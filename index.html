@@ -17,9 +17,10 @@
             --accent: #ffc107;
             --danger: #dc3545;
             --info: #0dcaf0;
+            --success: #198754;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-light); overflow: hidden; touch-action: none; }
+        body { background-color: var(--bg-color); color: var(--text-light); overflow: hidden; touch-action: manipulation; }
         
         /* Layouts */
         #app { width: 100vw; height: 100vh; position: relative; display: flex; flex-direction: column; }
@@ -27,24 +28,26 @@
         
         /* Lobby */
         #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; text-align: center; background: radial-gradient(circle, #2a3a4a 0%, #1a2a3a 100%); z-index: 100; position: absolute; top:0; left:0; width: 100%; }
-        .lobby-box { background: rgba(0,0,0,0.6); padding: 30px; border-radius: 15px; border: 1px solid #444; max-width: 400px; width: 100%; }
-        h1 { color: var(--accent); margin-bottom: 20px; font-size: 2.5rem; text-shadow: 2px 2px 4px #000; }
+        .lobby-box { background: rgba(0,0,0,0.7); padding: 30px; border-radius: 15px; border: 1px solid #444; max-width: 400px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        h1 { color: var(--accent); margin-bottom: 20px; font-size: 2.8rem; text-shadow: 2px 2px 4px #000; letter-spacing: 2px; }
         input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; font-size: 1rem; }
-        input, select { background: #333; color: white; border: 1px solid #555; }
-        button { background: var(--accent); color: #000; font-weight: bold; cursor: pointer; transition: transform 0.1s, background 0.2s; }
-        button:active { transform: scale(0.98); }
+        input, select { background: #333; color: white; border: 1px solid #555; outline: none; }
+        input:focus, select:focus { border-color: var(--accent); }
+        button { background: var(--accent); color: #000; font-weight: bold; cursor: pointer; transition: transform 0.1s, background 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        button:active { transform: scale(0.96); box-shadow: 0 2px 3px rgba(0,0,0,0.3); }
         button.secondary { background: #6c757d; color: white; }
+        button.danger { background: var(--danger); color: white; }
         #qr-container { background: white; padding: 10px; display: inline-block; margin: 15px 0; border-radius: 8px; }
-        .player-list { text-align: left; margin-top: 15px; max-height: 150px; overflow-y: auto; }
-        .player-item { padding: 5px; border-bottom: 1px solid #444; display: flex; justify-content: space-between; }
+        .player-list { text-align: left; margin-top: 15px; max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 8px; }
+        .player-item { padding: 10px; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center;}
         
         /* Game Table */
         #game-view { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; perspective: 1000px; }
-        #table { width: 90%; height: 80%; background: var(--table-color); border-radius: 50%; border: 15px solid var(--table-border); position: relative; box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.8); }
+        #table { width: 95%; height: 85%; background: var(--table-color); border-radius: 50%; border: 15px solid var(--table-border); position: relative; box-shadow: inset 0 0 50px rgba(0,0,0,0.7), 0 15px 40px rgba(0,0,0,0.9); }
         
         /* Cards */
         #card-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-        .card { width: var(--card-w); height: var(--card-h); position: absolute; transform-style: preserve-3d; transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), left 0.4s, top 0.4s; pointer-events: auto; cursor: pointer; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); border-radius: 5px; transform-origin: center center; }
+        .card { width: var(--card-w); height: var(--card-h); position: absolute; transform-style: preserve-3d; transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), top 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); pointer-events: auto; cursor: pointer; box-shadow: 2px 2px 6px rgba(0,0,0,0.5); border-radius: 5px; transform-origin: center center; }
         .card.no-anim { transition: none !important; }
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 5px; border: 1px solid #ccc; display: flex; flex-direction: column; justify-content: space-between; padding: 4px; background: white; }
         .card-back { background: repeating-linear-gradient(45deg, #2b5876, #2b5876 10px, #4e4376 10px, #4e4376 20px); transform: rotateY(180deg); border: 2px solid #fff; }
@@ -55,38 +58,44 @@
         .card.red { color: #d32f2f; }
         .card.black { color: #212121; }
         .card.highlight { box-shadow: 0 0 15px 5px var(--accent); z-index: 100 !important; }
-        .card.targetable { box-shadow: 0 0 15px 5px var(--info); animation: pulse 1s infinite; }
+        .card.targetable { box-shadow: 0 0 15px 5px var(--info); animation: pulse 1s infinite; z-index: 100 !important; }
         
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 10px 2px var(--info); } 50% { transform: scale(1.08); box-shadow: 0 0 20px 6px var(--info); } 100% { transform: scale(1); box-shadow: 0 0 10px 2px var(--info); } }
 
         /* UI Overlays */
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; display: flex; flex-direction: column; justify-content: space-between; padding: 10px; }
         .top-bar { display: flex; justify-content: space-between; pointer-events: auto; }
-        .controls { display: flex; gap: 10px; pointer-events: auto; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 10px; align-items: center; justify-content: center; margin-bottom: 10px; }
-        .player-info { position: absolute; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; pointer-events: none; text-align: center; transform: translate(-50%, -100%); margin-top: -10px; white-space: nowrap; }
-        .player-info.active-turn { border: 2px solid var(--accent); color: var(--accent); font-weight: bold; }
+        .controls { display: flex; gap: 10px; pointer-events: auto; background: rgba(0,0,0,0.85); padding: 15px; border-radius: 12px; align-items: center; justify-content: center; margin-bottom: 20px; border: 1px solid #444; flex-wrap: wrap; }
+        .player-info { position: absolute; background: rgba(0,0,0,0.7); padding: 6px 12px; border-radius: 6px; font-size: 0.9rem; pointer-events: none; text-align: center; transform: translate(-50%, -100%); margin-top: -15px; white-space: nowrap; border: 1px solid #333; transition: all 0.3s; }
+        .player-info.active-turn { border: 2px solid var(--accent); color: var(--accent); font-weight: bold; background: rgba(0,0,0,0.9); transform: translate(-50%, -100%) scale(1.1); }
+        .player-info.bazunga { background: var(--accent); color: #000; border-color: #fff; animation: pulse 1s infinite; }
         
-        /* Chat Drawer */
-        #chat-drawer { position: absolute; right: -300px; top: 0; width: 300px; height: 100%; background: rgba(20, 30, 40, 0.95); border-left: 1px solid #444; transition: right 0.3s; z-index: 50; display: flex; flex-direction: column; pointer-events: auto; }
+        /* Chat UI */
+        #chat-fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: black; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; z-index: 90; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; }
+        #chat-drawer { position: fixed; right: -350px; top: 0; width: 320px; height: 100vh; background: rgba(20, 30, 40, 0.98); border-left: 2px solid #444; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 200; display: flex; flex-direction: column; pointer-events: auto; box-shadow: -5px 0 30px rgba(0,0,0,0.8); }
         #chat-drawer.open { right: 0; }
-        #chat-toggle { position: absolute; left: -40px; top: 50%; transform: translateY(-50%); background: var(--accent); color: black; border: none; padding: 10px; border-radius: 5px 0 0 5px; cursor: pointer; font-weight: bold; }
-        #chat-messages { flex: 1; overflow-y: auto; padding: 10px; font-size: 0.9rem; display: flex; flex-direction: column; gap: 5px; }
-        .msg-sys { color: #aaa; font-style: italic; }
-        .msg-chat { color: white; }
+        .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #111; border-bottom: 1px solid #444; }
+        .chat-header h3 { margin: 0; color: var(--accent); }
+        #chat-close { background: transparent; color: white; border: none; font-size: 1.5rem; cursor: pointer; padding: 0; width: auto; box-shadow: none; }
+        #chat-messages { flex: 1; overflow-y: auto; padding: 15px; font-size: 0.95rem; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
+        .msg-sys { color: #9aa0a6; font-style: italic; font-size: 0.85rem; text-align: center; margin: 5px 0; }
+        .msg-chat { color: white; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; }
         .msg-chat strong { color: var(--info); }
+        .msg-pirate { color: white; background: rgba(255,68,68,0.1); border-left: 3px solid #ff4444; padding: 8px; border-radius: 0 8px 8px 0; }
         .msg-pirate strong { color: #ff4444; }
-        #chat-input-container { display: flex; padding: 10px; border-top: 1px solid #444; }
-        #chat-input { flex: 1; margin: 0; border-radius: 4px 0 0 4px; }
-        #chat-send { width: auto; margin: 0; border-radius: 0 4px 4px 0; padding: 0 15px; }
+        #chat-input-container { display: flex; padding: 15px; border-top: 1px solid #444; background: #111; }
+        #chat-input { flex: 1; margin: 0; border-radius: 6px 0 0 6px; padding: 10px; }
+        #chat-send { width: auto; margin: 0; border-radius: 0 6px 6px 0; padding: 0 20px; }
 
         /* Modals */
-        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 20px; border-radius: 10px; border: 2px solid var(--accent); z-index: 200; text-align: center; pointer-events: auto; min-width: 300px; }
-        .modal h2 { color: var(--accent); margin-bottom: 15px; }
-        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+        #modal-overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:190; backdrop-filter: blur(3px); }
+        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 25px; border-radius: 12px; border: 2px solid var(--accent); z-index: 200; text-align: center; pointer-events: auto; min-width: 320px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .modal h2 { color: var(--accent); margin-bottom: 15px; font-size: 1.8rem; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
 
         /* Floating Text */
-        .floating-text { position: absolute; color: var(--accent); font-weight: bold; font-size: 1.5rem; pointer-events: none; animation: floatUp 1s forwards; text-shadow: 2px 2px 0 #000; z-index: 150; }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-50px) scale(1.5); } }
+        .floating-text { position: absolute; color: var(--accent); font-weight: bold; font-size: 1.8rem; pointer-events: none; animation: floatUp 1.2s forwards; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; z-index: 150; text-align: center; width: 100%; }
+        @keyframes floatUp { 0% { opacity: 0; transform: translateY(20px) scale(0.8); } 20% { opacity: 1; transform: translateY(0) scale(1.1); } 80% { opacity: 1; transform: translateY(-40px) scale(1); } 100% { opacity: 0; transform: translateY(-60px) scale(0.9); } }
     </style>
 </head>
 <body>
@@ -98,30 +107,30 @@
             <h1>BAZUNGA</h1>
             <input type="text" id="player-name" placeholder="Enter your name" maxlength="12">
             <button id="btn-host">Create Game</button>
-            <div style="margin: 15px 0; color: #aaa;">OR</div>
-            <input type="text" id="join-id" placeholder="Paste Game ID">
+            <div style="margin: 20px 0; color: #aaa; font-weight: bold;">OR</div>
+            <input type="text" id="join-id" placeholder="Paste Game ID to Join">
             <button id="btn-join" class="secondary">Join Game</button>
         </div>
 
         <div class="lobby-box hidden" id="lobby-room">
-            <h1>Lobby</h1>
-            <div id="room-id-display" style="font-family: monospace; background: #222; padding: 5px; margin-bottom: 10px; word-break: break-all;"></div>
+            <h2>Lobby</h2>
+            <div id="room-id-display" style="font-family: monospace; background: #111; padding: 10px; border-radius: 5px; margin-bottom: 10px; word-break: break-all; color: var(--info); font-size: 1.1rem;"></div>
             <div id="qr-container"></div>
             
             <div class="player-list" id="lobby-players"></div>
             
-            <div id="host-controls" class="hidden">
+            <div id="host-controls" class="hidden" style="margin-top: 20px;">
                 <select id="bot-difficulty">
                     <option value="1">Easy Bot</option>
                     <option value="2">Medium Bot</option>
                     <option value="3">Hard Bot</option>
                     <option value="4">Expert Bot</option>
-                    <option value="5">The Pirate</option>
+                    <option value="5">The Pirate (Aggressive)</option>
                 </select>
                 <button id="btn-add-bot" class="secondary">Add Bot</button>
-                <button id="btn-start-game" style="margin-top: 20px;">Start Game</button>
+                <button id="btn-start-game" style="margin-top: 20px; font-size: 1.2rem; padding: 15px;">START GAME</button>
             </div>
-            <div id="client-waiting" class="hidden">Waiting for host to start...</div>
+            <div id="client-waiting" class="hidden" style="margin-top: 20px; color: var(--info); font-weight: bold;">Waiting for Host to start...</div>
         </div>
     </div>
 
@@ -133,7 +142,7 @@
         <div id="ui-layer">
             <div class="top-bar">
                 <button id="btn-toggle-anim" class="secondary" style="width: auto; padding: 5px 10px; font-size: 0.8rem;">Anim: ON</button>
-                <div id="phase-display" style="background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; font-weight: bold;"></div>
+                <div id="phase-display" style="background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 20px; font-weight: bold; border: 1px solid #555;"></div>
             </div>
             
             <div style="flex:1"></div>
@@ -143,36 +152,41 @@
             </div>
         </div>
 
-        <!-- Chat Drawer -->
+        <!-- Chat Elements -->
+        <button id="chat-fab">💬</button>
         <div id="chat-drawer">
-            <button id="chat-toggle">💬</button>
+            <div class="chat-header">
+                <h3>Chat & Logs</h3>
+                <button id="chat-close">✖</button>
+            </div>
             <div id="chat-messages"></div>
             <div id="chat-input-container">
-                <input type="text" id="chat-input" placeholder="Type...">
-                <button id="chat-send">></button>
+                <input type="text" id="chat-input" placeholder="Trash talk here...">
+                <button id="chat-send">Send</button>
             </div>
         </div>
     </div>
 
-    <!-- Modals -->
-    <div id="modal-overlay" class="hidden" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:190;"></div>
+    <!-- HTML Modals (Replaces Thread-Blocking confirm()) -->
+    <div id="modal-overlay" class="hidden"></div>
     
-    <div id="modal-action" class="modal hidden">
-        <h2 id="modal-action-title">Choose Action</h2>
-        <div class="modal-buttons" id="modal-action-btns"></div>
+    <div id="modal-custom" class="modal hidden">
+        <h2 id="modal-title">Attention</h2>
+        <p id="modal-body" style="margin-bottom: 15px;"></p>
+        <div class="modal-buttons" id="modal-btns"></div>
     </div>
 
     <div id="modal-gameover" class="modal hidden">
-        <h2>Game Over!</h2>
-        <div id="gameover-results" style="text-align: left; margin-bottom: 15px;"></div>
+        <h2 style="font-size: 2.5rem; margin-bottom: 5px;">GAME OVER</h2>
+        <h3 id="gameover-winner" style="color: var(--success); margin-bottom: 20px;"></h3>
+        <div id="gameover-results" style="text-align: left; margin-bottom: 25px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px;"></div>
         <button id="btn-return-lobby">Return to Lobby</button>
     </div>
 </div>
 
 <script>
 /**
- * BAZUNGA - P2P Multiplayer Card Game
- * Architecture: Strict Host Authority. Host runs Engine, Clients run UI.
+ * BAZUNGA - Production Ready Architecture
  */
 
 // --- UTILS ---
@@ -180,9 +194,11 @@ const Utils = {
     uuid: () => Math.random().toString(36).substr(2, 9),
     timestamp: () => Date.now(),
     shuffle: (array) => {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
         }
         return array;
     },
@@ -192,7 +208,7 @@ const Utils = {
 // --- CONSTANTS & CONFIG ---
 const SUITS = ['♠', '♥', '♦', '♣'];
 const VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-const MAGIC_VALUES = ['9', '10', 'J', 'Q', 'K']; // K is only magic if Red
+const MAGIC_VALUES = ['9', '10', 'J', 'Q', 'K'];
 const BOT_NAMES = ["BeepBoop", "CardShark", "DeepBlue", "AlphaGo", "Captain Blackbeard"];
 
 // --- GLOBAL APP STATE ---
@@ -201,15 +217,15 @@ const App = {
     localId: null,
     localName: '',
     peer: null,
-    connections: {}, // Host only: peerId -> DataConnection
-    hostConn: null,  // Client only: DataConnection to Host
+    connections: {}, 
+    hostConn: null,  
     gameState: null,
     animEnabled: true,
     uiState: {
         selectedCardId: null,
-        targetingMode: null, // 'swap', 'peek', 'blind_swap_1', 'blind_swap_2', 'force_penalty'
+        targetingMode: null,
         drawnCardId: null,
-        peekedCards: new Set() // Local memory of peeked cards
+        peekedCards: new Set()
     },
     lastClickTime: 0,
     botInterval: null
@@ -218,17 +234,17 @@ const App = {
 // --- GAME ENGINE (HOST ONLY) ---
 const Engine = {
     state: {
-        phase: 'lobby', // lobby, peek, play, orbit, game_over
+        phase: 'lobby', 
         turnIndex: 0,
         deck: [],
         discardPile: [],
-        players: [], // { id, name, isHost, isBot, hand: [], penaltyCards: [], botDifficulty, score, ready }
+        players: [], 
         bazungaCallerId: null,
         orbitCount: 0,
         logs: [],
-        activeAbility: null // { player, card, type, step }
+        activeAbility: null 
     },
-    botMemory: {}, // botId -> { cardId: { value, suit, timestamp } }
+    botMemory: {},
 
     initDeck: () => {
         let deck = [];
@@ -241,7 +257,7 @@ const Engine = {
                     value: val,
                     isRed: suit === '♥' || suit === '♦',
                     isFaceUp: false,
-                    loc: 'deck', // deck, discard, hand, penalty
+                    loc: 'deck', 
                     ownerId: null
                 });
             }
@@ -252,17 +268,15 @@ const Engine = {
     broadcast: () => {
         if (!App.isHost) return;
         const payload = { type: 'STATE_UPDATE', state: Engine.state };
-        // Send to all clients
         Object.values(App.connections).forEach(conn => {
             if (conn.open) conn.send(payload);
         });
-        // Local update
         UI.render(Engine.state);
     },
 
     sysLog: (msg) => {
         Engine.state.logs.push({ type: 'sys', msg, time: Utils.timestamp() });
-        if (Engine.state.logs.length > 50) Engine.state.logs.shift();
+        if (Engine.state.logs.length > 60) Engine.state.logs.shift();
         Engine.broadcast();
     },
 
@@ -280,8 +294,8 @@ const Engine = {
         Engine.state.bazungaCallerId = null;
         Engine.state.orbitCount = 0;
         Engine.state.activeAbility = null;
+        Engine.botMemory = {};
 
-        // Deal 4 cards to each player
         Engine.state.players.forEach(p => {
             p.hand = [];
             p.penaltyCards = [];
@@ -295,7 +309,6 @@ const Engine = {
             }
         });
 
-        // Start discard pile
         let firstDiscard = Engine.state.deck.pop();
         firstDiscard.loc = 'discard';
         firstDiscard.isFaceUp = true;
@@ -305,15 +318,35 @@ const Engine = {
         Engine.broadcast();
     },
 
+    checkDeckEmpty: () => {
+        if (Engine.state.deck.length === 0) {
+            Engine.sysLog("Deck empty! Reshuffling discard pile...");
+            let topDiscard = Engine.state.discardPile.pop();
+            
+            Engine.state.discardPile.forEach(c => {
+                c.loc = 'deck';
+                c.isFaceUp = false;
+                c.ownerId = null;
+            });
+            
+            Engine.state.deck = Utils.shuffle([...Engine.state.discardPile]);
+            Engine.state.discardPile = [topDiscard];
+        }
+    },
+
     getCardById: (id) => {
         let allCards = [...Engine.state.deck, ...Engine.state.discardPile];
         Engine.state.players.forEach(p => {
             allCards.push(...p.hand, ...p.penaltyCards);
         });
+        if (Engine.state.activeAbility && Engine.state.activeAbility.card) {
+            allCards.push(Engine.state.activeAbility.card);
+        }
         return allCards.find(c => c.id === id);
     },
 
     drawPenalty: (playerId) => {
+        Engine.checkDeckEmpty();
         let p = Engine.state.players.find(p => p.id === playerId);
         if (!p || Engine.state.deck.length === 0) return;
         let c = Engine.state.deck.pop();
@@ -326,7 +359,6 @@ const Engine = {
 
     nextTurn: () => {
         if (Engine.state.phase === 'game_over') return;
-        
         Engine.state.activeAbility = null;
         
         if (Engine.state.phase === 'orbit') {
@@ -340,7 +372,6 @@ const Engine = {
         Engine.state.turnIndex = (Engine.state.turnIndex + 1) % Engine.state.players.length;
         let activePlayer = Engine.state.players[Engine.state.turnIndex];
         
-        // Skip players with no cards (unless they are the bazunga caller)
         if (activePlayer.hand.length === 0 && activePlayer.penaltyCards.length === 0 && activePlayer.id !== Engine.state.bazungaCallerId) {
             Engine.nextTurn();
             return;
@@ -352,11 +383,10 @@ const Engine = {
 
     endGame: () => {
         Engine.state.phase = 'game_over';
-        // Flip all cards
+        
         Engine.state.players.forEach(p => {
             [...p.hand, ...p.penaltyCards].forEach(c => c.isFaceUp = true);
             
-            // Calculate score
             p.score = 0;
             [...p.hand, ...p.penaltyCards].forEach(c => {
                 if (c.value === 'K' && !c.isRed) p.score -= 1;
@@ -375,18 +405,18 @@ const Engine = {
             let isStrictlyLowest = caller.score === lowestScore && Engine.state.players.filter(p => p.score === lowestScore).length === 1;
             if (isStrictlyLowest) {
                 winners.push(caller.name);
-                Engine.sysLog(`${caller.name} successfully called Bazunga and wins!`);
+                Engine.sysLog(`${caller.name} successfully called BAZUNGA and wins!`);
             } else {
-                caller.score += 25; // Penalty for failed bazunga
+                caller.score += 25; // Failed Bazunga penalty
                 winners = Engine.state.players.filter(p => p.id !== caller.id).map(p => p.name);
                 Engine.sysLog(`${caller.name} failed Bazunga! Everyone else wins.`);
             }
         } else {
-            // Normal end (deck empty)
             winners = Engine.state.players.filter(p => p.score === lowestScore).map(p => p.name);
-            Engine.sysLog(`Game ended. Winners: ${winners.join(', ')}`);
+            Engine.sysLog(`Game ended naturally. Winners: ${winners.join(', ')}`);
         }
-
+        
+        Engine.state.winners = winners;
         Engine.broadcast();
     },
 
@@ -409,22 +439,18 @@ const Engine = {
                 break;
 
             case 'SLAP':
-                // Anyone can slap at any time if discard pile has cards
                 if (Engine.state.phase !== 'play' && Engine.state.phase !== 'orbit') return;
                 if (Engine.state.discardPile.length === 0) return;
                 
                 let targetCard = Engine.getCardById(action.targetId);
+                // Prevent slapping cards that are already moving/slapped
                 if (!targetCard || (targetCard.loc !== 'hand' && targetCard.loc !== 'penalty')) return;
                 
                 let topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
                 
-                // Race resolution: If top discard changed since client sent slap, it's a fail.
-                // For simplicity, we just check if values match right now.
                 if (targetCard.value === topDiscard.value) {
-                    // Success!
                     let owner = Engine.state.players.find(p => p.id === targetCard.ownerId);
                     
-                    // Remove from owner
                     if (targetCard.loc === 'hand') owner.hand = owner.hand.filter(c => c.id !== targetCard.id);
                     else owner.penaltyCards = owner.penaltyCards.filter(c => c.id !== targetCard.id);
                     
@@ -434,16 +460,15 @@ const Engine = {
                     Engine.state.discardPile.push(targetCard);
 
                     if (owner.id === player.id) {
-                        Engine.sysLog(`${player.name} successfully slapped their own card!`);
+                        Engine.sysLog(`💥 ${player.name} successfully slapped their own card!`);
                     } else {
-                        Engine.sysLog(`${player.name} slapped ${owner.name}'s card! ${owner.name} gets 2 penalties.`);
+                        Engine.sysLog(`💥 ${player.name} slapped ${owner.name}'s card! ${owner.name} gets 2 penalties.`);
                         Engine.drawPenalty(owner.id);
                         Engine.drawPenalty(owner.id);
-                        if (owner.isBot && owner.botDifficulty === 5) Engine.chatLog(owner.name, "Arrr, ye scurvy dog, took me card!", true);
+                        if (owner.isBot && owner.botDifficulty === 5) Engine.chatLog(owner.name, "Arrr, ye scallywag! Keep yer hands off me booty!", true);
                     }
                 } else {
-                    // Fail
-                    Engine.sysLog(`${player.name} failed a slap and gets a penalty.`);
+                    Engine.sysLog(`❌ ${player.name} failed a slap and gets a penalty.`);
                     Engine.drawPenalty(player.id);
                 }
                 Engine.broadcast();
@@ -451,11 +476,13 @@ const Engine = {
 
             case 'DRAW_DECK':
                 if (!isTurn || Engine.state.activeAbility) return;
-                if (Engine.state.deck.length === 0) { Engine.endGame(); return; }
+                Engine.checkDeckEmpty();
+                if (Engine.state.deck.length === 0) return; // Failsafe
+                
                 let drawn = Engine.state.deck.pop();
                 drawn.loc = 'holding';
                 drawn.ownerId = player.id;
-                drawn.isFaceUp = true; // Only visible to drawer in UI, but state marks it true
+                drawn.isFaceUp = true; 
                 Engine.state.activeAbility = { player: player.id, card: drawn, type: 'holding', step: 0 };
                 Engine.sysLog(`${player.name} drew from the deck.`);
                 Engine.broadcast();
@@ -477,20 +504,17 @@ const Engine = {
                 let hCard = Engine.state.activeAbility.card;
                 
                 if (action.action === 'discard') {
-                    // Play to discard (triggers magic if from deck)
                     hCard.loc = 'discard';
                     hCard.ownerId = null;
                     hCard.isFaceUp = true;
                     Engine.state.discardPile.push(hCard);
                     
                     if (Engine.state.activeAbility.type === 'holding' && MAGIC_VALUES.includes(hCard.value)) {
-                        // Trigger Magic
                         if (hCard.value === 'K' && !hCard.isRed) {
-                            // Black K does nothing
                             Engine.nextTurn();
                         } else {
                             Engine.state.activeAbility = { player: player.id, card: hCard, type: 'magic_' + hCard.value, step: 1 };
-                            Engine.sysLog(`${player.name} played a magic ${hCard.value}!`);
+                            Engine.sysLog(`✨ ${player.name} activated magic ${hCard.value}!`);
                             if (player.isBot && player.botDifficulty === 5) Engine.chatLog(player.name, "Prepare to be boarded!", true);
                             Engine.broadcast();
                         }
@@ -498,11 +522,9 @@ const Engine = {
                         Engine.nextTurn();
                     }
                 } else if (action.action === 'swap') {
-                    // Swap with layout
                     let target = Engine.getCardById(action.targetId);
                     if (!target || target.ownerId !== player.id) return;
                     
-                    // Move target to discard
                     if (target.loc === 'hand') player.hand = player.hand.filter(c => c.id !== target.id);
                     else player.penaltyCards = player.penaltyCards.filter(c => c.id !== target.id);
                     
@@ -511,8 +533,7 @@ const Engine = {
                     target.isFaceUp = true;
                     Engine.state.discardPile.push(target);
 
-                    // Move holding to target's old spot
-                    hCard.loc = 'hand'; // simplify, goes to hand
+                    hCard.loc = 'hand'; 
                     hCard.ownerId = player.id;
                     hCard.isFaceUp = false;
                     player.hand.push(hCard);
@@ -526,23 +547,23 @@ const Engine = {
                 if (!isTurn || !Engine.state.activeAbility) return;
                 let mType = Engine.state.activeAbility.type;
                 
+                // For 9, 10, Q peek - the peek logic is entirely local UI. The host just receives RESOLVE_MAGIC to move on.
                 if (mType === 'magic_9' || mType === 'magic_10' || mType === 'magic_Q') {
-                    // Peek logic handled client side mostly, host just acknowledges and moves on
-                    // For Q swap, client sends a swap action if they chose to
                     if (action.swapTarget1 && action.swapTarget2) {
                         Engine.executeSwap(action.swapTarget1, action.swapTarget2);
+                        Engine.sysLog(`${player.name} swapped cards using the Queen.`);
                     }
                     Engine.nextTurn();
                 } else if (mType === 'magic_J') {
                     if (action.swapTarget1 && action.swapTarget2) {
                         Engine.executeSwap(action.swapTarget1, action.swapTarget2);
-                        Engine.sysLog(`${player.name} blind swapped two cards.`);
+                        Engine.sysLog(`🌪️ ${player.name} blind swapped two cards!`);
                     }
                     Engine.nextTurn();
-                } else if (mType === 'magic_K') { // Red K
+                } else if (mType === 'magic_K') {
                     if (action.targetPlayerId) {
+                        Engine.sysLog(`😈 ${player.name} forced a penalty using the Red King!`);
                         Engine.drawPenalty(action.targetPlayerId);
-                        Engine.sysLog(`${player.name} forced a penalty on someone!`);
                     }
                     Engine.nextTurn();
                 }
@@ -579,7 +600,6 @@ const Engine = {
             else p2.penaltyCards = p2.penaltyCards.filter(c => c.id !== c2.id);
         }
 
-        // Swap owners and locs
         let tempOwner = c1.ownerId;
         let tempLoc = c1.loc;
         c1.ownerId = c2.ownerId;
@@ -604,43 +624,53 @@ const Bot = {
         if (App.botInterval) clearInterval(App.botInterval);
         App.botInterval = setInterval(Bot.tick, 1000);
     },
+    
+    getNumericValue: (valStr, isRed) => {
+        if (valStr === 'K' && !isRed) return -1;
+        if (valStr === 'K' && isRed) return 10;
+        if (valStr === 'Q' || valStr === 'J') return 10;
+        if (valStr === 'A') return 1;
+        return parseInt(valStr);
+    },
+
     tick: () => {
         if (!App.isHost || Engine.state.phase === 'lobby' || Engine.state.phase === 'game_over') return;
 
-        // 1. Update Memories (scan face up cards)
+        // Force Bots to Ready Up instantly in peek phase (Fixes Bug 1)
+        if (Engine.state.phase === 'peek') {
+            Engine.state.players.filter(p => p.isBot).forEach(bot => {
+                if (!bot.ready) Engine.processAction({ type: 'READY_PEEK' }, bot.id);
+            });
+        }
+
         let visibleCards = [...Engine.state.discardPile];
         if (Engine.state.activeAbility && Engine.state.activeAbility.card) visibleCards.push(Engine.state.activeAbility.card);
         
+        // Memory Scan
         Engine.state.players.filter(p => p.isBot).forEach(bot => {
             if (!Engine.botMemory[bot.id]) Engine.botMemory[bot.id] = {};
             visibleCards.forEach(c => {
-                if (c.isFaceUp) {
-                    // Chance to remember based on difficulty
-                    if (Math.random() < (bot.botDifficulty * 0.2)) {
-                        Engine.botMemory[bot.id][c.id] = { value: c.value, time: Utils.timestamp() };
-                    }
+                if (c.isFaceUp && Math.random() < (bot.botDifficulty * 0.25)) {
+                    Engine.botMemory[bot.id][c.id] = { value: c.value, isRed: c.isRed, numVal: Bot.getNumericValue(c.value, c.isRed), time: Utils.timestamp() };
                 }
             });
         });
 
-        // 2. Check for Slaps (All bots)
+        // Slapping checks
         if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && Engine.state.discardPile.length > 0) {
             let topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
             Engine.state.players.filter(p => p.isBot).forEach(bot => {
-                // Reflex check
-                let reflexDelay = 2500 - (bot.botDifficulty * 400); // Diff 5 = 500ms
-                
-                // Look through memory for a match
+                let reflexDelay = 2500 - (bot.botDifficulty * 450); 
                 let mem = Engine.botMemory[bot.id];
+                
                 for (let cid in mem) {
                     if (mem[cid].value === topDiscard.value) {
                         let target = Engine.getCardById(cid);
                         if (target && (target.loc === 'hand' || target.loc === 'penalty')) {
-                            // Simulate reflex delay (rough approximation using random chance per tick)
                             if (Math.random() < (1000 / reflexDelay)) {
                                 Engine.processAction({ type: 'SLAP', targetId: cid }, bot.id);
-                                delete mem[cid]; // forget after slapping
-                                return; // one slap per tick
+                                delete mem[cid]; 
+                                return; 
                             }
                         }
                     }
@@ -648,24 +678,28 @@ const Bot = {
             });
         }
 
-        // 3. Take Turn
+        // Standard Turn Logic
         let activePlayer = Engine.state.players[Engine.state.turnIndex];
         if (!activePlayer.isBot) return;
 
-        if (Engine.state.phase === 'peek' && !activePlayer.ready) {
-            Engine.processAction({ type: 'READY_PEEK' }, activePlayer.id);
-            return;
-        }
-
         if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && !Engine.state.activeAbility) {
-            // Decide to draw deck or discard
-            // Simple logic: if discard matches a known card in hand, draw discard to swap. Else deck.
             let topDiscard = Engine.state.discardPile.length > 0 ? Engine.state.discardPile[Engine.state.discardPile.length - 1] : null;
             let wantsDiscard = false;
             
-            if (topDiscard && topDiscard.value !== 'K' && topDiscard.value !== 'Q' && topDiscard.value !== 'J') {
-                // Low value, maybe take it
-                wantsDiscard = Math.random() > 0.5;
+            if (topDiscard) {
+                let topVal = Bot.getNumericValue(topDiscard.value, topDiscard.isRed);
+                // Smart bots only take the discard if it's explicitly low
+                if (activePlayer.botDifficulty >= 3) {
+                    wantsDiscard = topVal <= 4;
+                } else {
+                    wantsDiscard = topVal < 8 && Math.random() > 0.5;
+                }
+            }
+
+            // Bots call Bazunga rarely
+            if (Engine.state.phase === 'play' && activePlayer.botDifficulty >= 4 && Math.random() < 0.05) {
+                Engine.processAction({ type: 'CALL_BAZUNGA' }, activePlayer.id);
+                return;
             }
 
             if (wantsDiscard) Engine.processAction({ type: 'DRAW_DISCARD' }, activePlayer.id);
@@ -677,34 +711,47 @@ const Bot = {
             let ability = Engine.state.activeAbility;
             
             if (ability.type.startsWith('holding')) {
-                // Decide to play or swap
                 let hCard = ability.card;
+                let cardVal = Bot.getNumericValue(hCard.value, hCard.isRed);
+                
                 if (ability.type === 'holding' && MAGIC_VALUES.includes(hCard.value)) {
-                    // Play magic
-                    Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
+                    // Play magic card 90% of the time, unless it's a Black K
+                    if (cardVal === -1) {
+                         let target = activePlayer.hand[Math.floor(Math.random() * activePlayer.hand.length)];
+                         if (target) Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: target.id }, activePlayer.id);
+                    } else {
+                         Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
+                    }
                 } else {
-                    // Swap with a random card
-                    let target = activePlayer.hand[Math.floor(Math.random() * activePlayer.hand.length)];
-                    if (target) Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: target.id }, activePlayer.id);
-                    else Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id); // fallback
+                    // Decide to swap or discard
+                    let shouldSwap = false;
+                    if (activePlayer.botDifficulty >= 3) {
+                        shouldSwap = cardVal <= 6 && cardVal !== -1; // Keep low cards or black Kings
+                    } else {
+                        shouldSwap = Math.random() > 0.3; // Dumb swap
+                    }
+
+                    if (shouldSwap) {
+                        let target = activePlayer.hand[Math.floor(Math.random() * activePlayer.hand.length)];
+                        if (target) Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: target.id }, activePlayer.id);
+                        else Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
+                    } else {
+                        Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
+                    }
                 }
             } else {
-                // Resolve Magic
                 let mType = ability.type;
                 let payload = { type: 'RESOLVE_MAGIC' };
                 
+                // Note: Bots auto-skip 9, 10, Q peeks silently for simplicity, but use J and Red K actively
                 if (mType === 'magic_J') {
-                    // Blind swap 2 random cards
                     let allCards = [];
                     Engine.state.players.forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
                     if (allCards.length >= 2) {
-                        let c1 = allCards[Math.floor(Math.random() * allCards.length)];
-                        let c2 = allCards[Math.floor(Math.random() * allCards.length)];
-                        payload.swapTarget1 = c1.id;
-                        payload.swapTarget2 = c2.id;
+                        payload.swapTarget1 = allCards[Math.floor(Math.random() * allCards.length)].id;
+                        payload.swapTarget2 = allCards[Math.floor(Math.random() * allCards.length)].id;
                     }
                 } else if (mType === 'magic_K') {
-                    // Target random opponent
                     let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
                     if (opps.length > 0) payload.targetPlayerId = opps[Math.floor(Math.random() * opps.length)].id;
                 }
@@ -727,13 +774,12 @@ const Net = {
                 document.getElementById('lobby-init').classList.add('hidden');
                 document.getElementById('lobby-room').classList.remove('hidden');
                 document.getElementById('host-controls').classList.remove('hidden');
-                document.getElementById('room-id-display').innerText = `Game ID: ${id}`;
+                document.getElementById('room-id-display').innerText = id;
                 
                 new QRCode(document.getElementById("qr-container"), {
-                    text: id, width: 128, height: 128, colorDark: "#000000", colorLight: "#ffffff"
+                    text: id, width: 150, height: 150, colorDark: "#000", colorLight: "#fff"
                 });
 
-                // Add self to players
                 Engine.state.players.push({ id: id, name: App.localName, isHost: true, isBot: false });
                 Engine.broadcast();
                 Bot.start();
@@ -743,7 +789,7 @@ const Net = {
         });
 
         App.peer.on('connection', (conn) => {
-            if (!App.isHost) return; // Only host accepts connections
+            if (!App.isHost) return; 
             conn.on('data', (data) => {
                 if (data.type === 'JOIN') {
                     App.connections[conn.peer] = conn;
@@ -787,46 +833,43 @@ const Net = {
     },
 
     sendAction: (action) => {
-        if (App.isHost) {
-            Engine.processAction(action, App.localId);
-        } else if (App.hostConn && App.hostConn.open) {
-            App.hostConn.send(action);
-        }
+        if (App.isHost) Engine.processAction(action, App.localId);
+        else if (App.hostConn && App.hostConn.open) App.hostConn.send(action);
     }
 };
 
 // --- UI & RENDERING ---
 const UI = {
-    elements: {},
-    
     init: () => {
-        // Bind Lobby Buttons
         document.getElementById('btn-host').onclick = () => { App.isHost = true; Net.init(document.getElementById('player-name').value); };
         document.getElementById('btn-join').onclick = () => { App.isHost = false; Net.init(document.getElementById('player-name').value); };
         
         document.getElementById('btn-add-bot').onclick = () => {
-            let diff = parseInt(document.getElementById('bot-difficulty').value);
-            let name = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)] + ` (Bot)`;
+            let select = document.getElementById('bot-difficulty');
+            let diff = parseInt(select.value);
+            let diffText = select.options[select.selectedIndex].text;
+            let name = diff === 5 ? "Captain Blackbeard" : BOT_NAMES[Math.floor(Math.random() * (BOT_NAMES.length-1))] + ` [${diffText}]`;
             Engine.state.players.push({ id: Utils.uuid(), name: name, isHost: false, isBot: true, botDifficulty: diff });
             Engine.broadcast();
         };
 
         document.getElementById('btn-start-game').onclick = () => Engine.startGame();
 
-        // Bind Game Controls
         document.getElementById('btn-toggle-anim').onclick = (e) => {
             App.animEnabled = !App.animEnabled;
             e.target.innerText = `Anim: ${App.animEnabled ? 'ON' : 'OFF'}`;
         };
 
-        document.getElementById('chat-toggle').onclick = () => document.getElementById('chat-drawer').classList.toggle('open');
+        // Chat UI Binding
+        document.getElementById('chat-fab').onclick = () => document.getElementById('chat-drawer').classList.add('open');
+        document.getElementById('chat-close').onclick = () => document.getElementById('chat-drawer').classList.remove('open');
         document.getElementById('chat-send').onclick = UI.sendChat;
         document.getElementById('chat-input').onkeypress = (e) => { if(e.key === 'Enter') UI.sendChat(); };
 
-        document.getElementById('btn-return-lobby').onclick = () => location.reload(); // Simple reset
+        document.getElementById('btn-return-lobby').onclick = () => location.reload(); 
 
-        // Table clicks for slapping
-        document.getElementById('card-layer').addEventListener('click', UI.handleCardClick);
+        // Slapping and interaction bound to pointerdown for reliable double-taps on mobile
+        document.getElementById('card-layer').addEventListener('pointerdown', UI.handleCardClick);
     },
 
     sendChat: () => {
@@ -835,6 +878,28 @@ const UI = {
             Net.sendAction({ type: 'CHAT', msg: input.value.trim() });
             input.value = '';
         }
+    },
+
+    showModal: (title, body, buttons) => {
+        document.getElementById('modal-overlay').classList.remove('hidden');
+        let m = document.getElementById('modal-custom');
+        m.classList.remove('hidden');
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-body').innerText = body;
+        
+        let btnContainer = document.getElementById('modal-btns');
+        btnContainer.innerHTML = '';
+        buttons.forEach(b => {
+            let btn = document.createElement('button');
+            btn.innerText = b.text;
+            if (b.class) btn.className = b.class;
+            btn.onclick = () => {
+                document.getElementById('modal-overlay').classList.add('hidden');
+                m.classList.add('hidden');
+                b.action();
+            };
+            btnContainer.appendChild(btn);
+        });
     },
 
     createCardDOM: (card) => {
@@ -858,28 +923,27 @@ const UI = {
     render: (state) => {
         App.gameState = state;
         
-        // Lobby Render
         if (state.phase === 'lobby') {
             let list = document.getElementById('lobby-players');
             list.innerHTML = '';
             state.players.forEach(p => {
                 let item = document.createElement('div');
                 item.className = 'player-item';
-                item.innerText = p.name + (p.isHost ? ' (Host)' : '');
+                item.innerHTML = `<span>${p.name}</span> <span style="font-size:0.8rem; color:#aaa;">${p.isHost ? '(Host)' : p.isBot ? '(Bot)' : '(Player)'}</span>`;
                 list.appendChild(item);
             });
             return;
         }
 
-        // Switch to Game View
         document.getElementById('lobby').classList.add('hidden');
         document.getElementById('game-view').classList.remove('hidden');
 
-        // Update Phase Display
-        document.getElementById('phase-display').innerText = `Phase: ${state.phase.toUpperCase()}`;
+        document.getElementById('phase-display').innerText = `PHASE: ${state.phase.toUpperCase()}`;
+        if (state.phase === 'orbit') document.getElementById('phase-display').style.color = "var(--danger)";
 
-        // Render Chat/Logs
+        // Chat Rendering
         let chatBox = document.getElementById('chat-messages');
+        let wasAtBottom = chatBox.scrollHeight - chatBox.scrollTop <= chatBox.clientHeight + 20;
         chatBox.innerHTML = '';
         state.logs.forEach(l => {
             let d = document.createElement('div');
@@ -888,61 +952,58 @@ const UI = {
             else { d.className = 'msg-chat'; d.innerHTML = `<strong>${l.name}:</strong> ${l.msg}`; }
             chatBox.appendChild(d);
         });
-        chatBox.scrollTop = chatBox.scrollHeight;
+        if (wasAtBottom) chatBox.scrollTop = chatBox.scrollHeight;
 
-        // Calculate Layout
         let cx = window.innerWidth / 2;
         let cy = window.innerHeight / 2;
         let rx = window.innerWidth * 0.35;
         let ry = window.innerHeight * 0.3;
 
         let localPlayerIndex = state.players.findIndex(p => p.id === App.localId);
-        if (localPlayerIndex === -1) localPlayerIndex = 0; // Spectator fallback
+        if (localPlayerIndex === -1) localPlayerIndex = 0; 
 
-        // Render Player Info Tags
         document.querySelectorAll('.player-info').forEach(e => e.remove());
 
         state.players.forEach((p, i) => {
-            // Calculate relative position (local player always at bottom: angle 90 deg)
             let relIndex = (i - localPlayerIndex + state.players.length) % state.players.length;
             let angle = (Math.PI / 2) + (relIndex * (2 * Math.PI / state.players.length));
             
             let px = cx + Math.cos(angle) * rx;
             let py = cy + Math.sin(angle) * ry;
 
-            // Add Info Tag
             let info = document.createElement('div');
-            info.className = `player-info ${i === state.turnIndex ? 'active-turn' : ''}`;
+            info.className = `player-info ${i === state.turnIndex ? 'active-turn' : ''} ${state.bazungaCallerId === p.id ? 'bazunga' : ''}`;
             info.style.left = `${px}px`;
-            info.style.top = `${py - 60}px`;
-            info.innerText = `${p.name} ${p.score !== undefined ? '(Score: '+p.score+')' : ''}`;
+            info.style.top = `${py - 70}px`;
+            info.innerHTML = `${p.name} <br> <span style="font-size:0.75rem">${state.bazungaCallerId === p.id ? '🚨 BAZUNGA 🚨' : p.score !== undefined ? 'Score: '+p.score : ''}</span>`;
             document.getElementById('ui-layer').appendChild(info);
 
-            // Position Cards
+            // Dynamic grid layout for hands and penalties
             let pCards = [...p.hand, ...p.penaltyCards];
+            let cols = Math.ceil(Math.sqrt(pCards.length));
+            if (cols === 0) cols = 1; // Prevent division by zero
+            
             pCards.forEach((c, cIdx) => {
                 let el = document.getElementById(c.id) || UI.createCardDOM(c);
                 if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
                 
-                // 2x2 grid roughly
-                let ox = (cIdx % 2 === 0 ? -35 : 35);
-                let oy = (Math.floor(cIdx / 2) * 45);
+                let col = cIdx % cols;
+                let row = Math.floor(cIdx / cols);
+                let ox = (col * 45) - ((cols - 1) * 22.5);
+                let oy = (row * 50) - 20;
                 
-                el.style.left = `${px + ox - 30}px`; // -30 to center card width
+                el.style.left = `${px + ox - 30}px`; 
                 el.style.top = `${py + oy - 42}px`;
-                el.style.zIndex = cIdx;
+                el.style.zIndex = cIdx; // Base z-index
 
-                // Face up logic
                 let isFaceUp = c.isFaceUp || App.uiState.peekedCards.has(c.id);
                 if (state.phase === 'game_over') isFaceUp = true;
                 
                 if (isFaceUp) el.classList.remove('face-down');
                 else el.classList.add('face-down');
 
-                // Targeting highlights
                 el.classList.remove('targetable', 'highlight');
                 if (App.uiState.targetingMode && p.id !== App.localId && App.uiState.targetingMode === 'force_penalty') {
-                    // Highlight opponent cards to select player
                     el.classList.add('targetable');
                 } else if (App.uiState.targetingMode) {
                     el.classList.add('targetable');
@@ -950,45 +1011,40 @@ const UI = {
             });
         });
 
-        // Render Deck
+        // Deck
         state.deck.forEach((c, i) => {
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
-            el.style.left = `${cx - 40 - 30}px`;
-            el.style.top = `${cy - 42 - (i*0.5)}px`;
+            el.style.left = `${cx - 50 - 30}px`;
+            el.style.top = `${cy - 42 - (i*0.3)}px`;
             el.style.zIndex = i;
             el.classList.add('face-down');
             el.classList.remove('targetable', 'highlight');
         });
 
-        // Render Discard
+        // Discard
         state.discardPile.forEach((c, i) => {
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
-            el.style.left = `${cx + 40 - 30}px`;
+            el.style.left = `${cx + 50 - 30}px`;
             el.style.top = `${cy - 42}px`;
-            el.style.zIndex = i;
+            el.style.zIndex = i; // Ensure latest discard is top
             el.classList.remove('face-down', 'targetable', 'highlight');
-            // Slight random rotation for messy pile
-            if (!el.dataset.rot) el.dataset.rot = (Math.random() * 20 - 10);
+            if (!el.dataset.rot) el.dataset.rot = (Math.random() * 24 - 12);
             el.style.transform = `rotate(${el.dataset.rot}deg)`;
         });
 
-        // Render Holding Card (Active Ability)
+        // Holding Card
         if (state.activeAbility && state.activeAbility.card) {
             let c = state.activeAbility.card;
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             el.style.left = `${cx - 30}px`;
-            el.style.top = `${cy + 100}px`;
+            el.style.top = `${cy + 110}px`;
             el.style.zIndex = 1000;
             el.style.transform = `scale(1.5)`;
             
-            // Only show face to the owner unless it's a public magic resolution
-            if (state.activeAbility.player === App.localId || state.activeAbility.step > 0) {
-                el.classList.remove('face-down');
-            } else {
-                el.classList.add('face-down');
-            }
+            if (state.activeAbility.player === App.localId || state.activeAbility.step > 0) el.classList.remove('face-down');
+            else el.classList.add('face-down');
         }
 
         UI.updateControls(state);
@@ -996,7 +1052,8 @@ const UI = {
         if (state.phase === 'game_over') {
             document.getElementById('modal-gameover').classList.remove('hidden');
             document.getElementById('modal-overlay').classList.remove('hidden');
-            let res = state.players.map(p => `${p.name}: ${p.score}`).join('<br>');
+            document.getElementById('gameover-winner').innerText = state.winners.length > 1 ? "Winners: " + state.winners.join(', ') : "Winner: " + state.winners[0];
+            let res = state.players.map(p => `<strong>${p.name}</strong>: ${p.score} pts`).join('<br>');
             document.getElementById('gameover-results').innerHTML = res;
         }
     },
@@ -1013,10 +1070,7 @@ const UI = {
             controls.classList.remove('hidden');
             let btn = document.createElement('button');
             btn.innerText = "Ready (Finished Peeking)";
-            btn.onclick = () => {
-                App.uiState.peekedCards.clear();
-                Net.sendAction({ type: 'READY_PEEK' });
-            };
+            btn.onclick = () => { App.uiState.peekedCards.clear(); Net.sendAction({ type: 'READY_PEEK' }); };
             controls.appendChild(btn);
             return;
         }
@@ -1040,13 +1094,17 @@ const UI = {
                 if (state.phase === 'play') {
                     let btnBaz = document.createElement('button');
                     btnBaz.innerText = "Call BAZUNGA";
-                    btnBaz.className = "secondary";
-                    btnBaz.onclick = () => Net.sendAction({ type: 'CALL_BAZUNGA' });
+                    btnBaz.className = "danger";
+                    btnBaz.onclick = () => { 
+                        UI.showModal("Call BAZUNGA?", "Are you sure? This triggers the final orbit!", [
+                            { text: "Yes, Call it!", class: "danger", action: () => Net.sendAction({ type: 'CALL_BAZUNGA' }) },
+                            { text: "Cancel", class: "secondary", action: () => {} }
+                        ]);
+                    };
                     controls.appendChild(btnBaz);
                 }
             }
 
-            // Handle Active Ability UI for local player
             if (state.activeAbility && state.activeAbility.player === App.localId) {
                 controls.classList.remove('hidden');
                 let ab = state.activeAbility;
@@ -1059,30 +1117,15 @@ const UI = {
 
                     let btnSwap = document.createElement('button');
                     btnSwap.innerText = "Swap with Layout";
-                    btnSwap.onclick = () => {
-                        App.uiState.targetingMode = 'swap';
-                        UI.showFloatingText("Select a card to swap");
-                    };
+                    btnSwap.onclick = () => { App.uiState.targetingMode = 'swap'; UI.showFloatingText("Select your card to swap out"); };
                     controls.appendChild(btnSwap);
                 } else if (ab.step === 1) {
-                    // Magic Resolution
                     let mType = ab.type;
-                    if (mType === 'magic_9') {
-                        App.uiState.targetingMode = 'peek_self';
-                        UI.showFloatingText("Select your card to peek");
-                    } else if (mType === 'magic_10') {
-                        App.uiState.targetingMode = 'peek_opp';
-                        UI.showFloatingText("Select opponent card to peek");
-                    } else if (mType === 'magic_J') {
-                        App.uiState.targetingMode = 'blind_swap_1';
-                        UI.showFloatingText("Select 1st card to swap");
-                    } else if (mType === 'magic_Q') {
-                        App.uiState.targetingMode = 'peek_any';
-                        UI.showFloatingText("Select any card to peek");
-                    } else if (mType === 'magic_K') {
-                        App.uiState.targetingMode = 'force_penalty';
-                        UI.showFloatingText("Select an opponent to penalize");
-                    }
+                    if (mType === 'magic_9') { App.uiState.targetingMode = 'peek_self'; UI.showFloatingText("Select your card to peek"); }
+                    else if (mType === 'magic_10') { App.uiState.targetingMode = 'peek_opp'; UI.showFloatingText("Select opponent card to peek"); }
+                    else if (mType === 'magic_J') { App.uiState.targetingMode = 'blind_swap_1'; UI.showFloatingText("Select 1st card to swap"); }
+                    else if (mType === 'magic_Q') { App.uiState.targetingMode = 'peek_any'; UI.showFloatingText("Select any card to peek"); }
+                    else if (mType === 'magic_K') { App.uiState.targetingMode = 'force_penalty'; UI.showFloatingText("Select opponent card to penalize them"); }
                 }
             }
         }
@@ -1093,10 +1136,10 @@ const UI = {
         el.className = 'floating-text';
         el.innerText = msg;
         el.style.left = '50%';
-        el.style.top = '30%';
+        el.style.top = '25%';
         el.style.transform = 'translate(-50%, -50%)';
         document.getElementById('ui-layer').appendChild(el);
-        setTimeout(() => el.remove(), 1000);
+        setTimeout(() => el.remove(), 1200);
     },
 
     handleCardClick: (e) => {
@@ -1107,40 +1150,14 @@ const UI = {
         if (!state) return;
 
         let now = Utils.timestamp();
-        let isDoubleClick = (now - App.lastClickTime) < 300;
+        // Increased double-tap threshold to 450ms for better mobile responsiveness
+        let isDoubleClick = (now - App.lastClickTime) < 450; 
         App.lastClickTime = now;
 
-        let clickedCard = null;
-        // Find card in state
-        [...state.deck, ...state.discardPile].forEach(c => { if(c.id === cardId) clickedCard = c; });
-        state.players.forEach(p => { [...p.hand, ...p.penaltyCards].forEach(c => { if(c.id === cardId) clickedCard = c; }); });
-        if (state.activeAbility && state.activeAbility.card && state.activeAbility.card.id === cardId) clickedCard = state.activeAbility.card;
-
+        let clickedCard = Engine.getCardById(cardId);
         if (!clickedCard) return;
 
-        // 1. Slapping Logic (Double Click on layout card)
-        if (isDoubleClick && (state.phase === 'play' || state.phase === 'orbit') && (clickedCard.loc === 'hand' || clickedCard.loc === 'penalty')) {
-            Net.sendAction({ type: 'SLAP', targetId: cardId, timestamp: now });
-            return;
-        }
-
-        // 2. Peek Phase Logic
-        if (state.phase === 'peek' && clickedCard.ownerId === App.localId) {
-            // Allow peeking bottom 2 cards (index 2 and 3 in hand)
-            let me = state.players.find(p => p.id === App.localId);
-            let idx = me.hand.findIndex(c => c.id === cardId);
-            if (idx >= 2) {
-                App.uiState.peekedCards.add(cardId);
-                UI.render(state); // re-render to show face
-                setTimeout(() => {
-                    App.uiState.peekedCards.delete(cardId);
-                    UI.render(state);
-                }, 2000);
-            }
-            return;
-        }
-
-        // 3. Targeting Logic
+        // Bypass double click if we are in a targeting mode to avoid conflicts
         if (App.uiState.targetingMode) {
             let mode = App.uiState.targetingMode;
             
@@ -1165,17 +1182,17 @@ const UI = {
                 UI.render(state);
                 App.uiState.targetingMode = null;
                 
-                // Ask if want to swap
                 setTimeout(() => {
                     App.uiState.peekedCards.delete(cardId);
                     UI.render(state);
-                    if (confirm("Do you want to swap this card with one of yours?")) {
-                        App.uiState.targetingMode = 'q_swap_target';
-                        App.uiState.selectedCardId = cardId; // the opponent card
-                        UI.showFloatingText("Select your card to swap");
-                    } else {
-                        Net.sendAction({ type: 'RESOLVE_MAGIC' });
-                    }
+                    UI.showModal("Queen Magic", "Do you want to swap this card with one of yours?", [
+                        { text: "Yes, Swap", class: "", action: () => { 
+                            App.uiState.targetingMode = 'q_swap_target'; 
+                            App.uiState.selectedCardId = cardId; 
+                            UI.showFloatingText("Select your card to swap"); 
+                        }},
+                        { text: "No, Pass", class: "secondary", action: () => { Net.sendAction({ type: 'RESOLVE_MAGIC' }); } }
+                    ]);
                 }, 2000);
             }
             else if (mode === 'q_swap_target' && clickedCard.ownerId === App.localId) {
@@ -1195,15 +1212,32 @@ const UI = {
                 Net.sendAction({ type: 'RESOLVE_MAGIC', targetPlayerId: clickedCard.ownerId });
                 App.uiState.targetingMode = null;
             }
+            return;
+        }
+
+        // 1. Slapping Logic (Double Tap)
+        if (isDoubleClick && (state.phase === 'play' || state.phase === 'orbit') && (clickedCard.loc === 'hand' || clickedCard.loc === 'penalty')) {
+            cardEl.style.zIndex = 999;
+            Net.sendAction({ type: 'SLAP', targetId: cardId, timestamp: now });
+            return;
+        }
+
+        // 2. Peek Phase
+        if (state.phase === 'peek' && clickedCard.ownerId === App.localId) {
+            let me = state.players.find(p => p.id === App.localId);
+            let idx = me.hand.findIndex(c => c.id === cardId);
+            if (idx >= 2) {
+                App.uiState.peekedCards.add(cardId);
+                UI.render(state);
+                setTimeout(() => { App.uiState.peekedCards.delete(cardId); UI.render(state); }, 2000);
+            }
+            return;
         }
     }
 };
 
 // --- BOOTSTRAP ---
-window.onload = () => {
-    UI.init();
-};
-
+window.onload = () => { UI.init(); };
 </script>
 </body>
 </html>

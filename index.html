@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bazunga - P2P Card Game</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #1a2a3a;
+            --table-color: #0f5132;
+            --table-border: #5c3a21;
+            --card-w: 60px;
+            --card-h: 84px;
+            --text-light: #f8f9fa;
+            --accent: #ffc107;
+            --danger: #dc3545;
+            --info: #0dcaf0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-light); overflow: hidden; touch-action: none; }
+        
+        /* Layouts */
+        #app { width: 100vw; height: 100vh; position: relative; display: flex; flex-direction: column; }
+        .hidden { display: none !important; }
+        
+        /* Lobby */
+        #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; text-align: center; background: radial-gradient(circle, #2a3a4a 0%, #1a2a3a 100%); z-index: 100; position: absolute; top:0; left:0; width: 100%; }
+        .lobby-box { background: rgba(0,0,0,0.6); padding: 30px; border-radius: 15px; border: 1px solid #444; max-width: 400px; width: 100%; }
+        h1 { color: var(--accent); margin-bottom: 20px; font-size: 2.5rem; text-shadow: 2px 2px 4px #000; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; font-size: 1rem; }
+        input, select { background: #333; color: white; border: 1px solid #555; }
+        button { background: var(--accent); color: #000; font-weight: bold; cursor: pointer; transition: transform 0.1s, background 0.2s; }
+        button:active { transform: scale(0.98); }
+        button.secondary { background: #6c757d; color: white; }
+        #qr-container { background: white; padding: 10px; display: inline-block; margin: 15px 0; border-radius: 8px; }
+        .player-list { text-align: left; margin-top: 15px; max-height: 150px; overflow-y: auto; }
+        .player-item { padding: 5px; border-bottom: 1px solid #444; display: flex; justify-content: space-between; }
+        
+        /* Game Table */
+        #game-view { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; perspective: 1000px; }
+        #table { width: 90%; height: 80%; background: var(--table-color); border-radius: 50%; border: 15px solid var(--table-border); position: relative; box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.8); }
+        
+        /* Cards */
+        #card-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        .card { width: var(--card-w); height: var(--card-h); position: absolute; transform-style: preserve-3d; transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), left 0.4s, top 0.4s; pointer-events: auto; cursor: pointer; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); border-radius: 5px; transform-origin: center center; }
+        .card.no-anim { transition: none !important; }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 5px; border: 1px solid #ccc; display: flex; flex-direction: column; justify-content: space-between; padding: 4px; background: white; }
+        .card-back { background: repeating-linear-gradient(45deg, #2b5876, #2b5876 10px, #4e4376 10px, #4e4376 20px); transform: rotateY(180deg); border: 2px solid #fff; }
+        .card.face-down { transform: rotateY(180deg); }
+        .card .val { font-size: 1.2rem; font-weight: bold; line-height: 1; }
+        .card .suit { font-size: 1.5rem; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; }
+        .card .val.bottom { transform: rotate(180deg); }
+        .card.red { color: #d32f2f; }
+        .card.black { color: #212121; }
+        .card.highlight { box-shadow: 0 0 15px 5px var(--accent); z-index: 100 !important; }
+        .card.targetable { box-shadow: 0 0 15px 5px var(--info); animation: pulse 1s infinite; }
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* UI Overlays */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; display: flex; flex-direction: column; justify-content: space-between; padding: 10px; }
+        .top-bar { display: flex; justify-content: space-between; pointer-events: auto; }
+        .controls { display: flex; gap: 10px; pointer-events: auto; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 10px; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .player-info { position: absolute; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; pointer-events: none; text-align: center; transform: translate(-50%, -100%); margin-top: -10px; white-space: nowrap; }
+        .player-info.active-turn { border: 2px solid var(--accent); color: var(--accent); font-weight: bold; }
+        
+        /* Chat Drawer */
+        #chat-drawer { position: absolute; right: -300px; top: 0; width: 300px; height: 100%; background: rgba(20, 30, 40, 0.95); border-left: 1px solid #444; transition: right 0.3s; z-index: 50; display: flex; flex-direction: column; pointer-events: auto; }
+        #chat-drawer.open { right: 0; }
+        #chat-toggle { position: absolute; left: -40px; top: 50%; transform: translateY(-50%); background: var(--accent); color: black; border: none; padding: 10px; border-radius: 5px 0 0 5px; cursor: pointer; font-weight: bold; }
+        #chat-messages { flex: 1; overflow-y: auto; padding: 10px; font-size: 0.9rem; display: flex; flex-direction: column; gap: 5px; }
+        .msg-sys { color: #aaa; font-style: italic; }
+        .msg-chat { color: white; }
+        .msg-chat strong { color: var(--info); }
+        .msg-pirate strong { color: #ff4444; }
+        #chat-input-container { display: flex; padding: 10px; border-top: 1px solid #444; }
+        #chat-input { flex: 1; margin: 0; border-radius: 4px 0 0 4px; }
+        #chat-send { width: auto; margin: 0; border-radius: 0 4px 4px 0; padding: 0 15px; }
+
+        /* Modals */
+        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 20px; border-radius: 10px; border: 2px solid var(--accent); z-index: 200; text-align: center; pointer-events: auto; min-width: 300px; }
+        .modal h2 { color: var(--accent); margin-bottom: 15px; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+
+        /* Floating Text */
+        .floating-text { position: absolute; color: var(--accent); font-weight: bold; font-size: 1.5rem; pointer-events: none; animation: floatUp 1s forwards; text-shadow: 2px 2px 0 #000; z-index: 150; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-50px) scale(1.5); } }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- Lobby View -->
+    <div id="lobby">
+        <div class="lobby-box" id="lobby-init">
+            <h1>BAZUNGA</h1>
+            <input type="text" id="player-name" placeholder="Enter your name" maxlength="12">
+            <button id="btn-host">Create Game</button>
+            <div style="margin: 15px 0; color: #aaa;">OR</div>
+            <input type="text" id="join-id" placeholder="Paste Game ID">
+            <button id="btn-join" class="secondary">Join Game</button>
+        </div>
+
+        <div class="lobby-box hidden" id="lobby-room">
+            <h1>Lobby</h1>
+            <div id="room-id-display" style="font-family: monospace; background: #222; padding: 5px; margin-bottom: 10px; word-break: break-all;"></div>
+            <div id="qr-container"></div>
+            
+            <div class="player-list" id="lobby-players"></div>
+            
+            <div id="host-controls" class="hidden">
+                <select id="bot-difficulty">
+                    <option value="1">Easy Bot</option>
+                    <option value="2">Medium Bot</option>
+                    <option value="3">Hard Bot</option>
+                    <option value="4">Expert Bot</option>
+                    <option value="5">The Pirate</option>
+                </select>
+                <button id="btn-add-bot" class="secondary">Add Bot</button>
+                <button id="btn-start-game" style="margin-top: 20px;">Start Game</button>
+            </div>
+            <div id="client-waiting" class="hidden">Waiting for host to start...</div>
+        </div>
+    </div>
+
+    <!-- Game View -->
+    <div id="game-view" class="hidden">
+        <div id="table"></div>
+        <div id="card-layer"></div>
+        
+        <div id="ui-layer">
+            <div class="top-bar">
+                <button id="btn-toggle-anim" class="secondary" style="width: auto; padding: 5px 10px; font-size: 0.8rem;">Anim: ON</button>
+                <div id="phase-display" style="background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; font-weight: bold;"></div>
+            </div>
+            
+            <div style="flex:1"></div>
+            
+            <div class="controls hidden" id="action-controls">
+                <!-- Populated dynamically based on state -->
+            </div>
+        </div>
+
+        <!-- Chat Drawer -->
+        <div id="chat-drawer">
+            <button id="chat-toggle">💬</button>
+            <div id="chat-messages"></div>
+            <div id="chat-input-container">
+                <input type="text" id="chat-input" placeholder="Type...">
+                <button id="chat-send">></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="hidden" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:190;"></div>
+    
+    <div id="modal-action" class="modal hidden">
+        <h2 id="modal-action-title">Choose Action</h2>
+        <div class="modal-buttons" id="modal-action-btns"></div>
+    </div>
+
+    <div id="modal-gameover" class="modal hidden">
+        <h2>Game Over!</h2>
+        <div id="gameover-results" style="text-align: left; margin-bottom: 15px;"></div>
+        <button id="btn-return-lobby">Return to Lobby</button>
+    </div>
+</div>
+
+<script>
+/**
+ * BAZUNGA - P2P Multiplayer Card Game
+ * Architecture: Strict Host Authority. Host runs Engine, Clients run UI.
+ */
+
+// --- UTILS ---
+const Utils = {
+    uuid: () => Math.random().toString(36).substr(2, 9),
+    timestamp: () => Date.now(),
+    shuffle: (array) => {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    },
+    log: (msg) => console.log(`[${new Date().toISOString().split('T')[1].slice(0,-1)}] ${msg}`)
+};
+
+// --- CONSTANTS & CONFIG ---
+const SUITS = ['♠', '♥', '♦', '♣'];
+const VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+const MAGIC_VALUES = ['9', '10', 'J', 'Q', 'K']; // K is only magic if Red
+const BOT_NAMES = ["BeepBoop", "CardShark", "DeepBlue", "AlphaGo", "Captain Blackbeard"];
+
+// --- GLOBAL APP STATE ---
+const App = {
+    isHost: false,
+    localId: null,
+    localName: '',
+    peer: null,
+    connections: {}, // Host only: peerId -> DataConnection
+    hostConn: null,  // Client only: DataConnection to Host
+    gameState: null,
+    animEnabled: true,
+    uiState: {
+        selectedCardId: null,
+        targetingMode: null, // 'swap', 'peek', 'blind_swap_1', 'blind_swap_2', 'force_penalty'
+        drawnCardId: null,
+        peekedCards: new Set() // Local memory of peeked cards
+    },
+    lastClickTime: 0,
+    botInterval: null
+};
+
+// --- GAME ENGINE (HOST ONLY) ---
+const Engine = {
+    state: {
+        phase: 'lobby', // lobby, peek, play, orbit, game_over
+        turnIndex: 0,
+        deck: [],
+        discardPile: [],
+        players: [], // { id, name, isHost, isBot, hand: [], penaltyCards: [], botDifficulty, score, ready }
+        bazungaCallerId: null,
+        orbitCount: 0,
+        logs: [],
+        activeAbility: null // { player, card, type, step }
+    },
+    botMemory: {}, // botId -> { cardId: { value, suit, timestamp } }
+
+    initDeck: () => {
+        let deck = [];
+        let idCounter = 0;
+        for (let suit of SUITS) {
+            for (let val of VALUES) {
+                deck.push({
+                    id: `c-${idCounter++}`,
+                    suit: suit,
+                    value: val,
+                    isRed: suit === '♥' || suit === '♦',
+                    isFaceUp: false,
+                    loc: 'deck', // deck, discard, hand, penalty
+                    ownerId: null
+                });
+            }
+        }
+        return Utils.shuffle(deck);
+    },
+
+    broadcast: () => {
+        if (!App.isHost) return;
+        const payload = { type: 'STATE_UPDATE', state: Engine.state };
+        // Send to all clients
+        Object.values(App.connections).forEach(conn => {
+            if (conn.open) conn.send(payload);
+        });
+        // Local update
+        UI.render(Engine.state);
+    },
+
+    sysLog: (msg) => {
+        Engine.state.logs.push({ type: 'sys', msg, time: Utils.timestamp() });
+        if (Engine.state.logs.length > 50) Engine.state.logs.shift();
+        Engine.broadcast();
+    },
+
+    chatLog: (name, msg, isPirate = false) => {
+        Engine.state.logs.push({ type: isPirate ? 'pirate' : 'chat', name, msg, time: Utils.timestamp() });
+        Engine.broadcast();
+    },
+
+    startGame: () => {
+        if (Engine.state.players.length < 2) return alert("Need at least 2 players!");
+        Engine.state.deck = Engine.initDeck();
+        Engine.state.discardPile = [];
+        Engine.state.phase = 'peek';
+        Engine.state.turnIndex = Math.floor(Math.random() * Engine.state.players.length);
+        Engine.state.bazungaCallerId = null;
+        Engine.state.orbitCount = 0;
+        Engine.state.activeAbility = null;
+
+        // Deal 4 cards to each player
+        Engine.state.players.forEach(p => {
+            p.hand = [];
+            p.penaltyCards = [];
+            p.ready = false;
+            p.score = 0;
+            for(let i=0; i<4; i++) {
+                let c = Engine.state.deck.pop();
+                c.loc = 'hand';
+                c.ownerId = p.id;
+                p.hand.push(c);
+            }
+        });
+
+        // Start discard pile
+        let firstDiscard = Engine.state.deck.pop();
+        firstDiscard.loc = 'discard';
+        firstDiscard.isFaceUp = true;
+        Engine.state.discardPile.push(firstDiscard);
+
+        Engine.sysLog("Game started! Peek at your bottom two cards.");
+        Engine.broadcast();
+    },
+
+    getCardById: (id) => {
+        let allCards = [...Engine.state.deck, ...Engine.state.discardPile];
+        Engine.state.players.forEach(p => {
+            allCards.push(...p.hand, ...p.penaltyCards);
+        });
+        return allCards.find(c => c.id === id);
+    },
+
+    drawPenalty: (playerId) => {
+        let p = Engine.state.players.find(p => p.id === playerId);
+        if (!p || Engine.state.deck.length === 0) return;
+        let c = Engine.state.deck.pop();
+        c.loc = 'penalty';
+        c.ownerId = p.id;
+        c.isFaceUp = false;
+        p.penaltyCards.push(c);
+        Engine.sysLog(`${p.name} received a penalty card.`);
+    },
+
+    nextTurn: () => {
+        if (Engine.state.phase === 'game_over') return;
+        
+        Engine.state.activeAbility = null;
+        
+        if (Engine.state.phase === 'orbit') {
+            Engine.state.orbitCount++;
+            if (Engine.state.orbitCount >= Engine.state.players.length) {
+                Engine.endGame();
+                return;
+            }
+        }
+
+        Engine.state.turnIndex = (Engine.state.turnIndex + 1) % Engine.state.players.length;
+        let activePlayer = Engine.state.players[Engine.state.turnIndex];
+        
+        // Skip players with no cards (unless they are the bazunga caller)
+        if (activePlayer.hand.length === 0 && activePlayer.penaltyCards.length === 0 && activePlayer.id !== Engine.state.bazungaCallerId) {
+            Engine.nextTurn();
+            return;
+        }
+
+        Engine.sysLog(`It's ${activePlayer.name}'s turn.`);
+        Engine.broadcast();
+    },
+
+    endGame: () => {
+        Engine.state.phase = 'game_over';
+        // Flip all cards
+        Engine.state.players.forEach(p => {
+            [...p.hand, ...p.penaltyCards].forEach(c => c.isFaceUp = true);
+            
+            // Calculate score
+            p.score = 0;
+            [...p.hand, ...p.penaltyCards].forEach(c => {
+                if (c.value === 'K' && !c.isRed) p.score -= 1;
+                else if (c.value === 'K' && c.isRed) p.score += 10;
+                else if (c.value === 'Q' || c.value === 'J') p.score += 10;
+                else if (c.value === 'A') p.score += 1;
+                else p.score += parseInt(c.value);
+            });
+        });
+
+        let caller = Engine.state.players.find(p => p.id === Engine.state.bazungaCallerId);
+        let lowestScore = Math.min(...Engine.state.players.map(p => p.score));
+        let winners = [];
+
+        if (caller) {
+            let isStrictlyLowest = caller.score === lowestScore && Engine.state.players.filter(p => p.score === lowestScore).length === 1;
+            if (isStrictlyLowest) {
+                winners.push(caller.name);
+                Engine.sysLog(`${caller.name} successfully called Bazunga and wins!`);
+            } else {
+                caller.score += 25; // Penalty for failed bazunga
+                winners = Engine.state.players.filter(p => p.id !== caller.id).map(p => p.name);
+                Engine.sysLog(`${caller.name} failed Bazunga! Everyone else wins.`);
+            }
+        } else {
+            // Normal end (deck empty)
+            winners = Engine.state.players.filter(p => p.score === lowestScore).map(p => p.name);
+            Engine.sysLog(`Game ended. Winners: ${winners.join(', ')}`);
+        }
+
+        Engine.broadcast();
+    },
+
+    processAction: (action, peerId) => {
+        if (!App.isHost) return;
+        const player = Engine.state.players.find(p => p.id === peerId);
+        if (!player) return;
+
+        const isTurn = Engine.state.players[Engine.state.turnIndex].id === peerId;
+
+        switch (action.type) {
+            case 'READY_PEEK':
+                if (Engine.state.phase !== 'peek') return;
+                player.ready = true;
+                if (Engine.state.players.every(p => p.ready)) {
+                    Engine.state.phase = 'play';
+                    Engine.sysLog("Play phase started!");
+                }
+                Engine.broadcast();
+                break;
+
+            case 'SLAP':
+                // Anyone can slap at any time if discard pile has cards
+                if (Engine.state.phase !== 'play' && Engine.state.phase !== 'orbit') return;
+                if (Engine.state.discardPile.length === 0) return;
+                
+                let targetCard = Engine.getCardById(action.targetId);
+                if (!targetCard || (targetCard.loc !== 'hand' && targetCard.loc !== 'penalty')) return;
+                
+                let topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
+                
+                // Race resolution: If top discard changed since client sent slap, it's a fail.
+                // For simplicity, we just check if values match right now.
+                if (targetCard.value === topDiscard.value) {
+                    // Success!
+                    let owner = Engine.state.players.find(p => p.id === targetCard.ownerId);
+                    
+                    // Remove from owner
+                    if (targetCard.loc === 'hand') owner.hand = owner.hand.filter(c => c.id !== targetCard.id);
+                    else owner.penaltyCards = owner.penaltyCards.filter(c => c.id !== targetCard.id);
+                    
+                    targetCard.loc = 'discard';
+                    targetCard.ownerId = null;
+                    targetCard.isFaceUp = true;
+                    Engine.state.discardPile.push(targetCard);
+
+                    if (owner.id === player.id) {
+                        Engine.sysLog(`${player.name} successfully slapped their own card!`);
+                    } else {
+                        Engine.sysLog(`${player.name} slapped ${owner.name}'s card! ${owner.name} gets 2 penalties.`);
+                        Engine.drawPenalty(owner.id);
+                        Engine.drawPenalty(owner.id);
+                        if (owner.isBot && owner.botDifficulty === 5) Engine.chatLog(owner.name, "Arrr, ye scurvy dog, took me card!", true);
+                    }
+                } else {
+                    // Fail
+                    Engine.sysLog(`${player.name} failed a slap and gets a penalty.`);
+                    Engine.drawPenalty(player.id);
+                }
+                Engine.broadcast();
+                break;
+
+            case 'DRAW_DECK':
+                if (!isTurn || Engine.state.activeAbility) return;
+                if (Engine.state.deck.length === 0) { Engine.endGame(); return; }
+                let drawn = Engine.state.deck.pop();
+                drawn.loc = 'holding';
+                drawn.ownerId = player.id;
+                drawn.isFaceUp = true; // Only visible to drawer in UI, but state marks it true
+                Engine.state.activeAbility = { player: player.id, card: drawn, type: 'holding', step: 0 };
+                Engine.sysLog(`${player.name} drew from the deck.`);
+                Engine.broadcast();
+                break;
+
+            case 'DRAW_DISCARD':
+                if (!isTurn || Engine.state.activeAbility) return;
+                if (Engine.state.discardPile.length === 0) return;
+                let disc = Engine.state.discardPile.pop();
+                disc.loc = 'holding';
+                disc.ownerId = player.id;
+                Engine.state.activeAbility = { player: player.id, card: disc, type: 'holding_discard', step: 0 };
+                Engine.sysLog(`${player.name} drew from the discard pile.`);
+                Engine.broadcast();
+                break;
+
+            case 'PLAY_HOLDING':
+                if (!isTurn || !Engine.state.activeAbility) return;
+                let hCard = Engine.state.activeAbility.card;
+                
+                if (action.action === 'discard') {
+                    // Play to discard (triggers magic if from deck)
+                    hCard.loc = 'discard';
+                    hCard.ownerId = null;
+                    hCard.isFaceUp = true;
+                    Engine.state.discardPile.push(hCard);
+                    
+                    if (Engine.state.activeAbility.type === 'holding' && MAGIC_VALUES.includes(hCard.value)) {
+                        // Trigger Magic
+                        if (hCard.value === 'K' && !hCard.isRed) {
+                            // Black K does nothing
+                            Engine.nextTurn();
+                        } else {
+                            Engine.state.activeAbility = { player: player.id, card: hCard, type: 'magic_' + hCard.value, step: 1 };
+                            Engine.sysLog(`${player.name} played a magic ${hCard.value}!`);
+                            if (player.isBot && player.botDifficulty === 5) Engine.chatLog(player.name, "Prepare to be boarded!", true);
+                            Engine.broadcast();
+                        }
+                    } else {
+                        Engine.nextTurn();
+                    }
+                } else if (action.action === 'swap') {
+                    // Swap with layout
+                    let target = Engine.getCardById(action.targetId);
+                    if (!target || target.ownerId !== player.id) return;
+                    
+                    // Move target to discard
+                    if (target.loc === 'hand') player.hand = player.hand.filter(c => c.id !== target.id);
+                    else player.penaltyCards = player.penaltyCards.filter(c => c.id !== target.id);
+                    
+                    target.loc = 'discard';
+                    target.ownerId = null;
+                    target.isFaceUp = true;
+                    Engine.state.discardPile.push(target);
+
+                    // Move holding to target's old spot
+                    hCard.loc = 'hand'; // simplify, goes to hand
+                    hCard.ownerId = player.id;
+                    hCard.isFaceUp = false;
+                    player.hand.push(hCard);
+
+                    Engine.sysLog(`${player.name} swapped a card.`);
+                    Engine.nextTurn();
+                }
+                break;
+
+            case 'RESOLVE_MAGIC':
+                if (!isTurn || !Engine.state.activeAbility) return;
+                let mType = Engine.state.activeAbility.type;
+                
+                if (mType === 'magic_9' || mType === 'magic_10' || mType === 'magic_Q') {
+                    // Peek logic handled client side mostly, host just acknowledges and moves on
+                    // For Q swap, client sends a swap action if they chose to
+                    if (action.swapTarget1 && action.swapTarget2) {
+                        Engine.executeSwap(action.swapTarget1, action.swapTarget2);
+                    }
+                    Engine.nextTurn();
+                } else if (mType === 'magic_J') {
+                    if (action.swapTarget1 && action.swapTarget2) {
+                        Engine.executeSwap(action.swapTarget1, action.swapTarget2);
+                        Engine.sysLog(`${player.name} blind swapped two cards.`);
+                    }
+                    Engine.nextTurn();
+                } else if (mType === 'magic_K') { // Red K
+                    if (action.targetPlayerId) {
+                        Engine.drawPenalty(action.targetPlayerId);
+                        Engine.sysLog(`${player.name} forced a penalty on someone!`);
+                    }
+                    Engine.nextTurn();
+                }
+                break;
+
+            case 'CALL_BAZUNGA':
+                if (!isTurn || Engine.state.phase !== 'play') return;
+                Engine.state.phase = 'orbit';
+                Engine.state.bazungaCallerId = player.id;
+                Engine.sysLog(`🚨 ${player.name} called BAZUNGA! Final orbit begins! 🚨`);
+                Engine.nextTurn();
+                break;
+                
+            case 'CHAT':
+                Engine.chatLog(player.name, action.msg);
+                break;
+        }
+    },
+
+    executeSwap: (id1, id2) => {
+        let c1 = Engine.getCardById(id1);
+        let c2 = Engine.getCardById(id2);
+        if (!c1 || !c2) return;
+        
+        let p1 = Engine.state.players.find(p => p.id === c1.ownerId);
+        let p2 = Engine.state.players.find(p => p.id === c2.ownerId);
+        
+        if(p1) {
+            if(c1.loc === 'hand') p1.hand = p1.hand.filter(c => c.id !== c1.id);
+            else p1.penaltyCards = p1.penaltyCards.filter(c => c.id !== c1.id);
+        }
+        if(p2) {
+            if(c2.loc === 'hand') p2.hand = p2.hand.filter(c => c.id !== c2.id);
+            else p2.penaltyCards = p2.penaltyCards.filter(c => c.id !== c2.id);
+        }
+
+        // Swap owners and locs
+        let tempOwner = c1.ownerId;
+        let tempLoc = c1.loc;
+        c1.ownerId = c2.ownerId;
+        c1.loc = c2.loc;
+        c2.ownerId = tempOwner;
+        c2.loc = tempLoc;
+
+        if(p1) {
+            if(c2.loc === 'hand') p1.hand.push(c2);
+            else p1.penaltyCards.push(c2);
+        }
+        if(p2) {
+            if(c1.loc === 'hand') p2.hand.push(c1);
+            else p2.penaltyCards.push(c1);
+        }
+    }
+};
+
+// --- BOT AI (HOST ONLY) ---
+const Bot = {
+    start: () => {
+        if (App.botInterval) clearInterval(App.botInterval);
+        App.botInterval = setInterval(Bot.tick, 1000);
+    },
+    tick: () => {
+        if (!App.isHost || Engine.state.phase === 'lobby' || Engine.state.phase === 'game_over') return;
+
+        // 1. Update Memories (scan face up cards)
+        let visibleCards = [...Engine.state.discardPile];
+        if (Engine.state.activeAbility && Engine.state.activeAbility.card) visibleCards.push(Engine.state.activeAbility.card);
+        
+        Engine.state.players.filter(p => p.isBot).forEach(bot => {
+            if (!Engine.botMemory[bot.id]) Engine.botMemory[bot.id] = {};
+            visibleCards.forEach(c => {
+                if (c.isFaceUp) {
+                    // Chance to remember based on difficulty
+                    if (Math.random() < (bot.botDifficulty * 0.2)) {
+                        Engine.botMemory[bot.id][c.id] = { value: c.value, time: Utils.timestamp() };
+                    }
+                }
+            });
+        });
+
+        // 2. Check for Slaps (All bots)
+        if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && Engine.state.discardPile.length > 0) {
+            let topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
+            Engine.state.players.filter(p => p.isBot).forEach(bot => {
+                // Reflex check
+                let reflexDelay = 2500 - (bot.botDifficulty * 400); // Diff 5 = 500ms
+                
+                // Look through memory for a match
+                let mem = Engine.botMemory[bot.id];
+                for (let cid in mem) {
+                    if (mem[cid].value === topDiscard.value) {
+                        let target = Engine.getCardById(cid);
+                        if (target && (target.loc === 'hand' || target.loc === 'penalty')) {
+                            // Simulate reflex delay (rough approximation using random chance per tick)
+                            if (Math.random() < (1000 / reflexDelay)) {
+                                Engine.processAction({ type: 'SLAP', targetId: cid }, bot.id);
+                                delete mem[cid]; // forget after slapping
+                                return; // one slap per tick
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 3. Take Turn
+        let activePlayer = Engine.state.players[Engine.state.turnIndex];
+        if (!activePlayer.isBot) return;
+
+        if (Engine.state.phase === 'peek' && !activePlayer.ready) {
+            Engine.processAction({ type: 'READY_PEEK' }, activePlayer.id);
+            return;
+        }
+
+        if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && !Engine.state.activeAbility) {
+            // Decide to draw deck or discard
+            // Simple logic: if discard matches a known card in hand, draw discard to swap. Else deck.
+            let topDiscard = Engine.state.discardPile.length > 0 ? Engine.state.discardPile[Engine.state.discardPile.length - 1] : null;
+            let wantsDiscard = false;
+            
+            if (topDiscard && topDiscard.value !== 'K' && topDiscard.value !== 'Q' && topDiscard.value !== 'J') {
+                // Low value, maybe take it
+                wantsDiscard = Math.random() > 0.5;
+            }
+
+            if (wantsDiscard) Engine.processAction({ type: 'DRAW_DISCARD' }, activePlayer.id);
+            else Engine.processAction({ type: 'DRAW_DECK' }, activePlayer.id);
+            return;
+        }
+
+        if (Engine.state.activeAbility && Engine.state.activeAbility.player === activePlayer.id) {
+            let ability = Engine.state.activeAbility;
+            
+            if (ability.type.startsWith('holding')) {
+                // Decide to play or swap
+                let hCard = ability.card;
+                if (ability.type === 'holding' && MAGIC_VALUES.includes(hCard.value)) {
+                    // Play magic
+                    Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
+                } else {
+                    // Swap with a random card
+                    let target = activePlayer.hand[Math.floor(Math.random() * activePlayer.hand.length)];
+                    if (target) Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: target.id }, activePlayer.id);
+                    else Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id); // fallback
+                }
+            } else {
+                // Resolve Magic
+                let mType = ability.type;
+                let payload = { type: 'RESOLVE_MAGIC' };
+                
+                if (mType === 'magic_J') {
+                    // Blind swap 2 random cards
+                    let allCards = [];
+                    Engine.state.players.forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
+                    if (allCards.length >= 2) {
+                        let c1 = allCards[Math.floor(Math.random() * allCards.length)];
+                        let c2 = allCards[Math.floor(Math.random() * allCards.length)];
+                        payload.swapTarget1 = c1.id;
+                        payload.swapTarget2 = c2.id;
+                    }
+                } else if (mType === 'magic_K') {
+                    // Target random opponent
+                    let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
+                    if (opps.length > 0) payload.targetPlayerId = opps[Math.floor(Math.random() * opps.length)].id;
+                }
+                
+                Engine.processAction(payload, activePlayer.id);
+            }
+        }
+    }
+};
+
+// --- NETWORKING ---
+const Net = {
+    init: (name) => {
+        App.localName = name || "Player_" + Math.floor(Math.random()*1000);
+        App.peer = new Peer(Utils.uuid());
+        
+        App.peer.on('open', (id) => {
+            App.localId = id;
+            if (App.isHost) {
+                document.getElementById('lobby-init').classList.add('hidden');
+                document.getElementById('lobby-room').classList.remove('hidden');
+                document.getElementById('host-controls').classList.remove('hidden');
+                document.getElementById('room-id-display').innerText = `Game ID: ${id}`;
+                
+                new QRCode(document.getElementById("qr-container"), {
+                    text: id, width: 128, height: 128, colorDark: "#000000", colorLight: "#ffffff"
+                });
+
+                // Add self to players
+                Engine.state.players.push({ id: id, name: App.localName, isHost: true, isBot: false });
+                Engine.broadcast();
+                Bot.start();
+            } else {
+                Net.connectToHost(document.getElementById('join-id').value.trim());
+            }
+        });
+
+        App.peer.on('connection', (conn) => {
+            if (!App.isHost) return; // Only host accepts connections
+            conn.on('data', (data) => {
+                if (data.type === 'JOIN') {
+                    App.connections[conn.peer] = conn;
+                    Engine.state.players.push({ id: conn.peer, name: data.name, isHost: false, isBot: false });
+                    Engine.sysLog(`${data.name} joined the lobby.`);
+                    Engine.broadcast();
+                } else {
+                    Engine.processAction(data, conn.peer);
+                }
+            });
+            conn.on('close', () => {
+                Engine.state.players = Engine.state.players.filter(p => p.id !== conn.peer);
+                delete App.connections[conn.peer];
+                Engine.sysLog(`A player disconnected.`);
+                Engine.broadcast();
+            });
+        });
+    },
+
+    connectToHost: (hostId) => {
+        if (!hostId) return alert("Enter a Game ID");
+        App.hostConn = App.peer.connect(hostId);
+        
+        App.hostConn.on('open', () => {
+            document.getElementById('lobby-init').classList.add('hidden');
+            document.getElementById('lobby-room').classList.remove('hidden');
+            document.getElementById('client-waiting').classList.remove('hidden');
+            document.getElementById('room-id-display').innerText = `Connected to: ${hostId}`;
+            
+            App.hostConn.send({ type: 'JOIN', name: App.localName });
+        });
+
+        App.hostConn.on('data', (data) => {
+            if (data.type === 'STATE_UPDATE') {
+                App.gameState = data.state;
+                UI.render(data.state);
+            }
+        });
+        
+        App.hostConn.on('error', err => alert("Connection error: " + err));
+    },
+
+    sendAction: (action) => {
+        if (App.isHost) {
+            Engine.processAction(action, App.localId);
+        } else if (App.hostConn && App.hostConn.open) {
+            App.hostConn.send(action);
+        }
+    }
+};
+
+// --- UI & RENDERING ---
+const UI = {
+    elements: {},
+    
+    init: () => {
+        // Bind Lobby Buttons
+        document.getElementById('btn-host').onclick = () => { App.isHost = true; Net.init(document.getElementById('player-name').value); };
+        document.getElementById('btn-join').onclick = () => { App.isHost = false; Net.init(document.getElementById('player-name').value); };
+        
+        document.getElementById('btn-add-bot').onclick = () => {
+            let diff = parseInt(document.getElementById('bot-difficulty').value);
+            let name = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)] + ` (Bot)`;
+            Engine.state.players.push({ id: Utils.uuid(), name: name, isHost: false, isBot: true, botDifficulty: diff });
+            Engine.broadcast();
+        };
+
+        document.getElementById('btn-start-game').onclick = () => Engine.startGame();
+
+        // Bind Game Controls
+        document.getElementById('btn-toggle-anim').onclick = (e) => {
+            App.animEnabled = !App.animEnabled;
+            e.target.innerText = `Anim: ${App.animEnabled ? 'ON' : 'OFF'}`;
+        };
+
+        document.getElementById('chat-toggle').onclick = () => document.getElementById('chat-drawer').classList.toggle('open');
+        document.getElementById('chat-send').onclick = UI.sendChat;
+        document.getElementById('chat-input').onkeypress = (e) => { if(e.key === 'Enter') UI.sendChat(); };
+
+        document.getElementById('btn-return-lobby').onclick = () => location.reload(); // Simple reset
+
+        // Table clicks for slapping
+        document.getElementById('card-layer').addEventListener('click', UI.handleCardClick);
+    },
+
+    sendChat: () => {
+        let input = document.getElementById('chat-input');
+        if (input.value.trim()) {
+            Net.sendAction({ type: 'CHAT', msg: input.value.trim() });
+            input.value = '';
+        }
+    },
+
+    createCardDOM: (card) => {
+        let el = document.createElement('div');
+        el.id = card.id;
+        el.className = `card ${card.isRed ? 'red' : 'black'}`;
+        
+        let front = document.createElement('div');
+        front.className = 'card-face card-front';
+        front.innerHTML = `<div class="val">${card.value}</div><div class="suit">${card.suit}</div><div class="val bottom">${card.value}</div>`;
+        
+        let back = document.createElement('div');
+        back.className = 'card-face card-back';
+        
+        el.appendChild(front);
+        el.appendChild(back);
+        document.getElementById('card-layer').appendChild(el);
+        return el;
+    },
+
+    render: (state) => {
+        App.gameState = state;
+        
+        // Lobby Render
+        if (state.phase === 'lobby') {
+            let list = document.getElementById('lobby-players');
+            list.innerHTML = '';
+            state.players.forEach(p => {
+                let item = document.createElement('div');
+                item.className = 'player-item';
+                item.innerText = p.name + (p.isHost ? ' (Host)' : '');
+                list.appendChild(item);
+            });
+            return;
+        }
+
+        // Switch to Game View
+        document.getElementById('lobby').classList.add('hidden');
+        document.getElementById('game-view').classList.remove('hidden');
+
+        // Update Phase Display
+        document.getElementById('phase-display').innerText = `Phase: ${state.phase.toUpperCase()}`;
+
+        // Render Chat/Logs
+        let chatBox = document.getElementById('chat-messages');
+        chatBox.innerHTML = '';
+        state.logs.forEach(l => {
+            let d = document.createElement('div');
+            if (l.type === 'sys') { d.className = 'msg-sys'; d.innerText = l.msg; }
+            else if (l.type === 'pirate') { d.className = 'msg-pirate'; d.innerHTML = `<strong>${l.name}:</strong> ${l.msg}`; }
+            else { d.className = 'msg-chat'; d.innerHTML = `<strong>${l.name}:</strong> ${l.msg}`; }
+            chatBox.appendChild(d);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Calculate Layout
+        let cx = window.innerWidth / 2;
+        let cy = window.innerHeight / 2;
+        let rx = window.innerWidth * 0.35;
+        let ry = window.innerHeight * 0.3;
+
+        let localPlayerIndex = state.players.findIndex(p => p.id === App.localId);
+        if (localPlayerIndex === -1) localPlayerIndex = 0; // Spectator fallback
+
+        // Render Player Info Tags
+        document.querySelectorAll('.player-info').forEach(e => e.remove());
+
+        state.players.forEach((p, i) => {
+            // Calculate relative position (local player always at bottom: angle 90 deg)
+            let relIndex = (i - localPlayerIndex + state.players.length) % state.players.length;
+            let angle = (Math.PI / 2) + (relIndex * (2 * Math.PI / state.players.length));
+            
+            let px = cx + Math.cos(angle) * rx;
+            let py = cy + Math.sin(angle) * ry;
+
+            // Add Info Tag
+            let info = document.createElement('div');
+            info.className = `player-info ${i === state.turnIndex ? 'active-turn' : ''}`;
+            info.style.left = `${px}px`;
+            info.style.top = `${py - 60}px`;
+            info.innerText = `${p.name} ${p.score !== undefined ? '(Score: '+p.score+')' : ''}`;
+            document.getElementById('ui-layer').appendChild(info);
+
+            // Position Cards
+            let pCards = [...p.hand, ...p.penaltyCards];
+            pCards.forEach((c, cIdx) => {
+                let el = document.getElementById(c.id) || UI.createCardDOM(c);
+                if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
+                
+                // 2x2 grid roughly
+                let ox = (cIdx % 2 === 0 ? -35 : 35);
+                let oy = (Math.floor(cIdx / 2) * 45);
+                
+                el.style.left = `${px + ox - 30}px`; // -30 to center card width
+                el.style.top = `${py + oy - 42}px`;
+                el.style.zIndex = cIdx;
+
+                // Face up logic
+                let isFaceUp = c.isFaceUp || App.uiState.peekedCards.has(c.id);
+                if (state.phase === 'game_over') isFaceUp = true;
+                
+                if (isFaceUp) el.classList.remove('face-down');
+                else el.classList.add('face-down');
+
+                // Targeting highlights
+                el.classList.remove('targetable', 'highlight');
+                if (App.uiState.targetingMode && p.id !== App.localId && App.uiState.targetingMode === 'force_penalty') {
+                    // Highlight opponent cards to select player
+                    el.classList.add('targetable');
+                } else if (App.uiState.targetingMode) {
+                    el.classList.add('targetable');
+                }
+            });
+        });
+
+        // Render Deck
+        state.deck.forEach((c, i) => {
+            let el = document.getElementById(c.id) || UI.createCardDOM(c);
+            if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
+            el.style.left = `${cx - 40 - 30}px`;
+            el.style.top = `${cy - 42 - (i*0.5)}px`;
+            el.style.zIndex = i;
+            el.classList.add('face-down');
+            el.classList.remove('targetable', 'highlight');
+        });
+
+        // Render Discard
+        state.discardPile.forEach((c, i) => {
+            let el = document.getElementById(c.id) || UI.createCardDOM(c);
+            if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
+            el.style.left = `${cx + 40 - 30}px`;
+            el.style.top = `${cy - 42}px`;
+            el.style.zIndex = i;
+            el.classList.remove('face-down', 'targetable', 'highlight');
+            // Slight random rotation for messy pile
+            if (!el.dataset.rot) el.dataset.rot = (Math.random() * 20 - 10);
+            el.style.transform = `rotate(${el.dataset.rot}deg)`;
+        });
+
+        // Render Holding Card (Active Ability)
+        if (state.activeAbility && state.activeAbility.card) {
+            let c = state.activeAbility.card;
+            let el = document.getElementById(c.id) || UI.createCardDOM(c);
+            el.style.left = `${cx - 30}px`;
+            el.style.top = `${cy + 100}px`;
+            el.style.zIndex = 1000;
+            el.style.transform = `scale(1.5)`;
+            
+            // Only show face to the owner unless it's a public magic resolution
+            if (state.activeAbility.player === App.localId || state.activeAbility.step > 0) {
+                el.classList.remove('face-down');
+            } else {
+                el.classList.add('face-down');
+            }
+        }
+
+        UI.updateControls(state);
+
+        if (state.phase === 'game_over') {
+            document.getElementById('modal-gameover').classList.remove('hidden');
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            let res = state.players.map(p => `${p.name}: ${p.score}`).join('<br>');
+            document.getElementById('gameover-results').innerHTML = res;
+        }
+    },
+
+    updateControls: (state) => {
+        let controls = document.getElementById('action-controls');
+        controls.innerHTML = '';
+        controls.classList.add('hidden');
+
+        let isMyTurn = state.players[state.turnIndex]?.id === App.localId;
+        let me = state.players.find(p => p.id === App.localId);
+
+        if (state.phase === 'peek' && me && !me.ready) {
+            controls.classList.remove('hidden');
+            let btn = document.createElement('button');
+            btn.innerText = "Ready (Finished Peeking)";
+            btn.onclick = () => {
+                App.uiState.peekedCards.clear();
+                Net.sendAction({ type: 'READY_PEEK' });
+            };
+            controls.appendChild(btn);
+            return;
+        }
+
+        if (state.phase === 'play' || state.phase === 'orbit') {
+            if (isMyTurn && !state.activeAbility) {
+                controls.classList.remove('hidden');
+                
+                let btnDeck = document.createElement('button');
+                btnDeck.innerText = "Draw Deck";
+                btnDeck.onclick = () => Net.sendAction({ type: 'DRAW_DECK' });
+                controls.appendChild(btnDeck);
+
+                if (state.discardPile.length > 0) {
+                    let btnDisc = document.createElement('button');
+                    btnDisc.innerText = "Draw Discard";
+                    btnDisc.onclick = () => Net.sendAction({ type: 'DRAW_DISCARD' });
+                    controls.appendChild(btnDisc);
+                }
+
+                if (state.phase === 'play') {
+                    let btnBaz = document.createElement('button');
+                    btnBaz.innerText = "Call BAZUNGA";
+                    btnBaz.className = "secondary";
+                    btnBaz.onclick = () => Net.sendAction({ type: 'CALL_BAZUNGA' });
+                    controls.appendChild(btnBaz);
+                }
+            }
+
+            // Handle Active Ability UI for local player
+            if (state.activeAbility && state.activeAbility.player === App.localId) {
+                controls.classList.remove('hidden');
+                let ab = state.activeAbility;
+
+                if (ab.type.startsWith('holding')) {
+                    let btnPlay = document.createElement('button');
+                    btnPlay.innerText = MAGIC_VALUES.includes(ab.card.value) && ab.type === 'holding' ? "Play Magic" : "Discard";
+                    btnPlay.onclick = () => Net.sendAction({ type: 'PLAY_HOLDING', action: 'discard' });
+                    controls.appendChild(btnPlay);
+
+                    let btnSwap = document.createElement('button');
+                    btnSwap.innerText = "Swap with Layout";
+                    btnSwap.onclick = () => {
+                        App.uiState.targetingMode = 'swap';
+                        UI.showFloatingText("Select a card to swap");
+                    };
+                    controls.appendChild(btnSwap);
+                } else if (ab.step === 1) {
+                    // Magic Resolution
+                    let mType = ab.type;
+                    if (mType === 'magic_9') {
+                        App.uiState.targetingMode = 'peek_self';
+                        UI.showFloatingText("Select your card to peek");
+                    } else if (mType === 'magic_10') {
+                        App.uiState.targetingMode = 'peek_opp';
+                        UI.showFloatingText("Select opponent card to peek");
+                    } else if (mType === 'magic_J') {
+                        App.uiState.targetingMode = 'blind_swap_1';
+                        UI.showFloatingText("Select 1st card to swap");
+                    } else if (mType === 'magic_Q') {
+                        App.uiState.targetingMode = 'peek_any';
+                        UI.showFloatingText("Select any card to peek");
+                    } else if (mType === 'magic_K') {
+                        App.uiState.targetingMode = 'force_penalty';
+                        UI.showFloatingText("Select an opponent to penalize");
+                    }
+                }
+            }
+        }
+    },
+
+    showFloatingText: (msg) => {
+        let el = document.createElement('div');
+        el.className = 'floating-text';
+        el.innerText = msg;
+        el.style.left = '50%';
+        el.style.top = '30%';
+        el.style.transform = 'translate(-50%, -50%)';
+        document.getElementById('ui-layer').appendChild(el);
+        setTimeout(() => el.remove(), 1000);
+    },
+
+    handleCardClick: (e) => {
+        let cardEl = e.target.closest('.card');
+        if (!cardEl) return;
+        let cardId = cardEl.id;
+        let state = App.gameState;
+        if (!state) return;
+
+        let now = Utils.timestamp();
+        let isDoubleClick = (now - App.lastClickTime) < 300;
+        App.lastClickTime = now;
+
+        let clickedCard = null;
+        // Find card in state
+        [...state.deck, ...state.discardPile].forEach(c => { if(c.id === cardId) clickedCard = c; });
+        state.players.forEach(p => { [...p.hand, ...p.penaltyCards].forEach(c => { if(c.id === cardId) clickedCard = c; }); });
+        if (state.activeAbility && state.activeAbility.card && state.activeAbility.card.id === cardId) clickedCard = state.activeAbility.card;
+
+        if (!clickedCard) return;
+
+        // 1. Slapping Logic (Double Click on layout card)
+        if (isDoubleClick && (state.phase === 'play' || state.phase === 'orbit') && (clickedCard.loc === 'hand' || clickedCard.loc === 'penalty')) {
+            Net.sendAction({ type: 'SLAP', targetId: cardId, timestamp: now });
+            return;
+        }
+
+        // 2. Peek Phase Logic
+        if (state.phase === 'peek' && clickedCard.ownerId === App.localId) {
+            // Allow peeking bottom 2 cards (index 2 and 3 in hand)
+            let me = state.players.find(p => p.id === App.localId);
+            let idx = me.hand.findIndex(c => c.id === cardId);
+            if (idx >= 2) {
+                App.uiState.peekedCards.add(cardId);
+                UI.render(state); // re-render to show face
+                setTimeout(() => {
+                    App.uiState.peekedCards.delete(cardId);
+                    UI.render(state);
+                }, 2000);
+            }
+            return;
+        }
+
+        // 3. Targeting Logic
+        if (App.uiState.targetingMode) {
+            let mode = App.uiState.targetingMode;
+            
+            if (mode === 'swap' && clickedCard.ownerId === App.localId) {
+                Net.sendAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: cardId });
+                App.uiState.targetingMode = null;
+            } 
+            else if (mode === 'peek_self' && clickedCard.ownerId === App.localId) {
+                App.uiState.peekedCards.add(cardId);
+                UI.render(state);
+                setTimeout(() => { App.uiState.peekedCards.delete(cardId); Net.sendAction({ type: 'RESOLVE_MAGIC' }); }, 2000);
+                App.uiState.targetingMode = null;
+            }
+            else if (mode === 'peek_opp' && clickedCard.ownerId !== App.localId && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
+                App.uiState.peekedCards.add(cardId);
+                UI.render(state);
+                setTimeout(() => { App.uiState.peekedCards.delete(cardId); Net.sendAction({ type: 'RESOLVE_MAGIC' }); }, 2000);
+                App.uiState.targetingMode = null;
+            }
+            else if (mode === 'peek_any' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
+                App.uiState.peekedCards.add(cardId);
+                UI.render(state);
+                App.uiState.targetingMode = null;
+                
+                // Ask if want to swap
+                setTimeout(() => {
+                    App.uiState.peekedCards.delete(cardId);
+                    UI.render(state);
+                    if (confirm("Do you want to swap this card with one of yours?")) {
+                        App.uiState.targetingMode = 'q_swap_target';
+                        App.uiState.selectedCardId = cardId; // the opponent card
+                        UI.showFloatingText("Select your card to swap");
+                    } else {
+                        Net.sendAction({ type: 'RESOLVE_MAGIC' });
+                    }
+                }, 2000);
+            }
+            else if (mode === 'q_swap_target' && clickedCard.ownerId === App.localId) {
+                Net.sendAction({ type: 'RESOLVE_MAGIC', swapTarget1: App.uiState.selectedCardId, swapTarget2: cardId });
+                App.uiState.targetingMode = null;
+            }
+            else if (mode === 'blind_swap_1' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
+                App.uiState.selectedCardId = cardId;
+                App.uiState.targetingMode = 'blind_swap_2';
+                UI.showFloatingText("Select 2nd card");
+            }
+            else if (mode === 'blind_swap_2' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
+                Net.sendAction({ type: 'RESOLVE_MAGIC', swapTarget1: App.uiState.selectedCardId, swapTarget2: cardId });
+                App.uiState.targetingMode = null;
+            }
+            else if (mode === 'force_penalty' && clickedCard.ownerId !== App.localId && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
+                Net.sendAction({ type: 'RESOLVE_MAGIC', targetPlayerId: clickedCard.ownerId });
+                App.uiState.targetingMode = null;
+            }
+        }
+    }
+};
+
+// --- BOOTSTRAP ---
+window.onload = () => {
+    UI.init();
+};
+
+</script>
+</body>
+</html>

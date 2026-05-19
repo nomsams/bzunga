@@ -13,11 +13,10 @@
             --table-center: #064e3b;
             --table-edge: #022c22;
             --table-border: #78350f;
-            --card-w: 64px;
-            --card-h: 90px;
+            --card-w: 60px;
+            --card-h: 84px;
             --text-light: #f8fafc;
             --accent: #fbbf24;
-            --accent-hover: #f59e0b;
             --danger: #ef4444;
             --info: #38bdf8;
             --success: #10b981;
@@ -32,9 +31,9 @@
         
         /* Lobby */
         #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; text-align: center; background: radial-gradient(circle at top, #1e293b 0%, var(--bg-color) 100%); z-index: 100; position: absolute; top:0; left:0; width: 100%; }
-        .lobby-box { background: var(--surface); padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); max-width: 420px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
-        h1 { color: var(--accent); margin-bottom: 25px; font-size: 3rem; font-weight: 800; text-shadow: 0 4px 10px rgba(0,0,0,0.5); letter-spacing: 2px; }
-        input, select, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: none; font-size: 1rem; font-weight: 600; transition: all 0.2s; }
+        .lobby-box { background: var(--surface); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); max-width: 420px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
+        h1 { color: var(--accent); margin-bottom: 20px; font-size: 2.5rem; font-weight: 800; text-shadow: 0 4px 10px rgba(0,0,0,0.5); letter-spacing: 2px; }
+        input, select, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none; font-size: 1rem; font-weight: 600; transition: all 0.2s; }
         input, select { background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); outline: none; }
         input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2); }
         button { background: var(--accent); color: #000; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
@@ -43,35 +42,38 @@
         button.secondary { background: #475569; color: white; }
         button.danger { background: var(--danger); color: white; }
         
-        #qr-container { background: white; padding: 15px; display: inline-block; margin: 20px 0; border-radius: 12px; }
-        .player-list { text-align: left; margin-top: 20px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 5px; }
-        .player-item { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
+        #qr-container { background: white; padding: 15px; display: inline-block; margin: 15px 0; border-radius: 12px; }
+        .player-list { text-align: left; margin-top: 15px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 5px; }
+        .player-item { padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
         
         /* Game Table */
         #game-view { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; perspective: 1200px; }
-        #table { width: 96%; height: 88%; background: radial-gradient(circle, var(--table-center) 0%, var(--table-edge) 100%); border-radius: 50%; border: 20px solid var(--table-border); position: relative; box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 30px 60px rgba(0,0,0,0.8); }
-        #table::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,0.05); pointer-events: none; }
+        #table { width: 96%; height: 88%; background: radial-gradient(circle, var(--table-center) 0%, var(--table-edge) 100%); border-radius: 50%; border: 15px solid var(--table-border); position: relative; box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 30px 60px rgba(0,0,0,0.8); }
         
-        /* Cards (Decoupled 3D Flip & Scaling) */
+        /* Cards */
         #card-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
         .card { width: var(--card-w); height: var(--card-h); position: absolute; transition: left 0.4s cubic-bezier(0.22, 1, 0.36, 1), top 0.4s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s; pointer-events: auto; cursor: pointer; border-radius: 6px; transform-origin: center center; box-shadow: 2px 4px 10px rgba(0,0,0,0.4); }
         .card.no-anim { transition: none !important; }
         .card.no-anim .card-inner { transition: none !important; }
         
-        .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 2px 4px 10px rgba(0,0,0,0.4); border-radius: 6px; }
+        .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius: 6px; }
         .card-inner.is-flipped { transform: rotateY(180deg); }
         
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 6px; border: 1px solid #cbd5e1; display: flex; flex-direction: column; justify-content: space-between; padding: 4px; background: #fff; }
         .card-back { background: repeating-linear-gradient(45deg, #1e293b, #1e293b 10px, #0f172a 10px, #0f172a 20px); transform: rotateY(180deg); border: 2px solid #e2e8f0; }
         .card-back::after { content: 'B'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.1); font-size: 2rem; font-weight: bold; }
         
-        .card .val { font-size: 1.3rem; font-weight: 800; line-height: 1; }
-        .card .suit { font-size: 1.8rem; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; }
+        .card .val { font-size: 1.2rem; font-weight: 800; line-height: 1; }
+        .card .suit { font-size: 1.6rem; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; }
         .card .val.bottom { transform: rotate(180deg); }
         .card.red .card-front { color: #ef4444; }
         .card.black .card-front { color: #1e293b; }
         
-        /* Targeting & Selection VFX (Applied to outer .card) */
+        /* Disconnected State */
+        .card.disconnected { filter: grayscale(100%) opacity(0.5); pointer-events: none; }
+        .player-badge.disconnected { filter: grayscale(100%) opacity(0.5); }
+
+        /* Targeting & Selection VFX */
         .card.targetable { transform: scale(1.05); z-index: 100 !important; }
         .card.targetable .card-inner { box-shadow: 0 0 0 3px var(--info), 0 0 20px var(--info); animation: pulse-target 1.5s infinite; }
         .card.selected-target { transform: translateY(-15px) scale(1.1) !important; z-index: 105 !important; }
@@ -79,37 +81,37 @@
         .card.deck-glow .card-inner { box-shadow: 0 0 15px var(--success); }
         .card.holding-card { transform: scale(1.3) !important; z-index: 1000 !important; }
         
+        /* Highlight Recent Action */
+        .card.highlight-recent .card-inner { box-shadow: 0 0 15px 5px var(--accent); animation: pulse-recent 2s infinite; }
+        
         @keyframes pulse-target { 0% { box-shadow: 0 0 10px 2px var(--info); } 50% { box-shadow: 0 0 20px 6px var(--info); } 100% { box-shadow: 0 0 10px 2px var(--info); } }
+        @keyframes pulse-recent { 0%, 100% { box-shadow: 0 0 10px var(--accent); } 50% { box-shadow: 0 0 25px var(--accent); } }
 
         /* UI Overlays */
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; display: flex; flex-direction: column; justify-content: space-between; }
         
         /* Status Banner */
-        #status-banner { background: rgba(0,0,0,0.85); color: white; text-align: center; padding: 12px 20px; font-size: 1.1rem; font-weight: 600; backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,0.1); pointer-events: auto; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        #status-text { flex: 1; text-align: center; color: var(--accent); letter-spacing: 0.5px; }
+        #status-banner { background: rgba(0,0,0,0.85); color: white; text-align: center; padding: 10px 15px; font-size: 1rem; font-weight: 600; backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,0.1); pointer-events: auto; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        #status-text { flex: 1; text-align: center; color: var(--accent); letter-spacing: 0.5px; font-size: 0.9rem; }
         
         /* Player Badges */
-        .player-badge { position: absolute; background: var(--surface); padding: 8px 16px; border-radius: 12px; font-size: 0.9rem; pointer-events: none; text-align: center; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.3s; backdrop-filter: blur(4px); }
+        .player-badge { position: absolute; background: var(--surface); padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; pointer-events: none; text-align: center; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.3s; backdrop-filter: blur(4px); white-space: nowrap; }
         .player-badge .name { font-weight: 600; }
-        .player-badge .meta { font-size: 0.75rem; color: #94a3b8; }
-        .player-badge .turn-text { display: none; color: var(--accent); font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 2px; }
-        
-        /* Elegant Active Turn Indicator */
+        .player-badge .meta { font-size: 0.7rem; color: #94a3b8; }
+        .player-badge .turn-text { display: none; color: var(--accent); font-size: 0.6rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 2px; }
         .player-badge.active-turn { border-color: var(--accent); background: rgba(251, 191, 36, 0.15); box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); transform: translate(-50%, -50%) scale(1.08); z-index: 50; }
         .player-badge.active-turn .turn-text { display: block; }
         .player-badge.bazunga { background: var(--danger); border-color: #fff; animation: pulse-danger 1s infinite; }
-        
-        @keyframes pulse-danger { 0%, 100% { box-shadow: 0 0 10px var(--danger); } 50% { box-shadow: 0 0 30px var(--danger); } }
 
         /* Action Bar */
-        #action-bar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 12px 20px; border-radius: 16px; display: flex; gap: 10px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 200; pointer-events: auto; backdrop-filter: blur(10px); transition: bottom 0.3s, opacity 0.3s; }
+        #action-bar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 10px 15px; border-radius: 16px; display: flex; gap: 8px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 200; pointer-events: auto; backdrop-filter: blur(10px); transition: bottom 0.3s, opacity 0.3s; flex-wrap: wrap; width: max-content; max-width: 95vw; }
         #action-bar.hidden { bottom: -100px; opacity: 0; pointer-events: none; display: flex !important; }
-        #action-bar button { margin: 0; padding: 10px 20px; font-size: 1rem; border-radius: 10px; white-space: nowrap; }
+        #action-bar button { margin: 0; padding: 8px 16px; font-size: 0.9rem; border-radius: 8px; white-space: nowrap; }
         #action-bar button.primary { background: var(--success); color: white; }
 
         /* Toasts */
-        #toast-container { position: absolute; top: 70px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 300; pointer-events: none; }
-        .toast { background: var(--surface); color: white; padding: 12px 20px; border-radius: 8px; border-left: 4px solid var(--info); box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.9rem; animation: slideInRight 0.3s forwards, fadeOut 0.3s 4.7s forwards; backdrop-filter: blur(4px); max-width: 320px; line-height: 1.4; }
+        #toast-container { position: absolute; top: 60px; right: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 300; pointer-events: none; }
+        .toast { background: var(--surface); color: white; padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--info); box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; animation: slideInRight 0.3s forwards, fadeOut 0.3s 4.7s forwards; backdrop-filter: blur(4px); max-width: 280px; line-height: 1.3; }
         .toast.success { border-color: var(--success); }
         .toast.danger { border-color: var(--danger); }
         .toast.warning { border-color: var(--accent); }
@@ -118,40 +120,42 @@
         @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
 
         /* Visual Effects */
-        .vfx-slap { position: absolute; font-size: 3.5rem; font-weight: 900; color: var(--accent); text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000; pointer-events: none; z-index: 400; transform: translate(-50%, -50%) scale(0); animation: slapPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .vfx-slap { position: absolute; font-size: 3rem; font-weight: 900; color: var(--accent); text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; pointer-events: none; z-index: 400; transform: translate(-50%, -50%) scale(0); animation: slapPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .vfx-slap.miss { color: var(--danger); }
         @keyframes slapPop { 0% { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 0; } }
 
         /* Chat Drawer */
-        #chat-fab { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 25px; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 90; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
-        #chat-fab:hover { background: rgba(255,255,255,0.2); }
-        #chat-drawer { position: fixed; right: -320px; top: 0; width: 320px; height: 100vh; background: rgba(15, 23, 42, 0.95); border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 250; display: flex; flex-direction: column; pointer-events: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
+        #chat-fab { position: fixed; bottom: 80px; right: 15px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 90; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; }
+        #chat-drawer { position: fixed; right: -300px; top: 0; width: 300px; height: 100vh; background: rgba(15, 23, 42, 0.95); border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.3s; z-index: 250; display: flex; flex-direction: column; pointer-events: auto; backdrop-filter: blur(10px); }
         #chat-drawer.open { right: 0; }
-        .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .chat-header h3 { margin: 0; color: var(--text-light); font-size: 1.1rem; }
-        #chat-close { background: transparent; color: #94a3b8; border: none; font-size: 1.5rem; cursor: pointer; padding: 0; width: auto; box-shadow: none; }
-        #chat-messages { flex: 1; overflow-y: auto; padding: 15px; font-size: 0.9rem; display: flex; flex-direction: column; gap: 10px; }
-        .msg-sys { color: #64748b; font-style: italic; font-size: 0.8rem; text-align: center; }
-        .msg-chat { color: #e2e8f0; background: rgba(255,255,255,0.05); padding: 10px 12px; border-radius: 8px; border-bottom-left-radius: 0; }
+        .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        #chat-messages { flex: 1; overflow-y: auto; padding: 15px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 8px; }
+        .msg-sys { color: #64748b; font-style: italic; font-size: 0.75rem; text-align: center; }
+        .msg-chat { color: #e2e8f0; background: rgba(255,255,255,0.05); padding: 8px 10px; border-radius: 8px; border-bottom-left-radius: 0; }
         .msg-chat strong { color: var(--accent); }
-        .msg-pirate { color: #e2e8f0; background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); padding: 10px 12px; border-radius: 0 8px 8px 0; }
+        .msg-pirate { color: #e2e8f0; background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); padding: 8px 10px; border-radius: 0 8px 8px 0; }
         .msg-pirate strong { color: var(--danger); }
-        #chat-input-container { display: flex; padding: 15px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05); }
-        #chat-input { flex: 1; margin: 0; border-radius: 8px 0 0 8px; padding: 10px 15px; font-size: 0.9rem; }
-        #chat-send { width: auto; margin: 0; border-radius: 0 8px 8px 0; padding: 0 20px; font-size: 0.9rem; }
+        #chat-input-container { display: flex; padding: 10px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05); }
+        #chat-input { flex: 1; margin: 0; border-radius: 8px 0 0 8px; padding: 8px 12px; font-size: 0.85rem; }
+        #chat-send { width: auto; margin: 0; border-radius: 0 8px 8px 0; padding: 0 15px; font-size: 0.85rem; }
 
         /* Modals & Endgame */
         #modal-overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:400; backdrop-filter: blur(5px); }
-        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); padding: 35px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); z-index: 410; text-align: center; pointer-events: auto; min-width: 340px; max-width: 90vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
-        .modal h2 { color: var(--accent); margin-bottom: 15px; font-size: 2rem; }
-        .modal-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 25px; flex-wrap: wrap; }
+        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); z-index: 410; text-align: center; pointer-events: auto; min-width: 300px; max-width: 90vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
+        .modal h2 { color: var(--accent); margin-bottom: 10px; font-size: 1.8rem; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
         
         /* Score Table */
-        .score-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; }
-        .score-table th, .score-table td { padding: 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .score-table th { background: rgba(0,0,0,0.4); color: var(--accent); font-weight: 600; }
-        .score-table tr:last-child td { border-bottom: none; }
-        .score-winner { background: rgba(16, 185, 129, 0.2); font-weight: bold; color: var(--success); }
+        .endgame-player { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
+        .endgame-player.winner { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
+        .endgame-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+        .endgame-name { font-weight: bold; font-size: 1rem; color: var(--accent); }
+        .endgame-score { font-size: 1.1rem; font-weight: 800; }
+        .endgame-cards { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+        .mini-card { width: 28px; height: 40px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; border: 1px solid #ccc; }
+        .mini-card.red { color: var(--danger); }
+        .mini-card.black { color: #000; }
+        .endgame-math { font-size: 0.75rem; color: #94a3b8; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -163,20 +167,20 @@
             <h1>BAZUNGA</h1>
             <input type="text" id="player-name" placeholder="Enter your name" maxlength="12">
             <button id="btn-host">Create Game</button>
-            <div style="margin: 20px 0; color: #64748b; font-weight: 600; font-size: 0.9rem;">OR JOIN EXISTING</div>
+            <div style="margin: 15px 0; color: #64748b; font-weight: 600; font-size: 0.85rem;">OR JOIN EXISTING</div>
             <input type="text" id="join-id" placeholder="Paste Game ID">
             <button id="btn-join" class="secondary">Join Game</button>
         </div>
 
         <div class="lobby-box hidden" id="lobby-room">
             <h2 style="color: white; margin-bottom: 10px;">Game Lobby</h2>
-            <div id="room-id-display" style="font-family: monospace; background: rgba(0,0,0,0.5); padding: 12px; border-radius: 8px; margin-bottom: 10px; word-break: break-all; color: var(--accent); font-size: 1.1rem; letter-spacing: 1px;"></div>
+            <div id="room-id-display" style="font-family: monospace; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; margin-bottom: 10px; word-break: break-all; color: var(--accent); font-size: 1rem; letter-spacing: 1px;"></div>
             <div id="qr-container"></div>
             
             <div class="player-list" id="lobby-players"></div>
             
-            <div id="host-controls" class="hidden" style="margin-top: 20px;">
-                <div style="display: flex; gap: 10px;">
+            <div id="host-controls" class="hidden" style="margin-top: 15px;">
+                <div style="display: flex; gap: 8px;">
                     <select id="bot-difficulty" style="flex: 2; margin: 0;">
                         <option value="1">Easy Bot</option>
                         <option value="2">Medium Bot</option>
@@ -186,9 +190,9 @@
                     </select>
                     <button id="btn-add-bot" class="secondary" style="flex: 1; margin: 0;">+ Bot</button>
                 </div>
-                <button id="btn-start-game" style="margin-top: 20px; font-size: 1.2rem; padding: 15px;">START GAME</button>
+                <button id="btn-start-game" style="margin-top: 15px; font-size: 1.1rem; padding: 12px;">START GAME</button>
             </div>
-            <div id="client-waiting" class="hidden" style="margin-top: 20px; color: var(--info); font-weight: 600;">Waiting for Host to start...</div>
+            <div id="client-waiting" class="hidden" style="margin-top: 15px; color: var(--info); font-weight: 600;">Waiting for Host to start...</div>
         </div>
     </div>
 
@@ -200,9 +204,9 @@
         <div id="ui-layer">
             <!-- Status Banner -->
             <div id="status-banner">
-                <div style="font-size: 0.8rem; color: #94a3b8; font-weight:800;" id="phase-display">PHASE</div>
+                <div style="font-size: 0.75rem; color: #94a3b8; font-weight:800;" id="phase-display">PHASE</div>
                 <div id="status-text">Waiting for players...</div>
-                <button id="btn-toggle-anim" class="secondary" style="width: auto; padding: 4px 10px; font-size: 0.75rem; margin: 0; border-radius: 6px;">Anim: ON</button>
+                <button id="btn-toggle-anim" class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Anim: ON</button>
             </div>
             
             <div id="toast-container"></div>
@@ -215,8 +219,8 @@
         <button id="chat-fab">💬</button>
         <div id="chat-drawer">
             <div class="chat-header">
-                <h3>Game Log</h3>
-                <button id="chat-close">✖</button>
+                <h3 style="margin:0; color:white; font-size:1rem;">Game Log</h3>
+                <button id="chat-close" style="background:none; border:none; color:white; font-size:1.2rem;">✖</button>
             </div>
             <div id="chat-messages"></div>
             <div id="chat-input-container">
@@ -229,17 +233,14 @@
     <!-- HTML Modals -->
     <div id="modal-overlay" class="hidden"></div>
     
-    <div id="modal-custom" class="modal hidden">
-        <h2 id="modal-title">Attention</h2>
-        <p id="modal-body" style="margin-bottom: 20px; color: #cbd5e1; font-size: 1.1rem;"></p>
-        <div class="modal-buttons" id="modal-btns"></div>
-    </div>
-
     <div id="modal-gameover" class="modal hidden">
-        <h2 style="font-size: 2.5rem; margin-bottom: 5px; color: var(--accent);">GAME OVER</h2>
-        <h3 id="gameover-winner" style="color: var(--success); margin-bottom: 20px; font-size: 1.5rem;"></h3>
-        <div id="gameover-results" style="text-align: left; margin-bottom: 25px;"></div>
-        <button id="btn-return-lobby" class="primary">Return to Lobby</button>
+        <h2 style="font-size: 2rem; margin-bottom: 5px; color: var(--accent);">GAME OVER</h2>
+        <h3 id="gameover-winner" style="color: var(--success); margin-bottom: 15px; font-size: 1.2rem;"></h3>
+        <div id="gameover-results" style="text-align: left; margin-bottom: 20px;"></div>
+        <div class="modal-buttons">
+            <button id="btn-hide-gameover" class="secondary">View Table</button>
+            <button id="btn-return-lobby" class="primary">Return to Lobby</button>
+        </div>
     </div>
 </div>
 
@@ -282,8 +283,11 @@ const App = {
     uiState: {
         targetingMode: null,
         selectedCardId: null,
-        peekedCards: new Set()
+        peekedCards: new Set(),
+        showingResults: false
     },
+    lastClickedCardId: null,
+    lastClickTime: 0,
     botInterval: null
 };
 
@@ -301,7 +305,8 @@ const Engine = {
         activeAbility: null,
         lastSlapTime: 0,
         lastSlapTargetId: null,
-        lastSlap: null
+        lastSlap: null,
+        lastActionTargetId: null // For highlight-recent
     },
     botMemory: {}, // Tracks by slot: { [botId]: { [ownerId_slot]: { value, isRed, numVal, time } } }
 
@@ -364,6 +369,7 @@ const Engine = {
         Engine.state.lastSlapTime = 0;
         Engine.state.lastSlapTargetId = null;
         Engine.state.lastSlap = null;
+        Engine.state.lastActionTargetId = null;
         Engine.botMemory = {};
 
         Engine.state.players.forEach(p => {
@@ -371,6 +377,7 @@ const Engine = {
             p.penaltyCards = [];
             p.ready = false;
             p.score = 0;
+            p.connected = true;
             for(let i=0; i<4; i++) {
                 let c = Engine.state.deck.pop();
                 c.loc = 'hand';
@@ -424,6 +431,7 @@ const Engine = {
         c.ownerId = p.id;
         c.isFaceUp = false;
         p.penaltyCards.push(c);
+        Engine.state.lastActionTargetId = c.id;
         Engine.sysLog(`${p.name} received a penalty card.`, "danger");
     },
 
@@ -439,13 +447,13 @@ const Engine = {
             }
         }
 
-        Engine.state.turnIndex = (Engine.state.turnIndex + 1) % Engine.state.players.length;
-        let activePlayer = Engine.state.players[Engine.state.turnIndex];
-        
-        if (activePlayer.hand.length === 0 && activePlayer.penaltyCards.length === 0 && activePlayer.id !== Engine.state.bazungaCallerId) {
-            Engine.nextTurn();
-            return;
-        }
+        // Find next connected player
+        let loopCount = 0;
+        do {
+            Engine.state.turnIndex = (Engine.state.turnIndex + 1) % Engine.state.players.length;
+            loopCount++;
+        } while (!Engine.state.players[Engine.state.turnIndex].connected && !Engine.state.players[Engine.state.turnIndex].isBot && loopCount < Engine.state.players.length);
+
         Engine.broadcast();
     },
 
@@ -500,7 +508,7 @@ const Engine = {
             case 'READY_PEEK':
                 if (Engine.state.phase !== 'peek') return;
                 player.ready = true;
-                if (Engine.state.players.every(p => p.ready)) {
+                if (Engine.state.players.every(p => p.ready || (!p.connected && !p.isBot))) {
                     Engine.state.phase = 'play';
                     Engine.sysLog("Play phase started!", "success");
                 }
@@ -531,6 +539,7 @@ const Engine = {
                     targetCard.ownerId = null;
                     targetCard.isFaceUp = true;
                     Engine.state.discardPile.push(targetCard);
+                    Engine.state.lastActionTargetId = targetCard.id;
 
                     if (owner.id === player.id) {
                         Engine.sysLog(`${player.name} successfully slapped their own ${targetCard.value}!`, "success");
@@ -592,6 +601,7 @@ const Engine = {
                     hCard.ownerId = null;
                     hCard.isFaceUp = true;
                     Engine.state.discardPile.push(hCard);
+                    Engine.state.lastActionTargetId = hCard.id;
                     
                     if (Engine.state.activeAbility.type === 'holding' && MAGIC_VALUES.includes(hCard.value)) {
                         if (hCard.value === 'K' && !hCard.isRed) {
@@ -620,6 +630,7 @@ const Engine = {
                     if (replaced) {
                         hCard.ownerId = player.id;
                         hCard.isFaceUp = false; // Force face-down in layout
+                        Engine.state.lastActionTargetId = hCard.id;
 
                         target.loc = 'discard';
                         target.ownerId = null;
@@ -629,6 +640,14 @@ const Engine = {
                         Engine.sysLog(`${player.name} swapped their drawn card with a card in their layout.`, "info");
                         Engine.nextTurn();
                     }
+                } else if (action.action === 'add_to_layout') {
+                    hCard.ownerId = player.id;
+                    hCard.loc = 'hand';
+                    hCard.isFaceUp = false;
+                    player.hand.push(hCard);
+                    Engine.state.lastActionTargetId = hCard.id;
+                    Engine.sysLog(`${player.name} placed a card in their empty layout.`, "info");
+                    Engine.nextTurn();
                 }
                 break;
 
@@ -765,6 +784,8 @@ const Engine = {
         // Ensure cards swapped into layout are strictly forced face-down
         if (c1.loc === 'hand' || c1.loc === 'penalty') c1.isFaceUp = false;
         if (c2.loc === 'hand' || c2.loc === 'penalty') c2.isFaceUp = false;
+        
+        Engine.state.lastActionTargetId = c1.id; // Highlight one of them
     }
 };
 
@@ -976,11 +997,12 @@ const Net = {
                 document.getElementById('host-controls').classList.remove('hidden');
                 document.getElementById('room-id-display').innerText = id;
                 
+                let joinUrl = window.location.origin + window.location.pathname + '?join=' + id;
                 new QRCode(document.getElementById("qr-container"), {
-                    text: id, width: 160, height: 160, colorDark: "#000", colorLight: "#fff"
+                    text: joinUrl, width: 160, height: 160, colorDark: "#000", colorLight: "#fff"
                 });
 
-                Engine.state.players.push({ id: id, name: App.localName, isHost: true, isBot: false });
+                Engine.state.players.push({ id: id, name: App.localName, isHost: true, isBot: false, connected: true });
                 Engine.broadcast();
                 Bot.start();
             } else {
@@ -993,18 +1015,51 @@ const Net = {
             conn.on('data', (data) => {
                 if (data.type === 'JOIN') {
                     App.connections[conn.peer] = conn;
-                    Engine.state.players.push({ id: conn.peer, name: data.name, isHost: false, isBot: false });
-                    Engine.sysLog(`${data.name} joined the lobby.`, "info");
+                    
+                    // Reconnect logic
+                    let existing = Engine.state.players.find(p => p.name === data.name && !p.connected && !p.isBot);
+                    if (existing) {
+                        let oldId = existing.id;
+                        existing.id = conn.peer;
+                        existing.connected = true;
+                        
+                        // Update bot memory keys
+                        for (let botId in Engine.botMemory) {
+                            let mem = Engine.botMemory[botId];
+                            for (let key in mem) {
+                                if (key.startsWith(oldId + '_')) {
+                                    mem[conn.peer + key.substring(oldId.length)] = mem[key];
+                                    delete mem[key];
+                                }
+                            }
+                        }
+                        
+                        // Update card owners
+                        let allCards = [...Engine.state.deck, ...Engine.state.discardPile];
+                        Engine.state.players.forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
+                        if (Engine.state.activeAbility && Engine.state.activeAbility.card) allCards.push(Engine.state.activeAbility.card);
+                        allCards.forEach(c => { if (c.ownerId === oldId) c.ownerId = conn.peer; });
+                        
+                        if (Engine.state.bazungaCallerId === oldId) Engine.state.bazungaCallerId = conn.peer;
+                        
+                        Engine.sysLog(`${data.name} reconnected!`, "success");
+                    } else {
+                        Engine.state.players.push({ id: conn.peer, name: data.name, isHost: false, isBot: false, connected: true });
+                        Engine.sysLog(`${data.name} joined the lobby.`, "info");
+                    }
                     Engine.broadcast();
                 } else {
                     Engine.processAction(data, conn.peer);
                 }
             });
             conn.on('close', () => {
-                Engine.state.players = Engine.state.players.filter(p => p.id !== conn.peer);
+                let p = Engine.state.players.find(p => p.id === conn.peer);
+                if (p) {
+                    p.connected = false;
+                    Engine.sysLog(`${p.name} disconnected.`, "warning");
+                    Engine.broadcast();
+                }
                 delete App.connections[conn.peer];
-                Engine.sysLog(`A player disconnected.`, "warning");
-                Engine.broadcast();
             });
         });
     },
@@ -1044,6 +1099,13 @@ const UI = {
     lastSlapTime: 0,
 
     init: () => {
+        // Auto-fill join ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const joinId = urlParams.get('join');
+        if (joinId) {
+            document.getElementById('join-id').value = joinId;
+        }
+
         document.getElementById('btn-host').onclick = () => { App.isHost = true; Net.init(document.getElementById('player-name').value); };
         document.getElementById('btn-join').onclick = () => { App.isHost = false; Net.init(document.getElementById('player-name').value); };
         
@@ -1052,7 +1114,7 @@ const UI = {
             let diff = parseInt(select.value);
             let diffText = select.options[select.selectedIndex].text;
             let name = diff === 5 ? "Blackbeard" : BOT_NAMES[Math.floor(Math.random() * (BOT_NAMES.length-1))] + ` [${diffText.split(' ')[0]}]`;
-            Engine.state.players.push({ id: Utils.uuid(), name: name, isHost: false, isBot: true, botDifficulty: diff });
+            Engine.state.players.push({ id: Utils.uuid(), name: name, isHost: false, isBot: true, botDifficulty: diff, connected: true });
             Engine.broadcast();
         };
 
@@ -1069,6 +1131,12 @@ const UI = {
         document.getElementById('chat-input').onkeypress = (e) => { if(e.key === 'Enter') UI.sendChat(); };
 
         document.getElementById('btn-return-lobby').onclick = () => location.reload(); 
+        document.getElementById('btn-hide-gameover').onclick = () => {
+            document.getElementById('modal-gameover').classList.add('hidden');
+            document.getElementById('modal-overlay').classList.add('hidden');
+            App.uiState.showingResults = false;
+            UI.render(App.gameState);
+        };
 
         document.getElementById('card-layer').addEventListener('pointerdown', UI.handleCardClick);
     },
@@ -1127,7 +1195,8 @@ const UI = {
             state.players.forEach(p => {
                 let item = document.createElement('div');
                 item.className = 'player-item';
-                item.innerHTML = `<strong>${p.name}</strong> <span style="color:#94a3b8;">${p.isHost ? '👑 Host' : p.isBot ? '🤖 Bot' : '👤 Player'}</span>`;
+                let status = !p.connected && !p.isBot ? '<span style="color:var(--danger)">(Disconnected)</span>' : '';
+                item.innerHTML = `<strong>${p.name}</strong> <span style="color:#94a3b8;">${p.isHost ? '👑 Host' : p.isBot ? '🤖 Bot' : '👤 Player'} ${status}</span>`;
                 list.appendChild(item);
             });
             return;
@@ -1202,7 +1271,7 @@ const UI = {
 
             // Player Badge
             let badge = document.createElement('div');
-            badge.className = `player-badge ${i === state.turnIndex ? 'active-turn' : ''} ${state.bazungaCallerId === p.id ? 'bazunga' : ''}`;
+            badge.className = `player-badge ${i === state.turnIndex ? 'active-turn' : ''} ${state.bazungaCallerId === p.id ? 'bazunga' : ''} ${!p.connected && !p.isBot ? 'disconnected' : ''}`;
             
             let isBottomHalf = py > cy;
             let yDir = isBottomHalf ? -1 : 1; 
@@ -1217,9 +1286,11 @@ const UI = {
             document.getElementById('ui-layer').appendChild(badge);
 
             let allCards = [...p.hand, ...p.penaltyCards];
-            let handW = 70; 
-            let handH = 95; 
-            let maxCols = 5; 
+            
+            // 2x2 Grid Layout for Mobile
+            let maxCols = 2; 
+            let handW = 45; 
+            let handH = 65; 
             
             allCards.forEach((c, idx) => {
                 let el = document.getElementById(c.id) || UI.createCardDOM(c);
@@ -1227,14 +1298,14 @@ const UI = {
                 
                 let row = Math.floor(idx / maxCols);
                 let col = idx % maxCols;
-                let cardsInRow = Math.min(maxCols, allCards.length - Math.floor(idx / maxCols) * maxCols);
+                let cardsInRow = Math.min(maxCols, allCards.length - row * maxCols);
                 
                 let ox = (col * handW) - ((cardsInRow - 1) * handW / 2);
                 let oy = row * handH * yDir; 
                 
                 el.style.left = `${px + ox - 32}px`; 
                 el.style.top = `${py + oy - 45}px`;
-                el.style.zIndex = 10 + row; 
+                el.style.zIndex = 20 + idx; 
 
                 // STRICT FACE-UP LOGIC (Memory Game Mechanic)
                 let isFaceUp = false;
@@ -1251,8 +1322,15 @@ const UI = {
                 if (!isFaceUp) inner.classList.add('is-flipped');
                 else inner.classList.remove('is-flipped');
 
+                // Disconnected State
+                if (!p.connected && !p.isBot) el.classList.add('disconnected');
+                else el.classList.remove('disconnected');
+
                 // Targeting & Slap Selection Logic
-                el.classList.remove('targetable', 'selected-target', 'slap-ready', 'holding-card');
+                el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent');
+                
+                if (state.lastActionTargetId === c.id) el.classList.add('highlight-recent');
+
                 let mode = App.uiState.targetingMode;
                 if (mode) {
                     if (mode === 'swap' && p.id === App.localId) el.classList.add('targetable');
@@ -1278,7 +1356,7 @@ const UI = {
             el.style.top = `${cy - 45 - (i*0.5)}px`; 
             el.style.zIndex = i;
             el.querySelector('.card-inner').classList.add('is-flipped');
-            el.classList.remove('targetable', 'selected-target', 'slap-ready', 'holding-card');
+            el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent');
             
             // Highlight deck if it's my turn to draw
             let isMyTurn = state.players[state.turnIndex]?.id === App.localId;
@@ -1295,12 +1373,14 @@ const UI = {
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
             el.style.left = `${cx + 55 - 32}px`;
             el.style.top = `${cy - 45}px`;
-            el.style.zIndex = i; 
+            el.style.zIndex = 100 + i; // Ensure discard pile is always on top
             el.querySelector('.card-inner').classList.remove('is-flipped');
-            el.classList.remove('targetable', 'selected-target', 'slap-ready', 'deck-glow', 'holding-card');
+            el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent');
             if (!el.dataset.rot) el.dataset.rot = (Math.random() * 20 - 10);
             el.style.transform = `rotate(${el.dataset.rot}deg)`;
             
+            if (state.lastActionTargetId === c.id) el.classList.add('highlight-recent');
+
             // Highlight discard if ready to draw
             let isMyTurn = state.players[state.turnIndex]?.id === App.localId;
             if (isMyTurn && !state.activeAbility && !App.uiState.targetingMode) {
@@ -1331,23 +1411,36 @@ const UI = {
             else inner.classList.remove('is-flipped');
             
             el.classList.add('holding-card');
+            el.classList.remove('highlight-recent');
         }
 
         UI.updateControls(state);
 
-        if (state.phase === 'game_over') {
+        if (state.phase === 'game_over' && !App.uiState.showingResults) {
+            App.uiState.showingResults = true;
             document.getElementById('modal-gameover').classList.remove('hidden');
             document.getElementById('modal-overlay').classList.remove('hidden');
             document.getElementById('gameover-winner').innerText = state.winners.length > 1 ? "Winners: " + state.winners.join(', ') : "Winner: " + state.winners[0];
             
-            let tableHTML = `<table class="score-table"><tr><th>Player</th><th>Score</th></tr>`;
+            let html = ``;
             let sortedPlayers = [...state.players].sort((a,b) => a.score - b.score);
             sortedPlayers.forEach(p => {
                 let isWinner = state.winners.includes(p.name);
-                tableHTML += `<tr class="${isWinner ? 'score-winner' : ''}"><td>${p.name}</td><td>${p.score}</td></tr>`;
+                let pCards = [...p.hand, ...p.penaltyCards];
+                let mathStr = pCards.map(c => UI.getCardScoreString(c)).join(' + ') + ` = <strong>${p.score}</strong>`;
+                let cardsHtml = pCards.map(c => `<div class="mini-card ${c.isRed ? 'red' : 'black'}">${c.value}${c.suit}</div>`).join('');
+                
+                html += `
+                <div class="endgame-player ${isWinner ? 'winner' : ''}">
+                    <div class="endgame-header">
+                        <span class="endgame-name">${p.name} ${isWinner ? '👑' : ''} ${state.bazungaCallerId === p.id ? '(Bazunga Caller)' : ''}</span>
+                        <span class="endgame-score">${p.score} pts</span>
+                    </div>
+                    <div class="endgame-cards">${cardsHtml}</div>
+                    <div class="endgame-math">${mathStr}</div>
+                </div>`;
             });
-            tableHTML += `</table>`;
-            document.getElementById('gameover-results').innerHTML = tableHTML;
+            document.getElementById('gameover-results').innerHTML = html;
         }
     },
 
@@ -1384,6 +1477,19 @@ const UI = {
         }
 
         // Action Bar Logic
+        if (state.phase === 'game_over') {
+            actionBar.classList.remove('hidden');
+            let btn = document.createElement('button');
+            btn.innerText = "Show Results";
+            btn.className = "primary";
+            btn.onclick = () => {
+                document.getElementById('modal-gameover').classList.remove('hidden');
+                document.getElementById('modal-overlay').classList.remove('hidden');
+            };
+            actionBar.appendChild(btn);
+            return;
+        }
+
         if (state.phase === 'peek' && me && !me.ready) {
             actionBar.classList.remove('hidden');
             let btn = document.createElement('button');
@@ -1444,6 +1550,16 @@ const UI = {
                         UI.render(state); 
                     };
                     actionBar.appendChild(btnSwap);
+
+                    // Empty Hand Logic
+                    if (me.hand.length + me.penaltyCards.length === 0) {
+                        let btnAdd = document.createElement('button');
+                        btnAdd.innerText = "Place in Empty Layout";
+                        btnAdd.className = "secondary";
+                        btnAdd.onclick = () => Net.sendAction({ type: 'PLAY_HOLDING', action: 'add_to_layout' });
+                        actionBar.appendChild(btnAdd);
+                    }
+
                 } else if (ab.step === 1 && !App.uiState.targetingMode) {
                     // ONLY set targeting mode if it hasn't been set yet (fixes J and Q bugs)
                     let mType = ab.type;
@@ -1467,7 +1583,11 @@ const UI = {
                     let btnPass = document.createElement('button');
                     btnPass.innerText = "Pass";
                     btnPass.className = "secondary";
-                    btnPass.onclick = () => { App.uiState.targetingMode = null; Net.sendAction({ type: 'RESOLVE_MAGIC' }); };
+                    btnPass.onclick = () => { 
+                        App.uiState.targetingMode = null; 
+                        App.uiState.peekedCards.clear(); // Ensure secrecy
+                        Net.sendAction({ type: 'RESOLVE_MAGIC' }); 
+                    };
                     actionBar.appendChild(btnPass);
                 } else if (App.uiState.targetingMode) {
                     let btnCancel = document.createElement('button');
@@ -1476,6 +1596,7 @@ const UI = {
                     btnCancel.onclick = () => {
                         App.uiState.targetingMode = null;
                         App.uiState.selectedCardId = null;
+                        App.uiState.peekedCards.clear();
                         if (ab.step === 1) Net.sendAction({ type: 'RESOLVE_MAGIC' }); 
                         else UI.render(state); 
                     };
@@ -1493,7 +1614,6 @@ const UI = {
         if (!state) return;
 
         let now = Utils.timestamp();
-        let isDoubleClick = (App.lastClickedCardId === cardId && (now - App.lastClickTime) < 500); 
         App.lastClickedCardId = cardId;
         App.lastClickTime = now;
 
@@ -1538,10 +1658,11 @@ const UI = {
                     UI.render(state);
                 }, 2000);
             }
-            else if (mode === 'q_swap_target' && clickedCard.ownerId === App.localId) {
+            else if (mode === 'q_swap_target' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 Net.sendAction({ type: 'RESOLVE_MAGIC', swapTarget1: App.uiState.selectedCardId, swapTarget2: cardId });
                 App.uiState.targetingMode = null;
                 App.uiState.selectedCardId = null;
+                App.uiState.peekedCards.clear(); // Ensure secrecy
             }
             else if (mode === 'blind_swap_1' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 App.uiState.selectedCardId = cardId;
@@ -1553,6 +1674,7 @@ const UI = {
                 Net.sendAction({ type: 'RESOLVE_MAGIC', swapTarget1: App.uiState.selectedCardId, swapTarget2: cardId });
                 App.uiState.targetingMode = null;
                 App.uiState.selectedCardId = null;
+                App.uiState.peekedCards.clear(); // Ensure secrecy
             }
             else if (mode === 'force_penalty' && clickedCard.ownerId !== App.localId && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 Net.sendAction({ type: 'RESOLVE_MAGIC', targetPlayerId: clickedCard.ownerId });

@@ -71,7 +71,11 @@
         /* Targeting & Selection VFX */
         .card.targetable { box-shadow: 0 0 0 3px var(--info), 0 0 20px var(--info); animation: pulse-target 1.5s infinite; z-index: 100 !important; }
         .card.selected-target { box-shadow: 0 0 0 4px var(--accent), 0 0 25px var(--accent); transform: translateY(-15px) scale(1.1) !important; z-index: 105 !important; }
+        .card.slap-ready { box-shadow: 0 0 0 4px var(--danger), 0 0 30px var(--danger); transform: translateY(-20px) scale(1.15) !important; z-index: 110 !important; animation: pulse-danger 1s infinite; }
+        .card.deck-glow { box-shadow: 0 0 15px var(--success); }
+        
         @keyframes pulse-target { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes pulse-danger { 0%, 100% { box-shadow: 0 0 10px var(--danger); } 50% { box-shadow: 0 0 30px var(--danger); } }
 
         /* UI Overlays */
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; display: flex; flex-direction: column; justify-content: space-between; }
@@ -90,8 +94,6 @@
         .player-badge.active-turn { border-color: var(--accent); background: rgba(251, 191, 36, 0.15); box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); transform: translate(-50%, -50%) scale(1.08); z-index: 50; }
         .player-badge.active-turn .turn-text { display: block; }
         .player-badge.bazunga { background: var(--danger); border-color: #fff; animation: pulse-danger 1s infinite; }
-        
-        @keyframes pulse-danger { 0%, 100% { box-shadow: 0 0 10px var(--danger); } 50% { box-shadow: 0 0 30px var(--danger); } }
 
         /* Action Bar (Docked Bottom) */
         #action-bar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 12px 20px; border-radius: 16px; display: flex; gap: 10px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 200; pointer-events: auto; backdrop-filter: blur(10px); transition: bottom 0.3s, opacity 0.3s; }
@@ -102,7 +104,7 @@
 
         /* Toasts */
         #toast-container { position: absolute; top: 70px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 300; pointer-events: none; }
-        .toast { background: var(--surface); color: white; padding: 12px 20px; border-radius: 8px; border-left: 4px solid var(--info); box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.9rem; animation: slideInRight 0.3s forwards, fadeOut 0.3s 3.7s forwards; backdrop-filter: blur(4px); max-width: 300px; line-height: 1.4; }
+        .toast { background: var(--surface); color: white; padding: 12px 20px; border-radius: 8px; border-left: 4px solid var(--info); box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.9rem; animation: slideInRight 0.3s forwards, fadeOut 0.3s 4.7s forwards; backdrop-filter: blur(4px); max-width: 320px; line-height: 1.4; }
         .toast.success { border-color: var(--success); }
         .toast.danger { border-color: var(--danger); }
         .toast.warning { border-color: var(--accent); }
@@ -277,6 +279,7 @@ const App = {
     uiState: {
         targetingMode: null,
         selectedCardId: null,
+        selectedSlapCardId: null, // For tap-to-slap mechanic
         peekedCards: new Set()
     },
     lastClickedCardId: null,
@@ -295,7 +298,8 @@ const Engine = {
         bazungaCallerId: null,
         orbitCount: 0,
         logs: [],
-        activeAbility: null 
+        activeAbility: null,
+        lastSlapTime: 0 // Used to hibernate bots
     },
     botMemory: {},
 
@@ -347,6 +351,7 @@ const Engine = {
         Engine.state.bazungaCallerId = null;
         Engine.state.orbitCount = 0;
         Engine.state.activeAbility = null;
+        Engine.state.lastSlapTime = 0;
         Engine.botMemory = {};
 
         Engine.state.players.forEach(p => {
@@ -493,6 +498,8 @@ const Engine = {
                 if (Engine.state.phase !== 'play' && Engine.state.phase !== 'orbit') return;
                 if (Engine.state.discardPile.length === 0) return;
                 
+                Engine.state.lastSlapTime = Utils.timestamp(); // Hibernate bots
+                
                 let targetCard = Engine.getCardById(action.targetId);
                 if (!targetCard || (targetCard.loc !== 'hand' && targetCard.loc !== 'penalty')) return;
                 
@@ -518,7 +525,7 @@ const Engine = {
                     }
                     Engine.state.lastSlap = { id: targetCard.id, success: true, time: Utils.timestamp() };
                 } else {
-                    Engine.sysLog(`${player.name} incorrectly slapped a ${targetCard.value} on a ${topDiscard.value}! Penalty!`, "danger");
+                    Engine.sysLog(`${player.name} incorrectly slapped ${owner.name}'s ${targetCard.value} onto a ${topDiscard.value}! Penalty!`, "danger");
                     Engine.drawPenalty(player.id);
                     Engine.state.lastSlap = { id: targetCard.id, success: false, time: Utils.timestamp() };
                 }
@@ -604,24 +611,28 @@ const Engine = {
                 let mType = Engine.state.activeAbility.type;
                 
                 if (mType === 'magic_9') {
-                    Engine.sysLog(`${player.name} used a 9 to peek at their own card.`, "info");
+                    Engine.sysLog(`${player.name} used a 9 to secretly peek at their own card.`, "info");
                     Engine.nextTurn();
                 } else if (mType === 'magic_10') {
                     let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
-                    Engine.sysLog(`${player.name} used a 10 to peek at one of ${targetOwner ? targetOwner.name + "'s" : "an opponent's"} cards.`, "info");
+                    Engine.sysLog(`${player.name} used a 10 to secretly peek at one of ${targetOwner ? targetOwner.name + "'s" : "an opponent's"} cards.`, "info");
                     Engine.nextTurn();
                 } else if (mType === 'magic_Q') {
                     if (action.swapTarget1 && action.swapTarget2) {
                         Engine.executeSwap(action.swapTarget1, action.swapTarget2);
                         Engine.sysLog(`${player.name} used a Queen to peek and swap a card!`, "warning");
                     } else {
-                        Engine.sysLog(`${player.name} used a Queen to peek at a card.`, "info");
+                        Engine.sysLog(`${player.name} used a Queen to secretly peek at a card.`, "info");
                     }
                     Engine.nextTurn();
                 } else if (mType === 'magic_J') {
                     if (action.swapTarget1 && action.swapTarget2) {
+                        let c1 = Engine.getCardById(action.swapTarget1);
+                        let c2 = Engine.getCardById(action.swapTarget2);
+                        let p1 = Engine.state.players.find(p => p.id === c1?.ownerId);
+                        let p2 = Engine.state.players.find(p => p.id === c2?.ownerId);
                         Engine.executeSwap(action.swapTarget1, action.swapTarget2);
-                        Engine.sysLog(`🌪️ ${player.name} used a Jack to blind-swap two cards!`, "warning");
+                        Engine.sysLog(`🌪️ ${player.name} used a Jack to blind-swap a card from ${p1?.name} and ${p2?.name}!`, "warning");
                     }
                     Engine.nextTurn();
                 } else if (mType === 'magic_K') {
@@ -699,6 +710,9 @@ const Bot = {
 
     tick: () => {
         if (!App.isHost || Engine.state.phase === 'lobby' || Engine.state.phase === 'game_over') return;
+
+        // Hibernate bots if a slap just happened to let humans process
+        if (Utils.timestamp() - (Engine.state.lastSlapTime || 0) < 2500) return;
 
         if (Engine.state.phase === 'peek') {
             Engine.state.players.filter(p => p.isBot).forEach(bot => {
@@ -799,7 +813,6 @@ const Bot = {
                 let payload = { type: 'RESOLVE_MAGIC' };
                 
                 if (mType === 'magic_9' || mType === 'magic_10') {
-                    // Bot just acknowledges it looked
                     payload = { type: 'RESOLVE_MAGIC' };
                     if (mType === 'magic_10') {
                         let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
@@ -958,7 +971,7 @@ const UI = {
         toast.className = `toast ${type}`;
         toast.innerText = msg;
         container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+        setTimeout(() => toast.remove(), 4000);
     },
 
     showModal: (title, body, buttons) => {
@@ -1126,8 +1139,8 @@ const UI = {
                 if (!isFaceUp) transformStr += 'rotateY(180deg) ';
                 el.style.transform = transformStr.trim() || 'none';
 
-                // Targeting Logic
-                el.classList.remove('targetable', 'selected-target');
+                // Targeting & Slap Selection Logic
+                el.classList.remove('targetable', 'selected-target', 'slap-ready');
                 let mode = App.uiState.targetingMode;
                 if (mode) {
                     if (mode === 'swap' && p.id === App.localId) el.classList.add('targetable');
@@ -1141,6 +1154,8 @@ const UI = {
                         if (c.id === App.uiState.selectedCardId) el.classList.add('selected-target');
                     }
                     else if (mode === 'force_penalty' && p.id !== App.localId) el.classList.add('targetable');
+                } else if (App.uiState.selectedSlapCardId === c.id) {
+                    el.classList.add('slap-ready');
                 }
             });
         });
@@ -1153,7 +1168,15 @@ const UI = {
             el.style.top = `${cy - 45 - (i*0.5)}px`; 
             el.style.zIndex = i;
             el.style.transform = 'rotateY(180deg)';
-            el.classList.remove('targetable', 'selected-target');
+            el.classList.remove('targetable', 'selected-target', 'slap-ready');
+            
+            // Highlight deck if it's my turn to draw
+            let isMyTurn = state.players[state.turnIndex]?.id === App.localId;
+            if (isMyTurn && !state.activeAbility && !App.uiState.targetingMode && !App.uiState.selectedSlapCardId) {
+                el.classList.add('deck-glow');
+            } else {
+                el.classList.remove('deck-glow');
+            }
         });
 
         // Discard
@@ -1163,9 +1186,17 @@ const UI = {
             el.style.left = `${cx + 55 - 32}px`;
             el.style.top = `${cy - 45}px`;
             el.style.zIndex = i; 
-            el.classList.remove('targetable', 'selected-target');
+            el.classList.remove('targetable', 'selected-target', 'slap-ready', 'deck-glow');
             if (!el.dataset.rot) el.dataset.rot = (Math.random() * 20 - 10);
             el.style.transform = `rotate(${el.dataset.rot}deg)`;
+            
+            // Highlight discard if ready to slap or draw
+            let isMyTurn = state.players[state.turnIndex]?.id === App.localId;
+            if (App.uiState.selectedSlapCardId) {
+                el.classList.add('slap-ready'); // Glow red to indicate drop zone
+            } else if (isMyTurn && !state.activeAbility && !App.uiState.targetingMode) {
+                el.classList.add('deck-glow');
+            }
         });
 
         // Holding Area (Active Ability Card)
@@ -1178,8 +1209,8 @@ const UI = {
             let angle = (Math.PI / 2) + (relIndex * (2 * Math.PI / state.players.length));
             
             // Position in a dedicated "Holding Area" closer to center than hand
-            let px = cx + Math.cos(angle) * (rx * 0.55); 
-            let py = cy + Math.sin(angle) * (ry * 0.55);
+            let px = cx + Math.cos(angle) * (rx * 0.35); 
+            let py = cy + Math.sin(angle) * (ry * 0.35);
             
             el.style.left = `${px - 32}px`;
             el.style.top = `${py - 45}px`;
@@ -1224,7 +1255,9 @@ const UI = {
             if (me && !me.ready) statusText.innerText = "Peek at your bottom 2 cards, then click Ready.";
             else statusText.innerText = "Waiting for others to finish peeking...";
         } else if (state.phase === 'play' || state.phase === 'orbit') {
-            if (isMyTurn) {
+            if (App.uiState.selectedSlapCardId) {
+                statusText.innerText = "Tap the discard pile to SLAP!";
+            } else if (isMyTurn) {
                 if (App.uiState.targetingMode === 'swap') statusText.innerText = "Select a card in your layout to swap out.";
                 else if (App.uiState.targetingMode === 'peek_self') statusText.innerText = "Select one of your cards to peek at (9 Magic).";
                 else if (App.uiState.targetingMode === 'peek_opp') statusText.innerText = "Select an opponent's card to peek at (10 Magic).";
@@ -1252,6 +1285,16 @@ const UI = {
         }
 
         if (state.phase === 'play' || state.phase === 'orbit') {
+            if (App.uiState.selectedSlapCardId) {
+                actionBar.classList.remove('hidden');
+                let btnCancel = document.createElement('button');
+                btnCancel.innerText = "Cancel Slap";
+                btnCancel.className = "secondary";
+                btnCancel.onclick = () => { App.uiState.selectedSlapCardId = null; UI.render(state); };
+                actionBar.appendChild(btnCancel);
+                return;
+            }
+
             if (isMyTurn && !state.activeAbility) {
                 actionBar.classList.remove('hidden');
                 
@@ -1302,13 +1345,17 @@ const UI = {
                         UI.render(state); 
                     };
                     actionBar.appendChild(btnSwap);
-                } else if (ab.step === 1) {
+                } else if (ab.step === 1 && !App.uiState.targetingMode) {
+                    // ONLY set targeting mode if it hasn't been set yet (fixes J and Q bugs)
                     let mType = ab.type;
                     if (mType === 'magic_9') App.uiState.targetingMode = 'peek_self';
                     else if (mType === 'magic_10') App.uiState.targetingMode = 'peek_opp';
                     else if (mType === 'magic_J') App.uiState.targetingMode = 'blind_swap_1';
                     else if (mType === 'magic_Q') App.uiState.targetingMode = 'peek_any';
                     else if (mType === 'magic_K') App.uiState.targetingMode = 'force_penalty';
+                    
+                    // Re-render to apply targeting classes
+                    setTimeout(() => UI.render(state), 0);
                 }
 
                 if (App.uiState.targetingMode) {
@@ -1335,19 +1382,35 @@ const UI = {
         if (!state) return;
 
         let now = Utils.timestamp();
-        let isDoubleClick = (App.lastClickedCardId === cardId && (now - App.lastClickTime) < 400); 
+        let isDoubleClick = (App.lastClickedCardId === cardId && (now - App.lastClickTime) < 500); 
         App.lastClickedCardId = cardId;
         App.lastClickTime = now;
 
         let clickedCard = Engine.getCardById(cardId);
         if (!clickedCard) return;
 
-        // 1. SLAP LOGIC (Takes absolute priority if double clicked)
+        // 1. SLAP LOGIC (Absolute Priority)
+        // Method A: Double Click
         if (isDoubleClick && (state.phase === 'play' || state.phase === 'orbit') && (clickedCard.loc === 'hand' || clickedCard.loc === 'penalty')) {
-            App.uiState.targetingMode = null; // Cancel any targeting
+            App.uiState.targetingMode = null; 
             App.uiState.selectedCardId = null;
+            App.uiState.selectedSlapCardId = null;
             cardEl.style.zIndex = 999;
             Net.sendAction({ type: 'SLAP', targetId: cardId, timestamp: now });
+            return;
+        }
+
+        // Method B: Tap-to-Slap (Click layout card, then click discard pile)
+        if (clickedCard.loc === 'discard' && App.uiState.selectedSlapCardId) {
+            Net.sendAction({ type: 'SLAP', targetId: App.uiState.selectedSlapCardId, timestamp: now });
+            App.uiState.selectedSlapCardId = null;
+            return;
+        }
+
+        // Select card for Tap-to-Slap
+        if (!isDoubleClick && !App.uiState.targetingMode && (state.phase === 'play' || state.phase === 'orbit') && (clickedCard.loc === 'hand' || clickedCard.loc === 'penalty')) {
+            App.uiState.selectedSlapCardId = cardId;
+            UI.render(state);
             return;
         }
 

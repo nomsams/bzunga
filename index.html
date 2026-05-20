@@ -47,7 +47,7 @@
         button { background: var(--accent); color: #000; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         button:hover:not(:disabled) { transform: translateY(-2px); }
         button:active:not(:disabled) { transform: translateY(1px); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
         button.secondary { background: #475569; color: white; }
         button.danger { background: var(--danger); color: white; }
         
@@ -669,42 +669,30 @@ const Bot = {
                     }
                     
                 } else if (mType === 'magic_Q') {
-                    let myWorst = null; let myWorstVal = -99;
-                    let oppBest = null; let oppBestVal = 99;
-                    
-                    for (let key in mem) {
-                        if (key.startsWith(activePlayer.id) && mem[key].numVal > myWorstVal) {
-                            let [_, loc, idx] = key.split('_');
-                            myWorst = loc === 'hand' ? activePlayer.hand[idx] : activePlayer.penaltyCards[idx];
-                            myWorstVal = mem[key].numVal;
-                        } else if (!key.startsWith(activePlayer.id) && mem[key].numVal < oppBestVal) {
-                            let [oid, loc, idx] = key.split('_');
-                            let opp = Engine.state.players.find(p => p.id === oid);
-                            if (opp) { 
-                                oppBest = loc === 'hand' ? opp.hand[idx] : opp.penaltyCards[idx]; 
-                                oppBestVal = mem[key].numVal; 
-                            }
+                    if (Math.random() > 0.5) {
+                        let allCards = [];
+                        Engine.state.players.forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
+                        let myCards = activePlayer.hand;
+                        if (allCards.length > 0 && myCards.length > 0) {
+                            payload.swapTarget1 = myCards[Math.floor(Math.random() * myCards.length)].id;
+                            payload.swapTarget2 = allCards[Math.floor(Math.random() * allCards.length)].id;
+                        }
+                    } else {
+                        let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
+                        if (opps.length > 0) {
+                            let opp = opps[Math.floor(Math.random() * opps.length)];
+                            payload.targetId = opp.hand[0]?.id;
                         }
                     }
-                    
-                    if (myWorst && oppBest && myWorstVal > oppBestVal) {
-                        payload.swapTarget1 = myWorst.id; 
-                        payload.swapTarget2 = oppBest.id;
-                    } else if (Math.random() > 0.5) {
-                        let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
-                        if (opps.length > 0) payload.targetId = opps[0].hand[0]?.id;
-                    }
-                    
                 } else if (mType === 'magic_J') {
                     let allCards = [];
-                    Engine.state.players.filter(p => p.id !== activePlayer.id).forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
+                    Engine.state.players.forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
                     if (allCards.length >= 2) {
                         payload.swapTarget1 = allCards[Math.floor(Math.random() * allCards.length)].id;
                         let t2 = allCards[Math.floor(Math.random() * allCards.length)].id;
                         while(t2 === payload.swapTarget1) t2 = allCards[Math.floor(Math.random() * allCards.length)].id; 
                         payload.swapTarget2 = t2;
                     }
-                    
                 } else if (mType === 'magic_K') {
                     let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
                     if (opps.length > 0) {
@@ -1206,7 +1194,17 @@ Engine.executeSwap = (id1, id2, isBlindSwap) => {
 const Net = {
     init: (name) => {
         App.localName = name || "Player_" + Math.floor(Math.random()*1000);
-        App.peer = new Peer(Utils.uuid());
+        
+        // Robust PeerJS Initialization with Fallback ICE Servers
+        App.peer = new Peer(Utils.uuid(), {
+            secure: true,
+            config: {
+                'iceServers': [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:global.stun.twilio.com:3478' }
+                ]
+            }
+        });
         
         App.peer.on('open', (id) => {
             App.localId = id;
@@ -1234,6 +1232,8 @@ const Net = {
             UI.showToast("Connection Error: " + err.message, "danger");
             let btn = document.getElementById('btn-host');
             if(btn) { btn.innerText = "Create Game"; btn.disabled = false; }
+            let btnJoin = document.getElementById('btn-join');
+            if(btnJoin) { btnJoin.innerText = "Join Game"; btnJoin.disabled = false; }
         });
 
         App.peer.on('connection', (conn) => {
@@ -1307,7 +1307,11 @@ const Net = {
             }
         });
         
-        App.hostConn.on('error', err => UI.showToast("Connection error: " + err, "danger"));
+        App.hostConn.on('error', err => {
+            UI.showToast("Connection error: " + err, "danger");
+            let btnJoin = document.getElementById('btn-join');
+            if(btnJoin) { btnJoin.innerText = "Join Game"; btnJoin.disabled = false; }
+        });
     },
 
     sendAction: (action) => {
@@ -1329,12 +1333,54 @@ const UI = {
         }
 
         document.getElementById('btn-host').onclick = (e) => { 
-            e.target.innerText = "Connecting...";
-            e.target.disabled = true;
+            let btn = e.target;
+            btn.innerText = "Connecting...";
+            btn.disabled = true;
             App.isHost = true; 
-            Net.init(document.getElementById('player-name').value); 
+            
+            // Timeout fallback if PeerJS hangs
+            setTimeout(() => {
+                if (!App.localId) {
+                    btn.innerText = "Create Game";
+                    btn.disabled = false;
+                    UI.showToast("Connection timed out. Please try again.", "danger");
+                }
+            }, 8000);
+
+            try {
+                Net.init(document.getElementById('player-name').value); 
+            } catch (err) {
+                btn.innerText = "Create Game";
+                btn.disabled = false;
+                UI.showToast("Error initializing network.", "danger");
+            }
         };
-        document.getElementById('btn-join').onclick = () => { App.isHost = false; Net.init(document.getElementById('join-id').value); };
+        
+        document.getElementById('btn-join').onclick = (e) => { 
+            let jId = document.getElementById('join-id').value.trim();
+            if (!jId) return UI.showToast("Enter a Game ID", "warning");
+            
+            let btn = e.target;
+            btn.innerText = "Joining...";
+            btn.disabled = true;
+            App.isHost = false; 
+            
+            setTimeout(() => {
+                if (!App.hostConn || !App.hostConn.open) {
+                    btn.innerText = "Join Game";
+                    btn.disabled = false;
+                    UI.showToast("Failed to join. Check ID.", "danger");
+                }
+            }, 8000);
+
+            try {
+                Net.init(document.getElementById('player-name').value); 
+            } catch (err) {
+                btn.innerText = "Join Game";
+                btn.disabled = false;
+                UI.showToast("Error initializing network.", "danger");
+            }
+        };
         
         document.getElementById('btn-add-bot').onclick = () => {
             let select = document.getElementById('bot-difficulty');
@@ -1640,7 +1686,7 @@ const UI = {
             if (state.activeAbility.player === App.localId) {
                 px = cx - rx * 0.8;
                 py = cy + ry * 0.5;
-                px -= 60; // Shift left
+                px -= 60; 
             } else {
                 px = cx + Math.cos(angle) * (rx * 0.65); 
                 py = cy + Math.sin(angle) * (ry * 0.65);

@@ -45,8 +45,9 @@
         input, select { background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); outline: none; }
         input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2); }
         button { background: var(--accent); color: #000; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-        button:hover { transform: translateY(-2px); }
-        button:active { transform: translateY(1px); }
+        button:hover:not(:disabled) { transform: translateY(-2px); }
+        button:active:not(:disabled) { transform: translateY(1px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         button.secondary { background: #475569; color: white; }
         button.danger { background: var(--danger); color: white; }
         
@@ -107,19 +108,19 @@
         /* Collapsible Player Badges */
         .player-badge { position: absolute; background: var(--surface); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; pointer-events: auto; text-align: center; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.3s ease; backdrop-filter: blur(4px); white-space: nowrap; max-width: 45px; overflow: hidden; cursor: pointer; }
         .player-badge .icon { font-size: 1.1rem; }
-        .player-badge .name-text, .player-badge .meta { display: inline-block; opacity: 0; width: 0; transition: opacity 0.2s; }
+        .player-badge .name-text, .player-badge .meta { display: inline-block; opacity: 0; width: 0; transition: opacity 0.2s; height: 0; }
         .player-badge .turn-text { display: none; color: var(--accent); font-size: 0.6rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 2px; }
         
         /* Expanded State */
         .player-badge:hover, .player-badge.expanded { max-width: 200px; padding: 8px 16px; }
-        .player-badge:hover .name-text, .player-badge.expanded .name-text { opacity: 1; width: auto; margin-left: 6px; font-weight: 600; }
-        .player-badge:hover .meta, .player-badge.expanded .meta { opacity: 1; width: auto; font-size: 0.7rem; color: #94a3b8; margin-top: 2px; }
+        .player-badge:hover .name-text, .player-badge.expanded .name-text { opacity: 1; width: auto; margin-left: 6px; font-weight: 600; height: auto; }
+        .player-badge:hover .meta, .player-badge.expanded .meta { opacity: 1; width: auto; font-size: 0.7rem; color: #94a3b8; margin-top: 2px; height: auto; }
         
         .player-badge.active-turn { border-color: var(--accent); background: rgba(251, 191, 36, 0.15); box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); z-index: 50; }
         .player-badge.active-turn .turn-text { display: block; }
         .player-badge.bazunga { background: var(--danger); border-color: #fff; animation: pulse-danger 1s infinite; }
 
-        /* Action Bar (Side Docked + Mobile Optimized) */
+        /* Action Bar (Side Docked) */
         #action-bar { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 200; pointer-events: auto; backdrop-filter: blur(10px); transition: right 0.3s, opacity 0.3s; width: 110px; }
         #action-bar.hidden { right: -150px; opacity: 0; pointer-events: none; display: flex !important; }
         #action-bar button { margin: 0; padding: 10px 8px; font-size: 0.85rem; border-radius: 8px; width: 100%; text-align: center; line-height: 1.2; }
@@ -264,6 +265,12 @@
     <!-- HTML Modals -->
     <div id="modal-overlay" class="hidden"></div>
     
+    <div id="modal-custom" class="modal hidden">
+        <h2 id="modal-title">Attention</h2>
+        <p id="modal-body" style="margin-bottom: 20px; color: #cbd5e1; font-size: 1.1rem;"></p>
+        <div class="modal-buttons" id="modal-btns"></div>
+    </div>
+
     <div id="modal-gameover" class="modal hidden">
         <h2 style="font-size: 2rem; margin-bottom: 5px; color: var(--accent);">GAME OVER</h2>
         <h3 id="gameover-winner" style="color: var(--success); margin-bottom: 15px; font-size: 1.2rem;"></h3>
@@ -713,8 +720,6 @@ const Bot = {
 };
 
 // --- GAME ENGINE (HOST ONLY) ---
-// (Engine object is defined above, merging methods)
-
 Engine.getSlot = (player, cardId) => {
     let idx = player.hand.findIndex(c => c.id === cardId);
     if (idx > -1) return `hand_${idx}`;
@@ -808,13 +813,14 @@ Engine.checkDeckEmpty = () => {
         Engine.sysLog("Deck empty! Reshuffling discard pile...", "warning");
         let topDiscard = Engine.state.discardPile.pop();
         
-        Engine.state.discardPile.forEach(c => {
+        let newDeck = [...Engine.state.discardPile];
+        newDeck.forEach(c => {
             c.loc = 'deck';
             c.isFaceUp = false;
             c.ownerId = null;
         });
         
-        Engine.state.deck = Utils.shuffle([...Engine.state.discardPile]);
+        Engine.state.deck = Utils.shuffle(newDeck);
         Engine.state.discardPile = [topDiscard];
     }
 };
@@ -835,7 +841,7 @@ Engine.drawPenalty = (playerId) => {
     let p = Engine.state.players.find(p => p.id === playerId);
     if (!p || Engine.state.deck.length === 0) return;
     let c = Engine.state.deck.pop();
-    Engine.checkDeckEmpty(); // Check again after popping
+    Engine.checkDeckEmpty(); 
     c.loc = 'penalty';
     c.ownerId = p.id;
     c.isFaceUp = false;
@@ -863,7 +869,7 @@ Engine.nextTurn = () => {
         loopCount++;
     } while (!Engine.state.players[Engine.state.turnIndex].connected && !Engine.state.players[Engine.state.turnIndex].isBot && loopCount < Engine.state.players.length);
 
-    Engine.state.turnStartTime = Utils.timestamp();
+    Engine.state.turnStartTime = Utils.timestamp() + 1000; // Add 1s artificial delay for bots
     Engine.broadcast();
 };
 
@@ -982,7 +988,7 @@ Engine.processAction = (action, peerId) => {
             if (Engine.state.deck.length === 0) return; 
             
             let drawn = Engine.state.deck.pop();
-            Engine.checkDeckEmpty(); // Check again after popping
+            Engine.checkDeckEmpty(); 
             drawn.loc = 'holding';
             drawn.ownerId = player.id;
             drawn.isFaceUp = true; 
@@ -1223,6 +1229,13 @@ const Net = {
             }
         });
 
+        App.peer.on('error', (err) => {
+            console.error(err);
+            UI.showToast("Connection Error: " + err.message, "danger");
+            let btn = document.getElementById('btn-host');
+            if(btn) { btn.innerText = "Create Game"; btn.disabled = false; }
+        });
+
         App.peer.on('connection', (conn) => {
             if (!App.isHost) return; 
             conn.on('data', (data) => {
@@ -1315,8 +1328,13 @@ const UI = {
             document.getElementById('join-id').value = joinId;
         }
 
-        document.getElementById('btn-host').onclick = () => { App.isHost = true; Net.init(document.getElementById('player-name').value); };
-        document.getElementById('btn-join').onclick = () => { App.isHost = false; Net.init(document.getElementById('player-name').value); };
+        document.getElementById('btn-host').onclick = (e) => { 
+            e.target.innerText = "Connecting...";
+            e.target.disabled = true;
+            App.isHost = true; 
+            Net.init(document.getElementById('player-name').value); 
+        };
+        document.getElementById('btn-join').onclick = () => { App.isHost = false; Net.init(document.getElementById('join-id').value); };
         
         document.getElementById('btn-add-bot').onclick = () => {
             let select = document.getElementById('bot-difficulty');
@@ -1507,13 +1525,13 @@ const UI = {
             let allCards = [...p.hand, ...p.penaltyCards];
             
             let maxCols = 2; 
-            let handW = window.innerWidth <= 768 ? 50 : 60; 
-            let handH = window.innerWidth <= 768 ? 70 : 82; 
+            let handW = window.innerWidth <= 768 ? 45 : 55; 
+            let handH = window.innerWidth <= 768 ? 65 : 75; 
             
             if (allCards.length > 4) {
-                handH = 25; 
-                handW = 40; 
                 maxCols = Math.ceil(Math.sqrt(allCards.length)); 
+                handW = 35; 
+                handH = 45;
             }
             
             allCards.forEach((c, idx) => {
@@ -1568,7 +1586,7 @@ const UI = {
             });
         });
 
-        let deckOffsetY = ry * 0.5; 
+        let deckOffsetY = ry * 0.8; 
         let cWidthScale = window.innerWidth <= 768 ? 22 : 26;
 
         // Deck
@@ -1621,7 +1639,8 @@ const UI = {
             let px, py;
             if (state.activeAbility.player === App.localId) {
                 px = cx - rx * 0.8;
-                py = cy + ry * 0.2;
+                py = cy + ry * 0.5;
+                px -= 60; // Shift left
             } else {
                 px = cx + Math.cos(angle) * (rx * 0.65); 
                 py = cy + Math.sin(angle) * (ry * 0.65);
@@ -1693,6 +1712,7 @@ const UI = {
                 else if (App.uiState.targetingMode === 'peek_self') statusText.innerText = "Select one of your cards to peek at (9 Magic).";
                 else if (App.uiState.targetingMode === 'peek_opp') statusText.innerText = "Select an opponent's card to peek at (10 Magic).";
                 else if (App.uiState.targetingMode === 'peek_any') statusText.innerText = "Select ANY card to peek at (Queen Magic).";
+                else if (App.uiState.targetingMode === 'q_decision') statusText.innerText = "Do you want to swap the peeked card?";
                 else if (App.uiState.targetingMode === 'q_swap_target') statusText.innerText = "Select ANY card to swap with the peeked card.";
                 else if (App.uiState.targetingMode === 'blind_swap_1') statusText.innerText = "Select the FIRST card to blind swap (Jack Magic).";
                 else if (App.uiState.targetingMode === 'blind_swap_2') statusText.innerText = "Select the SECOND card to blind swap.";
@@ -1797,9 +1817,15 @@ const UI = {
                     setTimeout(() => UI.render(state), 0);
                 }
 
-                if (App.uiState.targetingMode === 'q_swap_target') {
+                if (App.uiState.targetingMode === 'q_decision') {
+                    let btnSwap = document.createElement('button');
+                    btnSwap.innerText = "Swap Peeked Card";
+                    btnSwap.className = "primary";
+                    btnSwap.onclick = () => { App.uiState.targetingMode = 'q_swap_target'; UI.render(state); };
+                    actionBar.appendChild(btnSwap);
+                    
                     let btnPass = document.createElement('button');
-                    btnPass.innerText = "Pass (Don't Swap)";
+                    btnPass.innerText = "Pass";
                     btnPass.className = "secondary";
                     btnPass.onclick = () => { 
                         App.uiState.targetingMode = null; 
@@ -1865,7 +1891,7 @@ const UI = {
             }
             else if (mode === 'peek_any' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 App.uiState.peekedCards.add(cardId);
-                App.uiState.targetingMode = 'q_swap_target';
+                App.uiState.targetingMode = 'q_decision';
                 App.uiState.selectedCardId = cardId;
                 UI.render(state);
             }

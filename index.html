@@ -22,6 +22,15 @@
             --success: #10b981;
             --surface: rgba(30, 41, 59, 0.85);
         }
+
+        /* Mobile specific variable scaling */
+        @media (max-width: 768px) {
+            :root {
+                --card-w: 44px;
+                --card-h: 62px;
+            }
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-color); color: var(--text-light); overflow: hidden; touch-action: none; }
         
@@ -50,6 +59,11 @@
         #game-view { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; perspective: 1200px; }
         #table { width: 96%; height: 88%; background: radial-gradient(circle, var(--table-center) 0%, var(--table-edge) 100%); border-radius: 50%; border: 15px solid var(--table-border); position: relative; box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 30px 60px rgba(0,0,0,0.8); }
         
+        /* Animated Table Rim VFX */
+        @keyframes rotate-rim { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        #table-rim-svg { position: absolute; top: -15px; left: -15px; width: calc(100% + 30px); height: calc(100% + 30px); pointer-events: none; border-radius: 50%; overflow: visible; animation: rotate-rim 80s linear infinite; }
+        .table-arrow-text { font-size: 26px; font-weight: 900; fill: rgba(251, 191, 36, 0.25); letter-spacing: 8px; }
+
         /* Cards */
         #card-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
         .card { width: var(--card-w); height: var(--card-h); position: absolute; transition: left 0.4s cubic-bezier(0.22, 1, 0.36, 1), top 0.4s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s; pointer-events: auto; cursor: pointer; border-radius: 6px; transform-origin: center center; box-shadow: 2px 4px 10px rgba(0,0,0,0.4); }
@@ -101,11 +115,16 @@
         .player-badge.active-turn .turn-text { display: block; }
         .player-badge.bazunga { background: var(--danger); border-color: #fff; animation: pulse-danger 1s infinite; }
 
-        /* Action Bar (Side Docked) */
+        /* Action Bar (Side Docked + Mobile Optimized) */
         #action-bar { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 200; pointer-events: auto; backdrop-filter: blur(10px); transition: right 0.3s, opacity 0.3s; width: 110px; }
         #action-bar.hidden { right: -150px; opacity: 0; pointer-events: none; display: flex !important; }
         #action-bar button { margin: 0; padding: 10px 8px; font-size: 0.85rem; border-radius: 8px; width: 100%; text-align: center; line-height: 1.2; }
         #action-bar button.primary { background: var(--success); color: white; font-size: 0.95rem; padding: 12px 8px; }
+
+        @media (max-width: 768px) {
+            #action-bar { top: auto; bottom: 85px; right: 15px; transform: none; width: 120px; }
+            #action-bar button { font-size: 0.9rem; padding: 12px 10px; }
+        }
 
         /* Toasts */
         #toast-container { position: absolute; top: 60px; right: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 300; pointer-events: none; }
@@ -196,7 +215,17 @@
 
     <!-- Game View -->
     <div id="game-view" class="hidden">
-        <div id="table"></div>
+        <div id="table">
+            <!-- Animated Arrow Rim -->
+            <svg id="table-rim-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+                <path id="rim-path" d="M 500 20 A 480 480 0 0 1 500 980 A 480 480 0 0 1 500 20" fill="none" />
+                <text class="table-arrow-text">
+                    <textPath href="#rim-path" startOffset="0%">
+                        » » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »
+                    </textPath>
+                </text>
+            </svg>
+        </div>
         <div id="card-layer"></div>
         
         <div id="ui-layer">
@@ -271,6 +300,16 @@ const VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'
 const MAGIC_VALUES = ['9', '10', 'J', 'Q', 'K'];
 const BOT_NAMES = ["BeepBoop", "CardShark", "DeepBlue", "AlphaGo", "Blackbeard"];
 
+// Grid Slot Map: Defines fixed coordinate layout {col, row} up to infinite penalties
+const GRID_POSITIONS = [
+    {c:0, r:0}, {c:1, r:0}, // Indices 0, 1 (Top row / Inner row)
+    {c:0, r:1}, {c:1, r:1}, // Indices 2, 3 (Bottom row / Outer row - Allowed to peek)
+    {c:0, r:2}, {c:1, r:2}, // Indices 4, 5 (3x2 Layout Expansion)
+    {c:2, r:0}, {c:2, r:1}, {c:2, r:2}, // Indices 6, 7, 8 (3x3 Layout)
+    {c:3, r:0}, {c:3, r:1}, {c:3, r:2}, // Indices 9, 10, 11 (4x3 Layout)
+    {c:0, r:3}, {c:1, r:3}, {c:2, r:3}, {c:3, r:3} // Future-proofing
+];
+
 // --- GLOBAL APP STATE ---
 const App = {
     isHost: false,
@@ -285,6 +324,7 @@ const App = {
         targetingMode: null,
         selectedCardId: null,
         peekedCards: new Set(),
+        hasPeeked: new Set(), // Enforces "only peek once per card" rule
         showingResults: false
     },
     botInterval: null
@@ -310,11 +350,10 @@ const Engine = {
     },
     botMemory: {}, 
 
+    // Improved tracking: Memory is now locked to physical grid slots
     getSlot: (player, cardId) => {
-        let idx = player.hand.findIndex(c => c.id === cardId);
-        if (idx > -1) return `hand_${idx}`;
-        idx = player.penaltyCards.findIndex(c => c.id === cardId);
-        if (idx > -1) return `pen_${idx}`;
+        let c = [...player.hand, ...player.penaltyCards].find(card => card.id === cardId);
+        if (c) return `slot_${c.gridIndex}`;
         return null;
     },
 
@@ -378,6 +417,8 @@ const Engine = {
         Engine.state.lastActionTargetId = null;
         Engine.state.turnStartTime = Utils.timestamp();
         Engine.botMemory = {};
+        
+        App.uiState.hasPeeked.clear(); // Reset peeking logic locally
 
         Engine.state.players.forEach(p => {
             p.hand = [];
@@ -389,6 +430,7 @@ const Engine = {
                 let c = Engine.state.deck.pop();
                 c.loc = 'hand';
                 c.ownerId = p.id;
+                c.gridIndex = i; // Map uniquely to stable physical slot
                 p.hand.push(c);
             }
         });
@@ -433,6 +475,13 @@ const Engine = {
         c.loc = 'penalty';
         c.ownerId = p.id;
         c.isFaceUp = false;
+        
+        // Find lowest available grid index to fill holes or expand sequentially
+        let usedIndices = new Set([...p.hand, ...p.penaltyCards].map(card => card.gridIndex));
+        let newIndex = 0;
+        while(usedIndices.has(newIndex)) newIndex++;
+        c.gridIndex = newIndex;
+        
         p.penaltyCards.push(c);
         Engine.state.lastActionTargetId = c.id;
         Engine.sysLog(`${p.name} received a penalty card.`, "danger");
@@ -631,6 +680,7 @@ const Engine = {
 
                     if (replaced) {
                         hCard.ownerId = player.id;
+                        hCard.gridIndex = target.gridIndex; // Maintain layout position
                         hCard.isFaceUp = false; 
                         Engine.state.lastActionTargetId = hCard.id;
 
@@ -646,6 +696,12 @@ const Engine = {
                     hCard.ownerId = player.id;
                     hCard.loc = 'hand';
                     hCard.isFaceUp = false;
+                    
+                    let usedIndices = new Set([...player.hand, ...player.penaltyCards].map(c => c.gridIndex));
+                    let newIndex = 0;
+                    while(usedIndices.has(newIndex)) newIndex++;
+                    hCard.gridIndex = newIndex;
+                    
                     player.hand.push(hCard);
                     Engine.state.lastActionTargetId = hCard.id;
                     Engine.sysLog(`${player.name} placed a card in their empty layout.`, "info");
@@ -775,10 +831,15 @@ const Engine = {
 
         let tempOwner = c1.ownerId;
         let tempLoc = c1.loc;
+        let tempGrid = c1.gridIndex; // Maintain layout structures correctly
+        
         c1.ownerId = c2.ownerId;
         c1.loc = c2.loc;
+        c1.gridIndex = c2.gridIndex;
+        
         c2.ownerId = tempOwner;
         c2.loc = tempLoc;
+        c2.gridIndex = tempGrid;
 
         if (c1.loc === 'hand' || c1.loc === 'penalty') c1.isFaceUp = false;
         if (c2.loc === 'hand' || c2.loc === 'penalty') c2.isFaceUp = false;
@@ -938,7 +999,8 @@ const UI = {
             UI.render(App.gameState);
         };
 
-        document.getElementById('card-layer').addEventListener('pointerdown', UI.handleCardClick);
+        // Massive mobile fix: Use standard robust `click` event
+        document.getElementById('card-layer').addEventListener('click', UI.handleCardClick);
     },
 
     sendChat: () => {
@@ -1002,6 +1064,9 @@ const UI = {
             return;
         }
 
+        // Cleanup local states if game left peek phase
+        if (state.phase !== 'peek') App.uiState.hasPeeked.clear();
+
         document.getElementById('lobby').classList.add('hidden');
         document.getElementById('game-view').classList.remove('hidden');
 
@@ -1051,6 +1116,10 @@ const UI = {
 
         let cx = window.innerWidth / 2;
         let cy = window.innerHeight / 2;
+        
+        // Mobile layout shifts entire game upwards slightly to combat native browser UI
+        if (window.innerWidth <= 768) cy -= 45; 
+
         let rx = Math.min(window.innerWidth * 0.35, window.innerWidth / 2 - 80); 
         let ry = Math.min(window.innerHeight * 0.38, window.innerHeight / 2 - 90);
 
@@ -1070,10 +1139,11 @@ const UI = {
             badge.className = `player-badge ${i === state.turnIndex ? 'active-turn' : ''} ${state.bazungaCallerId === p.id ? 'bazunga' : ''} ${!p.connected && !p.isBot ? 'disconnected' : ''}`;
             
             let isBottomHalf = py > cy;
-            let yDir = isBottomHalf ? -1 : 1; 
+            // Evaluates to -1 if player is at bottom. Centers coordinate push correctly.
+            let yDirToCenter = isBottomHalf ? -1 : 1; 
             
             badge.style.left = `${px}px`;
-            badge.style.top = `${py + (yDir === -1 ? 90 : -100)}px`;
+            badge.style.top = `${py + (yDirToCenter === -1 ? 90 : -100)}px`; // Place badge away from center
             
             let icon = p.isBot ? '🤖' : '👤';
             let cardCount = p.hand.length + p.penaltyCards.length;
@@ -1083,28 +1153,23 @@ const UI = {
 
             let allCards = [...p.hand, ...p.penaltyCards];
             
-            let maxCols = 2; 
-            let handW = 60; 
-            let handH = 82; 
-            if (allCards.length > 8) {
-                handW = 20; 
-                handH = 30;
-            }
+            let handW = window.innerWidth <= 768 ? 50 : 60; 
+            let handH = window.innerWidth <= 768 ? 70 : 82; 
             
-            allCards.forEach((c, idx) => {
+            allCards.forEach((c) => {
                 let el = document.getElementById(c.id) || UI.createCardDOM(c);
                 if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
                 
-                let row = Math.floor(idx / maxCols);
-                let col = idx % maxCols;
-                let cardsInRow = Math.min(maxCols, allCards.length - row * maxCols);
+                // Mapped precisely to fixed grid mapping resolving collapsing layouts natively.
+                let pos = GRID_POSITIONS[c.gridIndex] || {c: c.gridIndex % 4, r: Math.floor(c.gridIndex / 4)};
                 
-                let ox = (col * handW) - ((cardsInRow - 1) * handW / 2);
-                let oy = row * handH * yDir; 
+                let ox = (pos.c - 0.5) * handW;
+                // row 0 is inner edge. row 1 is outer edge. (Outer pushed away from center)
+                let oy = (pos.r - 0.5) * handH * -yDirToCenter; 
                 
-                el.style.left = `${px + ox - 26}px`; 
-                el.style.top = `${py + oy - 37}px`;
-                el.style.zIndex = 20 + idx; 
+                el.style.left = `${px + ox - (handW * 0.5)}px`; 
+                el.style.top = `${py + oy - (handH * 0.5)}px`;
+                el.style.zIndex = 20 + c.gridIndex; 
 
                 let isFaceUp = false;
                 if (state.phase === 'game_over') {
@@ -1143,12 +1208,16 @@ const UI = {
             });
         });
 
+        // Deck Positioning Offset - Shift deck up towards the opponent.
+        let deckOffsetY = window.innerWidth <= 768 ? 60 : 40;
+        let cWidthScale = window.innerWidth <= 768 ? 22 : 26;
+
         // Deck
         state.deck.forEach((c, i) => {
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
-            el.style.left = `${cx - 45 - 26}px`;
-            el.style.top = `${cy - 37 - (i*0.5)}px`; 
+            el.style.left = `${cx - 45 - cWidthScale}px`;
+            el.style.top = `${cy - deckOffsetY - (i*0.5)}px`; 
             el.style.zIndex = i;
             el.querySelector('.card-inner').classList.add('is-flipped');
             el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent');
@@ -1165,8 +1234,8 @@ const UI = {
         state.discardPile.forEach((c, i) => {
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
-            el.style.left = `${cx + 45 - 26}px`;
-            el.style.top = `${cy - 37}px`;
+            el.style.left = `${cx + 45 - cWidthScale}px`;
+            el.style.top = `${cy - deckOffsetY}px`;
             el.style.zIndex = 100 + i; 
             el.querySelector('.card-inner').classList.remove('is-flipped');
             el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent');
@@ -1199,7 +1268,7 @@ const UI = {
                 py = cy + Math.sin(angle) * (ry * 0.65);
             }
             
-            el.style.left = `${px - 26}px`;
+            el.style.left = `${px - cWidthScale}px`;
             el.style.top = `${py - 37}px`;
             el.style.zIndex = 1000;
             
@@ -1257,7 +1326,7 @@ const UI = {
         let activePlayer = state.players[state.turnIndex];
 
         if (state.phase === 'peek') {
-            if (me && !me.ready) statusText.innerText = "Peek at your bottom 2 cards, then click Ready.";
+            if (me && !me.ready) statusText.innerText = "Tap your BOTTOM TWO cards to peek. Then click Ready.";
             else statusText.innerText = "Waiting for others to finish peeking...";
         } else if (state.phase === 'play' || state.phase === 'orbit') {
             if (isMyTurn) {
@@ -1501,13 +1570,19 @@ const UI = {
             }
         }
 
+        // Revised Peeking Logic: Only bottom cards (gridIndex 2 and 3), strictly once!
         if (state.phase === 'peek' && clickedCard.ownerId === App.localId) {
-            let me = state.players.find(p => p.id === App.localId);
-            let idx = me.hand.findIndex(c => c.id === cardId);
-            if (idx >= 2) {
-                App.uiState.peekedCards.add(cardId);
-                UI.render(state);
-                setTimeout(() => { App.uiState.peekedCards.delete(cardId); UI.render(state); }, 2000);
+            if (!App.uiState.hasPeeked.has(cardId)) {
+                if (clickedCard.gridIndex === 2 || clickedCard.gridIndex === 3) {
+                    App.uiState.hasPeeked.add(cardId);
+                    App.uiState.peekedCards.add(cardId);
+                    UI.render(state);
+                    setTimeout(() => { App.uiState.peekedCards.delete(cardId); UI.render(state); }, 2000);
+                } else {
+                    UI.showToast("You can only peek at the bottom two cards!", "warning");
+                }
+            } else {
+                UI.showToast("You already peeked at this card!", "warning");
             }
             return;
         }

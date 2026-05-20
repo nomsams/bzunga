@@ -13,8 +13,8 @@
             --table-center: #064e3b;
             --table-edge: #022c22;
             --table-border: #78350f;
-            --card-w: 60px;
-            --card-h: 84px;
+            --card-w: 52px;
+            --card-h: 74px;
             --text-light: #f8fafc;
             --accent: #fbbf24;
             --danger: #ef4444;
@@ -33,7 +33,7 @@
         #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; text-align: center; background: radial-gradient(circle at top, #1e293b 0%, var(--bg-color) 100%); z-index: 100; position: absolute; top:0; left:0; width: 100%; }
         .lobby-box { background: var(--surface); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); max-width: 420px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
         h1 { color: var(--accent); margin-bottom: 20px; font-size: 2.5rem; font-weight: 800; text-shadow: 0 4px 10px rgba(0,0,0,0.5); letter-spacing: 2px; }
-        input, select, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none; font-size: 1rem; font-weight: 600; transition: all 0.2s; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; border: none; font-size: 1rem; font-weight: 600; transition: all 0.2s; }
         input, select { background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); outline: none; }
         input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2); }
         button { background: var(--accent); color: #000; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
@@ -61,10 +61,10 @@
         
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 6px; border: 1px solid #cbd5e1; display: flex; flex-direction: column; justify-content: space-between; padding: 4px; background: #fff; }
         .card-back { background: repeating-linear-gradient(45deg, #1e293b, #1e293b 10px, #0f172a 10px, #0f172a 20px); transform: rotateY(180deg); border: 2px solid #e2e8f0; }
-        .card-back::after { content: 'B'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.1); font-size: 2rem; font-weight: bold; }
+        .card-back::after { content: 'B'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: bold; }
         
-        .card .val { font-size: 1.2rem; font-weight: 800; line-height: 1; }
-        .card .suit { font-size: 1.6rem; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; }
+        .card .val { font-size: 1.1rem; font-weight: 800; line-height: 1; }
+        .card .suit { font-size: 1.5rem; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; }
         .card .val.bottom { transform: rotate(180deg); }
         .card.red .card-front { color: #ef4444; }
         .card.black .card-front { color: #1e293b; }
@@ -80,8 +80,6 @@
         .card.selected-target .card-inner { box-shadow: 0 0 0 4px var(--accent), 0 0 25px var(--accent); }
         .card.deck-glow .card-inner { box-shadow: 0 0 15px var(--success); }
         .card.holding-card { transform: scale(1.3) !important; z-index: 1000 !important; }
-        
-        /* Highlight Recent Action */
         .card.highlight-recent .card-inner { box-shadow: 0 0 15px 5px var(--accent); animation: pulse-recent 2s infinite; }
         
         @keyframes pulse-target { 0% { box-shadow: 0 0 10px 2px var(--info); } 50% { box-shadow: 0 0 20px 6px var(--info); } 100% { box-shadow: 0 0 10px 2px var(--info); } }
@@ -103,11 +101,11 @@
         .player-badge.active-turn .turn-text { display: block; }
         .player-badge.bazunga { background: var(--danger); border-color: #fff; animation: pulse-danger 1s infinite; }
 
-        /* Action Bar */
-        #action-bar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 10px 15px; border-radius: 16px; display: flex; gap: 8px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 200; pointer-events: auto; backdrop-filter: blur(10px); transition: bottom 0.3s, opacity 0.3s; flex-wrap: wrap; width: max-content; max-width: 95vw; }
-        #action-bar.hidden { bottom: -100px; opacity: 0; pointer-events: none; display: flex !important; }
-        #action-bar button { margin: 0; padding: 8px 16px; font-size: 0.9rem; border-radius: 8px; white-space: nowrap; }
-        #action-bar button.primary { background: var(--success); color: white; }
+        /* Action Bar (Side Docked) */
+        #action-bar { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 200; pointer-events: auto; backdrop-filter: blur(10px); transition: right 0.3s, opacity 0.3s; width: 110px; }
+        #action-bar.hidden { right: -150px; opacity: 0; pointer-events: none; display: flex !important; }
+        #action-bar button { margin: 0; padding: 10px 8px; font-size: 0.85rem; border-radius: 8px; width: 100%; text-align: center; line-height: 1.2; }
+        #action-bar button.primary { background: var(--success); color: white; font-size: 0.95rem; padding: 12px 8px; }
 
         /* Toasts */
         #toast-container { position: absolute; top: 60px; right: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 300; pointer-events: none; }
@@ -125,9 +123,9 @@
         @keyframes slapPop { 0% { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 0; } }
 
         /* Chat Drawer */
-        #chat-fab { position: fixed; bottom: 80px; right: 15px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 90; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; }
-        #chat-drawer { position: fixed; right: -300px; top: 0; width: 300px; height: 100vh; background: rgba(15, 23, 42, 0.95); border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.3s; z-index: 250; display: flex; flex-direction: column; pointer-events: auto; backdrop-filter: blur(10px); }
-        #chat-drawer.open { right: 0; }
+        #chat-fab { position: fixed; bottom: 20px; left: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 90; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; }
+        #chat-drawer { position: fixed; left: -300px; top: 0; width: 300px; height: 100vh; background: rgba(15, 23, 42, 0.95); border-right: 1px solid rgba(255,255,255,0.1); transition: left 0.3s; z-index: 250; display: flex; flex-direction: column; pointer-events: auto; backdrop-filter: blur(10px); }
+        #chat-drawer.open { left: 0; }
         .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); }
         #chat-messages { flex: 1; overflow-y: auto; padding: 15px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 8px; }
         .msg-sys { color: #64748b; font-style: italic; font-size: 0.75rem; text-align: center; }
@@ -286,8 +284,6 @@ const App = {
         peekedCards: new Set(),
         showingResults: false
     },
-    lastClickedCardId: null,
-    lastClickTime: 0,
     botInterval: null
 };
 
@@ -306,9 +302,10 @@ const Engine = {
         lastSlapTime: 0,
         lastSlapTargetId: null,
         lastSlap: null,
-        lastActionTargetId: null // For highlight-recent
+        lastActionTargetId: null,
+        turnStartTime: 0
     },
-    botMemory: {}, // Tracks by slot: { [botId]: { [ownerId_slot]: { value, isRed, numVal, time } } }
+    botMemory: {}, 
 
     getSlot: (player, cardId) => {
         let idx = player.hand.findIndex(c => c.id === cardId);
@@ -360,7 +357,7 @@ const Engine = {
     startGame: () => {
         if (Engine.state.players.length < 2) return UI.showToast("Need at least 2 players!", "danger");
         Engine.state.deck = Engine.initDeck();
-        Engine.state.discardPile = [];
+        Engine.state.discardPile = []; // Empty discard pile at start
         Engine.state.phase = 'peek';
         Engine.state.turnIndex = Math.floor(Math.random() * Engine.state.players.length);
         Engine.state.bazungaCallerId = null;
@@ -370,6 +367,7 @@ const Engine = {
         Engine.state.lastSlapTargetId = null;
         Engine.state.lastSlap = null;
         Engine.state.lastActionTargetId = null;
+        Engine.state.turnStartTime = Utils.timestamp();
         Engine.botMemory = {};
 
         Engine.state.players.forEach(p => {
@@ -385,11 +383,6 @@ const Engine = {
                 p.hand.push(c);
             }
         });
-
-        let firstDiscard = Engine.state.deck.pop();
-        firstDiscard.loc = 'discard';
-        firstDiscard.isFaceUp = true;
-        Engine.state.discardPile.push(firstDiscard);
 
         Engine.sysLog("Game started! Peek phase.", "success");
         Engine.broadcast();
@@ -454,6 +447,7 @@ const Engine = {
             loopCount++;
         } while (!Engine.state.players[Engine.state.turnIndex].connected && !Engine.state.players[Engine.state.turnIndex].isBot && loopCount < Engine.state.players.length);
 
+        Engine.state.turnStartTime = Utils.timestamp();
         Engine.broadcast();
     },
 
@@ -510,6 +504,7 @@ const Engine = {
                 player.ready = true;
                 if (Engine.state.players.every(p => p.ready || (!p.connected && !p.isBot))) {
                     Engine.state.phase = 'play';
+                    Engine.state.turnStartTime = now;
                     Engine.sysLog("Play phase started!", "success");
                 }
                 Engine.broadcast();
@@ -864,6 +859,9 @@ const Bot = {
         let activePlayer = Engine.state.players[Engine.state.turnIndex];
         if (!activePlayer.isBot) return;
 
+        // Wait 2-3 seconds before acting
+        if (now - Engine.state.turnStartTime < 2500) return;
+
         if (Engine.state.activeAbility && Engine.state.activeAbility.player === activePlayer.id) {
             if (now - Engine.state.activeAbility.time < 2000) return; 
         }
@@ -874,8 +872,22 @@ const Bot = {
             
             if (topDiscard) {
                 let topVal = Bot.getNumericValue(topDiscard.value, topDiscard.isRed);
-                if (activePlayer.botDifficulty >= 3) wantsDiscard = topVal <= 4;
-                else wantsDiscard = topVal < 8 && Math.random() > 0.5;
+                let mem = Engine.botMemory[activePlayer.id];
+                
+                // Advanced Bot Logic: Only draw discard if it's very low, or perfectly matches a known card
+                if (activePlayer.botDifficulty >= 3) {
+                    if (topVal <= 3) wantsDiscard = true;
+                    else {
+                        for (let key in mem) {
+                            if (key.startsWith(activePlayer.id) && mem[key].value === topDiscard.value) {
+                                wantsDiscard = true;
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    wantsDiscard = topVal < 6 && Math.random() > 0.5;
+                }
             }
 
             if (Engine.state.phase === 'play' && activePlayer.botDifficulty >= 4 && Math.random() < 0.05) {
@@ -1254,7 +1266,7 @@ const UI = {
 
         let cx = window.innerWidth / 2;
         let cy = window.innerHeight / 2;
-        let rx = Math.min(window.innerWidth * 0.42, window.innerWidth / 2 - 70);
+        let rx = Math.min(window.innerWidth * 0.35, window.innerWidth / 2 - 80); // Leave room for action bar
         let ry = Math.min(window.innerHeight * 0.38, window.innerHeight / 2 - 90);
 
         let localPlayerIndex = state.players.findIndex(p => p.id === App.localId);
@@ -1289,8 +1301,12 @@ const UI = {
             
             // 2x2 Grid Layout for Mobile
             let maxCols = 2; 
-            let handW = 45; 
-            let handH = 65; 
+            let handW = 60; 
+            let handH = 82; 
+            if (allCards.length > 8) {
+                handW = 20; // Overlap if too many cards
+                handH = 30;
+            }
             
             allCards.forEach((c, idx) => {
                 let el = document.getElementById(c.id) || UI.createCardDOM(c);
@@ -1303,8 +1319,8 @@ const UI = {
                 let ox = (col * handW) - ((cardsInRow - 1) * handW / 2);
                 let oy = row * handH * yDir; 
                 
-                el.style.left = `${px + ox - 32}px`; 
-                el.style.top = `${py + oy - 45}px`;
+                el.style.left = `${px + ox - 26}px`; // -26 is half of 52px card width
+                el.style.top = `${py + oy - 37}px`;
                 el.style.zIndex = 20 + idx; 
 
                 // STRICT FACE-UP LOGIC (Memory Game Mechanic)
@@ -1337,7 +1353,7 @@ const UI = {
                     else if (mode === 'peek_self' && p.id === App.localId) el.classList.add('targetable');
                     else if (mode === 'peek_opp' && p.id !== App.localId) el.classList.add('targetable');
                     else if (mode === 'peek_any') el.classList.add('targetable');
-                    else if (mode === 'q_swap_target' && p.id === App.localId) el.classList.add('targetable');
+                    else if (mode === 'q_swap_target') el.classList.add('targetable'); // Queen can swap with ANY card
                     else if (mode === 'blind_swap_1') el.classList.add('targetable');
                     else if (mode === 'blind_swap_2') {
                         el.classList.add('targetable');
@@ -1352,8 +1368,8 @@ const UI = {
         state.deck.forEach((c, i) => {
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
-            el.style.left = `${cx - 55 - 32}px`;
-            el.style.top = `${cy - 45 - (i*0.5)}px`; 
+            el.style.left = `${cx - 45 - 26}px`;
+            el.style.top = `${cy - 37 - (i*0.5)}px`; 
             el.style.zIndex = i;
             el.querySelector('.card-inner').classList.add('is-flipped');
             el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent');
@@ -1371,8 +1387,8 @@ const UI = {
         state.discardPile.forEach((c, i) => {
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
-            el.style.left = `${cx + 55 - 32}px`;
-            el.style.top = `${cy - 45}px`;
+            el.style.left = `${cx + 45 - 26}px`;
+            el.style.top = `${cy - 37}px`;
             el.style.zIndex = 100 + i; // Ensure discard pile is always on top
             el.querySelector('.card-inner').classList.remove('is-flipped');
             el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent');
@@ -1397,12 +1413,19 @@ const UI = {
             let relIndex = (activePIdx - localPlayerIndex + state.players.length) % state.players.length;
             let angle = (Math.PI / 2) + (relIndex * (2 * Math.PI / state.players.length));
             
-            // Position in a dedicated "Holding Area" closer to center than hand
-            let px = cx + Math.cos(angle) * (rx * 0.2); 
-            let py = cy + Math.sin(angle) * (ry * 0.2);
+            let px, py;
+            if (state.activeAbility.player === App.localId) {
+                // Local player holding card: Left side of their layout
+                px = cx - rx * 0.8;
+                py = cy + ry * 0.5;
+            } else {
+                // Opponent holding card: Closer to them
+                px = cx + Math.cos(angle) * (rx * 0.65); 
+                py = cy + Math.sin(angle) * (ry * 0.65);
+            }
             
-            el.style.left = `${px - 32}px`;
-            el.style.top = `${py - 45}px`;
+            el.style.left = `${px - 26}px`;
+            el.style.top = `${py - 37}px`;
             el.style.zIndex = 1000;
             
             let isFaceUp = (state.activeAbility.player === App.localId || state.activeAbility.step > 0);
@@ -1418,29 +1441,33 @@ const UI = {
 
         if (state.phase === 'game_over' && !App.uiState.showingResults) {
             App.uiState.showingResults = true;
-            document.getElementById('modal-gameover').classList.remove('hidden');
-            document.getElementById('modal-overlay').classList.remove('hidden');
-            document.getElementById('gameover-winner').innerText = state.winners.length > 1 ? "Winners: " + state.winners.join(', ') : "Winner: " + state.winners[0];
+            UI.showToast("Game Over! Calculating scores...", "info");
             
-            let html = ``;
-            let sortedPlayers = [...state.players].sort((a,b) => a.score - b.score);
-            sortedPlayers.forEach(p => {
-                let isWinner = state.winners.includes(p.name);
-                let pCards = [...p.hand, ...p.penaltyCards];
-                let mathStr = pCards.map(c => UI.getCardScoreString(c)).join(' + ') + ` = <strong>${p.score}</strong>`;
-                let cardsHtml = pCards.map(c => `<div class="mini-card ${c.isRed ? 'red' : 'black'}">${c.value}${c.suit}</div>`).join('');
+            setTimeout(() => {
+                document.getElementById('modal-gameover').classList.remove('hidden');
+                document.getElementById('modal-overlay').classList.remove('hidden');
+                document.getElementById('gameover-winner').innerText = state.winners.length > 1 ? "Winners: " + state.winners.join(', ') : "Winner: " + state.winners[0];
                 
-                html += `
-                <div class="endgame-player ${isWinner ? 'winner' : ''}">
-                    <div class="endgame-header">
-                        <span class="endgame-name">${p.name} ${isWinner ? '👑' : ''} ${state.bazungaCallerId === p.id ? '(Bazunga Caller)' : ''}</span>
-                        <span class="endgame-score">${p.score} pts</span>
-                    </div>
-                    <div class="endgame-cards">${cardsHtml}</div>
-                    <div class="endgame-math">${mathStr}</div>
-                </div>`;
-            });
-            document.getElementById('gameover-results').innerHTML = html;
+                let html = ``;
+                let sortedPlayers = [...state.players].sort((a,b) => a.score - b.score);
+                sortedPlayers.forEach(p => {
+                    let isWinner = state.winners.includes(p.name);
+                    let pCards = [...p.hand, ...p.penaltyCards];
+                    let mathStr = pCards.map(c => UI.getCardScoreString(c)).join(' + ') + ` = <strong>${p.score}</strong>`;
+                    let cardsHtml = pCards.map(c => `<div class="mini-card ${c.isRed ? 'red' : 'black'}">${c.value}${c.suit}</div>`).join('');
+                    
+                    html += `
+                    <div class="endgame-player ${isWinner ? 'winner' : ''}">
+                        <div class="endgame-header">
+                            <span class="endgame-name">${p.name} ${isWinner ? '👑' : ''} ${state.bazungaCallerId === p.id ? '(Bazunga Caller)' : ''}</span>
+                            <span class="endgame-score">${p.score} pts</span>
+                        </div>
+                        <div class="endgame-cards">${cardsHtml}</div>
+                        <div class="endgame-math">${mathStr}</div>
+                    </div>`;
+                });
+                document.getElementById('gameover-results').innerHTML = html;
+            }, 3500); // Wait 3.5s to let players see the table
         }
     },
 
@@ -1465,7 +1492,7 @@ const UI = {
                 else if (App.uiState.targetingMode === 'peek_opp') statusText.innerText = "Select an opponent's card to peek at (10 Magic).";
                 else if (App.uiState.targetingMode === 'peek_any') statusText.innerText = "Select ANY card to peek at (Queen Magic).";
                 else if (App.uiState.targetingMode === 'q_decision') statusText.innerText = "Do you want to swap the peeked card?";
-                else if (App.uiState.targetingMode === 'q_swap_target') statusText.innerText = "Select one of your cards to swap with the peeked card.";
+                else if (App.uiState.targetingMode === 'q_swap_target') statusText.innerText = "Select ANY card to swap with the peeked card.";
                 else if (App.uiState.targetingMode === 'blind_swap_1') statusText.innerText = "Select the FIRST card to blind swap (Jack Magic).";
                 else if (App.uiState.targetingMode === 'blind_swap_2') statusText.innerText = "Select the SECOND card to blind swap.";
                 else if (App.uiState.targetingMode === 'force_penalty') statusText.innerText = "Select an opponent's card to penalize them (Red King).";

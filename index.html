@@ -23,11 +23,10 @@
             --surface: rgba(30, 41, 59, 0.85);
         }
 
-        /* Mobile specific variable scaling */
         @media (max-width: 768px) {
             :root {
-                --card-w: 44px;
-                --card-h: 62px;
+                --card-w: 46px;
+                --card-h: 66px;
             }
         }
 
@@ -59,9 +58,8 @@
         #game-view { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; perspective: 1200px; }
         #table { width: 96%; height: 88%; background: radial-gradient(circle, var(--table-center) 0%, var(--table-edge) 100%); border-radius: 50%; border: 15px solid var(--table-border); position: relative; box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 30px 60px rgba(0,0,0,0.8); }
         
-        /* Animated Table Rim VFX */
-        @keyframes rotate-rim { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        #table-rim-svg { position: absolute; top: -15px; left: -15px; width: calc(100% + 30px); height: calc(100% + 30px); pointer-events: none; border-radius: 50%; overflow: visible; animation: rotate-rim 80s linear infinite; }
+        /* Static Table Rim VFX */
+        #table-rim-svg { position: absolute; top: -15px; left: -15px; width: calc(100% + 30px); height: calc(100% + 30px); pointer-events: none; border-radius: 50%; overflow: visible; }
         .table-arrow-text { font-size: 26px; font-weight: 900; fill: rgba(251, 191, 36, 0.25); letter-spacing: 8px; }
 
         /* Cards */
@@ -106,12 +104,18 @@
         #status-banner { background: rgba(0,0,0,0.85); color: white; text-align: center; padding: 10px 15px; font-size: 1rem; font-weight: 600; backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,0.1); pointer-events: auto; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         #status-text { flex: 1; text-align: center; color: var(--accent); letter-spacing: 0.5px; font-size: 0.9rem; }
         
-        /* Player Badges */
-        .player-badge { position: absolute; background: var(--surface); padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; pointer-events: none; text-align: center; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.3s; backdrop-filter: blur(4px); white-space: nowrap; }
-        .player-badge .name { font-weight: 600; }
-        .player-badge .meta { font-size: 0.7rem; color: #94a3b8; }
+        /* Collapsible Player Badges */
+        .player-badge { position: absolute; background: var(--surface); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; pointer-events: auto; text-align: center; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.3s ease; backdrop-filter: blur(4px); white-space: nowrap; max-width: 45px; overflow: hidden; cursor: pointer; }
+        .player-badge .icon { font-size: 1.1rem; }
+        .player-badge .name-text, .player-badge .meta { display: inline-block; opacity: 0; width: 0; transition: opacity 0.2s; }
         .player-badge .turn-text { display: none; color: var(--accent); font-size: 0.6rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 2px; }
-        .player-badge.active-turn { border-color: var(--accent); background: rgba(251, 191, 36, 0.15); box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); transform: translate(-50%, -50%) scale(1.08); z-index: 50; }
+        
+        /* Expanded State */
+        .player-badge:hover, .player-badge.expanded { max-width: 200px; padding: 8px 16px; }
+        .player-badge:hover .name-text, .player-badge.expanded .name-text { opacity: 1; width: auto; margin-left: 6px; font-weight: 600; }
+        .player-badge:hover .meta, .player-badge.expanded .meta { opacity: 1; width: auto; font-size: 0.7rem; color: #94a3b8; margin-top: 2px; }
+        
+        .player-badge.active-turn { border-color: var(--accent); background: rgba(251, 191, 36, 0.15); box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); z-index: 50; }
         .player-badge.active-turn .turn-text { display: block; }
         .player-badge.bazunga { background: var(--danger); border-color: #fff; animation: pulse-danger 1s infinite; }
 
@@ -216,7 +220,7 @@
     <!-- Game View -->
     <div id="game-view" class="hidden">
         <div id="table">
-            <!-- Animated Arrow Rim -->
+            <!-- Static Arrow Rim -->
             <svg id="table-rim-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
                 <path id="rim-path" d="M 500 20 A 480 480 0 0 1 500 980 A 480 480 0 0 1 500 20" fill="none" />
                 <text class="table-arrow-text">
@@ -271,9 +275,6 @@
     </div>
 </div>
 
-<!-- Incorporate Advanced Heuristic & Conversation Modules -->
-<script src="bot.js"></script>
-
 <script>
 /**
  * BAZUNGA - Elite Production Ready Architecture
@@ -300,16 +301,6 @@ const VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'
 const MAGIC_VALUES = ['9', '10', 'J', 'Q', 'K'];
 const BOT_NAMES = ["BeepBoop", "CardShark", "DeepBlue", "AlphaGo", "Blackbeard"];
 
-// Grid Slot Map: Defines fixed coordinate layout {col, row} up to infinite penalties
-const GRID_POSITIONS = [
-    {c:0, r:0}, {c:1, r:0}, // Indices 0, 1 (Top row / Inner row)
-    {c:0, r:1}, {c:1, r:1}, // Indices 2, 3 (Bottom row / Outer row - Allowed to peek)
-    {c:0, r:2}, {c:1, r:2}, // Indices 4, 5 (3x2 Layout Expansion)
-    {c:2, r:0}, {c:2, r:1}, {c:2, r:2}, // Indices 6, 7, 8 (3x3 Layout)
-    {c:3, r:0}, {c:3, r:1}, {c:3, r:2}, // Indices 9, 10, 11 (4x3 Layout)
-    {c:0, r:3}, {c:1, r:3}, {c:2, r:3}, {c:3, r:3} // Future-proofing
-];
-
 // --- GLOBAL APP STATE ---
 const App = {
     isHost: false,
@@ -324,528 +315,885 @@ const App = {
         targetingMode: null,
         selectedCardId: null,
         peekedCards: new Set(),
-        hasPeeked: new Set(), // Enforces "only peek once per card" rule
+        hasPeeked: new Set(), 
         showingResults: false
     },
     botInterval: null
 };
 
-// --- GAME ENGINE (HOST ONLY) ---
-const Engine = {
-    state: {
-        phase: 'lobby', 
-        turnIndex: 0,
-        deck: [],
-        discardPile: [],
-        players: [], 
-        bazungaCallerId: null,
-        orbitCount: 0,
-        logs: [],
-        activeAbility: null,
-        lastSlapTime: 0,
-        lastSlapTargetId: null,
-        lastSlap: null,
-        lastActionTargetId: null,
-        turnStartTime: 0
+// --- BOT CONFIG & LOGIC ---
+const BotConfig = {
+    profiles: {
+        1: { type: 'noob', capacity: 2, decayMs: 12000, reflexBase: 2500, extroversion: 0.9 },
+        2: { type: 'casual', capacity: 4, decayMs: 20000, reflexBase: 1800, extroversion: 0.6 },
+        3: { type: 'pro', capacity: 6, decayMs: 35000, reflexBase: 1200, extroversion: 0.2 },
+        4: { type: 'expert', capacity: 10, decayMs: 60000, reflexBase: 800, extroversion: 0.1 },
+        5: { type: 'pirate', capacity: 8, decayMs: 45000, reflexBase: 900, extroversion: 1.0 }
     },
-    botMemory: {}, 
-
-    // Improved tracking: Memory is now locked to physical grid slots
-    getSlot: (player, cardId) => {
-        let c = [...player.hand, ...player.penaltyCards].find(card => card.id === cardId);
-        if (c) return `slot_${c.gridIndex}`;
-        return null;
-    },
-
-    initDeck: () => {
-        let deck = [];
-        let idCounter = 0;
-        for (let suit of SUITS) {
-            for (let val of VALUES) {
-                deck.push({
-                    id: `c-${idCounter++}`,
-                    suit: suit,
-                    value: val,
-                    isRed: suit === '♥' || suit === '♦',
-                    isFaceUp: false,
-                    loc: 'deck', 
-                    ownerId: null
-                });
-            }
+    elizaPatterns: [
+        { match: ["WHY", "HOW COME"], replies: ["Why do you ask?", "Probabilities dictate it.", "Because the cards fell that way."] },
+        { match: ["YOU SUCK", "CHEAT", "RIGGED", "STUPID", "DUMB"], replies: ["Are you feeling frustrated?", "Emotions lead to mistakes.", "I am just executing logic."] },
+        { match: ["HELLO", "HI ", "HOLA"], replies: ["Greetings. Let us play.", "Hello. Focus on the deck."] },
+        { match: ["BOT", "AI", "ROBOT"], replies: ["Do computers worry you?", "I am simply an algorithm."] },
+        { match: ["YES", "YEP", "YEAH"], replies: ["You seem quite positive.", "Are you sure?"] },
+        { match: ["NO", "NOPE", "NAH"], replies: ["Why the negativity?", "Suit yourself."] },
+        { match: ["BAZUNGA", "WIN", "LOSE"], replies: ["The final score is all that matters.", "We shall see when the cards flip."] }
+    ],
+    chatBank: {
+        noob: {
+            slapSuccess: ["Wait, I did it?", "Gotcha!", "Oops, was that yours?"],
+            slapFail: ["Ouch!", "My hand slipped.", "I thought that was a match..."],
+            penalty: ["Why always me?", "This game is rigged.", "I have too many cards."],
+            magic: ["Magic time!", "What does this one do again?", "Pew pew!"],
+            frustrated: ["I hate this game!", "Stop picking on me!", "I'm just clicking randomly now."]
+        },
+        casual: {
+            slapSuccess: ["Too slow!", "Nice try.", "Yoink!"],
+            slapFail: ["Ah, misread it.", "Dang it.", "Reflexes betrayed me."],
+            penalty: ["Not good.", "I'll recover.", "Rough draw."],
+            magic: ["Let's see what you're hiding.", "Time to mix it up."],
+            frustrated: ["Okay, that's enough.", "My luck is terrible today."]
+        },
+        pro: {
+            slapSuccess: ["Predictable.", "Saw that coming.", "Tracked it."],
+            slapFail: ["Calculated risk.", "A rare error.", "Latency."],
+            penalty: ["A minor setback.", "Stats are balancing out."],
+            magic: ["Gathering intel.", "Optimizing layout.", "Executing swap."],
+            frustrated: ["Variance is severely against me.", "Focusing. Reducing errors."]
+        },
+        expert: {
+            slapSuccess: ["Your layout is compromised.", "Checkmate.", "Memory serves."],
+            slapFail: ["Margin of error.", "Grace period missed."],
+            penalty: ["Absorbing the penalty.", "Calculated sacrifice."],
+            magic: ["Reordering the board.", "Target acquired.", "Blind swap initiated."],
+            frustrated: ["System error: too many penalties.", "Re-evaluating heuristic models."]
+        },
+        pirate: {
+            slapSuccess: ["Arrr! Snatched yer treasure!", "Walk the plank!", "Plundered!"],
+            slapFail: ["Blistering barnacles!", "Shiver me timbers!", "Blast it!"],
+            penalty: ["A curse upon the sea!", "More dead weight for the hull.", "Mutiny!"],
+            magic: ["Prepare to be boarded!", "Hoist the colors!", "Swappin' the cargo!"],
+            frustrated: ["I'll keelhaul the lot of ye!", "Kraken take ye all!"]
         }
-        return Utils.shuffle(deck);
+    }
+};
+
+const Bot = {
+    chatHistory: [],    
+    lastChatTime: {},   
+    usedLines: {},      
+    frustration: {},    
+    eventCache: {},     
+
+    start: () => {
+        if (App.botInterval) clearInterval(App.botInterval);
+        App.botInterval = setInterval(Bot.tick, 1000);
+        Bot.chatHistory = []; 
     },
 
-    broadcast: () => {
-        if (!App.isHost) return;
-        const payload = { type: 'STATE_UPDATE', state: Engine.state };
-        Object.values(App.connections).forEach(conn => {
-            if (conn.open) conn.send(payload);
-        });
-        UI.render(Engine.state);
+    getNumericValue: (valStr, isRed) => {
+        if (valStr === 'K' && !isRed) return -1;
+        if (valStr === 'K' && isRed) return 10;
+        if (valStr === 'Q' || valStr === 'J') return 10;
+        if (valStr === 'A') return 1;
+        return parseInt(valStr);
     },
 
-    sysLog: (msg, type = 'info') => {
-        Engine.state.logs.push({ type: 'sys', msg, logType: type, time: Utils.timestamp() });
-        if (Engine.state.logs.length > 60) Engine.state.logs.shift();
-        Engine.broadcast();
+    getUniqueResponse: (botId, category, linesArray) => {
+        if (!Bot.usedLines[botId]) Bot.usedLines[botId] = {};
+        let lastIndex = Bot.usedLines[botId][category];
+        let nextIndex;
+        if (linesArray.length > 1) {
+            do { nextIndex = Math.floor(Math.random() * linesArray.length); } while (nextIndex === lastIndex);
+        } else { nextIndex = 0; }
+        Bot.usedLines[botId][category] = nextIndex;
+        return linesArray[nextIndex];
     },
 
-    chatLog: (name, msg, isPirate = false) => {
-        Engine.state.logs.push({ type: isPirate ? 'pirate' : 'chat', name, msg, time: Utils.timestamp() });
-        Engine.broadcast();
-        
-        // Connects directly to the external bot processing layout
-        if (App.isHost && typeof window.Bot !== 'undefined' && window.Bot.listenToChat) {
-            let isBotSender = Engine.state.players.some(p => p.name === name && p.isBot);
-            window.Bot.listenToChat(name, msg, isBotSender);
-        }
-    },
-
-    startGame: () => {
-        if (Engine.state.players.length < 2) return UI.showToast("Need at least 2 players!", "danger");
-        Engine.state.deck = Engine.initDeck();
-        Engine.state.discardPile = []; 
-        Engine.state.phase = 'peek';
-        Engine.state.turnIndex = Math.floor(Math.random() * Engine.state.players.length);
-        Engine.state.bazungaCallerId = null;
-        Engine.state.orbitCount = 0;
-        Engine.state.activeAbility = null;
-        Engine.state.lastSlapTime = 0;
-        Engine.state.lastSlapTargetId = null;
-        Engine.state.lastSlap = null;
-        Engine.state.lastActionTargetId = null;
-        Engine.state.turnStartTime = Utils.timestamp();
-        Engine.botMemory = {};
-        
-        App.uiState.hasPeeked.clear(); // Reset peeking logic locally
-
-        Engine.state.players.forEach(p => {
-            p.hand = [];
-            p.penaltyCards = [];
-            p.ready = false;
-            p.score = 0;
-            p.connected = true;
-            for(let i=0; i<4; i++) {
-                let c = Engine.state.deck.pop();
-                c.loc = 'hand';
-                c.ownerId = p.id;
-                c.gridIndex = i; // Map uniquely to stable physical slot
-                p.hand.push(c);
-            }
-        });
-
-        Engine.sysLog("Game started! Peek phase.", "success");
-        Engine.broadcast();
-        if (window.Bot && window.Bot.start) window.Bot.start();
-    },
-
-    checkDeckEmpty: () => {
-        if (Engine.state.deck.length === 0 && Engine.state.discardPile.length > 1) {
-            Engine.sysLog("Deck empty! Reshuffling discard pile...", "warning");
-            let topDiscard = Engine.state.discardPile.pop();
-            
-            Engine.state.discardPile.forEach(c => {
-                c.loc = 'deck';
-                c.isFaceUp = false;
-                c.ownerId = null;
-            });
-            
-            Engine.state.deck = Utils.shuffle([...Engine.state.discardPile]);
-            Engine.state.discardPile = [topDiscard];
-        }
-    },
-
-    getCardById: (id) => {
-        let allCards = [...Engine.state.deck, ...Engine.state.discardPile];
-        Engine.state.players.forEach(p => {
-            allCards.push(...p.hand, ...p.penaltyCards);
-        });
-        if (Engine.state.activeAbility && Engine.state.activeAbility.card) {
-            allCards.push(Engine.state.activeAbility.card);
-        }
-        return allCards.find(c => c.id === id);
-    },
-
-    drawPenalty: (playerId) => {
-        Engine.checkDeckEmpty();
-        let p = Engine.state.players.find(p => p.id === playerId);
-        if (!p || Engine.state.deck.length === 0) return;
-        let c = Engine.state.deck.pop();
-        c.loc = 'penalty';
-        c.ownerId = p.id;
-        c.isFaceUp = false;
-        
-        // Find lowest available grid index to fill holes or expand sequentially
-        let usedIndices = new Set([...p.hand, ...p.penaltyCards].map(card => card.gridIndex));
-        let newIndex = 0;
-        while(usedIndices.has(newIndex)) newIndex++;
-        c.gridIndex = newIndex;
-        
-        p.penaltyCards.push(c);
-        Engine.state.lastActionTargetId = c.id;
-        Engine.sysLog(`${p.name} received a penalty card.`, "danger");
-    },
-
-    nextTurn: () => {
-        if (Engine.state.phase === 'game_over') return;
-        Engine.state.activeAbility = null;
-        
-        if (Engine.state.phase === 'orbit') {
-            Engine.state.orbitCount++;
-            if (Engine.state.orbitCount >= Engine.state.players.length) {
-                Engine.endGame();
-                return;
-            }
-        }
-
-        let loopCount = 0;
-        do {
-            Engine.state.turnIndex = (Engine.state.turnIndex + 1) % Engine.state.players.length;
-            loopCount++;
-        } while (!Engine.state.players[Engine.state.turnIndex].connected && !Engine.state.players[Engine.state.turnIndex].isBot && loopCount < Engine.state.players.length);
-
-        Engine.state.turnStartTime = Utils.timestamp();
-        Engine.broadcast();
-    },
-
-    endGame: () => {
-        Engine.state.phase = 'game_over';
-        
-        Engine.state.players.forEach(p => {
-            [...p.hand, ...p.penaltyCards].forEach(c => c.isFaceUp = true);
-            
-            p.score = 0;
-            [...p.hand, ...p.penaltyCards].forEach(c => {
-                if (c.value === 'K' && !c.isRed) p.score -= 1;
-                else if (c.value === 'K' && c.isRed) p.score += 10;
-                else if (c.value === 'Q' || c.value === 'J') p.score += 10;
-                else if (c.value === 'A') p.score += 1;
-                else p.score += parseInt(c.value);
-            });
-        });
-
-        let caller = Engine.state.players.find(p => p.id === Engine.state.bazungaCallerId);
-        let lowestScore = Math.min(...Engine.state.players.map(p => p.score));
-        let winners = [];
-
-        if (caller) {
-            let isStrictlyLowest = caller.score === lowestScore && Engine.state.players.filter(p => p.score === lowestScore).length === 1;
-            if (isStrictlyLowest) {
-                winners.push(caller.name);
-                Engine.sysLog(`${caller.name} successfully called BAZUNGA and wins!`, "success");
-            } else {
-                caller.score += 25; 
-                winners = Engine.state.players.filter(p => p.id !== caller.id).map(p => p.name);
-                Engine.sysLog(`${caller.name} failed Bazunga! Everyone else wins.`, "danger");
-            }
-        } else {
-            winners = Engine.state.players.filter(p => p.score === lowestScore).map(p => p.name);
-            Engine.sysLog(`Game ended naturally.`, "info");
-        }
-        
-        Engine.state.winners = winners;
-        Engine.broadcast();
-    },
-
-    processAction: (action, peerId) => {
-        if (!App.isHost) return;
-        const player = Engine.state.players.find(p => p.id === peerId);
-        if (!player) return;
-
-        const isTurn = Engine.state.players[Engine.state.turnIndex].id === peerId;
+    chat: (bot, trigger) => {
         let now = Utils.timestamp();
+        if (now - (Bot.lastChatTime[bot.id] || 0) < 5000) return; 
 
-        switch (action.type) {
-            case 'READY_PEEK':
-                if (Engine.state.phase !== 'peek') return;
-                player.ready = true;
-                if (Engine.state.players.every(p => p.ready || (!p.connected && !p.isBot))) {
-                    Engine.state.phase = 'play';
-                    Engine.state.turnStartTime = now;
-                    Engine.sysLog("Play phase started!", "success");
+        let profile = BotConfig.profiles[bot.botDifficulty];
+        if (Math.random() > profile.extroversion * 0.4) return;
+
+        let frustrationLvl = Bot.frustration[bot.id] || 0;
+        let actualTrigger = trigger;
+        if (frustrationLvl >= 3 && Math.random() > 0.3) actualTrigger = 'frustrated';
+
+        let lines = BotConfig.chatBank[profile.type][actualTrigger];
+        if (lines) {
+            let msg = Bot.getUniqueResponse(bot.id, actualTrigger, lines);
+            Engine.chatLog(bot.name, msg, profile.type === 'pirate');
+            Bot.lastChatTime[bot.id] = Utils.timestamp();
+        }
+    },
+
+    listenToChat: (senderName, message, isBotSender) => {
+        Bot.chatHistory.push({ sender: senderName, isBot: isBotSender });
+        if (Bot.chatHistory.length > 10) Bot.chatHistory.shift();
+
+        let recentBots = Bot.chatHistory.slice(-4).filter(h => h.isBot);
+        if (recentBots.length >= 4) return;
+
+        let upperMsg = message.toUpperCase();
+        let bots = Engine.state.players.filter(p => p.isBot);
+        
+        bots.forEach(bot => {
+            if (bot.name === senderName) return;
+            let profile = BotConfig.profiles[bot.botDifficulty];
+
+            if (upperMsg.includes("STUPID") || upperMsg.includes("DUMB")) {
+                Bot.frustration[bot.id] = (Bot.frustration[bot.id] || 0) + 1;
+            }
+
+            if (Math.random() > profile.extroversion * 0.6) return;
+
+            for (let pattern of BotConfig.elizaPatterns) {
+                if (pattern.match.some(keyword => upperMsg.includes(keyword))) {
+                    let reply = Bot.getUniqueResponse(bot.id, 'eliza_' + pattern.match[0], pattern.replies);
+                    setTimeout(() => {
+                        Engine.chatLog(bot.name, `@${senderName} ${reply}`, profile.type === 'pirate');
+                        Bot.lastChatTime[bot.id] = Utils.timestamp();
+                    }, Math.random() * 2000 + 1000);
+                    return; 
                 }
-                Engine.broadcast();
-                break;
+            }
+        });
+    },
 
-            case 'SLAP':
-                if (Engine.state.phase !== 'play' && Engine.state.phase !== 'orbit') return;
-                if (Engine.state.discardPile.length === 0) return;
-                
-                let targetCard = Engine.getCardById(action.targetId);
-                if (!targetCard || (targetCard.loc !== 'hand' && targetCard.loc !== 'penalty')) return;
-                
-                let topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
-                let owner = Engine.state.players.find(p => p.id === targetCard.ownerId);
-                
-                let isTie = (now - Engine.state.lastSlapTime < 250) && (action.targetId === Engine.state.lastSlapTargetId);
-
-                if (targetCard.value === topDiscard.value) {
-                    Engine.state.lastSlapTime = now;
-                    Engine.state.lastSlapTargetId = action.targetId;
-
-                    if (targetCard.loc === 'hand') owner.hand = owner.hand.filter(c => c.id !== targetCard.id);
-                    else owner.penaltyCards = owner.penaltyCards.filter(c => c.id !== targetCard.id);
-                    
-                    targetCard.loc = 'discard';
-                    targetCard.ownerId = null;
-                    targetCard.isFaceUp = true;
-                    Engine.state.discardPile.push(targetCard);
-                    Engine.state.lastActionTargetId = targetCard.id;
-
-                    if (owner.id === player.id) {
-                        Engine.sysLog(`${player.name} successfully slapped their own ${targetCard.value}!`, "success");
-                    } else {
-                        Engine.sysLog(`${player.name} correctly slapped ${owner.name}'s ${targetCard.value}! ${owner.name} gets 2 penalties.`, "success");
-                        Engine.drawPenalty(owner.id);
-                        Engine.drawPenalty(owner.id);
-                        if (owner.isBot && owner.botDifficulty === 5) Engine.chatLog(owner.name, "Arrr, ye scallywag! Keep yer hands off me booty!", true);
-                    }
-                    Engine.state.lastSlap = { id: targetCard.id, success: true, time: now };
+    processReactions: (now) => {
+        let lastSlap = Engine.state.lastSlap;
+        if (lastSlap && lastSlap.time > (Bot.eventCache.lastSlapTime || 0)) {
+            Bot.eventCache.lastSlapTime = lastSlap.time;
+            let slappingBot = Engine.state.players.find(p => p.isBot && p.id === lastSlap.playerId);
+            
+            if (slappingBot) {
+                if (lastSlap.success) {
+                    Bot.frustration[slappingBot.id] = 0; 
+                    Bot.chat(slappingBot, 'slapSuccess');
                 } else {
-                    if (isTie) {
-                        Engine.sysLog(`${player.name} slapped just a millisecond too late! No penalty.`, "warning");
-                        return;
-                    }
-                    Engine.sysLog(`${player.name} incorrectly slapped ${owner.name}'s ${targetCard.value} onto a ${topDiscard.value}! Penalty!`, "danger");
-                    Engine.drawPenalty(player.id);
-                    Engine.state.lastSlap = { id: targetCard.id, success: false, time: now };
-                    
-                    Engine.state.players.filter(p => p.isBot).forEach(bot => {
-                        Engine.memorizeForBot(bot.id, targetCard);
-                    });
+                    Bot.frustration[slappingBot.id] = (Bot.frustration[slappingBot.id] || 0) + 2;
+                    Bot.chat(slappingBot, 'slapFail');
                 }
-                Engine.broadcast();
-                break;
+            }
 
-            case 'DRAW_DECK':
-                if (!isTurn || Engine.state.activeAbility) return;
-                Engine.checkDeckEmpty();
-                if (Engine.state.deck.length === 0) return; 
+            if (lastSlap.success && lastSlap.targetOwnerId) {
+                let victimBot = Engine.state.players.find(p => p.isBot && p.id === lastSlap.targetOwnerId);
+                if (victimBot) {
+                    Bot.frustration[victimBot.id] = (Bot.frustration[victimBot.id] || 0) + 1;
+                    Bot.chat(victimBot, 'penalty');
+                }
+            }
+        }
+    },
+
+    tick: () => {
+        if (!App.isHost || Engine.state.phase === 'lobby' || Engine.state.phase === 'game_over') return;
+
+        let now = Utils.timestamp();
+        let bots = Engine.state.players.filter(p => p.isBot);
+
+        Bot.processReactions(now);
+
+        if (now - (Engine.state.lastSlapTime || 0) < 2500) return;
+
+        if (Engine.state.phase === 'peek') {
+            bots.forEach(bot => { 
+                if (!bot.ready) Engine.processAction({ type: 'READY_PEEK' }, bot.id); 
+            });
+        }
+
+        bots.forEach(bot => {
+            let profile = BotConfig.profiles[bot.botDifficulty];
+            if (!Engine.botMemory[bot.id]) Engine.botMemory[bot.id] = {};
+            let mem = Engine.botMemory[bot.id];
+            
+            for (let key in mem) {
+                if (now - mem[key].time > profile.decayMs) delete mem[key];
+            }
+            
+            let keys = Object.keys(mem);
+            if (keys.length > profile.capacity) {
+                let oldest = keys.sort((a,b) => mem[a].time - mem[b].time)[0];
+                delete mem[oldest];
+            }
+        });
+
+        if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && Engine.state.discardPile.length > 0) {
+            let topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
+            bots.forEach(bot => {
+                let profile = BotConfig.profiles[bot.botDifficulty];
+                let frustration = Bot.frustration[bot.id] || 0;
+                let reflexDelay = profile.reflexBase - (frustration * 50); 
+                let mem = Engine.botMemory[bot.id];
                 
-                let drawn = Engine.state.deck.pop();
-                drawn.loc = 'holding';
-                drawn.ownerId = player.id;
-                drawn.isFaceUp = true; 
-                Engine.state.activeAbility = { player: player.id, card: drawn, type: 'holding', step: 0, time: now };
-                Engine.sysLog(`${player.name} drew from the deck.`);
-                Engine.broadcast();
-                break;
+                for (let key in mem) {
+                    if (mem[key].value === topDiscard.value) {
+                        let [ownerId, loc, idx] = key.split('_');
+                        let owner = Engine.state.players.find(p => p.id === ownerId);
+                        if (owner) {
+                            let target = loc === 'hand' ? owner.hand[idx] : owner.penaltyCards[idx];
+                            if (target && Math.random() < (1000 / Math.max(200, reflexDelay))) {
+                                Engine.processAction({ type: 'SLAP', targetId: target.id }, bot.id);
+                                delete mem[key]; 
+                                return; 
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
-            case 'DRAW_DISCARD':
-                if (!isTurn || Engine.state.activeAbility) return;
-                if (Engine.state.discardPile.length === 0) return;
-                let disc = Engine.state.discardPile.pop();
-                disc.loc = 'holding';
-                disc.ownerId = player.id;
-                Engine.state.activeAbility = { player: player.id, card: disc, type: 'holding_discard', step: 0, time: now };
-                Engine.sysLog(`${player.name} drew from the discard pile.`);
-                Engine.broadcast();
-                break;
+        let activePlayer = Engine.state.players[Engine.state.turnIndex];
+        if (!activePlayer.isBot) return;
 
-            case 'PLAY_HOLDING':
-                if (!isTurn || !Engine.state.activeAbility) return;
-                let hCard = Engine.state.activeAbility.card;
+        // Wait 2-3 seconds before acting
+        if (now - Engine.state.turnStartTime < 2500) return;
+
+        if (Engine.state.activeAbility && Engine.state.activeAbility.player === activePlayer.id) {
+            if (now - Engine.state.activeAbility.time < 2000) return; 
+        }
+
+        if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && !Engine.state.activeAbility) {
+            let topDiscard = Engine.state.discardPile.length > 0 ? Engine.state.discardPile[Engine.state.discardPile.length - 1] : null;
+            let wantsDiscard = false;
+            let mem = Engine.botMemory[activePlayer.id];
+            
+            if (topDiscard) {
+                let topVal = Bot.getNumericValue(topDiscard.value, topDiscard.isRed);
+                if (activePlayer.botDifficulty >= 3) {
+                    if (topVal <= 3) wantsDiscard = true;
+                    else {
+                        for (let key in mem) {
+                            if (key.startsWith(activePlayer.id) && mem[key].value === topDiscard.value) {
+                                wantsDiscard = true; 
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    wantsDiscard = topVal < 6 && Math.random() > 0.5;
+                }
+            }
+
+            if (Engine.state.phase === 'play' && activePlayer.botDifficulty >= 4 && Math.random() < 0.15) {
+                let myExpectedScore = 0;
+                let knownCards = 0;
+                let totalCards = activePlayer.hand.length + activePlayer.penaltyCards.length;
+
+                for (let key in mem) {
+                    if (key.startsWith(activePlayer.id)) {
+                        myExpectedScore += mem[key].numVal;
+                        knownCards++;
+                    }
+                }
                 
-                if (action.action === 'discard') {
-                    hCard.loc = 'discard';
-                    hCard.ownerId = null;
-                    hCard.isFaceUp = true;
-                    Engine.state.discardPile.push(hCard);
-                    Engine.state.lastActionTargetId = hCard.id;
-                    
-                    if (Engine.state.activeAbility.type === 'holding' && MAGIC_VALUES.includes(hCard.value)) {
-                        if (hCard.value === 'K' && !hCard.isRed) {
-                            Engine.nextTurn();
-                        } else {
-                            Engine.state.activeAbility = { player: player.id, card: hCard, type: 'magic_' + hCard.value, step: 1, time: now };
-                            Engine.sysLog(`${player.name} activated magic ${hCard.value}!`, "info");
-                            if (player.isBot && player.botDifficulty === 5) Engine.chatLog(player.name, "Prepare to be boarded!", true);
-                            Engine.broadcast();
+                myExpectedScore += (totalCards - knownCards) * 5;
+
+                if (myExpectedScore <= 4 && totalCards <= 4) {
+                    Engine.processAction({ type: 'CALL_BAZUNGA' }, activePlayer.id);
+                    return;
+                }
+            }
+
+            if (wantsDiscard) Engine.processAction({ type: 'DRAW_DISCARD' }, activePlayer.id);
+            else Engine.processAction({ type: 'DRAW_DECK' }, activePlayer.id);
+            return;
+        }
+
+        if (Engine.state.activeAbility && Engine.state.activeAbility.player === activePlayer.id) {
+            let ability = Engine.state.activeAbility;
+            let mem = Engine.botMemory[activePlayer.id];
+            
+            if (ability.type.startsWith('holding')) {
+                let hCard = ability.card;
+                let cardVal = Bot.getNumericValue(hCard.value, hCard.isRed);
+                
+                if (ability.type === 'holding' && MAGIC_VALUES.includes(hCard.value)) {
+                    if (cardVal === -1) { 
+                         let target = activePlayer.hand[Math.floor(Math.random() * activePlayer.hand.length)];
+                         if (target) Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: target.id }, activePlayer.id);
+                    } else {
+                         Bot.chat(activePlayer, 'magic');
+                         Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
+                    }
+                } else {
+                    let targetToSwap = null;
+                    if (activePlayer.botDifficulty >= 3) {
+                        let worstKnownVal = cardVal; 
+                        for (let key in mem) {
+                            if (key.startsWith(activePlayer.id) && mem[key].numVal > worstKnownVal) {
+                                let [_, loc, idx] = key.split('_');
+                                targetToSwap = loc === 'hand' ? activePlayer.hand[idx] : activePlayer.penaltyCards[idx];
+                                worstKnownVal = mem[key].numVal;
+                            }
+                        }
+                        if (!targetToSwap && cardVal <= 2) {
+                            let unknownOwn = activePlayer.hand.find(c => !mem[`${activePlayer.id}_${Engine.getSlot(activePlayer, c.id)}`]);
+                            if (unknownOwn) targetToSwap = unknownOwn;
                         }
                     } else {
-                        Engine.nextTurn();
-                    }
-                } else if (action.action === 'swap') {
-                    let target = Engine.getCardById(action.targetId);
-                    if (!target || target.ownerId !== player.id) return;
-                    
-                    let replaced = false;
-                    let iHand = player.hand.findIndex(c => c.id === target.id);
-                    if (iHand > -1) { player.hand[iHand] = hCard; replaced = true; hCard.loc = 'hand'; }
-                    if (!replaced) {
-                        let iPen = player.penaltyCards.findIndex(c => c.id === target.id);
-                        if (iPen > -1) { player.penaltyCards[iPen] = hCard; replaced = true; hCard.loc = 'penalty'; }
+                        if (cardVal < 7 && Math.random() > 0.4) {
+                            targetToSwap = activePlayer.hand[Math.floor(Math.random() * activePlayer.hand.length)];
+                        }
                     }
 
-                    if (replaced) {
-                        hCard.ownerId = player.id;
-                        hCard.gridIndex = target.gridIndex; // Maintain layout position
-                        hCard.isFaceUp = false; 
-                        Engine.state.lastActionTargetId = hCard.id;
-
-                        target.loc = 'discard';
-                        target.ownerId = null;
-                        target.isFaceUp = true; 
-                        Engine.state.discardPile.push(target);
-
-                        Engine.sysLog(`${player.name} swapped their drawn card with a card in their layout.`, "info");
-                        Engine.nextTurn();
-                    }
-                } else if (action.action === 'add_to_layout') {
-                    hCard.ownerId = player.id;
-                    hCard.loc = 'hand';
-                    hCard.isFaceUp = false;
-                    
-                    let usedIndices = new Set([...player.hand, ...player.penaltyCards].map(c => c.gridIndex));
-                    let newIndex = 0;
-                    while(usedIndices.has(newIndex)) newIndex++;
-                    hCard.gridIndex = newIndex;
-                    
-                    player.hand.push(hCard);
-                    Engine.state.lastActionTargetId = hCard.id;
-                    Engine.sysLog(`${player.name} placed a card in their empty layout.`, "info");
-                    Engine.nextTurn();
+                    if (targetToSwap) Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: targetToSwap.id }, activePlayer.id);
+                    else Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
                 }
-                break;
-
-            case 'RESOLVE_MAGIC':
-                if (!isTurn || !Engine.state.activeAbility) return;
-                let mType = Engine.state.activeAbility.type;
+            } else {
+                let mType = ability.type;
+                let payload = { type: 'RESOLVE_MAGIC' };
                 
                 if (mType === 'magic_9') {
-                    Engine.sysLog(`${player.name} used a 9 to secretly peek at their own card.`, "info");
-                    if (action.targetId && player.isBot) {
-                        let c = Engine.getCardById(action.targetId);
-                        if (c) Engine.memorizeForBot(player.id, c);
-                    }
-                    Engine.nextTurn();
+                    let unknownOwn = activePlayer.hand.find(c => !mem[`${activePlayer.id}_${Engine.getSlot(activePlayer, c.id)}`]);
+                    if (unknownOwn) payload.targetId = unknownOwn.id;
+                    
                 } else if (mType === 'magic_10') {
-                    let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
-                    Engine.sysLog(`${player.name} used a 10 to secretly peek at one of ${targetOwner ? targetOwner.name + "'s" : "an opponent's"} cards.`, "info");
-                    if (action.targetId && player.isBot) {
-                        let c = Engine.getCardById(action.targetId);
-                        if (c) Engine.memorizeForBot(player.id, c);
-                    }
-                    Engine.nextTurn();
-                } else if (mType === 'magic_Q') {
-                    if (action.swapTarget1 && action.swapTarget2) {
-                        Engine.executeSwap(action.swapTarget1, action.swapTarget2, false);
-                        Engine.sysLog(`${player.name} used a Queen to peek and swap a card!`, "warning");
-                    } else {
-                        Engine.sysLog(`${player.name} used a Queen to secretly peek at a card.`, "info");
-                        if (action.targetId && player.isBot) {
-                            let c = Engine.getCardById(action.targetId);
-                            if (c) Engine.memorizeForBot(player.id, c);
+                    let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
+                    if (opps.length > 0) {
+                        let opp = opps[Math.floor(Math.random() * opps.length)];
+                        let unknownOpp = opp.hand.find(c => !mem[`${opp.id}_${Engine.getSlot(opp, c.id)}`]);
+                        if (unknownOpp) { 
+                            payload.targetPlayerId = opp.id; 
+                            payload.targetId = unknownOpp.id; 
                         }
                     }
-                    Engine.nextTurn();
+                    
+                } else if (mType === 'magic_Q') {
+                    let myWorst = null; let myWorstVal = -99;
+                    let oppBest = null; let oppBestVal = 99;
+                    
+                    for (let key in mem) {
+                        if (key.startsWith(activePlayer.id) && mem[key].numVal > myWorstVal) {
+                            let [_, loc, idx] = key.split('_');
+                            myWorst = loc === 'hand' ? activePlayer.hand[idx] : activePlayer.penaltyCards[idx];
+                            myWorstVal = mem[key].numVal;
+                        } else if (!key.startsWith(activePlayer.id) && mem[key].numVal < oppBestVal) {
+                            let [oid, loc, idx] = key.split('_');
+                            let opp = Engine.state.players.find(p => p.id === oid);
+                            if (opp) { 
+                                oppBest = loc === 'hand' ? opp.hand[idx] : opp.penaltyCards[idx]; 
+                                oppBestVal = mem[key].numVal; 
+                            }
+                        }
+                    }
+                    
+                    if (myWorst && oppBest && myWorstVal > oppBestVal) {
+                        payload.swapTarget1 = myWorst.id; 
+                        payload.swapTarget2 = oppBest.id;
+                    } else if (Math.random() > 0.5) {
+                        let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
+                        if (opps.length > 0) payload.targetId = opps[0].hand[0]?.id;
+                    }
+                    
                 } else if (mType === 'magic_J') {
-                    if (action.swapTarget1 && action.swapTarget2) {
-                        if (action.swapTarget1 === action.swapTarget2) return; 
-                        let c1 = Engine.getCardById(action.swapTarget1);
-                        let c2 = Engine.getCardById(action.swapTarget2);
-                        let p1 = Engine.state.players.find(p => p.id === c1?.ownerId);
-                        let p2 = Engine.state.players.find(p => p.id === c2?.ownerId);
-                        Engine.executeSwap(action.swapTarget1, action.swapTarget2, true); 
-                        Engine.sysLog(`🌪️ ${player.name} used a Jack to blind-swap a card from ${p1?.name} and ${p2?.name}!`, "warning");
+                    let allCards = [];
+                    Engine.state.players.filter(p => p.id !== activePlayer.id).forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
+                    if (allCards.length >= 2) {
+                        payload.swapTarget1 = allCards[Math.floor(Math.random() * allCards.length)].id;
+                        let t2 = allCards[Math.floor(Math.random() * allCards.length)].id;
+                        while(t2 === payload.swapTarget1) t2 = allCards[Math.floor(Math.random() * allCards.length)].id; 
+                        payload.swapTarget2 = t2;
                     }
-                    Engine.nextTurn();
+                    
                 } else if (mType === 'magic_K') {
-                    if (action.targetPlayerId) {
-                        let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
-                        Engine.sysLog(`😈 ${player.name} forced a penalty on ${targetOwner ? targetOwner.name : "an opponent"} using the Red King!`, "danger");
-                        Engine.drawPenalty(action.targetPlayerId);
+                    let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
+                    if (opps.length > 0) {
+                        opps.sort((a,b) => (a.hand.length + a.penaltyCards.length) - (b.hand.length + b.penaltyCards.length));
+                        payload.targetPlayerId = opps[0].id;
                     }
+                }
+                
+                Engine.processAction(payload, activePlayer.id);
+            }
+        }
+    }
+};
+
+// --- GAME ENGINE (HOST ONLY) ---
+// (Engine object is defined above, merging methods)
+
+Engine.getSlot = (player, cardId) => {
+    let idx = player.hand.findIndex(c => c.id === cardId);
+    if (idx > -1) return `hand_${idx}`;
+    idx = player.penaltyCards.findIndex(c => c.id === cardId);
+    if (idx > -1) return `pen_${idx}`;
+    return null;
+};
+
+Engine.initDeck = () => {
+    let deck = [];
+    let idCounter = 0;
+    for (let suit of SUITS) {
+        for (let val of VALUES) {
+            deck.push({
+                id: `c-${idCounter++}`,
+                suit: suit,
+                value: val,
+                isRed: suit === '♥' || suit === '♦',
+                isFaceUp: false,
+                loc: 'deck', 
+                ownerId: null
+            });
+        }
+    }
+    return Utils.shuffle(deck);
+};
+
+Engine.broadcast = () => {
+    if (!App.isHost) return;
+    const payload = { type: 'STATE_UPDATE', state: Engine.state };
+    Object.values(App.connections).forEach(conn => {
+        if (conn.open) conn.send(payload);
+    });
+    UI.render(Engine.state);
+};
+
+Engine.sysLog = (msg, type = 'info') => {
+    Engine.state.logs.push({ type: 'sys', msg, logType: type, time: Utils.timestamp() });
+    if (Engine.state.logs.length > 60) Engine.state.logs.shift();
+    Engine.broadcast();
+};
+
+Engine.chatLog = (name, msg, isPirate = false) => {
+    Engine.state.logs.push({ type: isPirate ? 'pirate' : 'chat', name, msg, time: Utils.timestamp() });
+    Engine.broadcast();
+    if (App.isHost && Bot.listenToChat) {
+        let isBotSender = Engine.state.players.some(p => p.name === name && p.isBot);
+        Bot.listenToChat(name, msg, isBotSender);
+    }
+};
+
+Engine.startGame = () => {
+    if (Engine.state.players.length < 2) return UI.showToast("Need at least 2 players!", "danger");
+    Engine.state.deck = Engine.initDeck();
+    Engine.state.discardPile = []; 
+    Engine.state.phase = 'peek';
+    Engine.state.turnIndex = Math.floor(Math.random() * Engine.state.players.length);
+    Engine.state.bazungaCallerId = null;
+    Engine.state.orbitCount = 0;
+    Engine.state.activeAbility = null;
+    Engine.state.lastSlapTime = 0;
+    Engine.state.lastSlapTargetId = null;
+    Engine.state.lastSlap = null;
+    Engine.state.lastActionTargetId = null;
+    Engine.state.turnStartTime = Utils.timestamp();
+    Engine.botMemory = {};
+    
+    App.uiState.hasPeeked.clear(); 
+
+    Engine.state.players.forEach(p => {
+        p.hand = [];
+        p.penaltyCards = [];
+        p.ready = false;
+        p.score = 0;
+        p.connected = true;
+        for(let i=0; i<4; i++) {
+            let c = Engine.state.deck.pop();
+            c.loc = 'hand';
+            c.ownerId = p.id;
+            p.hand.push(c);
+        }
+    });
+
+    Engine.sysLog("Game started! Peek phase.", "success");
+    Engine.broadcast();
+    if (Bot.start) Bot.start();
+};
+
+Engine.checkDeckEmpty = () => {
+    if (Engine.state.deck.length === 0 && Engine.state.discardPile.length > 1) {
+        Engine.sysLog("Deck empty! Reshuffling discard pile...", "warning");
+        let topDiscard = Engine.state.discardPile.pop();
+        
+        Engine.state.discardPile.forEach(c => {
+            c.loc = 'deck';
+            c.isFaceUp = false;
+            c.ownerId = null;
+        });
+        
+        Engine.state.deck = Utils.shuffle([...Engine.state.discardPile]);
+        Engine.state.discardPile = [topDiscard];
+    }
+};
+
+Engine.getCardById = (id) => {
+    let allCards = [...Engine.state.deck, ...Engine.state.discardPile];
+    Engine.state.players.forEach(p => {
+        allCards.push(...p.hand, ...p.penaltyCards);
+    });
+    if (Engine.state.activeAbility && Engine.state.activeAbility.card) {
+        allCards.push(Engine.state.activeAbility.card);
+    }
+    return allCards.find(c => c.id === id);
+};
+
+Engine.drawPenalty = (playerId) => {
+    Engine.checkDeckEmpty();
+    let p = Engine.state.players.find(p => p.id === playerId);
+    if (!p || Engine.state.deck.length === 0) return;
+    let c = Engine.state.deck.pop();
+    Engine.checkDeckEmpty(); // Check again after popping
+    c.loc = 'penalty';
+    c.ownerId = p.id;
+    c.isFaceUp = false;
+    
+    p.penaltyCards.push(c);
+    Engine.state.lastActionTargetId = c.id;
+    Engine.sysLog(`${p.name} received a penalty card.`, "danger");
+};
+
+Engine.nextTurn = () => {
+    if (Engine.state.phase === 'game_over') return;
+    Engine.state.activeAbility = null;
+    
+    if (Engine.state.phase === 'orbit') {
+        Engine.state.orbitCount++;
+        if (Engine.state.orbitCount >= Engine.state.players.length) {
+            Engine.endGame();
+            return;
+        }
+    }
+
+    let loopCount = 0;
+    do {
+        Engine.state.turnIndex = (Engine.state.turnIndex + 1) % Engine.state.players.length;
+        loopCount++;
+    } while (!Engine.state.players[Engine.state.turnIndex].connected && !Engine.state.players[Engine.state.turnIndex].isBot && loopCount < Engine.state.players.length);
+
+    Engine.state.turnStartTime = Utils.timestamp();
+    Engine.broadcast();
+};
+
+Engine.endGame = () => {
+    Engine.state.phase = 'game_over';
+    
+    Engine.state.players.forEach(p => {
+        [...p.hand, ...p.penaltyCards].forEach(c => c.isFaceUp = true);
+        
+        p.score = 0;
+        [...p.hand, ...p.penaltyCards].forEach(c => {
+            if (c.value === 'K' && !c.isRed) p.score -= 1;
+            else if (c.value === 'K' && c.isRed) p.score += 10;
+            else if (c.value === 'Q' || c.value === 'J') p.score += 10;
+            else if (c.value === 'A') p.score += 1;
+            else p.score += parseInt(c.value);
+        });
+    });
+
+    let caller = Engine.state.players.find(p => p.id === Engine.state.bazungaCallerId);
+    let lowestScore = Math.min(...Engine.state.players.map(p => p.score));
+    let winners = [];
+
+    if (caller) {
+        let isStrictlyLowest = caller.score === lowestScore && Engine.state.players.filter(p => p.score === lowestScore).length === 1;
+        if (isStrictlyLowest) {
+            winners.push(caller.name);
+            Engine.sysLog(`${caller.name} successfully called BAZUNGA and wins!`, "success");
+        } else {
+            caller.score += 25; 
+            winners = Engine.state.players.filter(p => p.id !== caller.id).map(p => p.name);
+            Engine.sysLog(`${caller.name} failed Bazunga! Everyone else wins.`, "danger");
+        }
+    } else {
+        winners = Engine.state.players.filter(p => p.score === lowestScore).map(p => p.name);
+        Engine.sysLog(`Game ended naturally.`, "info");
+    }
+    
+    Engine.state.winners = winners;
+    Engine.broadcast();
+};
+
+Engine.processAction = (action, peerId) => {
+    if (!App.isHost) return;
+    const player = Engine.state.players.find(p => p.id === peerId);
+    if (!player) return;
+
+    const isTurn = Engine.state.players[Engine.state.turnIndex].id === peerId;
+    let now = Utils.timestamp();
+
+    switch (action.type) {
+        case 'READY_PEEK':
+            if (Engine.state.phase !== 'peek') return;
+            player.ready = true;
+            if (Engine.state.players.every(p => p.ready || (!p.connected && !p.isBot))) {
+                Engine.state.phase = 'play';
+                Engine.state.turnStartTime = now;
+                Engine.sysLog("Play phase started!", "success");
+            }
+            Engine.broadcast();
+            break;
+
+        case 'SLAP':
+            if (Engine.state.phase !== 'play' && Engine.state.phase !== 'orbit') return;
+            if (Engine.state.discardPile.length === 0) return;
+            
+            let targetCard = Engine.getCardById(action.targetId);
+            if (!targetCard || (targetCard.loc !== 'hand' && targetCard.loc !== 'penalty')) return;
+            
+            let topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
+            let owner = Engine.state.players.find(p => p.id === targetCard.ownerId);
+            
+            let isTie = (now - Engine.state.lastSlapTime < 250) && (action.targetId === Engine.state.lastSlapTargetId);
+
+            if (targetCard.value === topDiscard.value) {
+                Engine.state.lastSlapTime = now;
+                Engine.state.lastSlapTargetId = action.targetId;
+
+                if (targetCard.loc === 'hand') owner.hand = owner.hand.filter(c => c.id !== targetCard.id);
+                else owner.penaltyCards = owner.penaltyCards.filter(c => c.id !== targetCard.id);
+                
+                targetCard.loc = 'discard';
+                targetCard.ownerId = null;
+                targetCard.isFaceUp = true;
+                Engine.state.discardPile.push(targetCard);
+                Engine.state.lastActionTargetId = targetCard.id;
+
+                if (owner.id === player.id) {
+                    Engine.sysLog(`${player.name} successfully slapped their own ${targetCard.value}!`, "success");
+                } else {
+                    Engine.sysLog(`${player.name} correctly slapped ${owner.name}'s ${targetCard.value}! ${owner.name} gets 2 penalties.`, "success");
+                    Engine.drawPenalty(owner.id);
+                    Engine.drawPenalty(owner.id);
+                    if (owner.isBot && owner.botDifficulty === 5) Engine.chatLog(owner.name, "Arrr, ye scallywag! Keep yer hands off me booty!", true);
+                }
+                Engine.state.lastSlap = { id: targetCard.id, success: true, time: now, playerId: player.id, targetOwnerId: owner.id };
+            } else {
+                if (isTie) {
+                    Engine.sysLog(`${player.name} slapped just a millisecond too late! No penalty.`, "warning");
+                    return; 
+                }
+                Engine.sysLog(`${player.name} incorrectly slapped ${owner.name}'s ${targetCard.value} onto a ${topDiscard.value}! Penalty!`, "danger");
+                Engine.drawPenalty(player.id);
+                Engine.state.lastSlap = { id: targetCard.id, success: false, time: now, playerId: player.id, targetOwnerId: owner.id };
+                
+                Engine.state.players.filter(p => p.isBot).forEach(bot => {
+                    Engine.memorizeForBot(bot.id, targetCard);
+                });
+            }
+            Engine.broadcast();
+            break;
+
+        case 'DRAW_DECK':
+            if (!isTurn || Engine.state.activeAbility) return;
+            Engine.checkDeckEmpty();
+            if (Engine.state.deck.length === 0) return; 
+            
+            let drawn = Engine.state.deck.pop();
+            Engine.checkDeckEmpty(); // Check again after popping
+            drawn.loc = 'holding';
+            drawn.ownerId = player.id;
+            drawn.isFaceUp = true; 
+            Engine.state.activeAbility = { player: player.id, card: drawn, type: 'holding', step: 0, time: now };
+            Engine.sysLog(`${player.name} drew from the deck.`);
+            Engine.broadcast();
+            break;
+
+        case 'DRAW_DISCARD':
+            if (!isTurn || Engine.state.activeAbility) return;
+            if (Engine.state.discardPile.length === 0) return;
+            let disc = Engine.state.discardPile.pop();
+            disc.loc = 'holding';
+            disc.ownerId = player.id;
+            Engine.state.activeAbility = { player: player.id, card: disc, type: 'holding_discard', step: 0, time: now };
+            Engine.sysLog(`${player.name} drew from the discard pile.`);
+            Engine.broadcast();
+            break;
+
+        case 'PLAY_HOLDING':
+            if (!isTurn || !Engine.state.activeAbility) return;
+            let hCard = Engine.state.activeAbility.card;
+            
+            if (action.action === 'discard') {
+                hCard.loc = 'discard';
+                hCard.ownerId = null;
+                hCard.isFaceUp = true;
+                Engine.state.discardPile.push(hCard);
+                Engine.state.lastActionTargetId = hCard.id;
+                
+                if (Engine.state.activeAbility.type === 'holding' && MAGIC_VALUES.includes(hCard.value)) {
+                    if (hCard.value === 'K' && !hCard.isRed) {
+                        Engine.nextTurn();
+                    } else {
+                        Engine.state.activeAbility = { player: player.id, card: hCard, type: 'magic_' + hCard.value, step: 1, time: now };
+                        Engine.sysLog(`${player.name} activated magic ${hCard.value}!`, "info");
+                        if (player.isBot && player.botDifficulty === 5) Engine.chatLog(player.name, "Prepare to be boarded!", true);
+                        Engine.broadcast();
+                    }
+                } else {
                     Engine.nextTurn();
                 }
-                break;
-
-            case 'CALL_BAZUNGA':
-                if (!isTurn || Engine.state.phase !== 'play') return;
-                Engine.state.phase = 'orbit';
-                Engine.state.bazungaCallerId = player.id;
-                Engine.sysLog(`🚨 ${player.name} called BAZUNGA! Final orbit begins!`, "danger");
-                Engine.nextTurn();
-                break;
+            } else if (action.action === 'swap') {
+                let target = Engine.getCardById(action.targetId);
+                if (!target || target.ownerId !== player.id) return;
                 
-            case 'CHAT':
-                Engine.chatLog(player.name, action.msg);
-                break;
-        }
-    },
+                let replaced = false;
+                let iHand = player.hand.findIndex(c => c.id === target.id);
+                if (iHand > -1) { player.hand[iHand] = hCard; replaced = true; hCard.loc = 'hand'; }
+                if (!replaced) {
+                    let iPen = player.penaltyCards.findIndex(c => c.id === target.id);
+                    if (iPen > -1) { player.penaltyCards[iPen] = hCard; replaced = true; hCard.loc = 'penalty'; }
+                }
 
-    memorizeForBot: (botId, c) => {
-        if (!Engine.botMemory[botId]) Engine.botMemory[botId] = {};
-        let owner = Engine.state.players.find(p => p.id === c.ownerId);
-        if (!owner) return;
-        let slot = Engine.getSlot(owner, c.id);
-        if (slot) {
-            Engine.botMemory[botId][`${c.ownerId}_${slot}`] = { 
-                value: c.value, isRed: c.isRed, numVal: window.Bot.getNumericValue(c.value, c.isRed), time: Utils.timestamp() 
-            };
-        }
-    },
+                if (replaced) {
+                    hCard.ownerId = player.id;
+                    hCard.isFaceUp = false; 
+                    Engine.state.lastActionTargetId = hCard.id;
 
-    executeSwap: (id1, id2, isBlindSwap) => {
-        let c1 = Engine.getCardById(id1);
-        let c2 = Engine.getCardById(id2);
-        if (!c1 || !c2) return;
-        
-        let p1 = Engine.state.players.find(p => p.id === c1.ownerId);
-        let p2 = Engine.state.players.find(p => p.id === c2.ownerId);
-        
-        let slot1 = p1 ? Engine.getSlot(p1, c1.id) : null;
-        let slot2 = p2 ? Engine.getSlot(p2, c2.id) : null;
-        let key1 = p1 && slot1 ? `${p1.id}_${slot1}` : null;
-        let key2 = p2 && slot2 ? `${p2.id}_${slot2}` : null;
+                    target.loc = 'discard';
+                    target.ownerId = null;
+                    target.isFaceUp = true; 
+                    Engine.state.discardPile.push(target);
 
-        Engine.state.players.filter(p => p.isBot).forEach(bot => {
-            let bMem = Engine.botMemory[bot.id];
-            if (!bMem) return;
+                    Engine.sysLog(`${player.name} swapped their drawn card with a card in their layout.`, "info");
+                    Engine.nextTurn();
+                }
+            } else if (action.action === 'add_to_layout') {
+                hCard.ownerId = player.id;
+                hCard.loc = 'hand';
+                hCard.isFaceUp = false;
+                player.hand.push(hCard);
+                Engine.state.lastActionTargetId = hCard.id;
+                Engine.sysLog(`${player.name} placed a card in their empty layout.`, "info");
+                Engine.nextTurn();
+            }
+            break;
+
+        case 'RESOLVE_MAGIC':
+            if (!isTurn || !Engine.state.activeAbility) return;
+            let mType = Engine.state.activeAbility.type;
             
-            if (isBlindSwap) {
-                if (key1) delete bMem[key1];
-                if (key2) delete bMem[key2];
-            } else {
-                let temp = bMem[key1];
-                bMem[key1] = bMem[key2];
-                bMem[key2] = temp;
-                if (!bMem[key1]) delete bMem[key1];
-                if (!bMem[key2]) delete bMem[key2];
+            if (mType === 'magic_9') {
+                Engine.sysLog(`${player.name} used a 9 to secretly peek at their own card.`, "info");
+                if (action.targetId && player.isBot) {
+                    let c = Engine.getCardById(action.targetId);
+                    if (c) Engine.memorizeForBot(player.id, c);
+                }
+                Engine.nextTurn();
+            } else if (mType === 'magic_10') {
+                let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
+                Engine.sysLog(`${player.name} used a 10 to secretly peek at one of ${targetOwner ? targetOwner.name + "'s" : "an opponent's"} cards.`, "info");
+                if (action.targetId && player.isBot) {
+                    let c = Engine.getCardById(action.targetId);
+                    if (c) Engine.memorizeForBot(player.id, c);
+                }
+                Engine.nextTurn();
+            } else if (mType === 'magic_Q') {
+                if (action.swapTarget1 && action.swapTarget2) {
+                    Engine.executeSwap(action.swapTarget1, action.swapTarget2, false);
+                    Engine.sysLog(`${player.name} used a Queen to peek and swap a card!`, "warning");
+                } else {
+                    Engine.sysLog(`${player.name} used a Queen to secretly peek at a card.`, "info");
+                    if (action.targetId && player.isBot) {
+                        let c = Engine.getCardById(action.targetId);
+                        if (c) Engine.memorizeForBot(player.id, c);
+                    }
+                }
+                Engine.nextTurn();
+            } else if (mType === 'magic_J') {
+                if (action.swapTarget1 && action.swapTarget2) {
+                    if (action.swapTarget1 === action.swapTarget2) return; 
+                    let c1 = Engine.getCardById(action.swapTarget1);
+                    let c2 = Engine.getCardById(action.swapTarget2);
+                    let p1 = Engine.state.players.find(p => p.id === c1?.ownerId);
+                    let p2 = Engine.state.players.find(p => p.id === c2?.ownerId);
+                    Engine.executeSwap(action.swapTarget1, action.swapTarget2, true); 
+                    Engine.sysLog(`🌪️ ${player.name} used a Jack to blind-swap a card from ${p1?.name} and ${p2?.name}!`, "warning");
+                }
+                Engine.nextTurn();
+            } else if (mType === 'magic_K') {
+                if (action.targetPlayerId) {
+                    let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
+                    Engine.sysLog(`😈 ${player.name} forced a penalty on ${targetOwner ? targetOwner.name : "an opponent"} using the Red King!`, "danger");
+                    Engine.drawPenalty(action.targetPlayerId);
+                }
+                Engine.nextTurn();
             }
-        });
+            break;
 
-        const replaceCard = (p, oldId, newCard) => {
-            if (!p) return;
-            let iHand = p.hand.findIndex(c => c.id === oldId);
-            if (iHand > -1) p.hand[iHand] = newCard;
-            else {
-                let iPen = p.penaltyCards.findIndex(c => c.id === oldId);
-                if (iPen > -1) p.penaltyCards[iPen] = newCard;
-            }
-        };
-
-        replaceCard(p1, id1, c2);
-        replaceCard(p2, id2, c1);
-
-        let tempOwner = c1.ownerId;
-        let tempLoc = c1.loc;
-        let tempGrid = c1.gridIndex; // Maintain layout structures correctly
-        
-        c1.ownerId = c2.ownerId;
-        c1.loc = c2.loc;
-        c1.gridIndex = c2.gridIndex;
-        
-        c2.ownerId = tempOwner;
-        c2.loc = tempLoc;
-        c2.gridIndex = tempGrid;
-
-        if (c1.loc === 'hand' || c1.loc === 'penalty') c1.isFaceUp = false;
-        if (c2.loc === 'hand' || c2.loc === 'penalty') c2.isFaceUp = false;
-        
-        Engine.state.lastActionTargetId = c1.id; 
+        case 'CALL_BAZUNGA':
+            if (!isTurn || Engine.state.phase !== 'play') return;
+            Engine.state.phase = 'orbit';
+            Engine.state.bazungaCallerId = player.id;
+            Engine.sysLog(`🚨 ${player.name} called BAZUNGA! Final orbit begins!`, "danger");
+            Engine.nextTurn();
+            break;
+            
+        case 'CHAT':
+            Engine.chatLog(player.name, action.msg);
+            break;
     }
+};
+
+Engine.memorizeForBot = (botId, c) => {
+    if (!Engine.botMemory[botId]) Engine.botMemory[botId] = {};
+    let owner = Engine.state.players.find(p => p.id === c.ownerId);
+    if (!owner) return;
+    let slot = Engine.getSlot(owner, c.id);
+    if (slot) {
+        Engine.botMemory[botId][`${c.ownerId}_${slot}`] = { 
+            value: c.value, isRed: c.isRed, numVal: Bot.getNumericValue(c.value, c.isRed), time: Utils.timestamp() 
+        };
+    }
+};
+
+Engine.executeSwap = (id1, id2, isBlindSwap) => {
+    let c1 = Engine.getCardById(id1);
+    let c2 = Engine.getCardById(id2);
+    if (!c1 || !c2) return;
+    
+    let p1 = Engine.state.players.find(p => p.id === c1.ownerId);
+    let p2 = Engine.state.players.find(p => p.id === c2.ownerId);
+    
+    let slot1 = p1 ? Engine.getSlot(p1, c1.id) : null;
+    let slot2 = p2 ? Engine.getSlot(p2, c2.id) : null;
+    let key1 = p1 && slot1 ? `${p1.id}_${slot1}` : null;
+    let key2 = p2 && slot2 ? `${p2.id}_${slot2}` : null;
+
+    Engine.state.players.filter(p => p.isBot).forEach(bot => {
+        let bMem = Engine.botMemory[bot.id];
+        if (!bMem) return;
+        
+        if (isBlindSwap) {
+            if (key1) delete bMem[key1];
+            if (key2) delete bMem[key2];
+        } else {
+            let temp = bMem[key1];
+            bMem[key1] = bMem[key2];
+            bMem[key2] = temp;
+            if (!bMem[key1]) delete bMem[key1];
+            if (!bMem[key2]) delete bMem[key2];
+        }
+    });
+
+    const replaceCard = (p, oldId, newCard) => {
+        if (!p) return;
+        let iHand = p.hand.findIndex(c => c.id === oldId);
+        if (iHand > -1) p.hand[iHand] = newCard;
+        else {
+            let iPen = p.penaltyCards.findIndex(c => c.id === oldId);
+            if (iPen > -1) p.penaltyCards[iPen] = newCard;
+        }
+    };
+
+    replaceCard(p1, id1, c2);
+    replaceCard(p2, id2, c1);
+
+    let tempOwner = c1.ownerId;
+    let tempLoc = c1.loc;
+    
+    c1.ownerId = c2.ownerId;
+    c1.loc = c2.loc;
+    
+    c2.ownerId = tempOwner;
+    c2.loc = tempLoc;
+
+    if (c1.loc === 'hand' || c1.loc === 'penalty') c1.isFaceUp = false;
+    if (c2.loc === 'hand' || c2.loc === 'penalty') c2.isFaceUp = false;
+    
+    Engine.state.lastActionTargetId = c1.id; 
 };
 
 // --- NETWORKING ---
@@ -999,7 +1347,6 @@ const UI = {
             UI.render(App.gameState);
         };
 
-        // Massive mobile fix: Use standard robust `click` event
         document.getElementById('card-layer').addEventListener('click', UI.handleCardClick);
     },
 
@@ -1064,7 +1411,6 @@ const UI = {
             return;
         }
 
-        // Cleanup local states if game left peek phase
         if (state.phase !== 'peek') App.uiState.hasPeeked.clear();
 
         document.getElementById('lobby').classList.add('hidden');
@@ -1117,7 +1463,6 @@ const UI = {
         let cx = window.innerWidth / 2;
         let cy = window.innerHeight / 2;
         
-        // Mobile layout shifts entire game upwards slightly to combat native browser UI
         if (window.innerWidth <= 768) cy -= 45; 
 
         let rx = Math.min(window.innerWidth * 0.35, window.innerWidth / 2 - 80); 
@@ -1135,41 +1480,56 @@ const UI = {
             let px = cx + Math.cos(angle) * rx;
             let py = cy + Math.sin(angle) * ry;
 
-            let badge = document.createElement('div');
-            badge.className = `player-badge ${i === state.turnIndex ? 'active-turn' : ''} ${state.bazungaCallerId === p.id ? 'bazunga' : ''} ${!p.connected && !p.isBot ? 'disconnected' : ''}`;
-            
             let isBottomHalf = py > cy;
-            // Evaluates to -1 if player is at bottom. Centers coordinate push correctly.
             let yDirToCenter = isBottomHalf ? -1 : 1; 
+
+            let badge = document.createElement('div');
+            let isExpanded = state.phase === 'peek' ? 'expanded' : '';
+            badge.className = `player-badge ${i === state.turnIndex ? 'active-turn' : ''} ${state.bazungaCallerId === p.id ? 'bazunga' : ''} ${!p.connected && !p.isBot ? 'disconnected' : ''} ${isExpanded}`;
             
             badge.style.left = `${px}px`;
-            badge.style.top = `${py + (yDirToCenter === -1 ? 90 : -100)}px`; // Place badge away from center
+            badge.style.top = `${py + (yDirToCenter === -1 ? 90 : -100)}px`; 
             
             let icon = p.isBot ? '🤖' : '👤';
             let cardCount = p.hand.length + p.penaltyCards.length;
             let turnIndicator = i === state.turnIndex ? `<div class="turn-text">CURRENT TURN</div>` : '';
-            badge.innerHTML = `${turnIndicator}<span class="name">${icon} ${p.name}</span><span class="meta">${cardCount} Cards</span>`;
+            
+            badge.innerHTML = `
+                <div style="display:flex; align-items:center;">
+                    <span class="icon">${icon}</span>
+                    <span class="name-text">${p.name}</span>
+                </div>
+                <span class="meta">${cardCount} Cards</span>
+                ${turnIndicator}
+            `;
             document.getElementById('ui-layer').appendChild(badge);
 
             let allCards = [...p.hand, ...p.penaltyCards];
             
+            let maxCols = 2; 
             let handW = window.innerWidth <= 768 ? 50 : 60; 
             let handH = window.innerWidth <= 768 ? 70 : 82; 
             
-            allCards.forEach((c) => {
+            if (allCards.length > 4) {
+                handH = 25; 
+                handW = 40; 
+                maxCols = Math.ceil(Math.sqrt(allCards.length)); 
+            }
+            
+            allCards.forEach((c, idx) => {
                 let el = document.getElementById(c.id) || UI.createCardDOM(c);
                 if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
                 
-                // Mapped precisely to fixed grid mapping resolving collapsing layouts natively.
-                let pos = GRID_POSITIONS[c.gridIndex] || {c: c.gridIndex % 4, r: Math.floor(c.gridIndex / 4)};
+                let row = Math.floor(idx / maxCols);
+                let col = idx % maxCols;
+                let cardsInRow = Math.min(maxCols, allCards.length - row * maxCols);
                 
-                let ox = (pos.c - 0.5) * handW;
-                // row 0 is inner edge. row 1 is outer edge. (Outer pushed away from center)
-                let oy = (pos.r - 0.5) * handH * -yDirToCenter; 
+                let ox = (col * handW) - ((cardsInRow - 1) * handW / 2);
+                let oy = (row - 0.5) * handH * -yDirToCenter; 
                 
                 el.style.left = `${px + ox - (handW * 0.5)}px`; 
                 el.style.top = `${py + oy - (handH * 0.5)}px`;
-                el.style.zIndex = 20 + c.gridIndex; 
+                el.style.zIndex = 20 + idx; 
 
                 let isFaceUp = false;
                 if (state.phase === 'game_over') {
@@ -1208,8 +1568,7 @@ const UI = {
             });
         });
 
-        // Deck Positioning Offset - Shift deck up towards the opponent.
-        let deckOffsetY = window.innerWidth <= 768 ? 60 : 40;
+        let deckOffsetY = ry * 0.5; 
         let cWidthScale = window.innerWidth <= 768 ? 22 : 26;
 
         // Deck
@@ -1262,7 +1621,7 @@ const UI = {
             let px, py;
             if (state.activeAbility.player === App.localId) {
                 px = cx - rx * 0.8;
-                py = cy + ry * 0.5;
+                py = cy + ry * 0.2;
             } else {
                 px = cx + Math.cos(angle) * (rx * 0.65); 
                 py = cy + Math.sin(angle) * (ry * 0.65);
@@ -1311,7 +1670,7 @@ const UI = {
                     </div>`;
                 });
                 document.getElementById('gameover-results').innerHTML = html;
-            }, 3500); 
+            }, 4000); 
         }
     },
 
@@ -1334,7 +1693,6 @@ const UI = {
                 else if (App.uiState.targetingMode === 'peek_self') statusText.innerText = "Select one of your cards to peek at (9 Magic).";
                 else if (App.uiState.targetingMode === 'peek_opp') statusText.innerText = "Select an opponent's card to peek at (10 Magic).";
                 else if (App.uiState.targetingMode === 'peek_any') statusText.innerText = "Select ANY card to peek at (Queen Magic).";
-                else if (App.uiState.targetingMode === 'q_decision') statusText.innerText = "Do you want to swap the peeked card?";
                 else if (App.uiState.targetingMode === 'q_swap_target') statusText.innerText = "Select ANY card to swap with the peeked card.";
                 else if (App.uiState.targetingMode === 'blind_swap_1') statusText.innerText = "Select the FIRST card to blind swap (Jack Magic).";
                 else if (App.uiState.targetingMode === 'blind_swap_2') statusText.innerText = "Select the SECOND card to blind swap.";
@@ -1439,15 +1797,9 @@ const UI = {
                     setTimeout(() => UI.render(state), 0);
                 }
 
-                if (App.uiState.targetingMode === 'q_decision') {
-                    let btnSwap = document.createElement('button');
-                    btnSwap.innerText = "Swap Peeked Card";
-                    btnSwap.className = "primary";
-                    btnSwap.onclick = () => { App.uiState.targetingMode = 'q_swap_target'; UI.render(state); };
-                    actionBar.appendChild(btnSwap);
-                    
+                if (App.uiState.targetingMode === 'q_swap_target') {
                     let btnPass = document.createElement('button');
-                    btnPass.innerText = "Pass";
+                    btnPass.innerText = "Pass (Don't Swap)";
                     btnPass.className = "secondary";
                     btnPass.onclick = () => { 
                         App.uiState.targetingMode = null; 
@@ -1513,17 +1865,12 @@ const UI = {
             }
             else if (mode === 'peek_any' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 App.uiState.peekedCards.add(cardId);
+                App.uiState.targetingMode = 'q_swap_target';
+                App.uiState.selectedCardId = cardId;
                 UI.render(state);
-                App.uiState.targetingMode = null;
-                
-                setTimeout(() => {
-                    App.uiState.peekedCards.delete(cardId);
-                    App.uiState.targetingMode = 'q_decision';
-                    App.uiState.selectedCardId = cardId;
-                    UI.render(state);
-                }, 2000);
             }
             else if (mode === 'q_swap_target' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
+                if (cardId === App.uiState.selectedCardId) return; 
                 Net.sendAction({ type: 'RESOLVE_MAGIC', swapTarget1: App.uiState.selectedCardId, swapTarget2: cardId });
                 App.uiState.targetingMode = null;
                 App.uiState.selectedCardId = null;
@@ -1570,10 +1917,11 @@ const UI = {
             }
         }
 
-        // Revised Peeking Logic: Only bottom cards (gridIndex 2 and 3), strictly once!
         if (state.phase === 'peek' && clickedCard.ownerId === App.localId) {
             if (!App.uiState.hasPeeked.has(cardId)) {
-                if (clickedCard.gridIndex === 2 || clickedCard.gridIndex === 3) {
+                let me = state.players.find(p => p.id === App.localId);
+                let idx = me.hand.findIndex(c => c.id === cardId);
+                if (idx >= 2) {
                     App.uiState.hasPeeked.add(cardId);
                     App.uiState.peekedCards.add(cardId);
                     UI.render(state);

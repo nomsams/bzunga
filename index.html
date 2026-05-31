@@ -46,8 +46,9 @@
         input, select { background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); outline: none; }
         input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2); }
         button { background: var(--accent); color: #000; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-        button:hover { transform: translateY(-2px); }
-        button:active { transform: translateY(1px); }
+        button:hover:not(:disabled) { transform: translateY(-2px); }
+        button:active:not(:disabled) { transform: translateY(1px); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
         button.secondary { background: #475569; color: white; }
         button.danger { background: var(--danger); color: white; }
         
@@ -161,10 +162,10 @@
         @keyframes slapPop { 0% { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 0; } }
 
         /* Chat Drawer */
-        #chat-fab { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 25px; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 90; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
+        #chat-fab { position: fixed; bottom: 20px; left: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 90; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
         #chat-fab:hover { background: rgba(255,255,255,0.2); }
-        #chat-drawer { position: fixed; right: -320px; top: 0; width: 320px; height: 100vh; background: rgba(15, 23, 42, 0.95); border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 450; display: flex; flex-direction: column; pointer-events: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
-        #chat-drawer.open { right: 0; }
+        #chat-drawer { position: fixed; left: -300px; top: 0; width: 300px; height: 100vh; background: rgba(15, 23, 42, 0.95); border-right: 1px solid rgba(255,255,255,0.1); transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 450; display: flex; flex-direction: column; pointer-events: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
+        #chat-drawer.open { left: 0; }
         .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); }
         .chat-header h3 { margin: 0; color: var(--text-light); font-size: 1.1rem; }
         #chat-close { background: transparent; color: #94a3b8; border: none; font-size: 1.5rem; cursor: pointer; padding: 0; width: auto; box-shadow: none; }
@@ -182,7 +183,7 @@
         #modal-overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:400; backdrop-filter: blur(5px); }
         .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); z-index: 410; text-align: center; pointer-events: auto; min-width: 300px; max-width: 90vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
         .modal h2 { color: var(--accent); margin-bottom: 10px; font-size: 1.8rem; }
-        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 25px; flex-wrap: wrap; }
         
         /* Score Table */
         .endgame-player { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
@@ -750,11 +751,11 @@ const Engine = {
 };
 
 Engine.getSlot = (player, cardId) => {
-    let idx = player.hand.findIndex(c => c.id === cardId);
-    if (idx > -1) return `hand_${idx}`;
-    idx = player.penaltyCards.findIndex(c => c.id === cardId);
-    if (idx > -1) return `pen_${idx}`;
-    return null;
+    let idx = player.hand.findIndex(c => c.id === cardId);
+    if (idx > -1) return `hand_${idx}`;
+    idx = player.penaltyCards.findIndex(c => c.id === cardId);
+    if (idx > -1) return `pen_${idx}`;
+    return null;
 };
 
 Engine.initDeck = () => {
@@ -1005,15 +1006,15 @@ Engine.processAction = (action, peerId) => {
                     Engine.drawPenalty(owner.id);
                     if (owner.isBot && owner.botDifficulty === 5) Engine.chatLog(owner.name, "Arrr, ye scallywag! Keep yer hands off me booty!", true);
                 }
-                Engine.state.lastSlap = { id: targetCard.id, success: true, time: now };
+                Engine.state.lastSlap = { id: targetCard.id, success: true, time: now, playerId: player.id, targetOwnerId: owner.id };
             } else {
                 if (isTie) {
                     Engine.sysLog(`${player.name} slapped just a millisecond too late! No penalty.`, "warning");
-                    return;
+                    return; 
                 }
                 Engine.sysLog(`${player.name} incorrectly slapped ${owner.name}'s ${targetCard.value} onto a ${topDiscard.value}! Penalty!`, "danger");
                 Engine.drawPenalty(player.id);
-                Engine.state.lastSlap = { id: targetCard.id, success: false, time: now };
+                Engine.state.lastSlap = { id: targetCard.id, success: false, time: now, playerId: player.id, targetOwnerId: owner.id };
                 
                 Engine.state.players.filter(p => p.isBot).forEach(bot => {
                     Engine.memorizeForBot(bot.id, targetCard);
@@ -1983,7 +1984,6 @@ const UI = {
         let isMyTurn = state.players[state.turnIndex]?.id === App.localId;
         let isHolding = state.activeAbility && state.activeAbility.player === App.localId && state.activeAbility.type.startsWith('holding');
 
-        // 1. TARGETING LOGIC (Highest Priority if active)
         if (App.uiState.targetingMode) {
             let mode = App.uiState.targetingMode;
             

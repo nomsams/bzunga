@@ -837,7 +837,7 @@ Engine.startGame = () => {
     Engine.checkDeckEmpty(); 
     Engine.sysLog("Game started! Peek phase.", "success");
     Engine.broadcast();
-    if (window.Bot && window.Bot.start) window.Bot.start();
+    if (Bot && Bot.start) Bot.start();
 };
 
 Engine.checkDeckEmpty = () => {
@@ -1271,7 +1271,7 @@ const Net = {
 
                 Engine.state.players.push({ id: id, name: App.localName, isHost: true, isBot: false, connected: true });
                 Engine.broadcast();
-                if(window.Bot && window.Bot.start) window.Bot.start();
+                if (Bot && Bot.start) Bot.start();
             } else {
                 Net.connectToHost(document.getElementById('join-id').value.trim());
             }
@@ -1517,7 +1517,7 @@ const UI = {
     },
 
     getCardScoreString: (c) => {
-        let v = typeof window.Bot !== 'undefined' ? window.Bot.getNumericValue(c.value, c.isRed) : 0;
+        let v = Bot.getNumericValue(c.value, c.isRed);
         let colorClass = v < 0 ? 'success' : v > 5 ? 'danger' : '';
         return `<span style="color: var(--${colorClass || 'text-light'})">${c.value}${c.suit}(${v})</span>`;
     },
@@ -1614,8 +1614,20 @@ const UI = {
             let isBottomHalf = py > cy;
             let yDirToCenter = isBottomHalf ? -1 : 1; 
 
-            let badgePx = cx + Math.cos(angle) * (rx + 60);
-            let badgePy = cy + Math.sin(angle) * (ry + 80);
+let absCos = Math.abs(Math.cos(angle));
+let absSin = Math.abs(Math.sin(angle));
+let badgePx, badgePy;
+
+// Push badges completely clear of the card bounding boxes
+if (absCos > absSin) {
+    // Left or Right player -> snap badge cleanly to the side
+    badgePx = px + Math.sign(Math.cos(angle)) * (handW * maxCols * 0.6 + 60);
+    badgePy = py;
+} else {
+    // Top or Bottom player -> snap badge cleanly above or below
+    badgePx = px;
+    badgePy = py + Math.sign(Math.sin(angle)) * (handH + 45);
+}
 
             let badge = document.createElement('div');
             let isExpanded = state.phase === 'peek' ? 'expanded' : '';

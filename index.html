@@ -1604,7 +1604,8 @@ const UI = {
 
         document.querySelectorAll('.player-badge').forEach(e => e.remove());
 
-        state.players.forEach((p, i) => {
+
+state.players.forEach((p, i) => {
             let relIndex = (i - localPlayerIndex + state.players.length) % state.players.length;
             let angle = (Math.PI / 2) + (relIndex * (2 * Math.PI / state.players.length));
             
@@ -1614,21 +1615,32 @@ const UI = {
             let isBottomHalf = py > cy;
             let yDirToCenter = isBottomHalf ? -1 : 1; 
 
-let absCos = Math.abs(Math.cos(angle));
-let absSin = Math.abs(Math.sin(angle));
-let badgePx, badgePy;
+            // 1. DEFINE CARD DIMENSIONS FIRST
+            let allCards = [...p.hand, ...p.penaltyCards];
+            let maxCols = 2; 
+            let handW = window.innerWidth <= 768 ? 48 : 56; 
+            let handH = window.innerWidth <= 768 ? 66 : 78; 
+            
+            if (allCards.length > 4) {
+                maxCols = Math.ceil(Math.sqrt(allCards.length)); 
+                handW = 35; 
+                handH = 45;
+            }
 
-// Push badges completely clear of the card bounding boxes
-if (absCos > absSin) {
-    // Left or Right player -> snap badge cleanly to the side
-    badgePx = px + Math.sign(Math.cos(angle)) * (handW * maxCols * 0.6 + 60);
-    badgePy = py;
-} else {
-    // Top or Bottom player -> snap badge cleanly above or below
-    badgePx = px;
-    badgePy = py + Math.sign(Math.sin(angle)) * (handH + 45);
-}
+            // 2. NOW CALCULATE BADGE POSITION
+            let absCos = Math.abs(Math.cos(angle));
+            let absSin = Math.abs(Math.sin(angle));
+            let badgePx, badgePy;
 
+            if (absCos > absSin) {
+                badgePx = px + Math.sign(Math.cos(angle)) * (handW * maxCols * 0.6 + 60);
+                badgePy = py;
+            } else {
+                badgePx = px;
+                badgePy = py + Math.sign(Math.sin(angle)) * (handH + 45);
+            }
+
+            // 3. CREATE AND APPEND BADGE
             let badge = document.createElement('div');
             let isExpanded = state.phase === 'peek' ? 'expanded' : '';
             
@@ -1650,6 +1662,7 @@ if (absCos > absSin) {
                 ${turnIndicator}
             `;
             document.getElementById('ui-layer').appendChild(badge);
+  
 
             let allCards = [...p.hand, ...p.penaltyCards];
             

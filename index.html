@@ -738,12 +738,23 @@ const Bot = {
 };
 
 // --- GAME ENGINE (HOST ONLY) ---
+const Engine = {
+    state: {
+        phase: 'lobby',
+        players: [],
+        deck: [],
+        discardPile: [],
+        logs: []
+    },
+    botMemory: {}
+};
+
 Engine.getSlot = (player, cardId) => {
-    let idx = player.hand.findIndex(c => c.id === cardId);
-    if (idx > -1) return `hand_${idx}`;
-    idx = player.penaltyCards.findIndex(c => c.id === cardId);
-    if (idx > -1) return `pen_${idx}`;
-    return null;
+    let idx = player.hand.findIndex(c => c.id === cardId);
+    if (idx > -1) return `hand_${idx}`;
+    idx = player.penaltyCards.findIndex(c => c.id === cardId);
+    if (idx > -1) return `pen_${idx}`;
+    return null;
 };
 
 Engine.initDeck = () => {

@@ -8,10 +8,10 @@ const BotConfig = {
     // Extroversion (0.0 - 1.0) dictates how often they proactively chat and reply to prompts.
     profiles: {
         1: { type: 'noob', capacity: 2, decayMs: 12000, reflexBase: 2500, extroversion: 0.9, counting: false },
-        2: { type: 'casual', capacity: 4, decayMs: 20000, reflexBase: 1800, extroversion: 0.6, counting: false },
-        3: { type: 'pro', capacity: 6, decayMs: 35000, reflexBase: 1200, extroversion: 0.2, counting: false },
-        4: { type: 'expert', capacity: 10, decayMs: 60000, reflexBase: 800, extroversion: 0.1, counting: true },
-        5: { type: 'pirate', capacity: 8, decayMs: 45000, reflexBase: 900, extroversion: 1.0, counting: true }
+        2: { type: 'casual', capacity: 4, decayMs: 20000, reflexBase: 1500, extroversion: 0.6, counting: false },
+        3: { type: 'pro', capacity: 8, decayMs: 40000, reflexBase: 800, extroversion: 0.2, counting: false },
+        4: { type: 'expert', capacity: 15, decayMs: 80000, reflexBase: 350, extroversion: 0.1, counting: true },
+        5: { type: 'pirate', capacity: 10, decayMs: 50000, reflexBase: 550, extroversion: 1.0, counting: true }
     },
     
     // ELIZA-style Conversation Patterns for responding to players or other bots
@@ -223,7 +223,12 @@ const Bot = {
         // Auto-ready during peek phase
         if (Engine.state.phase === 'peek') {
             bots.forEach(bot => { 
-                if (!bot.ready) Engine.processAction({ type: 'READY_PEEK' }, bot.id); 
+                if (!bot.ready) {
+                    // Bots automatically memorize their bottom two cards when "peeking"
+                    let bCards = [...bot.hand, ...bot.penaltyCards];
+                    bCards.filter(c => c.gridIndex === 2 || c.gridIndex === 3).forEach(c => Engine.memorizeForBot(bot.id, c));
+                    Engine.processAction({ type: 'READY_PEEK' }, bot.id); 
+                }
             });
         }
 
@@ -246,7 +251,7 @@ const Bot = {
             }
         });
 
-        // 2. Real-time Slap Checks
+        // 2. Real-time Slap Checks (Aggressive Memory Scanning)
         if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && Engine.state.discardPile.length > 0) {
             let topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
             bots.forEach(bot => {
@@ -263,10 +268,12 @@ const Bot = {
                         let owner = Engine.state.players.find(p => p.id === ownerId);
                         if (owner) {
                             let target = loc === 'hand' ? owner.hand[idx] : owner.penaltyCards[idx];
-                            // Simulate human reaction time probability
-                            if (target && Math.random() < (1000 / Math.max(200, reflexDelay))) {
+                            // Simulate human reaction time probability (Boosted for hard bots)
+                            let slapProb = bot.botDifficulty >= 4 ? (2500 / Math.max(100, reflexDelay)) : (1000 / Math.max(200, reflexDelay));
+
+                            if (target && Math.random() < slapProb) {
                                 Engine.processAction({ type: 'SLAP', targetId: target.id }, bot.id);
-                                delete mem[key]; // Wipe from memory after slap
+                                delete mem[key]; // Wipe from memory after slap attempt
                                 return; 
                             }
                         }
@@ -280,11 +287,11 @@ const Bot = {
         if (!activePlayer.isBot) return;
 
         // Thinking delay before acting
-        if (now - Engine.state.turnStartTime < 2500) return;
+        if (now - Engine.state.turnStartTime < 1500) return;
 
         // Magic ability delay
         if (Engine.state.activeAbility && Engine.state.activeAbility.player === activePlayer.id) {
-            if (now - Engine.state.activeAbility.time < 2000) return; 
+            if (now - Engine.state.activeAbility.time < 1500) return; 
         }
 
         // Phase A: Draw a Card or Call Bazunga
@@ -329,7 +336,7 @@ const Bot = {
                 // Assume all unknown cards are roughly average value (~5)
                 myExpectedScore += (totalCards - knownCards) * 5;
 
-                // If my layout is extremely optimal (<= 4 pts across <= 4 cards), pull the trigger
+                // If layout is extremely optimal (<= 4 pts across <= 4 cards), pull the trigger
                 if (myExpectedScore <= 4 && totalCards <= 4) {
                     Engine.processAction({ type: 'CALL_BAZUNGA' }, activePlayer.id);
                     return;
@@ -351,9 +358,26 @@ const Bot = {
                 let hCard = ability.card;
                 let cardVal = Bot.getNumericValue(hCard.value, hCard.isRed);
                 
+                // --- DISCARD-TO-SLAP COMBO SETUP (Hard Bots Only) ---
+                // If the drawn card matches ANY card in memory, explicitly discard it.
+                // The Real-Time Slap engine will then catch it on the next tick and slap the layout card!
+                if (activePlayer.botDifficulty >= 3) {
+                    let memoryMatchFound = false;
+                    for (let key in mem) {
+                        if (mem[key].value === hCard.value) {
+                            memoryMatchFound = true;
+                            break;
+                        }
+                    }
+                    if (memoryMatchFound) {
+                        Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
+                        return;
+                    }
+                }
+
                 // Immediately discard standard magic cards (unless it's a negative King)
                 if (ability.type === 'holding' && ['9','10','J','Q','K'].includes(hCard.value)) {
-                    if (cardVal === -1) { // Red/Black K variance logic
+                    if (cardVal === -1) { // Red/Black K variance logic (Keep -1 points)
                          let target = activePlayer.hand[Math.floor(Math.random() * activePlayer.hand.length)];
                          if (target) Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: target.id }, activePlayer.id);
                     } else {
@@ -375,8 +399,8 @@ const Bot = {
                             }
                         }
                         
-                        // If no bad known cards exist, but we drew an amazing card (0, 1, 2), blindly swap out an unknown card
-                        if (!targetToSwap && cardVal <= 2) {
+                        // If no bad known cards exist, but we drew an amazing card (0, 1, 2, 3), blindly swap out an unknown card
+                        if (!targetToSwap && cardVal <= 3) {
                             let unknownOwn = activePlayer.hand.find(c => !mem[`${activePlayer.id}_${Engine.getSlot(activePlayer, c.id)}`]);
                             if (unknownOwn) targetToSwap = unknownOwn;
                         }

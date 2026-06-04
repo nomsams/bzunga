@@ -23,7 +23,6 @@
             --surface: rgba(30, 41, 59, 0.85);
         }
 
-        /* Mobile specific variable scaling */
         @media (max-width: 768px) {
             :root {
                 --card-w: 44px;
@@ -106,14 +105,14 @@
         #status-banner { background: rgba(0,0,0,0.85); color: white; text-align: center; padding: 10px 15px; font-size: 1rem; font-weight: 600; backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,0.1); pointer-events: auto; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         #status-text { flex: 1; text-align: center; color: var(--accent); letter-spacing: 0.5px; font-size: 0.9rem; }
         
-        /* Player Badges - Collapsible & Smarter Positioning */
+        /* Collapsible Player Badges */
         .player-badge { 
             position: absolute; background: var(--surface); border-radius: 22px; font-size: 0.85rem; pointer-events: auto; cursor: pointer; text-align: center; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; backdrop-filter: blur(4px); white-space: nowrap; z-index: 150; 
             width: 44px; height: 44px; padding: 0; justify-content: center; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .player-badge .icon { font-size: 1.4rem; line-height: 44px; margin: 0; transition: all 0.3s; }
-        .player-badge .name-text, .player-badge .meta { display: none; opacity: 0; transition: opacity 0.2s; }
+        .player-badge .name-text, .player-badge .meta { display: none; opacity: 0; transition: opacity 0.2s; height: 0; }
         .player-badge .turn-text { display: none; color: var(--accent); font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 2px; }
         
         /* Expanded State */
@@ -121,8 +120,8 @@
             width: auto; height: auto; max-width: 200px; padding: 8px 16px; border-radius: 16px; z-index: 250; background: rgba(30, 41, 59, 0.95); border-color: rgba(255,255,255,0.3);
         }
         .player-badge:hover .icon, .player-badge.expanded .icon { line-height: normal; font-size: 1.1rem; margin-right: 6px; }
-        .player-badge:hover .name-text, .player-badge.expanded .name-text { display: inline-block; opacity: 1; font-weight: 600; }
-        .player-badge:hover .meta, .player-badge.expanded .meta { display: block; opacity: 1; font-size: 0.75rem; color: #94a3b8; margin-top: 2px; }
+        .player-badge:hover .name-text, .player-badge.expanded .name-text { display: inline-block; opacity: 1; font-weight: 600; height: auto; }
+        .player-badge:hover .meta, .player-badge.expanded .meta { display: block; opacity: 1; font-size: 0.75rem; color: #94a3b8; margin-top: 2px; height: auto; }
 
         .player-badge.active-turn { border-color: var(--accent); box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
         .player-badge.active-turn .turn-text { display: block; }
@@ -344,6 +343,7 @@ const App = {
     isHost: false,
     localId: null,
     localName: '',
+    sessionToken: null,
     peer: null,
     connections: {}, 
     hostConn: null,  
@@ -422,12 +422,6 @@ const Bot = {
     usedLines: {},      
     frustration: {},    
     eventCache: {},     
-
-    start: () => {
-        if (App.botInterval) clearInterval(App.botInterval);
-        App.botInterval = setInterval(Bot.tick, 1000);
-        Bot.chatHistory = []; 
-    },
 
     getNumericValue: (valStr, isRed) => {
         if (valStr === 'K' && !isRed) return -1;
@@ -568,11 +562,9 @@ const Bot = {
                 
                 for (let key in mem) {
                     if (mem[key].value === topDiscard.value) {
-                        let [ownerId, loc, idx] = key.split('_');
-                        let owner = Engine.state.players.find(p => p.id === ownerId);
-                        if (owner) {
-                            let target = loc === 'hand' ? owner.hand[idx] : owner.penaltyCards[idx];
-                            if (target && Math.random() < (1000 / Math.max(200, reflexDelay))) {
+                        let target = Engine.getCardById(key);
+                        if (target && (target.loc === 'hand' || target.loc === 'penalty')) {
+                            if (Math.random() < (1000 / Math.max(200, reflexDelay))) {
                                 Engine.processAction({ type: 'SLAP', targetId: target.id }, bot.id);
                                 delete mem[key]; 
                                 return; 
@@ -604,7 +596,8 @@ const Bot = {
                     if (topVal <= 3) wantsDiscard = true;
                     else {
                         for (let key in mem) {
-                            if (key.startsWith(activePlayer.id) && mem[key].value === topDiscard.value) {
+                            let c = Engine.getCardById(key);
+                            if (c && c.ownerId === activePlayer.id && mem[key].value === topDiscard.value) {
                                 wantsDiscard = true; 
                                 break;
                             }
@@ -621,7 +614,8 @@ const Bot = {
                 let totalCards = activePlayer.hand.length + activePlayer.penaltyCards.length;
 
                 for (let key in mem) {
-                    if (key.startsWith(activePlayer.id)) {
+                    let c = Engine.getCardById(key);
+                    if (c && c.ownerId === activePlayer.id && (c.loc === 'hand' || c.loc === 'penalty')) {
                         myExpectedScore += mem[key].numVal;
                         knownCards++;
                     }
@@ -661,14 +655,14 @@ const Bot = {
                     if (activePlayer.botDifficulty >= 3) {
                         let worstKnownVal = cardVal; 
                         for (let key in mem) {
-                            if (key.startsWith(activePlayer.id) && mem[key].numVal > worstKnownVal) {
-                                let [_, loc, idx] = key.split('_');
-                                targetToSwap = loc === 'hand' ? activePlayer.hand[idx] : activePlayer.penaltyCards[idx];
+                            let c = Engine.getCardById(key);
+                            if (c && c.ownerId === activePlayer.id && (c.loc === 'hand' || c.loc === 'penalty') && mem[key].numVal > worstKnownVal) {
+                                targetToSwap = c;
                                 worstKnownVal = mem[key].numVal;
                             }
                         }
                         if (!targetToSwap && cardVal <= 2) {
-                            let unknownOwn = activePlayer.hand.find(c => !mem[`${activePlayer.id}_${Engine.getSlot(activePlayer, c.id)}`]);
+                            let unknownOwn = activePlayer.hand.find(c => !mem[c.id]);
                             if (unknownOwn) targetToSwap = unknownOwn;
                         }
                     } else {
@@ -685,14 +679,14 @@ const Bot = {
                 let payload = { type: 'RESOLVE_MAGIC' };
                 
                 if (mType === 'magic_9') {
-                    let unknownOwn = activePlayer.hand.find(c => !mem[`${activePlayer.id}_${Engine.getSlot(activePlayer, c.id)}`]);
+                    let unknownOwn = activePlayer.hand.find(c => !mem[c.id]);
                     if (unknownOwn) payload.targetId = unknownOwn.id;
                     
                 } else if (mType === 'magic_10') {
                     let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
                     if (opps.length > 0) {
                         let opp = opps[Math.floor(Math.random() * opps.length)];
-                        let unknownOpp = opp.hand.find(c => !mem[`${opp.id}_${Engine.getSlot(opp, c.id)}`]);
+                        let unknownOpp = opp.hand.find(c => !mem[c.id]);
                         if (unknownOpp) { 
                             payload.targetPlayerId = opp.id; 
                             payload.targetId = unknownOpp.id; 
@@ -700,21 +694,30 @@ const Bot = {
                     }
                     
                 } else if (mType === 'magic_Q') {
-                    if (Math.random() > 0.5) {
-                        let allCards = [];
-                        Engine.state.players.forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
-                        let myCards = activePlayer.hand;
-                        if (allCards.length > 0 && myCards.length > 0) {
-                            payload.swapTarget1 = myCards[Math.floor(Math.random() * myCards.length)].id;
-                            payload.swapTarget2 = allCards[Math.floor(Math.random() * allCards.length)].id;
-                        }
-                    } else {
-                        let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
-                        if (opps.length > 0) {
-                            let opp = opps[Math.floor(Math.random() * opps.length)];
-                            payload.targetId = opp.hand[0]?.id;
+                    let myWorst = null; let myWorstVal = -99;
+                    let oppBest = null; let oppBestVal = 99;
+                    
+                    for (let key in mem) {
+                        let c = Engine.getCardById(key);
+                        if (c && (c.loc === 'hand' || c.loc === 'penalty')) {
+                            if (c.ownerId === activePlayer.id && mem[key].numVal > myWorstVal) {
+                                myWorst = c;
+                                myWorstVal = mem[key].numVal;
+                            } else if (c.ownerId !== activePlayer.id && mem[key].numVal < oppBestVal) {
+                                oppBest = c;
+                                oppBestVal = mem[key].numVal;
+                            }
                         }
                     }
+                    
+                    if (myWorst && oppBest && myWorstVal > oppBestVal) {
+                        payload.swapTarget1 = myWorst.id; 
+                        payload.swapTarget2 = oppBest.id;
+                    } else if (Math.random() > 0.5) {
+                        let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
+                        if (opps.length > 0) payload.targetId = opps[0].hand[0]?.id;
+                    }
+                    
                 } else if (mType === 'magic_J') {
                     let allCards = [];
                     Engine.state.players.forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
@@ -745,17 +748,25 @@ const Engine = {
         players: [],
         deck: [],
         discardPile: [],
-        logs: []
+        logs: [],
+        activeAbility: null,
+        lastSlapTime: 0,
+        lastSlapTargetId: null,
+        lastSlap: null,
+        lastActionTargetId: null,
+        turnStartTime: 0
     },
     botMemory: {}
 };
 
-Engine.getSlot = (player, cardId) => {
-    let idx = player.hand.findIndex(c => c.id === cardId);
-    if (idx > -1) return `hand_${idx}`;
-    idx = player.penaltyCards.findIndex(c => c.id === cardId);
-    if (idx > -1) return `pen_${idx}`;
-    return null;
+Engine.memorizeForBot = (botId, card) => {
+    if (!Engine.botMemory[botId]) Engine.botMemory[botId] = {};
+    Engine.botMemory[botId][card.id] = {
+        id: card.id,
+        value: card.value,
+        numVal: Bot.getNumericValue(card.value, card.isRed),
+        time: Utils.timestamp()
+    };
 };
 
 Engine.initDeck = () => {
@@ -837,7 +848,7 @@ Engine.startGame = () => {
     Engine.checkDeckEmpty(); 
     Engine.sysLog("Game started! Peek phase.", "success");
     Engine.broadcast();
-    if (Bot && Bot.start) Bot.start();
+    if (window.Bot && window.Bot.start) window.Bot.start();
 };
 
 Engine.checkDeckEmpty = () => {
@@ -917,6 +928,11 @@ Engine.nextTurn = () => {
 Engine.endGame = () => {
     Engine.state.phase = 'game_over';
     
+    if (App.botInterval) {
+        clearInterval(App.botInterval);
+        App.botInterval = null;
+    }
+
     Engine.state.players.forEach(p => {
         [...p.hand, ...p.penaltyCards].forEach(c => c.isFaceUp = true);
         
@@ -983,7 +999,9 @@ Engine.processAction = (action, peerId) => {
             let topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
             let owner = Engine.state.players.find(p => p.id === targetCard.ownerId);
             
-            let isTie = (now - Engine.state.lastSlapTime < 250) && (action.targetId === Engine.state.lastSlapTargetId);
+            let transitTime = Math.max(0, now - (action.timestamp || now));
+            let adjustedSlapTime = now - transitTime;
+            let isTie = (adjustedSlapTime - Engine.state.lastSlapTime < 250) && (action.targetId === Engine.state.lastSlapTargetId);
 
             if (targetCard.value === topDiscard.value) {
                 Engine.state.lastSlapTime = now;
@@ -1188,27 +1206,6 @@ Engine.executeSwap = (id1, id2, isBlindSwap) => {
     
     let p1 = Engine.state.players.find(p => p.id === c1.ownerId);
     let p2 = Engine.state.players.find(p => p.id === c2.ownerId);
-    
-    let slot1 = p1 ? Engine.getSlot(p1, c1.id) : null;
-    let slot2 = p2 ? Engine.getSlot(p2, c2.id) : null;
-    let key1 = p1 && slot1 ? `${p1.id}_${slot1}` : null;
-    let key2 = p2 && slot2 ? `${p2.id}_${slot2}` : null;
-
-    Engine.state.players.filter(p => p.isBot).forEach(bot => {
-        let bMem = Engine.botMemory[bot.id];
-        if (!bMem) return;
-        
-        if (isBlindSwap) {
-            if (key1) delete bMem[key1];
-            if (key2) delete bMem[key2];
-        } else {
-            let temp = bMem[key1];
-            bMem[key1] = bMem[key2];
-            bMem[key2] = temp;
-            if (!bMem[key1]) delete bMem[key1];
-            if (!bMem[key2]) delete bMem[key2];
-        }
-    });
 
     const replaceCard = (p, oldId, newCard) => {
         if (!p) return;
@@ -1245,6 +1242,8 @@ Engine.executeSwap = (id1, id2, isBlindSwap) => {
 const Net = {
     init: (name) => {
         App.localName = name || "Player_" + Math.floor(Math.random()*1000);
+        App.sessionToken = localStorage.getItem('bazunga_token') || Utils.uuid();
+        localStorage.setItem('bazunga_token', App.sessionToken);
         
         App.peer = new Peer(Utils.uuid(), {
             secure: true,
@@ -1269,9 +1268,9 @@ const Net = {
                     text: joinUrl, width: 160, height: 160, colorDark: "#000", colorLight: "#fff"
                 });
 
-                Engine.state.players.push({ id: id, name: App.localName, isHost: true, isBot: false, connected: true });
+                Engine.state.players.push({ id: id, name: App.localName, sessionToken: App.sessionToken, isHost: true, isBot: false, connected: true });
                 Engine.broadcast();
-                if (Bot && Bot.start) Bot.start();
+                if(window.Bot && window.Bot.start) window.Bot.start();
             } else {
                 Net.connectToHost(document.getElementById('join-id').value.trim());
             }
@@ -1292,21 +1291,11 @@ const Net = {
                 if (data.type === 'JOIN') {
                     App.connections[conn.peer] = conn;
                     
-                    let existing = Engine.state.players.find(p => p.name === data.name && !p.connected && !p.isBot);
+                    let existing = Engine.state.players.find(p => p.sessionToken === data.sessionToken && !p.connected && !p.isBot);
                     if (existing) {
                         let oldId = existing.id;
                         existing.id = conn.peer;
                         existing.connected = true;
-                        
-                        for (let botId in Engine.botMemory) {
-                            let mem = Engine.botMemory[botId];
-                            for (let key in mem) {
-                                if (key.startsWith(oldId + '_')) {
-                                    mem[conn.peer + key.substring(oldId.length)] = mem[key];
-                                    delete mem[key];
-                                }
-                            }
-                        }
                         
                         let allCards = [...Engine.state.deck, ...Engine.state.discardPile];
                         Engine.state.players.forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
@@ -1317,7 +1306,7 @@ const Net = {
                         
                         Engine.sysLog(`${data.name} reconnected!`, "success");
                     } else {
-                        Engine.state.players.push({ id: conn.peer, name: data.name, isHost: false, isBot: false, connected: true });
+                        Engine.state.players.push({ id: conn.peer, name: data.name, sessionToken: data.sessionToken, isHost: false, isBot: false, connected: true });
                         Engine.sysLog(`${data.name} joined the lobby.`, "info");
                     }
                     Engine.broadcast();
@@ -1347,7 +1336,7 @@ const Net = {
             document.getElementById('client-waiting').classList.remove('hidden');
             document.getElementById('room-id-display').innerText = `Connected to: ${hostId}`;
             
-            App.hostConn.send({ type: 'JOIN', name: App.localName });
+            App.hostConn.send({ type: 'JOIN', name: App.localName, sessionToken: App.sessionToken });
         });
 
         App.hostConn.on('data', (data) => {
@@ -1461,6 +1450,14 @@ const UI = {
         };
 
         document.getElementById('card-layer').addEventListener('click', UI.handleCardClick);
+
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (App.gameState) UI.render(App.gameState);
+            }, 200);
+        });
     },
 
     sendChat: () => {
@@ -1517,7 +1514,7 @@ const UI = {
     },
 
     getCardScoreString: (c) => {
-        let v = Bot.getNumericValue(c.value, c.isRed);
+        let v = typeof window.Bot !== 'undefined' ? window.Bot.getNumericValue(c.value, c.isRed) : 0;
         let colorClass = v < 0 ? 'success' : v > 5 ? 'danger' : '';
         return `<span style="color: var(--${colorClass || 'text-light'})">${c.value}${c.suit}(${v})</span>`;
     },
@@ -1602,10 +1599,9 @@ const UI = {
         let localPlayerIndex = state.players.findIndex(p => p.id === App.localId);
         if (localPlayerIndex === -1) localPlayerIndex = 0; 
 
-        document.querySelectorAll('.player-badge').forEach(e => e.remove());
+        let currentBadgeIds = new Set();
 
-
-state.players.forEach((p, i) => {
+        state.players.forEach((p, i) => {
             let relIndex = (i - localPlayerIndex + state.players.length) % state.players.length;
             let angle = (Math.PI / 2) + (relIndex * (2 * Math.PI / state.players.length));
             
@@ -1615,35 +1611,19 @@ state.players.forEach((p, i) => {
             let isBottomHalf = py > cy;
             let yDirToCenter = isBottomHalf ? -1 : 1; 
 
-            // 1. DEFINE CARD DIMENSIONS FIRST
-            let allCards = [...p.hand, ...p.penaltyCards];
-            let maxCols = 2; 
-            let handW = window.innerWidth <= 768 ? 48 : 56; 
-            let handH = window.innerWidth <= 768 ? 66 : 78; 
-            
-            if (allCards.length > 4) {
-                maxCols = Math.ceil(Math.sqrt(allCards.length)); 
-                handW = 35; 
-                handH = 45;
+            let badgePx = cx + Math.cos(angle) * (rx + 60);
+            let badgePy = cy + Math.sin(angle) * (ry + 80);
+
+            let badgeId = 'badge-' + p.id;
+            currentBadgeIds.add(badgeId);
+            let badge = document.getElementById(badgeId);
+            if (!badge) {
+                badge = document.createElement('div');
+                badge.id = badgeId;
+                document.getElementById('ui-layer').appendChild(badge);
             }
 
-            // 2. NOW CALCULATE BADGE POSITION
-            let absCos = Math.abs(Math.cos(angle));
-            let absSin = Math.abs(Math.sin(angle));
-            let badgePx, badgePy;
-
-            if (absCos > absSin) {
-                badgePx = px + Math.sign(Math.cos(angle)) * (handW * maxCols * 0.6 + 60);
-                badgePy = py;
-            } else {
-                badgePx = px;
-                badgePy = py + Math.sign(Math.sin(angle)) * (handH + 45);
-            }
-
-            // 3. CREATE AND APPEND BADGE
-            let badge = document.createElement('div');
             let isExpanded = state.phase === 'peek' ? 'expanded' : '';
-            
             badge.className = `player-badge ${isExpanded} ${i === state.turnIndex ? 'active-turn' : ''} ${state.bazungaCallerId === p.id ? 'bazunga' : ''} ${!p.connected && !p.isBot ? 'disconnected' : ''}`;
             
             badge.style.left = `${badgePx}px`;
@@ -1661,8 +1641,6 @@ state.players.forEach((p, i) => {
                 <span class="meta">${cardCount} Cards</span>
                 ${turnIndicator}
             `;
-            document.getElementById('ui-layer').appendChild(badge);
-  
 
             let allCards = [...p.hand, ...p.penaltyCards];
             
@@ -1728,6 +1706,10 @@ state.players.forEach((p, i) => {
                     else if (mode === 'force_penalty' && p.id !== App.localId) el.classList.add('targetable');
                 }
             });
+        });
+
+        document.querySelectorAll('.player-badge').forEach(badge => {
+            if (!currentBadgeIds.has(badge.id)) badge.remove();
         });
 
         let deckOffsetY = ry * 0.45; 

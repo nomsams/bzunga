@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="bot.js"></script>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -128,7 +129,7 @@
         .player-badge.bazunga { background: var(--danger); border-color: #fff; animation: pulse-danger 1s infinite; }
 
         /* Action Bar (Side Docked + Mobile Optimized) */
-        #action-bar { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 200; pointer-events: auto; backdrop-filter: blur(10px); transition: right 0.3s, opacity 0.3s; width: 110px; }
+        #action-bar { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 300; pointer-events: auto; backdrop-filter: blur(10px); transition: right 0.3s, opacity 0.3s; width: 110px; }
         #action-bar.hidden { right: -150px; opacity: 0; pointer-events: none; display: flex !important; }
         #action-bar button { margin: 0; padding: 10px 8px; font-size: 0.85rem; border-radius: 8px; width: 100%; text-align: center; line-height: 1.2; }
         #action-bar button.primary { background: var(--success); color: white; font-size: 0.95rem; padding: 12px 8px; }
@@ -359,387 +360,6 @@ const App = {
     botInterval: null
 };
 
-// --- BOT CONFIG & LOGIC ---
-const BotConfig = {
-    profiles: {
-        1: { type: 'noob', capacity: 2, decayMs: 12000, reflexBase: 2500, extroversion: 0.9 },
-        2: { type: 'casual', capacity: 4, decayMs: 20000, reflexBase: 1800, extroversion: 0.6 },
-        3: { type: 'pro', capacity: 6, decayMs: 35000, reflexBase: 1200, extroversion: 0.2 },
-        4: { type: 'expert', capacity: 10, decayMs: 60000, reflexBase: 800, extroversion: 0.1 },
-        5: { type: 'pirate', capacity: 8, decayMs: 45000, reflexBase: 900, extroversion: 1.0 }
-    },
-    elizaPatterns: [
-        { match: ["WHY", "HOW COME"], replies: ["Why do you ask?", "Probabilities dictate it.", "Because the cards fell that way."] },
-        { match: ["YOU SUCK", "CHEAT", "RIGGED", "STUPID", "DUMB"], replies: ["Are you feeling frustrated?", "Emotions lead to mistakes.", "I am just executing logic."] },
-        { match: ["HELLO", "HI ", "HOLA"], replies: ["Greetings. Let us play.", "Hello. Focus on the deck."] },
-        { match: ["BOT", "AI", "ROBOT"], replies: ["Do computers worry you?", "I am simply an algorithm."] },
-        { match: ["YES", "YEP", "YEAH"], replies: ["You seem quite positive.", "Are you sure?"] },
-        { match: ["NO", "NOPE", "NAH"], replies: ["Why the negativity?", "Suit yourself."] },
-        { match: ["BAZUNGA", "WIN", "LOSE"], replies: ["The final score is all that matters.", "We shall see when the cards flip."] }
-    ],
-    chatBank: {
-        noob: {
-            slapSuccess: ["Wait, I did it?", "Gotcha!", "Oops, was that yours?"],
-            slapFail: ["Ouch!", "My hand slipped.", "I thought that was a match..."],
-            penalty: ["Why always me?", "This game is rigged.", "I have too many cards."],
-            magic: ["Magic time!", "What does this one do again?", "Pew pew!"],
-            frustrated: ["I hate this game!", "Stop picking on me!", "I'm just clicking randomly now."]
-        },
-        casual: {
-            slapSuccess: ["Too slow!", "Nice try.", "Yoink!"],
-            slapFail: ["Ah, misread it.", "Dang it.", "Reflexes betrayed me."],
-            penalty: ["Not good.", "I'll recover.", "Rough draw."],
-            magic: ["Let's see what you're hiding.", "Time to mix it up."],
-            frustrated: ["Okay, that's enough.", "My luck is terrible today."]
-        },
-        pro: {
-            slapSuccess: ["Predictable.", "Saw that coming.", "Tracked it."],
-            slapFail: ["Calculated risk.", "A rare error.", "Latency."],
-            penalty: ["A minor setback.", "Stats are balancing out."],
-            magic: ["Gathering intel.", "Optimizing layout.", "Executing swap."],
-            frustrated: ["Variance is severely against me.", "Focusing. Reducing errors."]
-        },
-        expert: {
-            slapSuccess: ["Your layout is compromised.", "Checkmate.", "Memory serves."],
-            slapFail: ["Margin of error.", "Grace period missed."],
-            penalty: ["Absorbing the penalty.", "Calculated sacrifice."],
-            magic: ["Reordering the board.", "Target acquired.", "Blind swap initiated."],
-            frustrated: ["System error: too many penalties.", "Re-evaluating heuristic models."]
-        },
-        pirate: {
-            slapSuccess: ["Arrr! Snatched yer treasure!", "Walk the plank!", "Plundered!"],
-            slapFail: ["Blistering barnacles!", "Shiver me timbers!", "Blast it!"],
-            penalty: ["A curse upon the sea!", "More dead weight for the hull.", "Mutiny!"],
-            magic: ["Prepare to be boarded!", "Hoist the colors!", "Swappin' the cargo!"],
-            frustrated: ["I'll keelhaul the lot of ye!", "Kraken take ye all!"]
-        }
-    }
-};
-
-const Bot = {
-    chatHistory: [],    
-    lastChatTime: {},   
-    usedLines: {},      
-    frustration: {},    
-    eventCache: {},     
-
-    getNumericValue: (valStr, isRed) => {
-        if (valStr === 'K' && !isRed) return -1;
-        if (valStr === 'K' && isRed) return 10;
-        if (valStr === 'Q' || valStr === 'J') return 10;
-        if (valStr === 'A') return 1;
-        return parseInt(valStr);
-    },
-
-    getUniqueResponse: (botId, category, linesArray) => {
-        if (!Bot.usedLines[botId]) Bot.usedLines[botId] = {};
-        let lastIndex = Bot.usedLines[botId][category];
-        let nextIndex;
-        if (linesArray.length > 1) {
-            do { nextIndex = Math.floor(Math.random() * linesArray.length); } while (nextIndex === lastIndex);
-        } else { nextIndex = 0; }
-        Bot.usedLines[botId][category] = nextIndex;
-        return linesArray[nextIndex];
-    },
-
-    chat: (bot, trigger) => {
-        let now = Utils.timestamp();
-        if (now - (Bot.lastChatTime[bot.id] || 0) < 3000) return; 
-
-        let profile = BotConfig.profiles[bot.botDifficulty];
-        if (Math.random() > profile.extroversion * 0.8) return;
-
-        let frustrationLvl = Bot.frustration[bot.id] || 0;
-        let actualTrigger = trigger;
-        if (frustrationLvl >= 3 && Math.random() > 0.3) actualTrigger = 'frustrated';
-
-        let lines = BotConfig.chatBank[profile.type][actualTrigger];
-        if (lines) {
-            let msg = Bot.getUniqueResponse(bot.id, actualTrigger, lines);
-            Engine.chatLog(bot.name, msg, profile.type === 'pirate');
-            Bot.lastChatTime[bot.id] = Utils.timestamp();
-        }
-    },
-
-    listenToChat: (senderName, message, isBotSender) => {
-        Bot.chatHistory.push({ sender: senderName, isBot: isBotSender });
-        if (Bot.chatHistory.length > 10) Bot.chatHistory.shift();
-
-        let recentBots = Bot.chatHistory.slice(-4).filter(h => h.isBot);
-        if (recentBots.length >= 4) return;
-
-        let upperMsg = message.toUpperCase();
-        let bots = Engine.state.players.filter(p => p.isBot);
-        
-        bots.forEach(bot => {
-            if (bot.name === senderName) return;
-            let profile = BotConfig.profiles[bot.botDifficulty];
-
-            if (upperMsg.includes("STUPID") || upperMsg.includes("DUMB")) {
-                Bot.frustration[bot.id] = (Bot.frustration[bot.id] || 0) + 1;
-            }
-
-            if (Math.random() > profile.extroversion * 0.9) return;
-
-            for (let pattern of BotConfig.elizaPatterns) {
-                if (pattern.match.some(keyword => upperMsg.includes(keyword))) {
-                    let reply = Bot.getUniqueResponse(bot.id, 'eliza_' + pattern.match[0], pattern.replies);
-                    setTimeout(() => {
-                        Engine.chatLog(bot.name, `@${senderName} ${reply}`, profile.type === 'pirate');
-                        Bot.lastChatTime[bot.id] = Utils.timestamp();
-                    }, Math.random() * 2000 + 1000);
-                    return; 
-                }
-            }
-        });
-    },
-
-    processReactions: (now) => {
-        let lastSlap = Engine.state.lastSlap;
-        if (lastSlap && lastSlap.time > (Bot.eventCache.lastSlapTime || 0)) {
-            Bot.eventCache.lastSlapTime = lastSlap.time;
-            let slappingBot = Engine.state.players.find(p => p.isBot && p.id === lastSlap.playerId);
-            
-            if (slappingBot) {
-                if (lastSlap.success) {
-                    Bot.frustration[slappingBot.id] = 0; 
-                    Bot.chat(slappingBot, 'slapSuccess');
-                } else {
-                    Bot.frustration[slappingBot.id] = (Bot.frustration[slappingBot.id] || 0) + 2;
-                    Bot.chat(slappingBot, 'slapFail');
-                }
-            }
-
-            if (lastSlap.success && lastSlap.targetOwnerId) {
-                let victimBot = Engine.state.players.find(p => p.isBot && p.id === lastSlap.targetOwnerId);
-                if (victimBot) {
-                    Bot.frustration[victimBot.id] = (Bot.frustration[victimBot.id] || 0) + 1;
-                    Bot.chat(victimBot, 'penalty');
-                }
-            }
-        }
-    },
-
-    tick: () => {
-        if (!App.isHost || Engine.state.phase === 'lobby' || Engine.state.phase === 'game_over') return;
-
-        let now = Utils.timestamp();
-        let bots = Engine.state.players.filter(p => p.isBot);
-
-        Bot.processReactions(now);
-
-        if (now - (Engine.state.lastSlapTime || 0) < 2500) return;
-
-        if (Engine.state.phase === 'peek') {
-            bots.forEach(bot => { 
-                if (!bot.ready) Engine.processAction({ type: 'READY_PEEK' }, bot.id); 
-            });
-        }
-
-        bots.forEach(bot => {
-            let profile = BotConfig.profiles[bot.botDifficulty];
-            if (!Engine.botMemory[bot.id]) Engine.botMemory[bot.id] = {};
-            let mem = Engine.botMemory[bot.id];
-            
-            for (let key in mem) {
-                if (now - mem[key].time > profile.decayMs) delete mem[key];
-            }
-            
-            let keys = Object.keys(mem);
-            if (keys.length > profile.capacity) {
-                let oldest = keys.sort((a,b) => mem[a].time - mem[b].time)[0];
-                delete mem[oldest];
-            }
-        });
-
-        if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && Engine.state.discardPile.length > 0) {
-            let topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
-            bots.forEach(bot => {
-                let profile = BotConfig.profiles[bot.botDifficulty];
-                let frustration = Bot.frustration[bot.id] || 0;
-                let reflexDelay = profile.reflexBase - (frustration * 50); 
-                let mem = Engine.botMemory[bot.id];
-                
-                for (let key in mem) {
-                    if (mem[key].value === topDiscard.value) {
-                        let target = Engine.getCardById(key);
-                        if (target && (target.loc === 'hand' || target.loc === 'penalty')) {
-                            if (Math.random() < (1000 / Math.max(200, reflexDelay))) {
-                                Engine.processAction({ type: 'SLAP', targetId: target.id }, bot.id);
-                                delete mem[key]; 
-                                return; 
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        let activePlayer = Engine.state.players[Engine.state.turnIndex];
-        if (!activePlayer.isBot) return;
-
-        // Wait 2-3 seconds before acting
-        if (now - Engine.state.turnStartTime < 2500) return;
-
-        if (Engine.state.activeAbility && Engine.state.activeAbility.player === activePlayer.id) {
-            if (now - Engine.state.activeAbility.time < 2000) return; 
-        }
-
-        if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && !Engine.state.activeAbility) {
-            let topDiscard = Engine.state.discardPile.length > 0 ? Engine.state.discardPile[Engine.state.discardPile.length - 1] : null;
-            let wantsDiscard = false;
-            let mem = Engine.botMemory[activePlayer.id];
-            
-            if (topDiscard) {
-                let topVal = Bot.getNumericValue(topDiscard.value, topDiscard.isRed);
-                if (activePlayer.botDifficulty >= 3) {
-                    if (topVal <= 3) wantsDiscard = true;
-                    else {
-                        for (let key in mem) {
-                            let c = Engine.getCardById(key);
-                            if (c && c.ownerId === activePlayer.id && mem[key].value === topDiscard.value) {
-                                wantsDiscard = true; 
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    wantsDiscard = topVal < 6 && Math.random() > 0.5;
-                }
-            }
-
-            if (Engine.state.phase === 'play' && activePlayer.botDifficulty >= 4 && Math.random() < 0.15) {
-                let myExpectedScore = 0;
-                let knownCards = 0;
-                let totalCards = activePlayer.hand.length + activePlayer.penaltyCards.length;
-
-                for (let key in mem) {
-                    let c = Engine.getCardById(key);
-                    if (c && c.ownerId === activePlayer.id && (c.loc === 'hand' || c.loc === 'penalty')) {
-                        myExpectedScore += mem[key].numVal;
-                        knownCards++;
-                    }
-                }
-                
-                myExpectedScore += (totalCards - knownCards) * 5;
-
-                if (myExpectedScore <= 4 && totalCards <= 4) {
-                    Engine.processAction({ type: 'CALL_BAZUNGA' }, activePlayer.id);
-                    return;
-                }
-            }
-
-            if (wantsDiscard) Engine.processAction({ type: 'DRAW_DISCARD' }, activePlayer.id);
-            else Engine.processAction({ type: 'DRAW_DECK' }, activePlayer.id);
-            return;
-        }
-
-        if (Engine.state.activeAbility && Engine.state.activeAbility.player === activePlayer.id) {
-            let ability = Engine.state.activeAbility;
-            let mem = Engine.botMemory[activePlayer.id];
-            
-            if (ability.type.startsWith('holding')) {
-                let hCard = ability.card;
-                let cardVal = Bot.getNumericValue(hCard.value, hCard.isRed);
-                
-                if (ability.type === 'holding' && MAGIC_VALUES.includes(hCard.value)) {
-                    if (cardVal === -1) { 
-                         let target = activePlayer.hand[Math.floor(Math.random() * activePlayer.hand.length)];
-                         if (target) Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: target.id }, activePlayer.id);
-                    } else {
-                         Bot.chat(activePlayer, 'magic');
-                         Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
-                    }
-                } else {
-                    let targetToSwap = null;
-                    if (activePlayer.botDifficulty >= 3) {
-                        let worstKnownVal = cardVal; 
-                        for (let key in mem) {
-                            let c = Engine.getCardById(key);
-                            if (c && c.ownerId === activePlayer.id && (c.loc === 'hand' || c.loc === 'penalty') && mem[key].numVal > worstKnownVal) {
-                                targetToSwap = c;
-                                worstKnownVal = mem[key].numVal;
-                            }
-                        }
-                        if (!targetToSwap && cardVal <= 2) {
-                            let unknownOwn = activePlayer.hand.find(c => !mem[c.id]);
-                            if (unknownOwn) targetToSwap = unknownOwn;
-                        }
-                    } else {
-                        if (cardVal < 7 && Math.random() > 0.4) {
-                            targetToSwap = activePlayer.hand[Math.floor(Math.random() * activePlayer.hand.length)];
-                        }
-                    }
-
-                    if (targetToSwap) Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: targetToSwap.id }, activePlayer.id);
-                    else Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
-                }
-            } else {
-                let mType = ability.type;
-                let payload = { type: 'RESOLVE_MAGIC' };
-                
-                if (mType === 'magic_9') {
-                    let unknownOwn = activePlayer.hand.find(c => !mem[c.id]);
-                    if (unknownOwn) payload.targetId = unknownOwn.id;
-                    
-                } else if (mType === 'magic_10') {
-                    let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
-                    if (opps.length > 0) {
-                        let opp = opps[Math.floor(Math.random() * opps.length)];
-                        let unknownOpp = opp.hand.find(c => !mem[c.id]);
-                        if (unknownOpp) { 
-                            payload.targetPlayerId = opp.id; 
-                            payload.targetId = unknownOpp.id; 
-                        }
-                    }
-                    
-                } else if (mType === 'magic_Q') {
-                    let myWorst = null; let myWorstVal = -99;
-                    let oppBest = null; let oppBestVal = 99;
-                    
-                    for (let key in mem) {
-                        let c = Engine.getCardById(key);
-                        if (c && (c.loc === 'hand' || c.loc === 'penalty')) {
-                            if (c.ownerId === activePlayer.id && mem[key].numVal > myWorstVal) {
-                                myWorst = c;
-                                myWorstVal = mem[key].numVal;
-                            } else if (c.ownerId !== activePlayer.id && mem[key].numVal < oppBestVal) {
-                                oppBest = c;
-                                oppBestVal = mem[key].numVal;
-                            }
-                        }
-                    }
-                    
-                    if (myWorst && oppBest && myWorstVal > oppBestVal) {
-                        payload.swapTarget1 = myWorst.id; 
-                        payload.swapTarget2 = oppBest.id;
-                    } else if (Math.random() > 0.5) {
-                        let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
-                        if (opps.length > 0) payload.targetId = opps[0].hand[0]?.id;
-                    }
-                    
-                } else if (mType === 'magic_J') {
-                    let allCards = [];
-                    Engine.state.players.forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
-                    if (allCards.length >= 2) {
-                        payload.swapTarget1 = allCards[Math.floor(Math.random() * allCards.length)].id;
-                        let t2 = allCards[Math.floor(Math.random() * allCards.length)].id;
-                        while(t2 === payload.swapTarget1) t2 = allCards[Math.floor(Math.random() * allCards.length)].id; 
-                        payload.swapTarget2 = t2;
-                    }
-                } else if (mType === 'magic_K') {
-                    let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
-                    if (opps.length > 0) {
-                        opps.sort((a,b) => (a.hand.length + a.penaltyCards.length) - (b.hand.length + b.penaltyCards.length));
-                        payload.targetPlayerId = opps[0].id;
-                    }
-                }
-                
-                Engine.processAction(payload, activePlayer.id);
-            }
-        }
-    }
-};
 
 // --- GAME ENGINE (HOST ONLY) ---
 const Engine = {
@@ -764,7 +384,7 @@ Engine.memorizeForBot = (botId, card) => {
     Engine.botMemory[botId][card.id] = {
         id: card.id,
         value: card.value,
-        numVal: Bot.getNumericValue(card.value, card.isRed),
+        numVal: window.Bot ? window.Bot.getNumericValue(card.value, card.isRed) : 0,
         time: Utils.timestamp()
     };
 };
@@ -806,9 +426,9 @@ Engine.sysLog = (msg, type = 'info') => {
 Engine.chatLog = (name, msg, isPirate = false) => {
     Engine.state.logs.push({ type: isPirate ? 'pirate' : 'chat', name, msg, time: Utils.timestamp() });
     Engine.broadcast();
-    if (App.isHost && Bot.listenToChat) {
+    if (App.isHost && window.Bot && window.Bot.listenToChat) {
         let isBotSender = Engine.state.players.some(p => p.name === name && p.isBot);
-        Bot.listenToChat(name, msg, isBotSender);
+        window.Bot.listenToChat(name, msg, isBotSender);
     }
 };
 
@@ -1240,7 +860,7 @@ Engine.executeSwap = (id1, id2, isBlindSwap) => {
 
 // --- NETWORKING ---
 const Net = {
-    init: (name) => {
+    init: (name, providedId) => {
         App.localName = name || "Player_" + Math.floor(Math.random()*1000);
         App.sessionToken = localStorage.getItem('bazunga_token') || Utils.uuid();
         localStorage.setItem('bazunga_token', App.sessionToken);
@@ -1263,7 +883,8 @@ const Net = {
                 document.getElementById('host-controls').classList.remove('hidden');
                 document.getElementById('room-id-display').innerText = id;
                 
-                let joinUrl = window.location.origin + window.location.pathname + '?join=' + id;
+                let hostUrl = window.location.href.split('?')[0].split('#')[0];
+                let joinUrl = hostUrl + '?join=' + id;
                 new QRCode(document.getElementById("qr-container"), {
                     text: joinUrl, width: 160, height: 160, colorDark: "#000", colorLight: "#fff"
                 });
@@ -1272,7 +893,7 @@ const Net = {
                 Engine.broadcast();
                 if(window.Bot && window.Bot.start) window.Bot.start();
             } else {
-                Net.connectToHost(document.getElementById('join-id').value.trim());
+                Net.connectToHost(providedId || document.getElementById('join-id').value.trim().replace(/[^a-zA-Z0-9-]/g, ''));
             }
         });
 
@@ -1336,7 +957,10 @@ const Net = {
             document.getElementById('client-waiting').classList.remove('hidden');
             document.getElementById('room-id-display').innerText = `Connected to: ${hostId}`;
             
-            App.hostConn.send({ type: 'JOIN', name: App.localName, sessionToken: App.sessionToken });
+            // Add a small 250ms delay to ensure connection channel completely resolves before emitting payload
+            setTimeout(() => {
+                App.hostConn.send({ type: 'JOIN', name: App.localName, sessionToken: App.sessionToken });
+            }, 250);
         });
 
         App.hostConn.on('data', (data) => {
@@ -1395,7 +1019,9 @@ const UI = {
         };
         
         document.getElementById('btn-join').onclick = (e) => { 
-            let jId = document.getElementById('join-id').value.trim();
+            let rawId = document.getElementById('join-id').value.trim();
+            // Sanitize pasting issues from URL parameters across apps
+            let jId = rawId.replace(/[^a-zA-Z0-9-]/g, ''); 
             if (!jId) return UI.showToast("Enter a Game ID", "warning");
             
             let btn = e.target;
@@ -1412,7 +1038,7 @@ const UI = {
             }, 8000);
 
             try {
-                Net.init(document.getElementById('player-name').value); 
+                Net.init(document.getElementById('player-name').value, jId); 
             } catch (err) {
                 btn.innerText = "Join Game";
                 btn.disabled = false;
@@ -1611,8 +1237,10 @@ const UI = {
             let isBottomHalf = py > cy;
             let yDirToCenter = isBottomHalf ? -1 : 1; 
 
-            let badgePx = cx + Math.cos(angle) * (rx + 60);
-            let badgePy = cy + Math.sin(angle) * (ry + 80);
+            // Offset the badges further out so they do not cover cards
+            let bOffset = window.innerWidth <= 768 ? 90 : 130;
+            let badgePx = cx + Math.cos(angle) * (rx + bOffset);
+            let badgePy = cy + Math.sin(angle) * (ry + bOffset);
 
             let badgeId = 'badge-' + p.id;
             currentBadgeIds.add(badgeId);

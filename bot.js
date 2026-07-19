@@ -2,10 +2,7 @@
  * BAZUNGA - Advanced Bot AI & ELIZA-Inspired Conversational Engine
  * Handles memory decay, heuristics, frustration tracking, and dynamic chat.
  */
-
 const BotConfig = {
-    // Difficulty profiles defining cognitive limits and personality traits
-    // Extroversion (0.0 - 1.0) dictates how often they proactively chat and reply to prompts.
     profiles: {
         1: { type: 'noob', capacity: 2, decayMs: 12000, reflexBase: 2500, extroversion: 0.9, counting: false },
         2: { type: 'casual', capacity: 4, decayMs: 20000, reflexBase: 1500, extroversion: 0.6, counting: false },
@@ -14,7 +11,6 @@ const BotConfig = {
         5: { type: 'pirate', capacity: 10, decayMs: 50000, reflexBase: 550, extroversion: 1.0, counting: true }
     },
     
-    // ELIZA-style Conversation Patterns for responding to players or other bots
     elizaPatterns: [
         { match: ["WHY", "HOW COME"], replies: ["Why do you ask?", "Probabilities dictate it.", "Because the cards fell that way.", "What answer would please you most?"] },
         { match: ["YOU SUCK", "CHEAT", "RIGGED", "STUPID", "DUMB"], replies: ["Are you feeling frustrated?", "Emotions lead to mistakes.", "I am just executing logic. Are you?", "Blaming the game won't improve your memory."] },
@@ -24,8 +20,6 @@ const BotConfig = {
         { match: ["NO", "NOPE", "NAH"], replies: ["Why the negativity?", "Are you saying 'no' just to be defensive?", "Understood.", "Suit yourself."] },
         { match: ["BAZUNGA", "WIN", "LOSE"], replies: ["The final score is all that matters.", "We shall see when the cards flip.", "Don't get ahead of yourself."] }
     ],
-
-    // Personality-based chat responses for game events
     chatBank: {
         noob: {
             slapSuccess: ["Wait, I did it?", "Gotcha!", "Oops, was that yours?", "I actually remembered one!"],
@@ -64,20 +58,17 @@ const BotConfig = {
         }
     }
 };
-
 const Bot = {
-    chatHistory: [],    // Stores recent messages to prevent infinite bot-to-bot loops
-    lastChatTime: {},   // Rate limiting for proactive bot chats
-    usedLines: {},      // Prevents back-to-back repetitive phrases
-    frustration: {},    // Tracks emotional state (failed slaps, insults)
-    eventCache: {},     // Avoid duplicate event parsing
-
+    chatHistory: [],    
+    lastChatTime: {},   
+    usedLines: {},      
+    frustration: {},    
+    eventCache: {},     
     start: () => {
         if (App.botInterval) clearInterval(App.botInterval);
         App.botInterval = setInterval(Bot.tick, 1000);
         Bot.chatHistory = []; 
     },
-
     getNumericValue: (valStr, isRed) => {
         if (valStr === 'K' && !isRed) return -1;
         if (valStr === 'K' && isRed) return 10;
@@ -85,48 +76,26 @@ const Bot = {
         if (valStr === 'A') return 1;
         return parseInt(valStr);
     },
-
-    // ------------------------------------------------------------------------
-    // CONVERSATION ENGINE (ELIZA-inspired)
-    // ------------------------------------------------------------------------
-
     getUniqueResponse: (botId, category, linesArray) => {
         if (!Bot.usedLines[botId]) Bot.usedLines[botId] = {};
-        
         let lastIndex = Bot.usedLines[botId][category];
         let nextIndex;
         
         if (linesArray.length > 1) {
-            do {
-                nextIndex = Math.floor(Math.random() * linesArray.length);
-            } while (nextIndex === lastIndex);
-        } else {
-            nextIndex = 0;
-        }
-
+            do { nextIndex = Math.floor(Math.random() * linesArray.length); } while (nextIndex === lastIndex);
+        } else { nextIndex = 0; }
         Bot.usedLines[botId][category] = nextIndex;
         return linesArray[nextIndex];
     },
-
     chat: (bot, trigger) => {
         let now = Utils.timestamp();
-        // 5-second cooldown per bot for proactive chatter
         if (now - (Bot.lastChatTime[bot.id] || 0) < 5000) return; 
-
         let profile = BotConfig.profiles[bot.botDifficulty];
-        
-        // Extroversion dictates the base probability of proactive chat
-        let proactiveProb = profile.extroversion * 0.4; 
-        if (Math.random() > proactiveProb) return;
-
+        if (Math.random() > profile.extroversion * 0.4) return;
         let frustrationLvl = Bot.frustration[bot.id] || 0;
         let actualTrigger = trigger;
         
-        // High frustration overrides normal event chatter
-        if (frustrationLvl >= 3 && Math.random() > 0.3) {
-            actualTrigger = 'frustrated';
-        }
-
+        if (frustrationLvl >= 3 && Math.random() > 0.3) actualTrigger = 'frustrated';
         let lines = BotConfig.chatBank[profile.type][actualTrigger];
         if (lines) {
             let msg = Bot.getUniqueResponse(bot.id, actualTrigger, lines);
@@ -134,51 +103,34 @@ const Bot = {
             Bot.lastChatTime[bot.id] = Utils.timestamp();
         }
     },
-
     listenToChat: (senderName, message, isBotSender) => {
         Bot.chatHistory.push({ sender: senderName, isBot: isBotSender });
         if (Bot.chatHistory.length > 10) Bot.chatHistory.shift();
-
-        // Anti-Loop: If the last 4 messages are all from bots, force silence to stop ping-pong
         let recentBots = Bot.chatHistory.slice(-4).filter(h => h.isBot);
         if (recentBots.length >= 4) return;
-
         let upperMsg = message.toUpperCase();
         let bots = Engine.state.players.filter(p => p.isBot);
         
         bots.forEach(bot => {
-            // Don't reply to yourself
             if (bot.name === senderName) return;
-
             let profile = BotConfig.profiles[bot.botDifficulty];
-
-            // Trigger frustration if a user insults the bot
             if (upperMsg.includes("STUPID") || upperMsg.includes("DUMB")) {
                 Bot.frustration[bot.id] = (Bot.frustration[bot.id] || 0) + 1;
             }
-
-            // Extroversion dictates the probability of replying to human or bot questions
-            let replyProb = profile.extroversion * 0.6; 
-            if (Math.random() > replyProb) return;
-
-            // ELIZA pattern matching
+            if (Math.random() > profile.extroversion * 0.6) return;
             for (let pattern of BotConfig.elizaPatterns) {
                 if (pattern.match.some(keyword => upperMsg.includes(keyword))) {
                     let reply = Bot.getUniqueResponse(bot.id, 'eliza_' + pattern.match[0], pattern.replies);
-                    
-                    // Simulate natural typing delay before sending
                     setTimeout(() => {
                         Engine.chatLog(bot.name, `@${senderName} ${reply}`, profile.type === 'pirate');
                         Bot.lastChatTime[bot.id] = Utils.timestamp();
                     }, Math.random() * 2000 + 1000);
-                    return; // Break loop after finding the first match
+                    return; 
                 }
             }
         });
     },
-
     processReactions: (now) => {
-        // Read the global game state to react to the latest slap event
         let lastSlap = Engine.state.lastSlap;
         if (lastSlap && lastSlap.time > (Bot.eventCache.lastSlapTime || 0)) {
             Bot.eventCache.lastSlapTime = lastSlap.time;
@@ -186,15 +138,13 @@ const Bot = {
             
             if (slappingBot) {
                 if (lastSlap.success) {
-                    Bot.frustration[slappingBot.id] = 0; // Success resets frustration
+                    Bot.frustration[slappingBot.id] = 0; 
                     Bot.chat(slappingBot, 'slapSuccess');
                 } else {
                     Bot.frustration[slappingBot.id] = (Bot.frustration[slappingBot.id] || 0) + 2;
                     Bot.chat(slappingBot, 'slapFail');
                 }
             }
-
-            // The victim of the slap might get frustrated too
             if (lastSlap.success && lastSlap.targetOwnerId) {
                 let victimBot = Engine.state.players.find(p => p.isBot && p.id === lastSlap.targetOwnerId);
                 if (victimBot) {
@@ -204,76 +154,54 @@ const Bot = {
             }
         }
     },
-
-    // ------------------------------------------------------------------------
-    // GAMEPLAY HEURISTICS & TURN LOGIC
-    // ------------------------------------------------------------------------
-
     tick: () => {
         if (!App.isHost || Engine.state.phase === 'lobby' || Engine.state.phase === 'game_over') return;
-
         let now = Utils.timestamp();
         let bots = Engine.state.players.filter(p => p.isBot);
-
         Bot.processReactions(now);
-
-        // Hibernate bots temporarily if a slap just happened to let humans process the visual
         if (now - (Engine.state.lastSlapTime || 0) < 2500) return;
-
-        // Auto-ready during peek phase
+        // Automatically finish peeking logic
         if (Engine.state.phase === 'peek') {
             bots.forEach(bot => { 
                 if (!bot.ready) {
-                    // Bots automatically memorize their bottom two cards when "peeking"
                     let bCards = [...bot.hand, ...bot.penaltyCards];
                     bCards.filter(c => c.gridIndex === 2 || c.gridIndex === 3).forEach(c => Engine.memorizeForBot(bot.id, c));
                     Engine.processAction({ type: 'READY_PEEK' }, bot.id); 
                 }
             });
         }
-
-        // 1. Memory Management & Decay
         bots.forEach(bot => {
             let profile = BotConfig.profiles[bot.botDifficulty];
             if (!Engine.botMemory[bot.id]) Engine.botMemory[bot.id] = {};
             let mem = Engine.botMemory[bot.id];
             
             for (let key in mem) {
-                // Hard decay - forget cards after duration expires
                 if (now - mem[key].time > profile.decayMs) delete mem[key];
             }
             
-            // Limit memory capacity based on difficulty
             let keys = Object.keys(mem);
             if (keys.length > profile.capacity) {
                 let oldest = keys.sort((a,b) => mem[a].time - mem[b].time)[0];
                 delete mem[oldest];
             }
         });
-
-        // 2. Real-time Slap Checks (Aggressive Memory Scanning)
+        // Real-Time Slap Checking
         if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && Engine.state.discardPile.length > 0) {
             let topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
             bots.forEach(bot => {
                 let profile = BotConfig.profiles[bot.botDifficulty];
                 let frustration = Bot.frustration[bot.id] || 0;
-                
-                // Highly frustrated bots slap slightly faster but make more mistakes
                 let reflexDelay = profile.reflexBase - (frustration * 50); 
                 let mem = Engine.botMemory[bot.id];
                 
                 for (let key in mem) {
                     if (mem[key].value === topDiscard.value) {
-                        let [ownerId, loc, idx] = key.split('_');
-                        let owner = Engine.state.players.find(p => p.id === ownerId);
-                        if (owner) {
-                            let target = loc === 'hand' ? owner.hand[idx] : owner.penaltyCards[idx];
-                            // Simulate human reaction time probability (Boosted for hard bots)
+                        let target = Engine.getCardById(key);
+                        if (target && (target.loc === 'hand' || target.loc === 'penalty')) {
                             let slapProb = bot.botDifficulty >= 4 ? (2500 / Math.max(100, reflexDelay)) : (1000 / Math.max(200, reflexDelay));
-
-                            if (target && Math.random() < slapProb) {
+                            if (Math.random() < slapProb) {
                                 Engine.processAction({ type: 'SLAP', targetId: target.id }, bot.id);
-                                delete mem[key]; // Wipe from memory after slap attempt
+                                delete mem[key]; 
                                 return; 
                             }
                         }
@@ -281,86 +209,64 @@ const Bot = {
                 }
             });
         }
-
-        // 3. Active Turn Logic
         let activePlayer = Engine.state.players[Engine.state.turnIndex];
         if (!activePlayer.isBot) return;
-
-        // Thinking delay before acting
         if (now - Engine.state.turnStartTime < 1500) return;
-
-        // Magic ability delay
         if (Engine.state.activeAbility && Engine.state.activeAbility.player === activePlayer.id) {
             if (now - Engine.state.activeAbility.time < 1500) return; 
         }
-
-        // Phase A: Draw a Card or Call Bazunga
         if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && !Engine.state.activeAbility) {
             let topDiscard = Engine.state.discardPile.length > 0 ? Engine.state.discardPile[Engine.state.discardPile.length - 1] : null;
             let wantsDiscard = false;
             let mem = Engine.botMemory[activePlayer.id];
             
-            // Assess Discard Pile
             if (topDiscard) {
                 let topVal = Bot.getNumericValue(topDiscard.value, topDiscard.isRed);
                 if (activePlayer.botDifficulty >= 3) {
-                    // Advanced: Pick up negative/low cards, or cards that perfectly match a known card for future swapping
                     if (topVal <= 0) wantsDiscard = true;
                     else {
                         for (let key in mem) {
-                            if (key.startsWith(activePlayer.id) && mem[key].value === topDiscard.value) {
+                            let c = Engine.getCardById(key);
+                            if (c && c.ownerId === activePlayer.id && mem[key].value === topDiscard.value) {
                                 wantsDiscard = true; 
                                 break;
                             }
                         }
                     }
                 } else {
-                    // Casual bots just randomly pick up low cards
                     wantsDiscard = topVal < 6 && Math.random() > 0.5;
                 }
             }
-
-            // Advanced Expected Value (EV) Bazunga Calculation
             if (Engine.state.phase === 'play' && activePlayer.botDifficulty >= 4 && Math.random() < 0.15) {
                 let myExpectedScore = 0;
                 let knownCards = 0;
                 let totalCards = activePlayer.hand.length + activePlayer.penaltyCards.length;
-
                 for (let key in mem) {
-                    if (key.startsWith(activePlayer.id)) {
+                    let c = Engine.getCardById(key);
+                    if (c && c.ownerId === activePlayer.id && (c.loc === 'hand' || c.loc === 'penalty')) {
                         myExpectedScore += mem[key].numVal;
                         knownCards++;
                     }
                 }
                 
-                // Assume all unknown cards are roughly average value (~5)
                 myExpectedScore += (totalCards - knownCards) * 5;
-
-                // If layout is extremely optimal (<= 4 pts across <= 4 cards), pull the trigger
                 if (myExpectedScore <= 4 && totalCards <= 4) {
                     Engine.processAction({ type: 'CALL_BAZUNGA' }, activePlayer.id);
                     return;
                 }
             }
-
             if (wantsDiscard) Engine.processAction({ type: 'DRAW_DISCARD' }, activePlayer.id);
             else Engine.processAction({ type: 'DRAW_DECK' }, activePlayer.id);
             return;
         }
-
-        // Phase B: Resolve Drawn Cards & Magic Abilities
         if (Engine.state.activeAbility && Engine.state.activeAbility.player === activePlayer.id) {
             let ability = Engine.state.activeAbility;
             let mem = Engine.botMemory[activePlayer.id];
             
-            // Deciding whether to keep or discard the drawn card
             if (ability.type.startsWith('holding')) {
                 let hCard = ability.card;
                 let cardVal = Bot.getNumericValue(hCard.value, hCard.isRed);
                 
-                // --- DISCARD-TO-SLAP COMBO SETUP (Hard Bots Only) ---
-                // If the drawn card matches ANY card in memory, explicitly discard it.
-                // The Real-Time Slap engine will then catch it on the next tick and slap the layout card!
                 if (activePlayer.botDifficulty >= 3) {
                     let memoryMatchFound = false;
                     for (let key in mem) {
@@ -374,10 +280,8 @@ const Bot = {
                         return;
                     }
                 }
-
-                // Immediately discard standard magic cards (unless it's a negative King)
                 if (ability.type === 'holding' && ['9','10','J','Q','K'].includes(hCard.value)) {
-                    if (cardVal === -1) { // Red/Black K variance logic (Keep -1 points)
+                    if (cardVal === -1) { 
                          let target = activePlayer.hand[Math.floor(Math.random() * activePlayer.hand.length)];
                          if (target) Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: target.id }, activePlayer.id);
                     } else {
@@ -385,51 +289,43 @@ const Bot = {
                          Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
                     }
                 } else {
-                    // Intelligent Swap Logic
                     let targetToSwap = null;
                     if (activePlayer.botDifficulty >= 3) {
                         let worstKnownVal = cardVal; 
                         
-                        // Look for a known card in layout that is worse than the card we just drew
                         for (let key in mem) {
-                            if (key.startsWith(activePlayer.id) && mem[key].numVal > worstKnownVal) {
-                                let [_, loc, idx] = key.split('_');
-                                targetToSwap = loc === 'hand' ? activePlayer.hand[idx] : activePlayer.penaltyCards[idx];
+                            let c = Engine.getCardById(key);
+                            if (c && c.ownerId === activePlayer.id && (c.loc === 'hand' || c.loc === 'penalty') && mem[key].numVal > worstKnownVal) {
+                                targetToSwap = c;
                                 worstKnownVal = mem[key].numVal;
                             }
                         }
                         
-                        // If no bad known cards exist, but we drew an amazing card (0, 1, 2, 3), blindly swap out an unknown card
                         if (!targetToSwap && cardVal <= 3) {
-                            let unknownOwn = activePlayer.hand.find(c => !mem[`${activePlayer.id}_${Engine.getSlot(activePlayer, c.id)}`]);
+                            let unknownOwn = activePlayer.hand.find(c => !mem[c.id]);
                             if (unknownOwn) targetToSwap = unknownOwn;
                         }
                     } else {
-                        // Casual swap logic
                         if (cardVal < 7 && Math.random() > 0.4) {
                             targetToSwap = activePlayer.hand[Math.floor(Math.random() * activePlayer.hand.length)];
                         }
                     }
-
                     if (targetToSwap) Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: targetToSwap.id }, activePlayer.id);
                     else Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
                 }
             } else {
-                // Resolving multi-step Magic Card logic (9, 10, J, Q, K)
                 let mType = ability.type;
                 let payload = { type: 'RESOLVE_MAGIC' };
                 
                 if (mType === 'magic_9') {
-                    // Peek at own unknown card
-                    let unknownOwn = activePlayer.hand.find(c => !mem[`${activePlayer.id}_${Engine.getSlot(activePlayer, c.id)}`]);
+                    let unknownOwn = activePlayer.hand.find(c => !mem[c.id]);
                     if (unknownOwn) payload.targetId = unknownOwn.id;
                     
                 } else if (mType === 'magic_10') {
-                    // Peek at opponent's unknown card
                     let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
                     if (opps.length > 0) {
                         let opp = opps[Math.floor(Math.random() * opps.length)];
-                        let unknownOpp = opp.hand.find(c => !mem[`${opp.id}_${Engine.getSlot(opp, c.id)}`]);
+                        let unknownOpp = opp.hand.find(c => !mem[c.id]);
                         if (unknownOpp) { 
                             payload.targetPlayerId = opp.id; 
                             payload.targetId = unknownOpp.id; 
@@ -437,52 +333,43 @@ const Bot = {
                     }
                     
                 } else if (mType === 'magic_Q') {
-                    // Queen: Peek and Swap
                     let myWorst = null; let myWorstVal = -99;
                     let oppBest = null; let oppBestVal = 99;
                     
-                    // Identify my worst card and opponent's best card based on memory
                     for (let key in mem) {
-                        if (key.startsWith(activePlayer.id) && mem[key].numVal > myWorstVal) {
-                            let [_, loc, idx] = key.split('_');
-                            myWorst = loc === 'hand' ? activePlayer.hand[idx] : activePlayer.penaltyCards[idx];
-                            myWorstVal = mem[key].numVal;
-                        } else if (!key.startsWith(activePlayer.id) && mem[key].numVal < oppBestVal) {
-                            let [oid, loc, idx] = key.split('_');
-                            let opp = Engine.state.players.find(p => p.id === oid);
-                            if (opp) { 
-                                oppBest = loc === 'hand' ? opp.hand[idx] : opp.penaltyCards[idx]; 
-                                oppBestVal = mem[key].numVal; 
+                        let c = Engine.getCardById(key);
+                        if (c && (c.loc === 'hand' || c.loc === 'penalty')) {
+                            if (c.ownerId === activePlayer.id && mem[key].numVal > myWorstVal) {
+                                myWorst = c;
+                                myWorstVal = mem[key].numVal;
+                            } else if (c.ownerId !== activePlayer.id && mem[key].numVal < oppBestVal) {
+                                oppBest = c;
+                                oppBestVal = mem[key].numVal;
                             }
                         }
                     }
                     
-                    // If we know a perfect swap, do it
                     if (myWorst && oppBest && myWorstVal > oppBestVal) {
                         payload.swapTarget1 = myWorst.id; 
                         payload.swapTarget2 = oppBest.id;
                     } else if (Math.random() > 0.5) {
-                        // Otherwise fallback to peeking an opponent
                         let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
                         if (opps.length > 0) payload.targetId = opps[0].hand[0]?.id;
                     }
                     
                 } else if (mType === 'magic_J') {
-                    // Jack: Blind Swap
                     let allCards = [];
                     Engine.state.players.filter(p => p.id !== activePlayer.id).forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
                     if (allCards.length >= 2) {
                         payload.swapTarget1 = allCards[Math.floor(Math.random() * allCards.length)].id;
                         let t2 = allCards[Math.floor(Math.random() * allCards.length)].id;
-                        while(t2 === payload.swapTarget1) t2 = allCards[Math.floor(Math.random() * allCards.length)].id; // Prevent self swap
+                        while(t2 === payload.swapTarget1) t2 = allCards[Math.floor(Math.random() * allCards.length)].id;
                         payload.swapTarget2 = t2;
                     }
                     
                 } else if (mType === 'magic_K') {
-                    // Red King: Force Penalty
                     let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
                     if (opps.length > 0) {
-                        // Target the opponent with the fewest cards (playing to win)
                         opps.sort((a,b) => (a.hand.length + a.penaltyCards.length) - (b.hand.length + b.penaltyCards.length));
                         payload.targetPlayerId = opps[0].id;
                     }
@@ -493,6 +380,4 @@ const Bot = {
         }
     }
 };
-
-// Export to global scope
 window.Bot = Bot;

@@ -55,6 +55,7 @@
     button:disabled { opacity: 0.6; cursor: not-allowed; }
     button.secondary { background: #475569; color: white; }
     button.danger { background: var(--danger); color: white; }
+    button.success { background: var(--success); color: white; }
     
     #qr-container { background: white; padding: 15px; display: inline-block; margin: 15px 0; border-radius: 12px; }
     .player-list { text-align: left; margin-top: 15px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 5px; }
@@ -83,13 +84,24 @@
     .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius: 6px; }
     .card-inner.is-flipped { transform: rotateY(180deg); }
     
-    .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 6px; border: 1px solid #cbd5e1; display: flex; flex-direction: column; justify-content: space-between; padding: 4px; background: #fff; }
-    .card-back { background: repeating-linear-gradient(45deg, #1e293b, #1e293b 10px, #0f172a 10px, #0f172a 20px); transform: rotateY(180deg); border: 2px solid #e2e8f0; }
+    /* Fixed Card Bleeding & Artifacts */
+    .card-face { 
+        position: absolute; width: 100%; height: 100%; 
+        backface-visibility: hidden; -webkit-backface-visibility: hidden; 
+        border-radius: 6px; border: 1px solid #cbd5e1; 
+        display: flex; flex-direction: column; justify-content: space-between; 
+        padding: 4px; background: #fff; overflow: hidden; 
+    }
+    .card-front { transform: rotateY(0deg) translateZ(1px); }
+    .card-back { 
+        background: repeating-linear-gradient(45deg, #1e293b, #1e293b 10px, #0f172a 10px, #0f172a 20px); 
+        transform: rotateY(180deg) translateZ(1px); border: 2px solid #e2e8f0; 
+    }
     .card-back::after { content: 'B'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: bold; }
     
     .card .val { font-size: 1.1rem; font-weight: 800; line-height: 1; }
     .card .suit { font-size: 1.5rem; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; }
-    .card .val.bottom { transform: rotate(180deg); }
+    .card .val.bottom { transform: rotate(180deg); margin-top: auto; }
     .card.red .card-front { color: #ef4444; }
     .card.black .card-front { color: #1e293b; }
     
@@ -284,9 +296,9 @@
         <h2 style="font-size: 2rem; margin-bottom: 5px; color: var(--accent);">GAME OVER</h2>
         <h3 id="gameover-winner" style="color: var(--success); margin-bottom: 15px; font-size: 1.2rem;"></h3>
         <div id="gameover-results" style="text-align: left; margin-bottom: 20px;"></div>
-        <div class="modal-buttons">
+        <div class="modal-buttons" id="gameover-buttons">
             <button id="btn-hide-gameover" class="secondary">View Table</button>
-            <button id="btn-return-lobby" class="primary">Return to Lobby</button>
+            <button id="btn-return-lobby" class="danger">Leave Game</button>
         </div>
     </div>
 </div>
@@ -386,7 +398,8 @@ Engine.startGame = () => {
     App.uiState.hasPeeked.clear();
 
     Engine.state.players.forEach(p => {
-        p.hand = []; p.penaltyCards = []; p.ready = false; p.score = 0; p.connected = true;
+        p.hand = []; p.penaltyCards = []; p.ready = false; p.roundScore = 0; p.connected = true;
+        if (p.totalScore === undefined) p.totalScore = 0; // Initialize total score if first game
         for(let i=0; i<4; i++) {
             let c = Engine.state.deck.pop();
             c.loc = 'hand'; c.ownerId = p.id; c.gridIndex = i;
@@ -460,35 +473,48 @@ Engine.endGame = () => {
     Engine.state.phase = 'game_over';
     if (App.botInterval) { clearInterval(App.botInterval); App.botInterval = null; }
 
+    let totalTableScore = 0;
     Engine.state.players.forEach(p => {
         [...p.hand, ...p.penaltyCards].forEach(c => c.isFaceUp = true);
-        p.score = 0;
+        p.roundScore = 0;
         [...p.hand, ...p.penaltyCards].forEach(c => {
-            if (c.value === 'K' && !c.isRed) p.score -= 1;
-            else if (c.value === 'K' && c.isRed) p.score += 10;
-            else if (c.value === 'Q' || c.value === 'J') p.score += 10;
-            else if (c.value === 'A') p.score += 1;
-            else p.score += parseInt(c.value);
+            if (c.value === 'K' && !c.isRed) p.roundScore -= 1;
+            else if (c.value === 'K' && c.isRed) p.roundScore += 10;
+            else if (c.value === 'Q' || c.value === 'J') p.roundScore += 10;
+            else if (c.value === 'A') p.roundScore += 1;
+            else p.roundScore += parseInt(c.value);
         });
+        totalTableScore += p.roundScore;
     });
 
     let caller = Engine.state.players.find(p => p.id === Engine.state.bazungaCallerId);
-    let lowestScore = Math.min(...Engine.state.players.map(p => p.score));
+    let lowestScore = Math.min(...Engine.state.players.map(p => p.roundScore));
     let winners = [];
 
     if (caller) {
-        let isStrictlyLowest = caller.score === lowestScore && Engine.state.players.filter(p => p.score === lowestScore).length === 1;
+        let isStrictlyLowest = caller.roundScore === lowestScore && Engine.state.players.filter(p => p.roundScore === lowestScore).length === 1;
         if (isStrictlyLowest) {
             winners.push(caller.name);
             Engine.sysLog(`${caller.name} successfully called BAZUNGA and wins!`, "success");
+            Engine.state.players.forEach(p => {
+                p.scoreAdded = (p.id === caller.id) ? 0 : p.roundScore;
+                p.totalScore = (p.totalScore || 0) + p.scoreAdded;
+            });
         } else {
-            caller.score += 25;
             winners = Engine.state.players.filter(p => p.id !== caller.id).map(p => p.name);
-            Engine.sysLog(`${caller.name} failed Bazunga! Everyone else wins.`, "danger");
+            Engine.sysLog(`${caller.name} failed Bazunga! They take all points.`, "danger");
+            Engine.state.players.forEach(p => {
+                p.scoreAdded = (p.id === caller.id) ? totalTableScore : 0;
+                p.totalScore = (p.totalScore || 0) + p.scoreAdded;
+            });
         }
     } else {
-        winners = Engine.state.players.filter(p => p.score === lowestScore).map(p => p.name);
+        winners = Engine.state.players.filter(p => p.roundScore === lowestScore).map(p => p.name);
         Engine.sysLog(`Game ended naturally.`, "info");
+        Engine.state.players.forEach(p => {
+            p.scoreAdded = p.roundScore;
+            p.totalScore = (p.totalScore || 0) + p.scoreAdded;
+        });
     }
 
     Engine.state.winners = winners;
@@ -504,6 +530,11 @@ Engine.processAction = (action, peerId) => {
     let now = Utils.timestamp();
 
     switch (action.type) {
+        case 'PLAY_AGAIN':
+            if (Engine.state.phase !== 'game_over') return;
+            Engine.startGame();
+            break;
+
         case 'READY_PEEK':
             if (Engine.state.phase !== 'peek') return;
             player.ready = true;
@@ -984,6 +1015,12 @@ const UI = {
             App.uiState.peekedCards.clear();
         }
 
+        if (state.phase !== 'game_over') {
+            App.uiState.showingResults = false;
+            document.getElementById('modal-gameover').classList.add('hidden');
+            document.getElementById('modal-overlay').classList.add('hidden');
+        }
+
         document.getElementById('lobby').classList.add('hidden');
         document.getElementById('game-view').classList.remove('hidden');
 
@@ -1232,24 +1269,42 @@ const UI = {
                 document.getElementById('gameover-winner').innerText = state.winners.length > 1 ? "Winners: " + state.winners.join(', ') : "Winner: " + state.winners[0];
 
                 let html = ``;
-                let sortedPlayers = [...state.players].sort((a,b) => a.score - b.score);
+                let sortedPlayers = [...state.players].sort((a,b) => a.totalScore - b.totalScore);
                 sortedPlayers.forEach(p => {
                     let isWinner = state.winners.includes(p.name);
                     let pCards = [...p.hand, ...p.penaltyCards];
-                    let mathStr = pCards.map(c => UI.getCardScoreString(c)).join(' + ') + ` = <strong>${p.score}</strong>`;
+                    let mathStr = pCards.map(c => UI.getCardScoreString(c)).join(' + ') + ` = <strong>${p.roundScore}</strong>`;
                     let cardsHtml = pCards.map(c => `<div class="mini-card ${c.isRed ? 'red' : 'black'}">${c.value}${c.suit}</div>`).join('');
 
                     html += `
                     <div class="endgame-player ${isWinner ? 'winner' : ''}">
                         <div class="endgame-header">
                             <span class="endgame-name">${p.name} ${isWinner ? '👑' : ''} ${state.bazungaCallerId === p.id ? '(Bazunga Caller)' : ''}</span>
-                            <span class="endgame-score">${p.score} pts</span>
+                            <span class="endgame-score">Total: ${p.totalScore} <span style="font-size:0.8rem; color:#94a3b8;">(+${p.scoreAdded})</span></span>
                         </div>
                         <div class="endgame-cards">${cardsHtml}</div>
                         <div class="endgame-math">${mathStr}</div>
                     </div>`;
                 });
                 document.getElementById('gameover-results').innerHTML = html;
+                
+                // Add Play Again button for host
+                let btnContainer = document.getElementById('gameover-buttons');
+                let oldBtn = document.getElementById('btn-play-again');
+                if (oldBtn) oldBtn.remove();
+                
+                if (App.isHost) {
+                    let btnPlayAgain = document.createElement('button');
+                    btnPlayAgain.id = 'btn-play-again';
+                    btnPlayAgain.className = 'success';
+                    btnPlayAgain.innerText = 'Play Next Round';
+                    btnPlayAgain.onclick = () => {
+                        document.getElementById('modal-gameover').classList.add('hidden');
+                        document.getElementById('modal-overlay').classList.add('hidden');
+                        Net.sendAction({ type: 'PLAY_AGAIN' });
+                    };
+                    btnContainer.appendChild(btnPlayAgain);
+                }
             }, 4000);
         }
     },
@@ -1438,8 +1493,9 @@ const UI = {
             }
             else if (mode === 'blind_swap_2' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 if (cardId === App.uiState.selectedCardId) return;
+                let target1 = App.uiState.selectedCardId;
                 App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear(); UI.render(state);
-                Net.sendAction({ type: 'RESOLVE_MAGIC', swapTarget1: App.uiState.selectedCardId, swapTarget2: cardId });
+                Net.sendAction({ type: 'RESOLVE_MAGIC', swapTarget1: target1, swapTarget2: cardId });
             }
             else if (mode === 'force_penalty' && clickedCard.ownerId !== App.localId && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 App.uiState.targetingMode = null; UI.render(state);

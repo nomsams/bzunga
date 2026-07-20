@@ -61,11 +61,18 @@
     #table { width: 96%; height: 88%; background: radial-gradient(circle, var(--table-center) 0%, var(--table-edge) 100%); border-radius: 50%; border: 15px solid var(--table-border); position: relative; box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 30px 60px rgba(0,0,0,0.8); }
     
     #table-rim-svg { position: absolute; top: -15px; left: -15px; width: calc(100% + 30px); height: calc(100% + 30px); pointer-events: none; border-radius: 50%; overflow: visible; }
-    .table-arrow-text { font-size: 26px; font-weight: 900; fill: rgba(251, 191, 36, 0.4); letter-spacing: 8px; }
+    .table-arrow-text { font-size: 22px; font-weight: 900; fill: rgba(251, 191, 36, 0.4); letter-spacing: 10px; dominant-baseline: middle; }
 
     /* Cards */
     #card-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-    .card { width: var(--card-w); height: var(--card-h); position: absolute; transition: left 0.4s cubic-bezier(0.22, 1, 0.36, 1), top 0.4s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s; pointer-events: auto; cursor: pointer; touch-action: manipulation; border-radius: 6px; transform-origin: center center; box-shadow: 2px 4px 10px rgba(0,0,0,0.4); }
+    .card { 
+        width: var(--card-w); height: var(--card-h); position: absolute; 
+        transition: left 0.4s cubic-bezier(0.22, 1, 0.36, 1), top 0.4s cubic-bezier(0.22, 1, 0.36, 1), scale 0.2s, rotate 0.2s, translate 0.2s; 
+        pointer-events: auto; cursor: pointer; touch-action: manipulation; border-radius: 6px; transform-origin: center center; box-shadow: 2px 4px 10px rgba(0,0,0,0.4); 
+        scale: var(--local-scale, 1);
+        rotate: var(--local-rot, 0deg);
+        translate: 0 0;
+    }
     .card.no-anim { transition: none !important; }
     .card.no-anim .card-inner { transition: none !important; }
     
@@ -86,12 +93,12 @@
     .player-badge.disconnected { filter: grayscale(100%) opacity(0.5); }
 
     /* Targeting & Selection VFX */
-    .card.targetable { transform: scale(1.05); z-index: 100 !important; }
+    .card.targetable { scale: calc(var(--local-scale, 1) * 1.05); z-index: 100 !important; }
     .card.targetable .card-inner { box-shadow: 0 0 0 3px var(--info), 0 0 20px var(--info); animation: pulse-target 1.5s infinite; }
-    .card.selected-target { transform: translateY(-15px) scale(1.1) !important; z-index: 105 !important; }
+    .card.selected-target { translate: 0 -15px; scale: calc(var(--local-scale, 1) * 1.1) !important; z-index: 105 !important; }
     .card.selected-target .card-inner { box-shadow: 0 0 0 4px var(--accent), 0 0 25px var(--accent); }
     .card.deck-glow .card-inner { box-shadow: 0 0 15px var(--success); }
-    .card.holding-card { transform: scale(1.3) !important; z-index: 1000 !important; }
+    .card.holding-card { scale: 1.3 !important; z-index: 1000 !important; }
     .card.highlight-recent .card-inner { box-shadow: 0 0 15px 5px var(--accent); animation: pulse-recent 2s infinite; }
     
     @keyframes pulse-target { 0% { box-shadow: 0 0 10px 2px var(--info); } 50% { box-shadow: 0 0 20px 6px var(--info); } 100% { box-shadow: 0 0 10px 2px var(--info); } }
@@ -227,7 +234,7 @@
     <div id="game-view" class="hidden">
         <div id="table">
             <svg id="table-rim-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
-                <path id="rim-path" d="M 500 20 A 480 480 0 0 1 500 980 A 480 480 0 0 1 500 20" fill="none" />
+                <path id="rim-path" d="M 500 10 A 490 490 0 0 1 500 990 A 490 490 0 0 1 500 10" fill="none" />
                 <text class="table-arrow-text">
                     <textPath href="#rim-path" startOffset="0%">
                         » » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »
@@ -1049,9 +1056,15 @@ const UI = {
             `;
 
             let allCards = [...p.hand, ...p.penaltyCards];
-            let handW = window.innerWidth <= 768 ? 48 : 56;
-            let handH = window.innerWidth <= 768 ? 66 : 78;
-            if (allCards.length > 4 && App.uiState.layoutMode === 'grid') { handW = 35; handH = 45; }
+            let baseHandW = window.innerWidth <= 768 ? 48 : 56;
+            let baseHandH = window.innerWidth <= 768 ? 66 : 78;
+            
+            let scale = 1;
+            if (allCards.length > 12) scale = 0.65;
+            else if (allCards.length > 8) scale = 0.8;
+
+            let handW = baseHandW * scale;
+            let handH = baseHandH * scale;
 
             let minC = 0, maxC = 1, minR = 0, maxR = 1;
             if (App.uiState.layoutMode === 'line') {
@@ -1074,9 +1087,12 @@ const UI = {
                 let ox = (off.c - centerC) * handW;
                 let oy = (off.r - centerR) * handH * -yDirToCenter;
 
-                el.style.left = `${px + ox - (handW * 0.5)}px`;
-                el.style.top = `${py + oy - (handH * 0.5)}px`;
+                el.style.left = `${px + ox - (baseHandW * 0.5)}px`;
+                el.style.top = `${py + oy - (baseHandH * 0.5)}px`;
                 el.style.zIndex = 20 + idx;
+                
+                el.style.setProperty('--local-scale', scale);
+                el.style.setProperty('--local-rot', '0deg');
 
                 let isFaceUp = false;
                 if (state.phase === 'game_over') isFaceUp = true;
@@ -1119,6 +1135,9 @@ const UI = {
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
             el.style.left = `${cx - 45 - cWidthScale}px`; el.style.top = `${cy - deckOffsetY - (i*0.5)}px`; el.style.zIndex = i;
+            el.style.setProperty('--local-scale', '1');
+            el.style.setProperty('--local-rot', '0deg');
+            
             el.querySelector('.card-inner').classList.add('is-flipped');
             el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent');
 
@@ -1131,10 +1150,13 @@ const UI = {
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
             el.style.left = `${cx + 45 - cWidthScale}px`; el.style.top = `${cy - deckOffsetY}px`; el.style.zIndex = 100 + i;
+            
+            el.style.setProperty('--local-scale', '1');
+            if (!el.dataset.rot) el.dataset.rot = (Math.random() * 20 - 10);
+            el.style.setProperty('--local-rot', `${el.dataset.rot}deg`);
+            
             el.querySelector('.card-inner').classList.remove('is-flipped');
             el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent');
-            if (!el.dataset.rot) el.dataset.rot = (Math.random() * 20 - 10);
-            el.style.transform = `rotate(${el.dataset.rot}deg)`;
 
             if (state.lastActionTargetId === c.id) el.classList.add('highlight-recent');
 
@@ -1155,6 +1177,8 @@ const UI = {
             else { px = cx + Math.cos(angle) * (rx * 0.4); py = cy + Math.sin(angle) * (ry * 0.4); }
 
             el.style.left = `${px - cWidthScale}px`; el.style.top = `${py - 37}px`; el.style.zIndex = 1000;
+            el.style.setProperty('--local-scale', '1');
+            el.style.setProperty('--local-rot', '0deg');
 
             let isFaceUp = (state.activeAbility.player === App.localId || state.activeAbility.step > 0);
             let inner = el.querySelector('.card-inner');
@@ -1331,6 +1355,12 @@ const UI = {
         let isMyTurn = state.players[state.turnIndex]?.id === App.localId;
         let isHolding = state.activeAbility && state.activeAbility.player === App.localId && state.activeAbility.type.startsWith('holding');
 
+        // Allow discarding drawn card by clicking the discard pile
+        if (isHolding && clickedCard.loc === 'discard') {
+            Net.sendAction({ type: 'PLAY_HOLDING', action: 'discard' });
+            return;
+        }
+
         if (App.uiState.targetingMode) {
             let mode = App.uiState.targetingMode;
             if (mode === 'peeking') return; 
@@ -1356,6 +1386,7 @@ const UI = {
             else if (mode === 'q_peek_or_swap' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 if (!App.uiState.selectedCardId) {
                     App.uiState.selectedCardId = cardId; App.uiState.peekedCards.add(cardId); UI.render(state);
+                    UI.showToast("Card peeked. Click another card to swap, or the same card to keep it.", "info");
                 } else {
                     if (cardId === App.uiState.selectedCardId) {
                         App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear(); UI.render(state);

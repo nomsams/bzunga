@@ -29,6 +29,10 @@
             --card-w: 44px;
             --card-h: 62px;
         }
+        /* Simplify card face on mobile to prevent overflow */
+        .card .val.bottom { display: none !important; }
+        .card .suit { font-size: 1.2rem !important; margin-top: -4px; }
+        .card .val { font-size: 1rem !important; }
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -60,8 +64,8 @@
     #game-view { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; perspective: 1200px; }
     #table { width: 96%; height: 88%; background: radial-gradient(circle, var(--table-center) 0%, var(--table-edge) 100%); border-radius: 50%; border: 15px solid var(--table-border); position: relative; box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 30px 60px rgba(0,0,0,0.8); }
     
-    #table-rim-svg { position: absolute; top: -15px; left: -15px; width: calc(100% + 30px); height: calc(100% + 30px); pointer-events: none; border-radius: 50%; overflow: visible; }
-    .table-arrow-text { font-size: 22px; font-weight: 900; fill: rgba(251, 191, 36, 0.4); letter-spacing: 10px; dominant-baseline: middle; }
+    #table-rim-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border-radius: 50%; overflow: visible; }
+    .table-arrow-text { font-size: 24px; font-weight: 900; fill: rgba(251, 191, 36, 0.4); letter-spacing: 12px; dominant-baseline: central; }
 
     /* Cards */
     #card-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
@@ -234,7 +238,8 @@
     <div id="game-view" class="hidden">
         <div id="table">
             <svg id="table-rim-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
-                <path id="rim-path" d="M 500 10 A 490 490 0 0 1 500 990 A 490 490 0 0 1 500 10" fill="none" />
+                <!-- 500 is center. Border is 15px. Middle of border is 7.5px from edge. 500 - 7.5 = 492.5 -->
+                <path id="rim-path" d="M 500 7.5 A 492.5 492.5 0 0 1 500 992.5 A 492.5 492.5 0 0 1 500 7.5" fill="none" />
                 <text class="table-arrow-text">
                     <textPath href="#rim-path" startOffset="0%">
                         » » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »
@@ -522,9 +527,11 @@ Engine.processAction = (action, peerId) => {
 
             let transitTime = Math.max(0, now - (action.timestamp || now));
             let adjustedSlapTime = now - transitTime;
-            let isTie = (adjustedSlapTime - Engine.state.lastSlapTime < 250) && (action.targetId === Engine.state.lastSlapTargetId);
+            
+            // Race condition fix: If the top discard was slapped within the last 1.5s, reject new slaps
+            let isLateSlap = topDiscard.slappedAt && (now - topDiscard.slappedAt < 1500);
 
-            if (targetCard.value === topDiscard.value) {
+            if (targetCard.value === topDiscard.value && !isLateSlap) {
                 Engine.state.lastSlapTime = now;
                 Engine.state.lastSlapTargetId = action.targetId;
 
@@ -532,6 +539,9 @@ Engine.processAction = (action, peerId) => {
                 else owner.penaltyCards = owner.penaltyCards.filter(c => c.id !== targetCard.id);
 
                 targetCard.loc = 'discard'; targetCard.ownerId = null; targetCard.isFaceUp = true;
+                targetCard.slappedAt = now; // Mark new top card as slapped
+                topDiscard.slappedAt = now; // Mark old top card as slapped to prevent race conditions
+                
                 Engine.state.discardPile.push(targetCard);
                 Engine.state.lastActionTargetId = targetCard.id;
 
@@ -543,8 +553,11 @@ Engine.processAction = (action, peerId) => {
                 }
                 Engine.state.lastSlap = { id: targetCard.id, success: true, time: now, playerId: player.id, targetOwnerId: owner.id };
             } else {
-                if (isTie) { Engine.sysLog(`${player.name} slapped just a millisecond too late! No penalty.`, "warning"); return; }
-                Engine.sysLog(`${player.name} incorrectly slapped ${owner.name}'s ${targetCard.value} onto a ${topDiscard.value}! Penalty!`, "danger");
+                if (isLateSlap && targetCard.value === topDiscard.value) {
+                    Engine.sysLog(`${player.name} slapped just a millisecond too late! Penalty!`, "warning");
+                } else {
+                    Engine.sysLog(`${player.name} incorrectly slapped ${owner.name}'s ${targetCard.value} onto a ${topDiscard.value}! Penalty!`, "danger");
+                }
                 Engine.drawPenalty(player.id);
                 Engine.state.lastSlap = { id: targetCard.id, success: false, time: now, playerId: player.id, targetOwnerId: owner.id };
                 Engine.state.players.filter(p => p.isBot).forEach(bot => { Engine.memorizeForBot(bot.id, targetCard); });
@@ -722,7 +735,7 @@ const Net = {
                 document.getElementById('host-controls').classList.remove('hidden');
                 document.getElementById('room-id-display').innerText = id;
 
-                let hostUrl = window.location.href.split('?')[0].split('#')[0];
+                let hostUrl = window.location.origin + window.location.pathname;
                 let joinUrl = hostUrl + '?join=' + id;
                 new QRCode(document.getElementById("qr-container"), { text: joinUrl, width: 160, height: 160, colorDark: "#000", colorLight: "#fff" });
 
@@ -818,7 +831,11 @@ const UI = {
     init: () => {
         const urlParams = new URLSearchParams(window.location.search);
         const joinId = urlParams.get('join');
-        if (joinId) document.getElementById('join-id').value = joinId;
+        if (joinId) {
+            document.getElementById('join-id').value = joinId;
+            // Auto-join if opened via QR code link
+            setTimeout(() => document.getElementById('btn-join').click(), 300);
+        }
 
         document.getElementById('btn-host').onclick = (e) => {
             let btn = e.target; btn.innerText = "Connecting..."; btn.disabled = true; App.isHost = true;
@@ -959,6 +976,14 @@ const UI = {
 
         if (state.phase !== 'peek') App.uiState.hasPeeked.clear();
 
+        // Ensure targeting mode is cleared if it's not our turn to prevent lingering bugs
+        let isMyTurn = state.players[state.turnIndex]?.id === App.localId;
+        if (!isMyTurn && App.uiState.targetingMode) {
+            App.uiState.targetingMode = null;
+            App.uiState.selectedCardId = null;
+            App.uiState.peekedCards.clear();
+        }
+
         document.getElementById('lobby').classList.add('hidden');
         document.getElementById('game-view').classList.remove('hidden');
 
@@ -1008,6 +1033,11 @@ const UI = {
 
         let rx = Math.min(window.innerWidth * 0.35, window.innerWidth / 2 - 80);
         let ry = Math.min(window.innerHeight * 0.38, window.innerHeight / 2 - 90);
+        
+        // Tighter vertical radius on mobile to prevent top cards from hiding behind banner
+        if (window.innerWidth <= 768) {
+            ry = Math.min(window.innerHeight * 0.35, window.innerHeight / 2 - 110);
+        }
 
         let localPlayerIndex = state.players.findIndex(p => p.id === App.localId);
         if (localPlayerIndex === -1) localPlayerIndex = 0;
@@ -1112,7 +1142,12 @@ const UI = {
                     if (mode === 'swap' && p.id === App.localId) el.classList.add('targetable');
                     else if (mode === 'peek_self' && p.id === App.localId) el.classList.add('targetable');
                     else if (mode === 'peek_opp' && p.id !== App.localId) el.classList.add('targetable');
-                    else if (mode === 'q_peek_or_swap') {
+                    else if (mode === 'q_peek') el.classList.add('targetable');
+                    else if (mode === 'q_swap_1') {
+                        el.classList.add('targetable');
+                        if (c.id === App.uiState.selectedCardId) el.classList.add('selected-target');
+                    }
+                    else if (mode === 'q_swap_2') {
                         el.classList.add('targetable');
                         if (c.id === App.uiState.selectedCardId) el.classList.add('selected-target');
                     }
@@ -1141,7 +1176,6 @@ const UI = {
             el.querySelector('.card-inner').classList.add('is-flipped');
             el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent');
 
-            let isMyTurn = state.players[state.turnIndex]?.id === App.localId;
             if (isMyTurn && !state.activeAbility && !App.uiState.targetingMode) el.classList.add('deck-glow');
             else el.classList.remove('deck-glow');
         });
@@ -1160,7 +1194,6 @@ const UI = {
 
             if (state.lastActionTargetId === c.id) el.classList.add('highlight-recent');
 
-            let isMyTurn = state.players[state.turnIndex]?.id === App.localId;
             if (isMyTurn && !state.activeAbility && !App.uiState.targetingMode) el.classList.add('deck-glow');
         });
 
@@ -1238,10 +1271,9 @@ const UI = {
                 if (App.uiState.targetingMode === 'swap') statusText.innerText = "Select a card in your layout to swap out.";
                 else if (App.uiState.targetingMode === 'peek_self') statusText.innerText = "Select one of your cards to peek at (9 Magic).";
                 else if (App.uiState.targetingMode === 'peek_opp') statusText.innerText = "Select an opponent's card to peek at (10 Magic).";
-                else if (App.uiState.targetingMode === 'q_peek_or_swap') {
-                    if (!App.uiState.selectedCardId) statusText.innerText = "Queen Magic: Click ANY card to PEEK at it.";
-                    else statusText.innerText = "Queen Magic: Click a DIFFERENT card to SWAP, or the SAME card to finish.";
-                }
+                else if (App.uiState.targetingMode === 'q_peek') statusText.innerText = "Queen Magic: Click ANY card to PEEK at it.";
+                else if (App.uiState.targetingMode === 'q_swap_1') statusText.innerText = "Queen Magic: Select FIRST card to swap.";
+                else if (App.uiState.targetingMode === 'q_swap_2') statusText.innerText = "Queen Magic: Select SECOND card to swap.";
                 else if (App.uiState.targetingMode === 'peeking') statusText.innerText = "Memorize this card...";
                 else if (App.uiState.targetingMode === 'blind_swap_1') statusText.innerText = "Select the FIRST card to blind swap (Jack Magic).";
                 else if (App.uiState.targetingMode === 'blind_swap_2') statusText.innerText = "Select the SECOND card to blind swap.";
@@ -1312,13 +1344,13 @@ const UI = {
                     if (mType === 'magic_9') App.uiState.targetingMode = 'peek_self';
                     else if (mType === 'magic_10') App.uiState.targetingMode = 'peek_opp';
                     else if (mType === 'magic_J') App.uiState.targetingMode = 'blind_swap_1';
-                    else if (mType === 'magic_Q') App.uiState.targetingMode = 'q_peek_or_swap';
+                    else if (mType === 'magic_Q') App.uiState.targetingMode = 'q_peek';
                     else if (mType === 'magic_K') App.uiState.targetingMode = 'force_penalty';
                     setTimeout(() => UI.render(state), 0);
                 }
 
-                if (App.uiState.targetingMode === 'q_peek_or_swap' && App.uiState.selectedCardId) {
-                    let btnPass = document.createElement('button'); btnPass.innerText = "Pass (Don't Swap)"; btnPass.className = "secondary";
+                if (App.uiState.targetingMode && App.uiState.targetingMode.startsWith('q_')) {
+                    let btnPass = document.createElement('button'); btnPass.innerText = "Pass (Finish)"; btnPass.className = "secondary";
                     btnPass.onclick = () => {
                         App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear();
                         UI.render(state); // Force immediate local UI update to clear hues
@@ -1383,19 +1415,23 @@ const UI = {
                     Net.sendAction({ type: 'RESOLVE_MAGIC', targetPlayerId: clickedCard.ownerId, targetId: cardId });
                 }, 2000);
             }
-            else if (mode === 'q_peek_or_swap' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
-                if (!App.uiState.selectedCardId) {
-                    App.uiState.selectedCardId = cardId; App.uiState.peekedCards.add(cardId); UI.render(state);
-                    UI.showToast("Card peeked. Click another card to swap, or the same card to keep it.", "info");
-                } else {
-                    if (cardId === App.uiState.selectedCardId) {
-                        App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear(); UI.render(state);
-                        Net.sendAction({ type: 'RESOLVE_MAGIC' });
-                    } else {
-                        App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear(); UI.render(state);
-                        Net.sendAction({ type: 'RESOLVE_MAGIC', swapTarget1: App.uiState.selectedCardId, swapTarget2: cardId });
-                    }
-                }
+            else if (mode === 'q_peek' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
+                App.uiState.peekedCards.add(cardId);
+                App.uiState.targetingMode = 'q_swap_1';
+                UI.render(state);
+                UI.showToast("Card peeked. Select FIRST card to swap, or click Pass.", "info");
+            }
+            else if (mode === 'q_swap_1' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
+                App.uiState.selectedCardId = cardId;
+                App.uiState.targetingMode = 'q_swap_2';
+                UI.render(state);
+                UI.showToast("Select SECOND card to swap.", "info");
+            }
+            else if (mode === 'q_swap_2' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
+                if (cardId === App.uiState.selectedCardId) return; // Can't swap with itself
+                let target1 = App.uiState.selectedCardId;
+                App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear(); UI.render(state);
+                Net.sendAction({ type: 'RESOLVE_MAGIC', swapTarget1: target1, swapTarget2: cardId });
             }
             else if (mode === 'blind_swap_1' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 App.uiState.selectedCardId = cardId; App.uiState.targetingMode = 'blind_swap_2'; UI.render(state);

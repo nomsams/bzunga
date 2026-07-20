@@ -288,4 +288,3 @@ const Bot = {
     }
 };
 window.Bot = Bot;
-

@@ -37,11 +37,11 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background-color: var(--bg-color); color: var(--text-light); overflow: hidden; touch-action: none; }
-    
+
     /* Layouts */
     #app { width: 100vw; height: 100vh; position: relative; display: flex; flex-direction: column; }
     .hidden { display: none !important; }
-    
+
     /* Lobby */
     #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; text-align: center; background: radial-gradient(circle at top, #1e293b 0%, var(--bg-color) 100%); z-index: 100; position: absolute; top:0; left:0; width: 100%; }
     .lobby-box { background: var(--surface); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); max-width: 420px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
@@ -56,55 +56,55 @@
     button.secondary { background: #475569; color: white; }
     button.danger { background: var(--danger); color: white; }
     button.success { background: var(--success); color: white; }
-    
+
     #qr-container { background: white; padding: 15px; display: inline-block; margin: 15px 0; border-radius: 12px; }
     .player-list { text-align: left; margin-top: 15px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 5px; }
     .player-item { padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
-    
+
     /* Game Table */
     #game-view { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; perspective: 1200px; }
     #table { width: 96%; height: 88%; background: radial-gradient(circle, var(--table-center) 0%, var(--table-edge) 100%); border-radius: 50%; border: 15px solid var(--table-border); position: relative; box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 30px 60px rgba(0,0,0,0.8); }
-    
+
     #table-rim-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border-radius: 50%; overflow: visible; }
     .table-arrow-text { font-size: 24px; font-weight: 900; fill: rgba(251, 191, 36, 0.4); letter-spacing: 12px; dominant-baseline: central; }
 
     /* Cards */
     #card-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-    .card { 
-        width: var(--card-w); height: var(--card-h); position: absolute; 
-        transition: left 0.4s cubic-bezier(0.22, 1, 0.36, 1), top 0.4s cubic-bezier(0.22, 1, 0.36, 1), scale 0.2s, rotate 0.2s, translate 0.2s; 
-        pointer-events: auto; cursor: pointer; touch-action: manipulation; border-radius: 6px; transform-origin: center center; box-shadow: 2px 4px 10px rgba(0,0,0,0.4); 
+    .card {
+        width: var(--card-w); height: var(--card-h); position: absolute;
+        transition: left 0.4s cubic-bezier(0.22, 1, 0.36, 1), top 0.4s cubic-bezier(0.22, 1, 0.36, 1), scale 0.2s, rotate 0.2s, translate 0.2s;
+        pointer-events: auto; cursor: pointer; touch-action: manipulation; border-radius: 6px; transform-origin: center center; box-shadow: 2px 4px 10px rgba(0,0,0,0.4);
         scale: var(--local-scale, 1);
         rotate: var(--local-rot, 0deg);
         translate: 0 0;
     }
     .card.no-anim { transition: none !important; }
     .card.no-anim .card-inner { transition: none !important; }
-    
+
     .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius: 6px; }
     .card-inner.is-flipped { transform: rotateY(180deg); }
-    
+
     /* Fixed Card Bleeding & Artifacts */
-    .card-face { 
-        position: absolute; width: 100%; height: 100%; 
-        backface-visibility: hidden; -webkit-backface-visibility: hidden; 
-        border-radius: 6px; border: 1px solid #cbd5e1; 
-        display: flex; flex-direction: column; justify-content: space-between; 
-        padding: 4px; background: #fff; overflow: hidden; 
+    .card-face {
+        position: absolute; width: 100%; height: 100%;
+        backface-visibility: hidden; -webkit-backface-visibility: hidden;
+        border-radius: 6px; border: 1px solid #cbd5e1;
+        display: flex; flex-direction: column; justify-content: space-between;
+        padding: 4px; background: #fff; overflow: hidden;
     }
     .card-front { transform: rotateY(0deg) translateZ(1px); }
-    .card-back { 
-        background: repeating-linear-gradient(45deg, #1e293b, #1e293b 10px, #0f172a 10px, #0f172a 20px); 
-        transform: rotateY(180deg) translateZ(1px); border: 2px solid #e2e8f0; 
+    .card-back {
+        background: repeating-linear-gradient(45deg, #1e293b, #1e293b 10px, #0f172a 10px, #0f172a 20px);
+        transform: rotateY(180deg) translateZ(1px); border: 2px solid #e2e8f0;
     }
     .card-back::after { content: 'B'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: bold; }
-    
+
     .card .val { font-size: 1.1rem; font-weight: 800; line-height: 1; }
     .card .suit { font-size: 1.5rem; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; }
     .card .val.bottom { transform: rotate(180deg); margin-top: auto; }
     .card.red .card-front { color: #ef4444; }
     .card.black .card-front { color: #1e293b; }
-    
+
     .card.disconnected { filter: grayscale(100%) opacity(0.5); pointer-events: none; }
     .player-badge.disconnected { filter: grayscale(100%) opacity(0.5); }
 
@@ -116,26 +116,26 @@
     .card.deck-glow .card-inner { box-shadow: 0 0 15px var(--success); }
     .card.holding-card { scale: 1.3 !important; z-index: 1000 !important; }
     .card.highlight-recent .card-inner { box-shadow: 0 0 15px 5px var(--accent); animation: pulse-recent 2s infinite; }
-    
+
     @keyframes pulse-target { 0% { box-shadow: 0 0 10px 2px var(--info); } 50% { box-shadow: 0 0 20px 6px var(--info); } 100% { box-shadow: 0 0 10px 2px var(--info); } }
     @keyframes pulse-recent { 0%, 100% { box-shadow: 0 0 10px var(--accent); } 50% { box-shadow: 0 0 25px var(--accent); } }
 
     /* UI Overlays */
     #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; display: flex; flex-direction: column; justify-content: space-between; }
-    
+
     #status-banner { background: rgba(0,0,0,0.85); color: white; text-align: center; padding: 10px 15px; font-size: 1rem; font-weight: 600; backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,0.1); pointer-events: auto; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
     #status-text { flex: 1; text-align: center; color: var(--accent); letter-spacing: 0.5px; font-size: 0.9rem; }
-    
-    .player-badge { 
-        position: absolute; background: var(--surface); border-radius: 22px; font-size: 0.85rem; pointer-events: auto; cursor: pointer; text-align: center; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; backdrop-filter: blur(4px); white-space: nowrap; z-index: 150; 
+
+    .player-badge {
+        position: absolute; background: var(--surface); border-radius: 22px; font-size: 0.85rem; pointer-events: auto; cursor: pointer; text-align: center; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; backdrop-filter: blur(4px); white-space: nowrap; z-index: 150;
         width: 44px; height: 44px; padding: 0; justify-content: center; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
+
     .player-badge .icon { font-size: 1.4rem; line-height: 44px; margin: 0; transition: all 0.3s; }
     .player-badge .name-text, .player-badge .meta { display: none; opacity: 0; transition: opacity 0.2s; height: 0; }
     .player-badge .turn-text { display: none; color: var(--accent); font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 2px; }
-    
-    .player-badge:hover, .player-badge.expanded { 
+
+    .player-badge:hover, .player-badge.expanded {
         width: auto; height: auto; max-width: 200px; padding: 8px 16px; border-radius: 16px; z-index: 250; background: rgba(30, 41, 59, 0.95); border-color: rgba(255,255,255,0.3);
     }
     .player-badge:hover .icon, .player-badge.expanded .icon { line-height: normal; font-size: 1.1rem; margin-right: 6px; }
@@ -161,7 +161,7 @@
     .toast.success { border-color: var(--success); }
     .toast.danger { border-color: var(--danger); }
     .toast.warning { border-color: var(--accent); }
-    
+
     #chat-bubble-container { position: absolute; bottom: 90px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 350; pointer-events: none; align-items: flex-end; }
     .chat-bubble { background: rgba(255,255,255,0.95); color: #000; padding: 10px 15px; border-radius: 16px; border-bottom-right-radius: 4px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s 3.7s forwards; max-width: 250px; word-wrap: break-word; }
     .chat-bubble.pirate { background: #fee2e2; border: 1px solid #ef4444; }
@@ -197,7 +197,7 @@
     .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); z-index: 410; text-align: center; pointer-events: auto; min-width: 300px; max-width: 90vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
     .modal h2 { color: var(--accent); margin-bottom: 10px; font-size: 1.8rem; }
     .modal-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 25px; flex-wrap: wrap; }
-    
+
     .endgame-player { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
     .endgame-player.winner { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
     .endgame-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
@@ -226,9 +226,9 @@
             <h2 style="color: white; margin-bottom: 10px;">Game Lobby</h2>
             <div id="room-id-display" style="font-family: monospace; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; margin-bottom: 10px; word-break: break-all; color: var(--accent); font-size: 1rem; letter-spacing: 1px;"></div>
             <div id="qr-container"></div>
-            
+
             <div class="player-list" id="lobby-players"></div>
-            
+
             <div id="host-controls" class="hidden" style="margin-top: 15px;">
                 <div style="display: flex; gap: 8px;">
                     <select id="bot-difficulty" style="flex: 2; margin: 0;">
@@ -260,7 +260,7 @@
             </svg>
         </div>
         <div id="card-layer"></div>
-        
+
         <div id="ui-layer">
             <div id="status-banner">
                 <div style="font-size: 0.75rem; color: #94a3b8; font-weight:800;" id="phase-display">PHASE</div>
@@ -270,7 +270,7 @@
                     <button id="btn-toggle-anim" class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Anim: ON</button>
                 </div>
             </div>
-            
+
             <div id="toast-container"></div>
             <div id="chat-bubble-container"></div>
             <div id="action-bar" class="hidden"></div>
@@ -558,7 +558,7 @@ Engine.processAction = (action, peerId) => {
 
             let transitTime = Math.max(0, now - (action.timestamp || now));
             let adjustedSlapTime = now - transitTime;
-            
+
             // Race condition fix: If the top discard was slapped within the last 1.5s, reject new slaps
             let isLateSlap = topDiscard.slappedAt && (now - topDiscard.slappedAt < 1500);
 
@@ -572,7 +572,7 @@ Engine.processAction = (action, peerId) => {
                 targetCard.loc = 'discard'; targetCard.ownerId = null; targetCard.isFaceUp = true;
                 targetCard.slappedAt = now; // Mark new top card as slapped
                 topDiscard.slappedAt = now; // Mark old top card as slapped to prevent race conditions
-                
+
                 Engine.state.discardPile.push(targetCard);
                 Engine.state.lastActionTargetId = targetCard.id;
 
@@ -1070,7 +1070,7 @@ const UI = {
 
         let rx = Math.min(window.innerWidth * 0.35, window.innerWidth / 2 - 80);
         let ry = Math.min(window.innerHeight * 0.38, window.innerHeight / 2 - 90);
-        
+
         // Tighter vertical radius on mobile to prevent top cards from hiding behind banner
         if (window.innerWidth <= 768) {
             ry = Math.min(window.innerHeight * 0.35, window.innerHeight / 2 - 110);
@@ -1125,7 +1125,7 @@ const UI = {
             let allCards = [...p.hand, ...p.penaltyCards];
             let baseHandW = window.innerWidth <= 768 ? 48 : 56;
             let baseHandH = window.innerWidth <= 768 ? 66 : 78;
-            
+
             let scale = 1;
             if (allCards.length > 12) scale = 0.65;
             else if (allCards.length > 8) scale = 0.8;
@@ -1157,7 +1157,7 @@ const UI = {
                 el.style.left = `${px + ox - (baseHandW * 0.5)}px`;
                 el.style.top = `${py + oy - (baseHandH * 0.5)}px`;
                 el.style.zIndex = 20 + idx;
-                
+
                 el.style.setProperty('--local-scale', scale);
                 el.style.setProperty('--local-rot', '0deg');
 
@@ -1209,7 +1209,7 @@ const UI = {
             el.style.left = `${cx - 45 - cWidthScale}px`; el.style.top = `${cy - deckOffsetY - (i*0.5)}px`; el.style.zIndex = i;
             el.style.setProperty('--local-scale', '1');
             el.style.setProperty('--local-rot', '0deg');
-            
+
             el.querySelector('.card-inner').classList.add('is-flipped');
             el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent');
 
@@ -1221,11 +1221,11 @@ const UI = {
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
             el.style.left = `${cx + 45 - cWidthScale}px`; el.style.top = `${cy - deckOffsetY}px`; el.style.zIndex = 100 + i;
-            
+
             el.style.setProperty('--local-scale', '1');
             if (!el.dataset.rot) el.dataset.rot = (Math.random() * 20 - 10);
             el.style.setProperty('--local-rot', `${el.dataset.rot}deg`);
-            
+
             el.querySelector('.card-inner').classList.remove('is-flipped');
             el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent');
 
@@ -1243,7 +1243,7 @@ const UI = {
             let angle = (Math.PI / 2) + (relIndex * (2 * Math.PI / state.players.length));
 
             let px, py;
-            if (state.activeAbility.player === App.localId) { px = cx; py = cy + ry * 0.35; } 
+            if (state.activeAbility.player === App.localId) { px = cx; py = cy + ry * 0.35; }
             else { px = cx + Math.cos(angle) * (rx * 0.4); py = cy + Math.sin(angle) * (ry * 0.4); }
 
             el.style.left = `${px - cWidthScale}px`; el.style.top = `${py - 37}px`; el.style.zIndex = 1000;
@@ -1287,12 +1287,12 @@ const UI = {
                     </div>`;
                 });
                 document.getElementById('gameover-results').innerHTML = html;
-                
+
                 // Add Play Again button for host
                 let btnContainer = document.getElementById('gameover-buttons');
                 let oldBtn = document.getElementById('btn-play-again');
                 if (oldBtn) oldBtn.remove();
-                
+
                 if (App.isHost) {
                     let btnPlayAgain = document.createElement('button');
                     btnPlayAgain.id = 'btn-play-again';
@@ -1450,7 +1450,7 @@ const UI = {
 
         if (App.uiState.targetingMode) {
             let mode = App.uiState.targetingMode;
-            if (mode === 'peeking') return; 
+            if (mode === 'peeking') return;
 
             if (mode === 'swap' && clickedCard.ownerId === App.localId) {
                 App.uiState.targetingMode = null; UI.render(state);

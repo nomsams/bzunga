@@ -86,7 +86,7 @@ const Bot = {
                         Engine.chatLog(bot.name, `@${senderName} ${reply}`, profile.type === 'pirate');
                         Bot.lastChatTime[bot.id] = Utils.timestamp();
                     }, Math.random() * 2000 + 1000);
-                    return; 
+                    return;
                 }
             }
         });
@@ -97,7 +97,7 @@ const Bot = {
             Bot.eventCache.lastSlapTime = lastSlap.time;
             let slappingBot = Engine.state.players.find(p => p.isBot && p.id === lastSlap.playerId);
             if (slappingBot) {
-                if (lastSlap.success) { Bot.frustration[slappingBot.id] = 0; Bot.chat(slappingBot, 'slapSuccess'); } 
+                if (lastSlap.success) { Bot.frustration[slappingBot.id] = 0; Bot.chat(slappingBot, 'slapSuccess'); }
                 else { Bot.frustration[slappingBot.id] = (Bot.frustration[slappingBot.id] || 0) + 2; Bot.chat(slappingBot, 'slapFail'); }
             }
             if (lastSlap.success && lastSlap.targetOwnerId) {
@@ -112,7 +112,7 @@ const Bot = {
         let bots = Engine.state.players.filter(p => p.isBot);
         Bot.processReactions(now);
         if (now - (Engine.state.lastSlapTime || 0) < 2500) return;
-        
+
         if (Engine.state.phase === 'peek') {
             bots.forEach(bot => {
                 if (!bot.ready) {
@@ -122,7 +122,7 @@ const Bot = {
                 }
             });
         }
-        
+
         bots.forEach(bot => {
             let profile = BotConfig.profiles[bot.botDifficulty];
             if (!Engine.botMemory[bot.id]) Engine.botMemory[bot.id] = {};
@@ -134,12 +134,12 @@ const Bot = {
                 delete mem[oldest];
             }
         });
-        
+
         if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && Engine.state.discardPile.length > 0) {
             let topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
             bots.forEach(bot => {
                 let profile = BotConfig.profiles[bot.botDifficulty];
-                let reflexDelay = profile.reflexBase - ((Bot.frustration[bot.id] || 0) * 50); 
+                let reflexDelay = profile.reflexBase - ((Bot.frustration[bot.id] || 0) * 50);
                 let mem = Engine.botMemory[bot.id];
                 for (let key in mem) {
                     if (mem[key].value === topDiscard.value) {
@@ -148,26 +148,26 @@ const Bot = {
                             let slapProb = bot.botDifficulty >= 4 ? (2500 / Math.max(100, reflexDelay)) : (1000 / Math.max(200, reflexDelay));
                             if (Math.random() < slapProb) {
                                 Engine.processAction({ type: 'SLAP', targetId: target.id }, bot.id);
-                                delete mem[key]; return; 
+                                delete mem[key]; return;
                             }
                         }
                     }
                 }
             });
         }
-        
+
         let activePlayer = Engine.state.players[Engine.state.turnIndex];
         if (!activePlayer.isBot) return;
         if (now - Engine.state.turnStartTime < 1500) return;
         if (Engine.state.activeAbility && Engine.state.activeAbility.player === activePlayer.id) {
-            if (now - Engine.state.activeAbility.time < 1500) return; 
+            if (now - Engine.state.activeAbility.time < 1500) return;
         }
-        
+
         if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && !Engine.state.activeAbility) {
             let topDiscard = Engine.state.discardPile.length > 0 ? Engine.state.discardPile[Engine.state.discardPile.length - 1] : null;
             let wantsDiscard = false;
             let mem = Engine.botMemory[activePlayer.id];
-            
+
             if (topDiscard) {
                 let topVal = Bot.getNumericValue(topDiscard.value, topDiscard.isRed);
                 if (activePlayer.botDifficulty >= 3) {
@@ -195,22 +195,22 @@ const Bot = {
             else Engine.processAction({ type: 'DRAW_DECK' }, activePlayer.id);
             return;
         }
-        
+
         if (Engine.state.activeAbility && Engine.state.activeAbility.player === activePlayer.id) {
             let ability = Engine.state.activeAbility;
             let mem = Engine.botMemory[activePlayer.id];
-            
+
             if (ability.type.startsWith('holding')) {
                 let hCard = ability.card;
                 let cardVal = Bot.getNumericValue(hCard.value, hCard.isRed);
-                
+
                 if (activePlayer.botDifficulty >= 3) {
                     let memoryMatchFound = false;
                     for (let key in mem) { if (mem[key].value === hCard.value) { memoryMatchFound = true; break; } }
                     if (memoryMatchFound) { Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id); return; }
                 }
                 if (ability.type === 'holding' && ['9','10','J','Q','K'].includes(hCard.value)) {
-                    if (cardVal === -1) { 
+                    if (cardVal === -1) {
                          let target = activePlayer.hand[Math.floor(Math.random() * activePlayer.hand.length)];
                          if (target) Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: target.id }, activePlayer.id);
                     } else {
@@ -220,7 +220,7 @@ const Bot = {
                 } else {
                     let targetToSwap = null;
                     if (activePlayer.botDifficulty >= 3) {
-                        let worstKnownVal = cardVal; 
+                        let worstKnownVal = cardVal;
                         for (let key in mem) {
                             let c = Engine.getCardById(key);
                             if (c && c.ownerId === activePlayer.id && (c.loc === 'hand' || c.loc === 'penalty') && mem[key].numVal > worstKnownVal) {
@@ -240,7 +240,7 @@ const Bot = {
             } else {
                 let mType = ability.type;
                 let payload = { type: 'RESOLVE_MAGIC' };
-                
+
                 if (mType === 'magic_9') {
                     let unknownOwn = activePlayer.hand.find(c => !mem[c.id]);
                     if (unknownOwn) payload.targetId = unknownOwn.id;
@@ -257,11 +257,11 @@ const Bot = {
                     for (let key in mem) {
                         let c = Engine.getCardById(key);
                         if (c && (c.loc === 'hand' || c.loc === 'penalty')) {
-                            if (c.ownerId === activePlayer.id && mem[key].numVal > myWorstVal) { myWorst = c; myWorstVal = mem[key].numVal; } 
+                            if (c.ownerId === activePlayer.id && mem[key].numVal > myWorstVal) { myWorst = c; myWorstVal = mem[key].numVal; }
                             else if (c.ownerId !== activePlayer.id && mem[key].numVal < oppBestVal) { oppBest = c; oppBestVal = mem[key].numVal; }
                         }
                     }
-                    if (myWorst && oppBest && myWorstVal > oppBestVal) { payload.swapTarget1 = myWorst.id; payload.swapTarget2 = oppBest.id; } 
+                    if (myWorst && oppBest && myWorstVal > oppBestVal) { payload.swapTarget1 = myWorst.id; payload.swapTarget2 = oppBest.id; }
                     else if (Math.random() > 0.5) {
                         let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
                         if (opps.length > 0) payload.targetId = opps[0].hand[0]?.id;

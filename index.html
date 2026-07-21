@@ -36,8 +36,7 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background-color: var(--bg-color); color: var(--text-light); overflow: hidden; touch-action: none; }
-
+    body { background-color: var(--bg-color); color: var(--text-light); overflow: hidden; touch-action: manipulation; }
     /* Layouts */
     #app { width: 100vw; height: 100vh; position: relative; display: flex; flex-direction: column; }
     .hidden { display: none !important; }
@@ -69,7 +68,7 @@
     .table-arrow-text { font-size: 24px; font-weight: 900; fill: rgba(251, 191, 36, 0.4); letter-spacing: 12px; dominant-baseline: central; }
 
     /* Cards */
-    #card-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+    #card-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: auto; z-index: 10; touch-action: manipulation; }
     .card {
         width: var(--card-w); height: var(--card-h); position: absolute;
         transition: left 0.4s cubic-bezier(0.22, 1, 0.36, 1), top 0.4s cubic-bezier(0.22, 1, 0.36, 1), scale 0.2s, rotate 0.2s, translate 0.2s;
@@ -863,9 +862,11 @@ const UI = {
         const urlParams = new URLSearchParams(window.location.search);
         const joinId = urlParams.get('join');
         if (joinId) {
-            document.getElementById('join-id').value = joinId;
-            // Auto-join if opened via QR code link
-            setTimeout(() => document.getElementById('btn-join').click(), 300);
+            // Clean the join ID with same regex used in manual join
+            const cleanJoinId = joinId.replace(/[^a-zA-Z0-9-]/g, '');
+            document.getElementById('join-id').value = cleanJoinId;
+            // Auto-join if opened via QR code link - wait for UI to be ready then trigger
+            document.getElementById('btn-join').dataset.autoJoin = 'true';
         }
 
         document.getElementById('btn-host').onclick = (e) => {
@@ -886,6 +887,12 @@ const UI = {
             }, 8000);
             try { Net.init(document.getElementById('player-name').value, jId); } catch (err) { btn.innerText = "Join Game"; btn.disabled = false; UI.showToast("Error initializing network.", "danger"); }
         };
+
+        // Auto-join if opened via QR code link
+        const autoJoinBtn = document.getElementById('btn-join');
+        if (autoJoinBtn.dataset.autoJoin === 'true') {
+            autoJoinBtn.click();
+        }
 
         document.getElementById('btn-add-bot').onclick = () => {
             let select = document.getElementById('bot-difficulty');
@@ -999,8 +1006,21 @@ const UI = {
             state.players.forEach(p => {
                 let item = document.createElement('div'); item.className = 'player-item';
                 let status = !p.connected && !p.isBot ? '<span style="color:var(--danger); font-weight:bold;">(Disconnected)</span>' : '';
-                item.innerHTML = `<strong>${p.name}</strong> <span style="color:#94a3b8;">${p.isHost ? '👑 Host' : p.isBot ? '🤖 Bot' : '👤 Player'} ${status}</span>`;
+                let removeBtn = '';
+                if (App.isHost && p.isBot && p.id !== App.localId) {
+                    removeBtn = `<button class="danger" style="width:auto; padding:4px 10px; font-size:0.75rem; margin-left:8px;" data-bot-id="${p.id}">Remove</button>`;
+                }
+                item.innerHTML = `<strong>${p.name}</strong> <span style="color:#94a3b8;">${p.isHost ? '👑 Host' : p.isBot ? '🤖 Bot' : '👤 Player'} ${status}</span> ${removeBtn}`;
                 list.appendChild(item);
+            });
+
+            // Add click handlers for remove bot buttons
+            document.querySelectorAll('#lobby-players button[data-bot-id]').forEach(btn => {
+                btn.onclick = (e) => {
+                    const botId = e.target.dataset.botId;
+                    Engine.state.players = Engine.state.players.filter(p => p.id !== botId);
+                    Engine.broadcast();
+                };
             });
             return;
         }

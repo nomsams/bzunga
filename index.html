@@ -71,7 +71,7 @@
     #card-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: auto; z-index: 10; touch-action: manipulation; }
     .card {
         width: var(--card-w); height: var(--card-h); position: absolute;
-        transition: left 0.4s cubic-bezier(0.22, 1, 0.36, 1), top 0.4s cubic-bezier(0.22, 1, 0.36, 1), scale 0.2s, rotate 0.2s, translate 0.2s;
+        transition: left 0.8s cubic-bezier(0.22, 1, 0.36, 1), top 0.8s cubic-bezier(0.22, 1, 0.36, 1), scale 0.2s, rotate 0.2s, translate 0.2s;
         pointer-events: auto; cursor: pointer; touch-action: manipulation; border-radius: 6px; transform-origin: center center; box-shadow: 2px 4px 10px rgba(0,0,0,0.4);
         scale: var(--local-scale, 1);
         rotate: var(--local-rot, 0deg);
@@ -155,14 +155,15 @@
         #action-bar button { font-size: 0.9rem; padding: 12px 10px; }
     }
 
-    #toast-container { position: absolute; top: 60px; right: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 300; pointer-events: none; }
+    #toast-container { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 550; pointer-events: none; }
     .toast { background: var(--surface); color: white; padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--info); box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; animation: slideInRight 0.3s forwards, fadeOut 0.3s 4.7s forwards; backdrop-filter: blur(4px); max-width: 280px; line-height: 1.3; }
     .toast.success { border-color: var(--success); }
     .toast.danger { border-color: var(--danger); }
     .toast.warning { border-color: var(--accent); }
-
-    #chat-bubble-container { position: absolute; bottom: 90px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 350; pointer-events: none; align-items: flex-end; }
-    .chat-bubble { background: rgba(255,255,255,0.95); color: #000; padding: 10px 15px; border-radius: 16px; border-bottom-right-radius: 4px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s 3.7s forwards; max-width: 250px; word-wrap: break-word; }
+    
+    #chat-bubble-container { position: absolute; top: 120px; left: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 550; pointer-events: none; align-items: flex-start; }
+    #chat-bubble-container.hidden { display: none !important; }
+    .chat-bubble { background: rgba(255,255,255,0.95); color: #000; padding: 10px 15px; border-radius: 16px; border-bottom-left-radius: 4px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s 3.7s forwards; max-width: 250px; word-wrap: break-word; pointer-events: auto; }
     .chat-bubble.pirate { background: #fee2e2; border: 1px solid #ef4444; }
     .chat-bubble strong { color: var(--accent-hover); }
     .chat-bubble.pirate strong { color: var(--danger); }
@@ -171,13 +172,16 @@
     @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
     @keyframes popIn { from { transform: scale(0.8) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
 
-    .vfx-slap { position: absolute; font-size: 3rem; font-weight: 900; color: var(--accent); text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; pointer-events: none; z-index: 400; transform: translate(-50%, -50%) scale(0); animation: slapPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .vfx-slap { position: absolute; font-size: 3rem; font-weight: 900; color: var(--accent); text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; pointer-events: none; z-index: 600; transform: translate(-50%, -50%) scale(0); animation: slapPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     .vfx-slap.miss { color: var(--danger); }
     @keyframes slapPop { 0% { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 0; } }
 
-    #chat-fab { position: fixed; bottom: 20px; left: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 90; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
+    #chat-fab { position: absolute; top: 10px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
     #chat-fab:hover { background: rgba(255,255,255,0.2); }
-    #chat-drawer { position: fixed; left: -300px; top: 0; width: 300px; height: 100vh; background: rgba(15, 23, 42, 0.95); border-right: 1px solid rgba(255,255,255,0.1); transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 450; display: flex; flex-direction: column; pointer-events: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
+    #btn-toggle-bubbles { position: absolute; top: 65px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
+    #btn-toggle-bubbles.toggled-off { opacity: 0.5; }
+    
+    #chat-drawer { position: fixed; left: -300px; top: 0; width: 300px; height: 100vh; background: rgba(15, 23, 42, 0.95); border-right: 1px solid rgba(255,255,255,0.1); transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 650; display: flex; flex-direction: column; pointer-events: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
     #chat-drawer.open { left: 0; }
     .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); }
     .chat-header h3 { margin: 0; color: var(--text-light); font-size: 1.1rem; }
@@ -247,35 +251,44 @@
 
     <!-- Game View -->
     <div id="game-view" class="hidden">
-        <div id="table">
-            <svg id="table-rim-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
-                <!-- 500 is center. Border is 15px. Middle of border is 7.5px from edge. 500 - 7.5 = 492.5 -->
-                <path id="rim-path" d="M 500 7.5 A 492.5 492.5 0 0 1 500 992.5 A 492.5 492.5 0 0 1 500 7.5" fill="none" />
-                <text class="table-arrow-text">
-                    <textPath href="#rim-path" startOffset="0%">
-                        » » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »
-                    </textPath>
-                </text>
-            </svg>
-        </div>
-        <div id="card-layer"></div>
-
-        <div id="ui-layer">
-            <div id="status-banner">
-                <div style="font-size: 0.75rem; color: #94a3b8; font-weight:800;" id="phase-display">PHASE</div>
-                <div id="status-text">Waiting for players...</div>
-                <div style="display: flex; gap: 5px;">
-                    <button id="btn-toggle-layout" class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Layout: GRID</button>
-                    <button id="btn-toggle-anim" class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Anim: ON</button>
-                </div>
+        <div id="zoom-wrapper" style="width: 100%; height: 100%; position: absolute; top:0; left:0; transform: scale(var(--zoom, 1)); transform-origin: center center; transition: transform 0.3s;">
+            <div id="table">
+                <svg id="table-rim-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+                    <!-- 500 is center. Border is 15px. Middle of border is 7.5px from edge. 500 - 7.5 = 492.5 -->
+                    <path id="rim-path" d="M 500 7.5 A 492.5 492.5 0 0 1 500 992.5 A 492.5 492.5 0 0 1 500 7.5" fill="none" />
+                    <text class="table-arrow-text">
+                        <textPath href="#rim-path" startOffset="0%">
+                            » » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »
+                        </textPath>
+                    </text>
+                </svg>
             </div>
+            <div id="card-layer"></div>
+            
+            <div id="ui-layer">
+                <div id="status-banner">
+                    <div style="font-size: 0.75rem; color: #94a3b8; font-weight:800;" id="phase-display">PHASE</div>
+                    <div id="status-text">Waiting for players...</div>
+                    <div style="display: flex; gap: 5px;">
+                        <button id="btn-toggle-layout" class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Layout: GRID</button>
+                        <button id="btn-toggle-anim" class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Anim: ON</button>
+                    </div>
+                </div>
+                <div id="action-bar" class="hidden"></div>
+            </div>
+        </div>
 
-            <div id="toast-container"></div>
-            <div id="chat-bubble-container"></div>
-            <div id="action-bar" class="hidden"></div>
+        <div id="toast-container"></div>
+        <div id="chat-bubble-container"></div>
+
+        <div id="zoom-controls" style="position: absolute; top: 60px; right: 10px; z-index: 550; display: flex; flex-direction: column; gap: 5px;">
+            <button id="btn-zoom-in" class="secondary" style="width:36px; height:36px; padding:0; border-radius:18px; margin:0; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">+</button>
+            <button id="btn-zoom-out" class="secondary" style="width:36px; height:36px; padding:0; border-radius:18px; margin:0; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">-</button>
         </div>
 
         <button id="chat-fab">💬</button>
+        <button id="btn-toggle-bubbles" title="Toggle Bubbles">👁️</button>
+        
         <div id="chat-drawer">
             <div class="chat-header">
                 <h3 style="margin:0; color:white; font-size:1rem;">Game Log</h3>
@@ -433,7 +446,12 @@ Engine.getCardById = (id) => {
 
 Engine.drawPenalty = (playerId) => {
     let p = Engine.state.players.find(p => p.id === playerId);
-    if (!p || Engine.state.deck.length === 0) return;
+    if (!p) return;
+    if (Engine.state.deck.length === 0) Engine.checkDeckEmpty();
+    if (Engine.state.deck.length === 0) {
+        Engine.sysLog(`No cards available for penalty.`, "warning");
+        return;
+    }
 
     let c = Engine.state.deck.pop();
     Engine.checkDeckEmpty();
@@ -561,7 +579,7 @@ Engine.processAction = (action, peerId) => {
             // Race condition fix: If the top discard was slapped within the last 1.5s, reject new slaps
             let isLateSlap = topDiscard.slappedAt && (now - topDiscard.slappedAt < 1500);
 
-            if (targetCard.value === topDiscard.value && !isLateSlap) {
+            if (targetCard.value === topDiscard.value && !isLateSlap && !topDiscard.isSlapped) {
                 Engine.state.lastSlapTime = now;
                 Engine.state.lastSlapTargetId = action.targetId;
 
@@ -570,8 +588,10 @@ Engine.processAction = (action, peerId) => {
 
                 targetCard.loc = 'discard'; targetCard.ownerId = null; targetCard.isFaceUp = true;
                 targetCard.slappedAt = now; // Mark new top card as slapped
+                targetCard.isSlapped = true;
                 topDiscard.slappedAt = now; // Mark old top card as slapped to prevent race conditions
-
+                topDiscard.isSlapped = true;
+                
                 Engine.state.discardPile.push(targetCard);
                 Engine.state.lastActionTargetId = targetCard.id;
 
@@ -583,8 +603,8 @@ Engine.processAction = (action, peerId) => {
                 }
                 Engine.state.lastSlap = { id: targetCard.id, success: true, time: now, playerId: player.id, targetOwnerId: owner.id };
             } else {
-                if (isLateSlap && targetCard.value === topDiscard.value) {
-                    Engine.sysLog(`${player.name} slapped just a millisecond too late! Penalty!`, "warning");
+                if ((isLateSlap || topDiscard.isSlapped) && targetCard.value === topDiscard.value) {
+                    Engine.sysLog(`${player.name} slapped a card that was already slapped! Penalty!`, "warning");
                 } else {
                     Engine.sysLog(`${player.name} incorrectly slapped ${owner.name}'s ${targetCard.value} onto a ${topDiscard.value}! Penalty!`, "danger");
                 }
@@ -597,7 +617,8 @@ Engine.processAction = (action, peerId) => {
 
         case 'DRAW_DECK':
             if (!isTurn || Engine.state.activeAbility) return;
-            if (Engine.state.deck.length === 0) return;
+            if (Engine.state.deck.length === 0) Engine.checkDeckEmpty();
+            if (Engine.state.deck.length === 0) { Engine.nextTurn(); return; }
             let drawn = Engine.state.deck.pop();
             Engine.checkDeckEmpty();
             drawn.loc = 'holding'; drawn.ownerId = player.id; drawn.isFaceUp = true;
@@ -918,14 +939,21 @@ const UI = {
         document.getElementById('chat-fab').onclick = () => document.getElementById('chat-drawer').classList.add('open');
         document.getElementById('chat-close').onclick = () => document.getElementById('chat-drawer').classList.remove('open');
         document.getElementById('chat-send').onclick = UI.sendChat;
-        document.getElementById('chat-input').onkeypress = (e) => { if(e.key === 'Enter') UI.sendChat(); };
+        document.getElementById('btn-toggle-bubbles').onclick = (e) => {
+            let container = document.getElementById('chat-bubble-container');
+            container.classList.toggle('hidden');
+            e.target.classList.toggle('toggled-off');
+        };
 
-        document.getElementById('btn-return-lobby').onclick = () => location.reload();
-        document.getElementById('btn-hide-gameover').onclick = () => {
-            document.getElementById('modal-gameover').classList.add('hidden');
-            document.getElementById('modal-overlay').classList.add('hidden');
-            App.uiState.showingResults = false;
-            UI.render(App.gameState);
+        // Zoom Controls
+        App.uiState.zoomLevel = 1.0;
+        document.getElementById('btn-zoom-in').onclick = () => {
+            App.uiState.zoomLevel = Math.min(App.uiState.zoomLevel + 0.1, 1.5);
+            document.getElementById('zoom-wrapper').style.setProperty('--zoom', App.uiState.zoomLevel);
+        };
+        document.getElementById('btn-zoom-out').onclick = () => {
+            App.uiState.zoomLevel = Math.max(App.uiState.zoomLevel - 0.1, 0.4);
+            document.getElementById('zoom-wrapper').style.setProperty('--zoom', App.uiState.zoomLevel);
         };
 
         // Use pointerdown for instant, reliable mobile taps
@@ -1200,10 +1228,6 @@ const UI = {
                     else if (mode === 'peek_self' && p.id === App.localId) el.classList.add('targetable');
                     else if (mode === 'peek_opp' && p.id !== App.localId) el.classList.add('targetable');
                     else if (mode === 'q_peek') el.classList.add('targetable');
-                    else if (mode === 'q_swap_1') {
-                        el.classList.add('targetable');
-                        if (c.id === App.uiState.selectedCardId) el.classList.add('selected-target');
-                    }
                     else if (mode === 'q_swap_2') {
                         el.classList.add('targetable');
                         if (c.id === App.uiState.selectedCardId) el.classList.add('selected-target');
@@ -1347,8 +1371,7 @@ const UI = {
                 else if (App.uiState.targetingMode === 'peek_self') statusText.innerText = "Select one of your cards to peek at (9 Magic).";
                 else if (App.uiState.targetingMode === 'peek_opp') statusText.innerText = "Select an opponent's card to peek at (10 Magic).";
                 else if (App.uiState.targetingMode === 'q_peek') statusText.innerText = "Queen Magic: Click ANY card to PEEK at it.";
-                else if (App.uiState.targetingMode === 'q_swap_1') statusText.innerText = "Queen Magic: Select FIRST card to swap.";
-                else if (App.uiState.targetingMode === 'q_swap_2') statusText.innerText = "Queen Magic: Select SECOND card to swap.";
+                else if (App.uiState.targetingMode === 'q_swap_2') statusText.innerText = "Queen Magic: Select SECOND card to swap, or same card to Pass.";
                 else if (App.uiState.targetingMode === 'peeking') statusText.innerText = "Memorize this card...";
                 else if (App.uiState.targetingMode === 'blind_swap_1') statusText.innerText = "Select the FIRST card to blind swap (Jack Magic).";
                 else if (App.uiState.targetingMode === 'blind_swap_2') statusText.innerText = "Select the SECOND card to blind swap.";
@@ -1400,7 +1423,8 @@ const UI = {
 
                 if (ab.type.startsWith('holding')) {
                     let btnPlay = document.createElement('button');
-                    btnPlay.innerText = MAGIC_VALUES.includes(ab.card.value) && ab.type === 'holding' ? "Play Magic" : "Discard";
+                    let isBlackKing = ab.card.value === 'K' && !ab.card.isRed;
+                    btnPlay.innerText = MAGIC_VALUES.includes(ab.card.value) && ab.type === 'holding' && !isBlackKing ? "Play Magic" : "Discard";
                     btnPlay.className = "primary";
                     btnPlay.onclick = () => Net.sendAction({ type: 'PLAY_HOLDING', action: 'discard' });
                     actionBar.appendChild(btnPlay);
@@ -1492,18 +1516,18 @@ const UI = {
             }
             else if (mode === 'q_peek' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 App.uiState.peekedCards.add(cardId);
-                App.uiState.targetingMode = 'q_swap_1';
-                UI.render(state);
-                UI.showToast("Card peeked. Select FIRST card to swap, or click Pass.", "info");
-            }
-            else if (mode === 'q_swap_1' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 App.uiState.selectedCardId = cardId;
                 App.uiState.targetingMode = 'q_swap_2';
                 UI.render(state);
-                UI.showToast("Select SECOND card to swap.", "info");
+                UI.showToast("Card peeked. Select a second card to swap, or click it again to cancel.", "info");
             }
             else if (mode === 'q_swap_2' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
-                if (cardId === App.uiState.selectedCardId) return; // Can't swap with itself
+                if (cardId === App.uiState.selectedCardId) {
+                    // Pressed the same card again to cancel swap
+                    App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear(); UI.render(state);
+                    Net.sendAction({ type: 'RESOLVE_MAGIC', targetId: cardId });
+                    return;
+                }
                 let target1 = App.uiState.selectedCardId;
                 App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear(); UI.render(state);
                 Net.sendAction({ type: 'RESOLVE_MAGIC', swapTarget1: target1, swapTarget2: cardId });

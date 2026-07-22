@@ -1,6 +1,6 @@
 /**
  * BAZUNGA - Advanced Bot AI & ELIZA-Inspired Conversational Engine
- * Handles memory decay, heuristics, frustration tracking, and dynamic chat.
+ * Handles memory decay, heuristics, frustration tracking, grudges, and dynamic chat.
  */
 const BotConfig = {
     profiles: {
@@ -13,23 +13,25 @@ const BotConfig = {
     elizaPatterns: [
         { match: ["WHY", "HOW COME"], replies: ["Why do you ask?", "Probabilities dictate it.", "Because the cards fell that way.", "What answer would please you most?"] },
         { match: ["YOU SUCK", "CHEAT", "RIGGED", "STUPID", "DUMB"], replies: ["Are you feeling frustrated?", "Emotions lead to mistakes.", "I am just executing logic. Are you?", "Blaming the game won't improve your memory."] },
-        { match: ["HELLO", "HI ", "HOLA"], replies: ["Greetings. Let us play.", "Hello. Focus on the deck.", "How do you do. Please watch your cards."] },
+        { match: ["HELLO", "HI ", "HOLA", "HEY"], replies: ["Greetings. Let us play.", "Hello. Focus on the deck.", "How do you do. Please watch your cards.", "Let's see what you've got."] },
         { match: ["BOT", "AI", "ROBOT"], replies: ["Do computers worry you?", "I am simply an algorithm.", "We are all just processing inputs, aren't we?", "Are you afraid of losing to a machine?"] },
         { match: ["YES", "YEP", "YEAH"], replies: ["You seem quite positive.", "Are you sure?", "I see.", "Confidence is good, but memory is better."] },
         { match: ["NO", "NOPE", "NAH"], replies: ["Why the negativity?", "Are you saying 'no' just to be defensive?", "Understood.", "Suit yourself."] },
-        { match: ["BAZUNGA", "WIN", "LOSE"], replies: ["The final score is all that matters.", "We shall see when the cards flip.", "Don't get ahead of yourself."] }
+        { match: ["BAZUNGA", "WIN", "LOSE"], replies: ["The final score is all that matters.", "We shall see when the cards flip.", "Don't get ahead of yourself.", "Statistics never lie."] },
+        { match: ["SORRY", "MY BAD", "WHOOPS"], replies: ["Apologies are unnecessary.", "Focus on the next turn.", "Errors are human.", "I will remember that."] },
+        { match: ["HATE", "ANGRY", "MAD"], replies: ["Anger clouds judgment.", "Keep a cool head.", "I feel nothing. It is an advantage.", "Does being angry help you win?"] }
     ],
     chatBank: {
-        noob: { slapSuccess: ["Wait, I did it?", "Gotcha!", "Oops, was that yours?", "I actually remembered one!"], slapFail: ["Ouch!", "My hand slipped.", "I thought that was a match...", "Why do I keep doing that?"], penalty: ["Why always me?", "This game is rigged.", "I have too many cards.", "I'm never going to win."], magic: ["Magic time!", "What does this one do again?", "Pew pew!", "I hope this helps me."], frustrated: ["I hate this game!", "Stop picking on me!", "I'm just clicking randomly now.", "This is too fast!"] },
-        casual: { slapSuccess: ["Too slow!", "Nice try.", "Yoink!", "Saw that from a mile away."], slapFail: ["Ah, misread it.", "Dang it.", "Reflexes betrayed me.", "Should have double-checked."], penalty: ["Not good.", "I'll recover.", "Rough draw.", "That sets me back."], magic: ["Let's see what you're hiding.", "Time to mix it up.", "Strategic move.", "Swapping things around."], frustrated: ["Okay, that's enough.", "My luck is terrible today.", "Seriously?", "I need a break after this."] },
-        pro: { slapSuccess: ["Predictable.", "Saw that coming.", "Tracked it.", "You left that exposed."], slapFail: ["Calculated risk.", "A rare error.", "Latency.", "I factored the odds incorrectly."], penalty: ["A minor setback.", "Stats are balancing out.", "Unfortunate variance.", "I can absorb this."], magic: ["Gathering intel.", "Optimizing layout.", "Executing swap.", "Realigning the board."], frustrated: ["Variance is severely against me.", "This sequence is highly improbable.", "Focusing. Reducing errors.", "Unacceptable outcome."] },
-        expert: { slapSuccess: ["Your layout is compromised.", "Checkmate.", "Memory serves.", "Flawless execution."], slapFail: ["Margin of error.", "Grace period missed.", "Irrelevant.", "A statistical anomaly."], penalty: ["Absorbing the penalty.", "I can afford this.", "Calculated sacrifice.", "It alters nothing."], magic: ["Reordering the board.", "Target acquired.", "Blind swap initiated.", "Manipulating variables."], frustrated: ["System error: too many penalties.", "Re-evaluating heuristic models.", "This board state is suboptimal.", "I will remember this."] },
-        pirate: { slapSuccess: ["Arrr! Snatched yer treasure!", "Walk the plank!", "Ye be too slow, matey!", "Plundered!"], slapFail: ["Blistering barnacles!", "Shiver me timbers!", "Blast it!", "A curse upon me hand!"], penalty: ["A curse upon the sea!", "More dead weight for the hull.", "Mutiny!", "The locker claims another!"], magic: ["Prepare to be boarded!", "Hoist the colors!", "I'm lookin' at yer booty!", "Swappin' the cargo!"], frustrated: ["I'll keelhaul the lot of ye!", "Kraken take ye all!", "Me ship is sinkin'!", "Fire the cannons!"] }
+        noob: { slapSuccess: ["Wait, I did it?", "Gotcha!", "Oops, was that yours?", "I actually remembered one!"], slapFail: ["Ouch!", "My hand slipped.", "I thought that was a match...", "Why do I keep doing that?"], penalty: ["Why always me?", "This game is rigged.", "I have too many cards.", "I'm never going to win.", "Leave me alone!"], magic: ["Magic time!", "What does this one do again?", "Pew pew!", "I hope this helps me."], frustrated: ["I hate this game!", "Stop picking on me!", "I'm just clicking randomly now.", "This is too fast!"] },
+        casual: { slapSuccess: ["Too slow!", "Nice try.", "Yoink!", "Saw that from a mile away."], slapFail: ["Ah, misread it.", "Dang it.", "Reflexes betrayed me.", "Should have double-checked."], penalty: ["Not good.", "I'll recover.", "Rough draw.", "That sets me back.", "I won't forget this."], magic: ["Let's see what you're hiding.", "Time to mix it up.", "Strategic move.", "Swapping things around."], frustrated: ["Okay, that's enough.", "My luck is terrible today.", "Seriously?", "I need a break after this."] },
+        pro: { slapSuccess: ["Predictable.", "Saw that coming.", "Tracked it.", "You left that exposed."], slapFail: ["Calculated risk.", "A rare error.", "Latency.", "I factored the odds incorrectly."], penalty: ["A minor setback.", "Stats are balancing out.", "Unfortunate variance.", "I can absorb this.", "Target prioritized."], magic: ["Gathering intel.", "Optimizing layout.", "Executing swap.", "Realigning the board."], frustrated: ["Variance is severely against me.", "This sequence is highly improbable.", "Focusing. Reducing errors.", "Unacceptable outcome."] },
+        expert: { slapSuccess: ["Your layout is compromised.", "Checkmate.", "Memory serves.", "Flawless execution."], slapFail: ["Margin of error.", "Grace period missed.", "Irrelevant.", "A statistical anomaly."], penalty: ["Absorbing the penalty.", "I can afford this.", "Calculated sacrifice.", "It alters nothing.", "Retaliation protocol armed."], magic: ["Reordering the board.", "Target acquired.", "Blind swap initiated.", "Manipulating variables."], frustrated: ["System error: too many penalties.", "Re-evaluating heuristic models.", "This board state is suboptimal.", "I will remember this."] },
+        pirate: { slapSuccess: ["Arrr! Snatched yer treasure!", "Walk the plank!", "Ye be too slow, matey!", "Plundered!"], slapFail: ["Blistering barnacles!", "Shiver me timbers!", "Blast it!", "A curse upon me hand!"], penalty: ["A curse upon the sea!", "More dead weight for the hull.", "Mutiny!", "The locker claims another!", "I'll be havin' me revenge!"], magic: ["Prepare to be boarded!", "Hoist the colors!", "I'm lookin' at yer booty!", "Swappin' the cargo!"], frustrated: ["I'll keelhaul the lot of ye!", "Kraken take ye all!", "Me ship is sinkin'!", "Fire the cannons!"] }
     }
 };
 
 const Bot = {
-    chatHistory: [], lastChatTime: {}, usedLines: {}, frustration: {}, eventCache: {},
+    chatHistory: [], lastChatTime: {}, usedLines: {}, frustration: {}, grudges: {}, eventCache: {},
     start: () => {
         if (App.botInterval) clearInterval(App.botInterval);
         App.botInterval = setInterval(Bot.tick, 1000);
@@ -102,9 +104,37 @@ const Bot = {
             }
             if (lastSlap.success && lastSlap.targetOwnerId) {
                 let victimBot = Engine.state.players.find(p => p.isBot && p.id === lastSlap.targetOwnerId);
-                if (victimBot) { Bot.frustration[victimBot.id] = (Bot.frustration[victimBot.id] || 0) + 1; Bot.chat(victimBot, 'penalty'); }
+                if (victimBot) { 
+                    Bot.frustration[victimBot.id] = (Bot.frustration[victimBot.id] || 0) + 1; 
+                    if (!Bot.grudges[victimBot.id]) Bot.grudges[victimBot.id] = {};
+                    let weight = victimBot.botDifficulty === 5 ? 3 : 1; // Pirate holds stronger grudges
+                    Bot.grudges[victimBot.id][lastSlap.playerId] = (Bot.grudges[victimBot.id][lastSlap.playerId] || 0) + weight;
+                    Bot.chat(victimBot, 'penalty'); 
+                }
             }
         }
+        
+        // Parse logs to detect Red King penalties to build grudges
+        let latestLogs = Engine.state.logs.filter(l => l.time > (Bot.eventCache.lastLogTime || 0));
+        latestLogs.forEach(l => {
+            if (l.type === 'sys' && l.msg.includes("Red King!") && l.msg.includes("forced a penalty on")) {
+                let parts = l.msg.split('forced a penalty on');
+                let aggrName = parts[0].replace('😈', '').trim();
+                let victimName = parts[1].split('using')[0].trim();
+                
+                let aggrPlayer = Engine.state.players.find(p => p.name === aggrName);
+                let victimPlayer = Engine.state.players.find(p => p.name === victimName);
+                
+                if (aggrPlayer && victimPlayer && victimPlayer.isBot) {
+                    if (!Bot.grudges[victimPlayer.id]) Bot.grudges[victimPlayer.id] = {};
+                    let weight = victimPlayer.botDifficulty === 5 ? 5 : 2;
+                    Bot.grudges[victimPlayer.id][aggrPlayer.id] = (Bot.grudges[victimPlayer.id][aggrPlayer.id] || 0) + weight;
+                    Bot.frustration[victimPlayer.id] = (Bot.frustration[victimPlayer.id] || 0) + 2;
+                    Bot.chat(victimPlayer, 'frustrated');
+                }
+            }
+        });
+        if (latestLogs.length > 0) Bot.eventCache.lastLogTime = latestLogs[latestLogs.length - 1].time;
     },
     tick: () => {
         if (!App.isHost || Engine.state.phase === 'lobby' || Engine.state.phase === 'game_over') return;
@@ -175,7 +205,11 @@ const Bot = {
                     else {
                         for (let key in mem) {
                             let c = Engine.getCardById(key);
-                            if (c && c.ownerId === activePlayer.id && mem[key].value === topDiscard.value) { wantsDiscard = true; break; }
+                            let memVal = Bot.getNumericValue(mem[key].value, mem[key].isRed);
+                            if (c && c.ownerId === activePlayer.id && mem[key].value === topDiscard.value && memVal !== -1) { 
+                                wantsDiscard = true; 
+                                break; 
+                            }
                         }
                     }
                 } else { wantsDiscard = topVal < 6 && Math.random() > 0.5; }
@@ -254,32 +288,75 @@ const Bot = {
                 } else if (mType === 'magic_Q') {
                     let myWorst = null; let myWorstVal = -99;
                     let oppBest = null; let oppBestVal = 99;
+                    
+                    let bazungaCaller = Engine.state.players.find(p => p.id === Engine.state.bazungaCallerId);
+                    let targetOppId = null;
+                    if (bazungaCaller && bazungaCaller.id !== activePlayer.id) targetOppId = bazungaCaller.id;
+                    else {
+                        let grudges = Bot.grudges[activePlayer.id] || {};
+                        let maxGrudge = 0;
+                        for (let pid in grudges) { if (grudges[pid] > maxGrudge) { maxGrudge = grudges[pid]; targetOppId = pid; } }
+                    }
+
                     for (let key in mem) {
                         let c = Engine.getCardById(key);
                         if (c && (c.loc === 'hand' || c.loc === 'penalty')) {
-                            if (c.ownerId === activePlayer.id && mem[key].numVal > myWorstVal) { myWorst = c; myWorstVal = mem[key].numVal; }
-                            else if (c.ownerId !== activePlayer.id && mem[key].numVal < oppBestVal) { oppBest = c; oppBestVal = mem[key].numVal; }
+                            if (c.ownerId === activePlayer.id && mem[key].numVal > myWorstVal) { myWorst = c; myWorstVal = mem[key].numVal; } 
+                            else if (c.ownerId !== activePlayer.id) {
+                                if (targetOppId && c.ownerId === targetOppId && mem[key].numVal < oppBestVal) { oppBest = c; oppBestVal = mem[key].numVal; }
+                                else if (!targetOppId && mem[key].numVal < oppBestVal) { oppBest = c; oppBestVal = mem[key].numVal; }
+                            }
                         }
                     }
-                    if (myWorst && oppBest && myWorstVal > oppBestVal) { payload.swapTarget1 = myWorst.id; payload.swapTarget2 = oppBest.id; }
+                    if (myWorst && oppBest && (myWorstVal > oppBestVal || targetOppId)) { payload.swapTarget1 = myWorst.id; payload.swapTarget2 = oppBest.id; } 
                     else if (Math.random() > 0.5) {
                         let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
+                        if (targetOppId) opps = opps.filter(p => p.id === targetOppId);
                         if (opps.length > 0) payload.targetId = opps[0].hand[0]?.id;
                     }
                 } else if (mType === 'magic_J') {
                     let allCards = [];
-                    Engine.state.players.filter(p => p.id !== activePlayer.id).forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
+                    let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
+                    
+                    let bazungaCaller = Engine.state.players.find(p => p.id === Engine.state.bazungaCallerId);
+                    let targetOppId = null;
+                    if (bazungaCaller && bazungaCaller.id !== activePlayer.id) targetOppId = bazungaCaller.id;
+                    else {
+                        let grudges = Bot.grudges[activePlayer.id] || {};
+                        let maxGrudge = 0;
+                        for (let pid in grudges) { if (grudges[pid] > maxGrudge) { maxGrudge = grudges[pid]; targetOppId = pid; } }
+                    }
+
+                    if (targetOppId && Math.random() > 0.2) {
+                        let targetOpp = opps.find(p => p.id === targetOppId);
+                        if (targetOpp) allCards.push(...targetOpp.hand, ...targetOpp.penaltyCards);
+                    } else {
+                        opps.forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
+                    }
+                    
                     if (allCards.length >= 2) {
                         payload.swapTarget1 = allCards[Math.floor(Math.random() * allCards.length)].id;
                         let t2 = allCards[Math.floor(Math.random() * allCards.length)].id;
-                        while(t2 === payload.swapTarget1) t2 = allCards[Math.floor(Math.random() * allCards.length)].id;
+                        let attempts = 0;
+                        while(t2 === payload.swapTarget1 && attempts < 10) { t2 = allCards[Math.floor(Math.random() * allCards.length)].id; attempts++; }
                         payload.swapTarget2 = t2;
                     }
                 } else if (mType === 'magic_K') {
                     let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
                     if (opps.length > 0) {
-                        opps.sort((a,b) => (a.hand.length + a.penaltyCards.length) - (b.hand.length + b.penaltyCards.length));
-                        payload.targetPlayerId = opps[0].id;
+                        let targetId = null;
+                        let grudges = Bot.grudges[activePlayer.id] || {};
+                        let maxGrudge = 0;
+                        for (let pid in grudges) {
+                            if (grudges[pid] > maxGrudge) { maxGrudge = grudges[pid]; targetId = pid; }
+                        }
+                        
+                        if (targetId && opps.some(p => p.id === targetId)) {
+                            payload.targetPlayerId = targetId;
+                        } else {
+                            opps.sort((a,b) => (a.hand.length + a.penaltyCards.length) - (b.hand.length + b.penaltyCards.length));
+                            payload.targetPlayerId = opps[0].id;
+                        }
                     }
                 }
                 Engine.processAction(payload, activePlayer.id);

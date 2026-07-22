@@ -127,12 +127,12 @@
 
     .player-badge {
         position: absolute; background: var(--surface); border-radius: 22px; font-size: 0.85rem; pointer-events: auto; cursor: pointer; text-align: center; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; backdrop-filter: blur(4px); white-space: nowrap; z-index: 150;
-        width: 44px; height: 44px; padding: 0; justify-content: center; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 44px; height: 44px; padding: 0; justify-content: center; overflow: visible; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .player-badge .icon { font-size: 1.4rem; line-height: 44px; margin: 0; transition: all 0.3s; }
     .player-badge .name-text, .player-badge .meta { display: none; opacity: 0; transition: opacity 0.2s; height: 0; }
-    .player-badge .turn-text { display: none; color: var(--accent); font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 2px; }
+    .player-badge .turn-text { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); opacity: 0; color: var(--accent); font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; transition: opacity 0.3s, top 0.3s; pointer-events: none; }
 
     .player-badge:hover, .player-badge.expanded {
         width: auto; height: auto; max-width: 200px; padding: 8px 16px; border-radius: 16px; z-index: 250; background: rgba(30, 41, 59, 0.95); border-color: rgba(255,255,255,0.3);
@@ -142,7 +142,7 @@
     .player-badge:hover .meta, .player-badge.expanded .meta { display: block; opacity: 1; font-size: 0.75rem; color: #94a3b8; margin-top: 2px; height: auto; }
 
     .player-badge.active-turn { border-color: var(--accent); box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
-    .player-badge.active-turn .turn-text { display: block; }
+    .player-badge.active-turn .turn-text { opacity: 1; top: -16px; }
     .player-badge.bazunga { background: var(--danger); border-color: #fff; animation: pulse-danger 1s infinite; }
 
     #action-bar { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 300; pointer-events: auto; backdrop-filter: blur(10px); transition: right 0.3s, opacity 0.3s; width: 110px; }
@@ -151,7 +151,7 @@
     #action-bar button.primary { background: var(--success); color: white; font-size: 0.95rem; padding: 12px 8px; }
 
     @media (max-width: 768px) {
-        #action-bar { top: auto; bottom: 85px; right: 15px; transform: none; width: 120px; }
+        #action-bar { top: auto; bottom: 20px; right: 10px; transform: none; width: 120px; }
         #action-bar button { font-size: 0.9rem; padding: 12px 10px; }
     }
 
@@ -179,6 +179,11 @@
     #chat-fab { position: absolute; top: 10px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
     #chat-fab:hover { background: rgba(255,255,255,0.2); }
     #btn-toggle-bubbles { position: absolute; top: 65px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
+    #btn-toggle-clutter { position: absolute; top: 115px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
+    #btn-toggle-bubbles.toggled-off, #btn-toggle-clutter.toggled-off { opacity: 0.5; }
+    .clutter-hidden #status-banner,
+    .clutter-hidden #chat-drawer,
+    .clutter-hidden #chat-bubble-container { display: none !important; }
     #btn-toggle-bubbles.toggled-off { opacity: 0.5; }
     
     #chat-drawer { position: fixed; left: -300px; top: 0; width: 300px; height: 100vh; background: rgba(15, 23, 42, 0.95); border-right: 1px solid rgba(255,255,255,0.1); transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 650; display: flex; flex-direction: column; pointer-events: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
@@ -243,6 +248,13 @@
                     </select>
                     <button id="btn-add-bot" class="secondary" style="flex: 1; margin: 0;">+ Bot</button>
                 </div>
+                <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center;">
+                    <select id="game-mode" style="flex: 1; margin: 0;">
+                        <option value="rhino">🦏 Rhino Mode (Standard)</option>
+                        <option value="joker">🃏 Joker Mode (Hardcore)</option>
+                    </select>
+                    <button id="btn-mode-info" class="secondary" style="flex: 0 0 45px; padding: 0; font-size: 1.2rem; margin: 0;" title="Game Mode Info">?</button>
+                </div>
                 <button id="btn-start-game" style="margin-top: 15px; font-size: 1.1rem; padding: 12px;">START GAME</button>
             </div>
             <div id="client-waiting" class="hidden" style="margin-top: 15px; color: var(--info); font-weight: 600;">Waiting for Host to start...</div>
@@ -264,18 +276,18 @@
                 </svg>
             </div>
             <div id="card-layer"></div>
+        </div>
             
-            <div id="ui-layer">
-                <div id="status-banner">
-                    <div style="font-size: 0.75rem; color: #94a3b8; font-weight:800;" id="phase-display">PHASE</div>
-                    <div id="status-text">Waiting for players...</div>
-                    <div style="display: flex; gap: 5px;">
-                        <button id="btn-toggle-layout" class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Layout: GRID</button>
-                        <button id="btn-toggle-anim" class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Anim: ON</button>
-                    </div>
+        <div id="ui-layer">
+            <div id="status-banner">
+                <div style="font-size: 0.75rem; color: #94a3b8; font-weight:800;" id="phase-display">PHASE</div>
+                <div id="status-text">Waiting for players...</div>
+                <div style="display: flex; gap: 5px;">
+                    <button id="btn-toggle-layout" class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Layout: GRID</button>
+                    <button id="btn-toggle-anim" class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Anim: ON</button>
                 </div>
-                <div id="action-bar" class="hidden"></div>
             </div>
+            <div id="action-bar" class="hidden"></div>
         </div>
 
         <div id="toast-container"></div>
@@ -288,6 +300,7 @@
 
         <button id="chat-fab">💬</button>
         <button id="btn-toggle-bubbles" title="Toggle Bubbles">👁️</button>
+        <button id="btn-toggle-clutter" title="Reduced Clutter Mode">👁️</button>
         
         <div id="chat-drawer">
             <div class="chat-header">
@@ -397,6 +410,7 @@ Engine.startGame = () => {
     Engine.state.discardPile = [];
     Engine.state.phase = 'peek';
     Engine.state.turnIndex = Math.floor(Math.random() * Engine.state.players.length);
+    Engine.state.gameMode = document.getElementById('game-mode') ? document.getElementById('game-mode').value : 'rhino';
     Engine.state.bazungaCallerId = null;
     Engine.state.orbitCount = 0;
     Engine.state.activeAbility = null;
@@ -507,22 +521,35 @@ Engine.endGame = () => {
     let caller = Engine.state.players.find(p => p.id === Engine.state.bazungaCallerId);
     let lowestScore = Math.min(...Engine.state.players.map(p => p.roundScore));
     let winners = [];
+    let isJoker = Engine.state.gameMode === 'joker';
 
     if (caller) {
-        let isStrictlyLowest = caller.roundScore === lowestScore && Engine.state.players.filter(p => p.roundScore === lowestScore).length === 1;
+        let lowestCount = Engine.state.players.filter(p => p.roundScore === lowestScore).length;
+        let isStrictlyLowest = caller.roundScore === lowestScore && lowestCount === 1;
+        
         if (isStrictlyLowest) {
             winners.push(caller.name);
             Engine.sysLog(`${caller.name} successfully called BAZUNGA and wins!`, "success");
             Engine.state.players.forEach(p => {
-                p.scoreAdded = (p.id === caller.id) ? 0 : p.roundScore;
-                p.totalScore = (p.totalScore || 0) + p.scoreAdded;
+                p.scoreAdded = (p.id === caller.id && !isJoker) ? 0 : p.roundScore;
+                if (!isJoker) p.totalScore = (p.totalScore || 0) + p.scoreAdded;
+                else p.totalScore = p.scoreAdded; // Only round score matters
+            });
+        } else if (isJoker && caller.roundScore === lowestScore && lowestCount > 1) {
+            // Joker mode draw
+            winners = Engine.state.players.filter(p => p.roundScore === lowestScore).map(p => p.name);
+            Engine.sysLog(`Bazunga call resulted in a draw! No penalties.`, "info");
+            Engine.state.players.forEach(p => {
+                p.scoreAdded = p.roundScore;
+                p.totalScore = p.scoreAdded;
             });
         } else {
             winners = Engine.state.players.filter(p => p.id !== caller.id).map(p => p.name);
             Engine.sysLog(`${caller.name} failed Bazunga! They take all points.`, "danger");
             Engine.state.players.forEach(p => {
                 p.scoreAdded = (p.id === caller.id) ? totalTableScore : 0;
-                p.totalScore = (p.totalScore || 0) + p.scoreAdded;
+                if (!isJoker) p.totalScore = (p.totalScore || 0) + p.scoreAdded;
+                else p.totalScore = p.scoreAdded;
             });
         }
     } else {
@@ -530,7 +557,8 @@ Engine.endGame = () => {
         Engine.sysLog(`Game ended naturally.`, "info");
         Engine.state.players.forEach(p => {
             p.scoreAdded = p.roundScore;
-            p.totalScore = (p.totalScore || 0) + p.scoreAdded;
+            if (!isJoker) p.totalScore = (p.totalScore || 0) + p.scoreAdded;
+            else p.totalScore = p.scoreAdded;
         });
     }
 
@@ -617,6 +645,7 @@ Engine.processAction = (action, peerId) => {
 
         case 'DRAW_DECK':
             if (!isTurn || Engine.state.activeAbility) return;
+            if (Engine.state.phase === 'peek') return;
             if (Engine.state.deck.length === 0) Engine.checkDeckEmpty();
             if (Engine.state.deck.length === 0) { Engine.nextTurn(); return; }
             let drawn = Engine.state.deck.pop();
@@ -629,6 +658,11 @@ Engine.processAction = (action, peerId) => {
 
         case 'DRAW_DISCARD':
             if (!isTurn || Engine.state.activeAbility) return;
+            if (Engine.state.phase === 'peek') return;
+            if (Engine.state.gameMode === 'joker') {
+                Engine.sysLog(`${player.name} tried to draw from discard in Joker mode! (Denied)`, "warning");
+                return;
+            }
             if (Engine.state.discardPile.length === 0) return;
             let disc = Engine.state.discardPile.pop();
             disc.loc = 'holding'; disc.ownerId = player.id;
@@ -690,6 +724,12 @@ Engine.processAction = (action, peerId) => {
         case 'RESOLVE_MAGIC':
             if (!isTurn || !Engine.state.activeAbility) return;
             let mType = Engine.state.activeAbility.type;
+            
+            if (action.action === 'pass') {
+                Engine.sysLog(`${player.name} passed on using their magic.`, "info");
+                Engine.nextTurn();
+                break;
+            }
 
             if (mType === 'magic_9') {
                 Engine.sysLog(`${player.name} used a 9 to secretly peek at their own card.`, "info");
@@ -942,6 +982,11 @@ const UI = {
         document.getElementById('btn-toggle-bubbles').onclick = (e) => {
             let container = document.getElementById('chat-bubble-container');
             container.classList.toggle('hidden');
+            e.target.classList.toggle('toggled-off');
+        };
+        document.getElementById('btn-toggle-clutter').onclick = (e) => {
+            let ui = document.getElementById('ui-layer');
+            ui.classList.toggle('clutter-hidden');
             e.target.classList.toggle('toggled-off');
         };
 
@@ -1324,7 +1369,12 @@ const UI = {
                     <div class="endgame-player ${isWinner ? 'winner' : ''}">
                         <div class="endgame-header">
                             <span class="endgame-name">${p.name} ${isWinner ? '👑' : ''} ${state.bazungaCallerId === p.id ? '(Bazunga Caller)' : ''}</span>
-                            <span class="endgame-score">Total: ${p.totalScore} <span style="font-size:0.8rem; color:#94a3b8;">(+${p.scoreAdded})</span></span>
+                            <span class="endgame-score">
+                                ${state.gameMode === 'joker' ? 
+                                    `Score: ${p.totalScore}` : 
+                                    `Total: ${p.totalScore} <span style="font-size:0.8rem; color:#94a3b8;">(+${p.scoreAdded})</span>`
+                                }
+                            </span>
                         </div>
                         <div class="endgame-cards">${cardsHtml}</div>
                         <div class="endgame-math">${mathStr}</div>
@@ -1453,17 +1503,23 @@ const UI = {
                     btnPass.onclick = () => {
                         App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear();
                         UI.render(state); // Force immediate local UI update to clear hues
-                        Net.sendAction({ type: 'RESOLVE_MAGIC' });
+                        Net.sendAction({ type: 'RESOLVE_MAGIC', action: 'pass' });
                     };
                     actionBar.appendChild(btnPass);
                 } else if (App.uiState.targetingMode && App.uiState.targetingMode !== 'peeking') {
-                    let btnCancel = document.createElement('button'); btnCancel.innerText = "Cancel Action"; btnCancel.className = "danger";
-                    btnCancel.onclick = () => {
-                        App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear();
-                        UI.render(state); // Force immediate local UI update to clear hues
-                        if (ab.step === 1) Net.sendAction({ type: 'RESOLVE_MAGIC' });
-                    };
-                    actionBar.appendChild(btnCancel);
+                    if (state.activeAbility && state.activeAbility.type.startsWith('magic_')) {
+                        let btnPass = document.createElement('button'); btnPass.innerText = "Pass Magic"; btnPass.className = "secondary";
+                        btnPass.onclick = () => {
+                            App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear();
+                            UI.render(state);
+                            Net.sendAction({ type: 'RESOLVE_MAGIC', action: 'pass' });
+                        };
+                        actionBar.appendChild(btnPass);
+                    } else {
+                        let btnCancel = document.createElement('button'); btnCancel.innerText = "Cancel Action"; btnCancel.className = "danger";
+                        btnCancel.onclick = () => { App.uiState.targetingMode = null; App.uiState.selectedCardId = null; UI.render(state); };
+                        actionBar.appendChild(btnCancel);
+                    }
                 }
             }
         }

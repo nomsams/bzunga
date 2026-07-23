@@ -152,7 +152,7 @@
     #action-bar button.primary { background: var(--success); color: white; font-size: 0.95rem; padding: 12px 8px; }
 
     @media (max-width: 768px) {
-        #action-bar { top: auto; bottom: 110px; left: 50%; transform: translateX(-50%); width: 120px; gap: 10px; }
+        #action-bar { top: auto; bottom: 110px; right: 15px; left: auto; transform: none; width: 120px; gap: 10px; }
         #action-bar button { font-size: 0.9rem; padding: 12px 10px; }
     }
 
@@ -160,9 +160,9 @@
     .toast { background: var(--surface); color: white; padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--info); box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; animation: slideInRight 0.3s forwards, fadeOut 0.3s 4.7s forwards; backdrop-filter: blur(4px); max-width: 280px; line-height: 1.3; }
     .toast.success { border-color: var(--success); }
     .toast.danger { border-color: var(--danger); }
-    .toast.warning { border-color: var(--accent); }
-    
-    #chat-bubble-container { position: absolute; bottom: 10px; left: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 550; pointer-events: none; align-items: flex-start; }
+.toast.warning { border-color: var(--accent); }
+     
+    #chat-bubble-container { position: absolute; bottom: 70px; left: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 550; pointer-events: none; align-items: flex-start; }
     #chat-bubble-container.hidden { display: none !important; }
     .chat-bubble { background: rgba(255,255,255,0.95); color: #000; padding: 10px 15px; border-radius: 16px; border-bottom-left-radius: 4px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s 3.7s forwards; max-width: 250px; word-wrap: break-word; pointer-events: auto; }
     .chat-bubble.pirate { background: #fee2e2; border: 1px solid #ef4444; }
@@ -177,14 +177,15 @@
     .vfx-slap.miss { color: var(--danger); }
     @keyframes slapPop { 0% { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 0; } }
 
-    #chat-fab { position: fixed; bottom: 10px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
-    #chat-fab:hover { background: rgba(255,255,255,0.2); }
-    #btn-toggle-bubbles { position: absolute; top: 65px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
-    #btn-toggle-clutter { position: absolute; top: 115px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
+    #chat-fab { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
+    #chat-fab:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
+    #btn-toggle-bubbles { position: fixed; top: 80px; right: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
+    #btn-toggle-clutter { position: fixed; top: 135px; right: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
     #btn-toggle-bubbles.toggled-off, #btn-toggle-clutter.toggled-off { opacity: 0.5; }
     .clutter-hidden #status-banner,
     .clutter-hidden #chat-drawer,
     .clutter-hidden #chat-bubble-container { display: none !important; }
+    .clutter-hidden .player-badge { display: flex !important; }
     #btn-toggle-bubbles.toggled-off { opacity: 0.5; }
     
     #chat-drawer { position: fixed; left: -300px; top: 0; width: 300px; height: 100vh; background: rgba(15, 23, 42, 0.95); border-right: 1px solid rgba(255,255,255,0.1); transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 650; display: flex; flex-direction: column; pointer-events: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
@@ -710,7 +711,8 @@ Engine.processAction = (action, peerId) => {
                 if (Engine.state.activeAbility.type === 'holding' && MAGIC_VALUES.includes(hCard.value)) {
                     if (hCard.value === 'K' && !hCard.isRed) Engine.nextTurn();
                     else {
-                        Engine.state.activeAbility = { player: player.id, card: hCard, type: 'magic_' + hCard.value, step: 1, time: now };
+                        // Magic card goes to discard, activeAbility only tracks magic type (not the card)
+                        Engine.state.activeAbility = { player: player.id, card: null, type: 'magic_' + hCard.value, step: 1, time: now };
                         Engine.sysLog(`${player.name} activated magic ${hCard.value}!`, "info");
                         if (player.isBot && player.botDifficulty === 5) Engine.chatLog(player.name, "Prepare to be boarded!", true);
                         Engine.broadcast();
@@ -1268,9 +1270,10 @@ const UI = {
             // For other players, keep badges on outer ellipse
             let bOffset, badgePx, badgePy;
             if (relIndex === 0) {
-                // Local player: badge to the left of their layout
+                // Local player: badge to the left of their layout - ensure it's on screen
                 bOffset = window.innerWidth <= 768 ? 180 : 220;
-                badgePx = cx - rx - bOffset;
+                let leftPos = cx - rx - bOffset;
+                badgePx = Math.max(40, leftPos); // Keep at least 40px from left edge
                 badgePy = cy + ry + (window.innerWidth <= 768 ? 60 : 80);
             } else {
                 // Other players: badges on outer ellipse
@@ -1416,26 +1419,29 @@ const UI = {
         });
 
         if (state.activeAbility && state.activeAbility.card) {
-            let c = state.activeAbility.card;
-            let el = document.getElementById(c.id) || UI.createCardDOM(c);
+            // Don't show magic cards as "holding" - they're already in discard pile
+            if (!state.activeAbility.type.startsWith('magic_')) {
+                let c = state.activeAbility.card;
+                let el = document.getElementById(c.id) || UI.createCardDOM(c);
 
-            let activePIdx = state.players.findIndex(p => p.id === state.activeAbility.player);
-            let relIndex = (activePIdx - localPlayerIndex + state.players.length) % state.players.length;
-            let angle = (Math.PI / 2) + (relIndex * (2 * Math.PI / state.players.length));
+                let activePIdx = state.players.findIndex(p => p.id === state.activeAbility.player);
+                let relIndex = (activePIdx - localPlayerIndex + state.players.length) % state.players.length;
+                let angle = (Math.PI / 2) + (relIndex * (2 * Math.PI / state.players.length));
 
-            let px, py;
-            if (state.activeAbility.player === App.localId) { px = cx; py = cy + ry * 0.35; }
-            else { px = cx + Math.cos(angle) * (rx * 0.4); py = cy + Math.sin(angle) * (ry * 0.4); }
+                let px, py;
+                if (state.activeAbility.player === App.localId) { px = cx; py = cy + ry * 0.35; }
+                else { px = cx + Math.cos(angle) * (rx * 0.4); py = cy + Math.sin(angle) * (ry * 0.4); }
 
-            el.style.left = `${px - cWidthScale}px`; el.style.top = `${py - 37}px`; el.style.zIndex = 1000;
-            el.style.setProperty('--local-scale', '1');
-            el.style.setProperty('--local-rot', '0deg');
+                el.style.left = `${px - cWidthScale}px`; el.style.top = `${py - 37}px`; el.style.zIndex = 1000;
+                el.style.setProperty('--local-scale', '1');
+                el.style.setProperty('--local-rot', '0deg');
 
-            let isFaceUp = (state.activeAbility.player === App.localId || state.activeAbility.step > 0);
-            let inner = el.querySelector('.card-inner');
-            if (!isFaceUp) inner.classList.add('is-flipped'); else inner.classList.remove('is-flipped');
+                let isFaceUp = (state.activeAbility.player === App.localId || state.activeAbility.step > 0);
+                let inner = el.querySelector('.card-inner');
+                if (!isFaceUp) inner.classList.add('is-flipped'); else inner.classList.remove('is-flipped');
 
-            el.classList.add('holding-card'); el.classList.remove('highlight-recent');
+                el.classList.add('holding-card'); el.classList.remove('highlight-recent');
+            }
         }
 
         UI.updateControls(state);
@@ -1598,7 +1604,8 @@ const UI = {
                         Net.sendAction({ type: 'RESOLVE_MAGIC', action: 'pass' });
                     };
                     actionBar.appendChild(btnPass);
-                } else if (App.uiState.targetingMode && App.uiState.targetingMode !== 'peeking') {
+                } else if (App.uiState.targetingMode && App.uiState.targetingMode !== 'peeking' && 
+                           App.uiState.targetingMode !== 'peek_self' && App.uiState.targetingMode !== 'peek_opp') {
                     if (state.activeAbility && state.activeAbility.type.startsWith('magic_')) {
                         let btnPass = document.createElement('button'); btnPass.innerText = "Pass Magic"; btnPass.className = "secondary";
                         btnPass.onclick = () => {

@@ -117,6 +117,7 @@ const BotConfig = {
 const Bot = {
     chatHistory: [], lastChatTime: {}, usedLines: {}, 
     frustration: {}, grudges: {}, eventCache: {}, deckMemory: {},
+    lastMagicProcessed: {}, // Track last magic processing time per bot
     
     start: () => {
         if (App.botInterval) clearInterval(App.botInterval);
@@ -485,6 +486,11 @@ const Bot = {
                     else Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
                 }
             } else {
+                // Prevent re-processing the same magic ability
+                const now = Utils.timestamp();
+                const lastMagic = Bot.lastMagicProcessed[activePlayer.id] || 0;
+                if (now - lastMagic < 2000) return; // Cooldown after processing magic
+                
                 let mType = ability.type;
                 let payload = { type: 'RESOLVE_MAGIC' };
 
@@ -506,7 +512,14 @@ const Bot = {
                     let unknownOwn = activePlayer.hand.find(c => !mem[c.id]);
                     if (unknownOwn) payload.targetId = unknownOwn.id;
                     else payload.targetId = activePlayer.hand[0].id;
-                } else if (mType === 'magic_9' || mType === 'magic_10') {
+                } else if (mType === 'magic_9') {
+                    // Magic 9: peek at OWN card (public knowledge)
+                    let unknownOwn = activePlayer.hand.find(c => !mem[c.id]);
+                    if (!unknownOwn) unknownOwn = activePlayer.penaltyCards.find(c => !mem[c.id]);
+                    if (unknownOwn) { payload.targetId = unknownOwn.id; }
+                    else { payload.targetId = activePlayer.hand[0]?.id || activePlayer.penaltyCards[0]?.id; }
+                } else if (mType === 'magic_10') {
+                    // Magic 10: peek at OPPONENT's card (secret)
                     let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
                     if (targetOppId) opps = opps.filter(p => p.id === targetOppId);
                     if (opps.length > 0) {
@@ -546,6 +559,7 @@ const Bot = {
                     }
                 }
                 Engine.processAction(payload, activePlayer.id);
+                Bot.lastMagicProcessed[activePlayer.id] = Utils.timestamp();
             }
         }
     }

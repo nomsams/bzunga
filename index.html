@@ -146,14 +146,14 @@
     .player-badge.active-turn .turn-text { opacity: 1; transform: translateY(-4px); transition: transform 0.2s ease-out, opacity 0.2s; }
     .player-badge.bazunga { background: var(--danger); border-color: #fff; animation: pulse-danger 1s infinite; }
 
-    #action-bar { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 600; pointer-events: auto; backdrop-filter: blur(10px); transition: opacity 0.3s, transform 0.3s; width: 110px; }
-    #action-bar.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(20px); display: flex !important; }
+#action-bar { position: fixed; right: 20px; bottom: 50%; transform: translateY(50%); background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 600; pointer-events: auto; backdrop-filter: blur(10px); transition: opacity 0.3s, transform 0.3s; width: 120px; }
+    #action-bar.hidden { opacity: 0; pointer-events: none; transform: translateY(50%) translateX(20px); display: flex !important; }
     #action-bar button { margin: 0; padding: 10px 8px; font-size: 0.85rem; border-radius: 8px; width: 100%; text-align: center; line-height: 1.2; }
     #action-bar button.primary { background: var(--success); color: white; font-size: 0.95rem; padding: 12px 8px; }
 
     @media (max-width: 768px) {
-        #action-bar { top: auto; bottom: 110px; right: 15px; left: auto; transform: none; width: 120px; gap: 10px; }
-        #action-bar button { font-size: 0.9rem; padding: 12px 10px; }
+        #action-bar { right: 10px; bottom: 40%; width: 110px; }
+        #action-bar button { font-size: 0.8rem; padding: 10px 6px; }
     }
 
     #toast-container { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 550; pointer-events: none; }

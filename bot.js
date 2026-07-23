@@ -118,6 +118,7 @@ const Bot = {
     chatHistory: [], lastChatTime: {}, usedLines: {}, 
     frustration: {}, grudges: {}, eventCache: {}, deckMemory: {},
     lastMagicProcessed: {}, // Track last magic processing time per bot
+    lastResolvedMagicType: {}, // Track last resolved magic type per bot to prevent duplicate processing
     
     start: () => {
         if (App.botInterval) clearInterval(App.botInterval);
@@ -489,8 +490,15 @@ const Bot = {
                 // Prevent re-processing the same magic ability
                 const now = Utils.timestamp();
                 const lastMagic = Bot.lastMagicProcessed[activePlayer.id] || 0;
+                const lastMagicType = Bot.lastResolvedMagicType[activePlayer.id] || null;
                 if (now - lastMagic < 2000) return; // Cooldown after processing magic
-                Bot.lastMagicProcessed[activePlayer.id] = now; // Update timestamp
+                
+                // Don't re-process the same magic type if activeAbility hasn't changed
+                if (lastMagicType === ability.type && Engine.state.activeAbility && Engine.state.activeAbility.type === ability.type) {
+                    return; // Already processed this magic type
+                }
+                Bot.lastMagicProcessed[activePlayer.id] = now;
+                Bot.lastResolvedMagicType[activePlayer.id] = ability.type;
                 
                 let mType = ability.type;
                 let payload = { type: 'RESOLVE_MAGIC' };

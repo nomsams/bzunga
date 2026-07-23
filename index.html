@@ -184,7 +184,8 @@
     #btn-toggle-bubbles.toggled-off, #btn-toggle-clutter.toggled-off { opacity: 0.5; }
     .clutter-hidden #status-banner,
     .clutter-hidden #chat-drawer,
-    .clutter-hidden #chat-bubble-container { display: none !important; }
+    .clutter-hidden #chat-bubble-container,
+    .clutter-hidden #toast-container { display: none !important; }
     .clutter-hidden .player-badge { display: flex !important; }
     #btn-toggle-bubbles.toggled-off { opacity: 0.5; }
     
@@ -1021,11 +1022,21 @@ const UI = {
             let container = document.getElementById('chat-bubble-container');
             container.classList.toggle('hidden');
             e.target.classList.toggle('toggled-off');
+            
+            // Also toggle clutter (notifications, status, etc)
+            let ui = document.getElementById('ui-layer');
+            ui.classList.toggle('clutter-hidden');
+            document.getElementById('btn-toggle-clutter').classList.toggle('toggled-off');
         };
         document.getElementById('btn-toggle-clutter').onclick = (e) => {
             let ui = document.getElementById('ui-layer');
             ui.classList.toggle('clutter-hidden');
             e.target.classList.toggle('toggled-off');
+            
+            // Also toggle bubbles to keep in sync
+            let container = document.getElementById('chat-bubble-container');
+            container.classList.toggle('hidden');
+            document.getElementById('btn-toggle-bubbles').classList.toggle('toggled-off');
         };
 
         // Zoom Controls

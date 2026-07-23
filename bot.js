@@ -490,6 +490,7 @@ const Bot = {
                 const now = Utils.timestamp();
                 const lastMagic = Bot.lastMagicProcessed[activePlayer.id] || 0;
                 if (now - lastMagic < 2000) return; // Cooldown after processing magic
+                Bot.lastMagicProcessed[activePlayer.id] = now; // Update timestamp
                 
                 let mType = ability.type;
                 let payload = { type: 'RESOLVE_MAGIC' };

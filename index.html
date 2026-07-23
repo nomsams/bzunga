@@ -179,8 +179,8 @@
 
     #chat-fab { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
     #chat-fab:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
-    #btn-toggle-bubbles { position: fixed; top: 80px; right: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
-    #btn-toggle-clutter { position: fixed; top: 135px; right: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
+    #btn-toggle-bubbles { position: fixed; top: 80px; left: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
+    #btn-toggle-clutter { position: fixed; top: 135px; left: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
     #btn-toggle-bubbles.toggled-off, #btn-toggle-clutter.toggled-off { opacity: 0.5; }
     .clutter-hidden #status-banner,
     .clutter-hidden #chat-drawer,
@@ -298,14 +298,18 @@
         <div id="toast-container"></div>
         <div id="chat-bubble-container"></div>
 
-        <div id="zoom-controls" style="position: absolute; top: 60px; right: 10px; z-index: 550; display: flex; flex-direction: column; gap: 5px;">
+        <!-- Zoom controls on RIGHT side -->
+        <div id="zoom-controls" style="position: fixed; top: 80px; right: 20px; z-index: 550; display: flex; flex-direction: column; gap: 5px;">
             <button id="btn-zoom-in" class="secondary" style="width:36px; height:36px; padding:0; border-radius:18px; margin:0; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">+</button>
             <button id="btn-zoom-out" class="secondary" style="width:36px; height:36px; padding:0; border-radius:18px; margin:0; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">-</button>
         </div>
 
-        <button id="chat-fab">💬</button>
+        <!-- Toggle buttons on LEFT side -->
         <button id="btn-toggle-bubbles" title="Toggle Bubbles">👁️</button>
-        <button id="btn-toggle-clutter" title="Reduced Clutter Mode">🧽</button>
+        <button id="btn-toggle-clutter" title="Toggle Game Logs">🧽</button>
+        
+        <!-- Chat FAB on bottom right -->
+        <button id="chat-fab">💬</button>
         
         <div id="chat-drawer">
             <div class="chat-header">
@@ -1253,11 +1257,11 @@ const UI = {
             let relIndex = (i - localPlayerIndex + state.players.length) % state.players.length;
             let angle = (Math.PI / 2) + (relIndex * (2 * Math.PI / state.players.length));
 
-            // For local player (relIndex 0), position layout more bottom-left
+            // Local player (relIndex 0) at bottom CENTER of table
             let px, py;
             if (relIndex === 0) {
-                px = cx - rx * 0.6;
-                py = cy + ry * 0.9;
+                px = cx;
+                py = cy + ry * 0.75;
             } else {
                 px = cx + Math.cos(angle) * rx;
                 py = cy + Math.sin(angle) * ry;
@@ -1266,15 +1270,13 @@ const UI = {
             let isBottomHalf = py > cy;
             let yDirToCenter = isBottomHalf ? -1 : 1;
 
-            // For local player (relIndex 0), position badge to the left of their layout
-            // For other players, keep badges on outer ellipse
+            // Badges positioned just outside the table edge
             let bOffset, badgePx, badgePy;
             if (relIndex === 0) {
-                // Local player: badge to the left of their layout - ensure it's on screen
-                bOffset = window.innerWidth <= 768 ? 180 : 220;
-                let leftPos = cx - rx - bOffset;
-                badgePx = Math.max(40, leftPos); // Keep at least 40px from left edge
-                badgePy = cy + ry + (window.innerWidth <= 768 ? 60 : 80);
+                // Local player: badge below their cards, centered
+                bOffset = window.innerWidth <= 768 ? 160 : 200;
+                badgePx = cx;
+                badgePy = cy + ry + bOffset;
             } else {
                 // Other players: badges on outer ellipse
                 bOffset = window.innerWidth <= 768 ? 180 : 220;

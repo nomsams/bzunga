@@ -407,7 +407,11 @@ const Bot = {
                     Engine.processAction({ type: 'CALL_BAZUNGA' }, activePlayer.id); return; 
                 }
             }
-            if (wantsDiscard) Engine.processAction({ type: 'DRAW_DISCARD' }, activePlayer.id);
+            if (wantsDiscard) {
+                if (Engine.state.gameMode !== 'joker') {
+                    Engine.processAction({ type: 'DRAW_DISCARD' }, activePlayer.id);
+                }
+            }
             else Engine.processAction({ type: 'DRAW_DECK' }, activePlayer.id);
             return;
         }

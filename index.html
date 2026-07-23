@@ -142,7 +142,7 @@
     .player-badge:hover .meta, .player-badge.expanded .meta { display: block; opacity: 1; font-size: 0.75rem; color: #94a3b8; margin-top: 2px; height: auto; }
 
     .player-badge.active-turn { border-color: var(--accent); box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
-    .player-badge.active-turn .turn-text { opacity: 1; top: -16px; }
+    .player-badge.active-turn .turn-text { opacity: 1; transform: translateY(-4px); transition: transform 0.2s ease-out, opacity 0.2s; }
     .player-badge.bazunga { background: var(--danger); border-color: #fff; animation: pulse-danger 1s infinite; }
 
     #action-bar { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 300; pointer-events: auto; backdrop-filter: blur(10px); transition: right 0.3s, opacity 0.3s; width: 110px; }
@@ -151,7 +151,7 @@
     #action-bar button.primary { background: var(--success); color: white; font-size: 0.95rem; padding: 12px 8px; }
 
     @media (max-width: 768px) {
-        #action-bar { top: auto; bottom: 20px; right: 10px; transform: none; width: 120px; }
+        #action-bar { top: auto; bottom: 12px; right: 12px; transform: none; width: 120px; gap: 10px; }
         #action-bar button { font-size: 0.9rem; padding: 12px 10px; }
     }
 
@@ -161,7 +161,7 @@
     .toast.danger { border-color: var(--danger); }
     .toast.warning { border-color: var(--accent); }
     
-    #chat-bubble-container { position: absolute; top: 120px; left: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 550; pointer-events: none; align-items: flex-start; }
+    #chat-bubble-container { position: absolute; bottom: 10px; left: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 550; pointer-events: none; align-items: flex-start; }
     #chat-bubble-container.hidden { display: none !important; }
     .chat-bubble { background: rgba(255,255,255,0.95); color: #000; padding: 10px 15px; border-radius: 16px; border-bottom-left-radius: 4px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s 3.7s forwards; max-width: 250px; word-wrap: break-word; pointer-events: auto; }
     .chat-bubble.pirate { background: #fee2e2; border: 1px solid #ef4444; }
@@ -277,7 +277,7 @@
             </div>
             <div id="card-layer"></div>
         </div>
-            
+        <!-- Moved UI elements outside zoom-wrapper -->
         <div id="ui-layer">
             <div id="status-banner">
                 <div style="font-size: 0.75rem; color: #94a3b8; font-weight:800;" id="phase-display">PHASE</div>
@@ -288,11 +288,10 @@
                 </div>
             </div>
             <div id="action-bar" class="hidden">
-    <button id="btn-pass" class="secondary" style="margin-right:8px; display:none;">Pass</button>
-    <!-- other action buttons will be appended dynamically -->
-</div>
+                <button id="btn-pass" class="secondary" style="margin-right:8px; display:none;">Pass</button>
+                <!-- other action buttons will be appended dynamically -->
+            </div>
         </div>
-
         <div id="toast-container"></div>
         <div id="chat-bubble-container"></div>
 
@@ -303,7 +302,7 @@
 
         <button id="chat-fab">💬</button>
         <button id="btn-toggle-bubbles" title="Toggle Bubbles">👁️</button>
-        <button id="btn-toggle-clutter" title="Reduced Clutter Mode">👁️</button>
+        <button id="btn-toggle-clutter" title="Reduced Clutter Mode">🧹</button>
         
         <div id="chat-drawer">
             <div class="chat-header">
@@ -366,13 +365,16 @@ const App = {
 
 // --- GAME ENGINE (HOST ONLY) ---
 const Engine = {
-    state: { phase: 'lobby', players: [], deck: [], discardPile: [], logs: [], activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, turnStartTime: 0 },
+    state: { phase: 'lobby', players: [], deck: [], discardPile: [], logs: [], activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, turnStartTime: 0, peekPhaseCompleted: false },
     botMemory: {}
 };
 
 Engine.memorizeForBot = (botId, card) => {
     if (!Engine.botMemory[botId]) Engine.botMemory[botId] = {};
-    Engine.botMemory[botId][card.id] = { id: card.id, value: card.value, numVal: window.Bot ? window.Bot.getNumericValue(card.value, card.isRed) : 0, time: Utils.timestamp() };
+    // Only memorize when card is publicly visible (peek phase or already face‑up on discard)
+    if (Engine.state.phase === 'peek' || (card.isFaceUp && card.loc === 'discard')) {
+        Engine.botMemory[botId][card.id] = { id: card.id, value: card.value, numVal: window.Bot ? window.Bot.getNumericValue(card.value, card.isRed) : 0, time: Utils.timestamp() };
+    }
 };
 
 Engine.initDeck = () => {
@@ -412,6 +414,7 @@ Engine.startGame = () => {
     Engine.state.deck = Engine.initDeck();
     Engine.state.discardPile = [];
     Engine.state.phase = 'peek';
+    Engine.state.peekPhaseCompleted = false;
     Engine.state.turnIndex = Math.floor(Math.random() * Engine.state.players.length);
     Engine.state.gameMode = document.getElementById('game-mode') ? document.getElementById('game-mode').value : 'rhino';
     Engine.state.bazungaCallerId = null;
@@ -588,6 +591,7 @@ Engine.processAction = (action, peerId) => {
             player.ready = true;
             if (Engine.state.players.every(p => p.ready || (!p.connected && !p.isBot))) {
                 Engine.state.phase = 'play';
+                Engine.state.peekPhaseCompleted = true;
                 Engine.state.turnStartTime = now;
                 Engine.sysLog("Play phase started!", "success");
             }
@@ -648,7 +652,10 @@ Engine.processAction = (action, peerId) => {
 
         case 'DRAW_DECK':
             if (!isTurn || Engine.state.activeAbility) return;
-            if (Engine.state.phase === 'peek') return;
+            if (Engine.state.phase === 'peek' || !Engine.state.peekPhaseCompleted) {
+                Engine.sysLog(`${player.name} cannot draw from the deck before peek phase is completed.`, 'warning');
+                return;
+            }
             if (Engine.state.deck.length === 0) Engine.checkDeckEmpty();
             if (Engine.state.deck.length === 0) { Engine.nextTurn(); return; }
             let drawn = Engine.state.deck.pop();

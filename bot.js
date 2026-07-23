@@ -360,27 +360,30 @@ const Bot = {
             let topDiscard = Engine.state.discardPile.length > 0 ? Engine.state.discardPile[Engine.state.discardPile.length - 1] : null;
             let wantsDiscard = false;
             let mem = Engine.botMemory[activePlayer.id];
+            const isJokerMode = Engine.state.gameMode === 'joker';
 
             if (topDiscard) {
                 let topVal = Bot.getNumericValue(topDiscard.value, topDiscard.isRed);
                 if (activePlayer.botDifficulty >= 3) {
                     let evThreshold = 5;
-                    // Baba Gupta utilizes Gordon count derivatives to map deck EV thresholds
                     if (activePlayer.botDifficulty === 6) {
                         if (Bot.deckMemory.highCards > Bot.deckMemory.lowCards) evThreshold = 6;
                         else evThreshold = 3;
                     }
-                    if (topVal <= evThreshold && topVal >= 0) wantsDiscard = true;
-                    else {
-                        for (let key in mem) {
-                            let c = Engine.getCardById(key);
-                            let memVal = Bot.getNumericValue(mem[key].value, mem[key].isRed);
-                            if (c && c.ownerId === activePlayer.id && mem[key].value === topDiscard.value && memVal !== -1) { 
-                                wantsDiscard = true; break; 
+                    // In Joker mode, never draw from discard
+                    if (!isJokerMode) {
+                        if (topVal <= evThreshold && topVal >= 0) wantsDiscard = true;
+                        else {
+                            for (let key in mem) {
+                                let c = Engine.getCardById(key);
+                                let memVal = Bot.getNumericValue(mem[key].value, mem[key].isRed);
+                                if (c && c.ownerId === activePlayer.id && mem[key].value === topDiscard.value && memVal !== -1) { 
+                                    wantsDiscard = true; break; 
+                                }
                             }
                         }
                     }
-                } else { wantsDiscard = topVal < 6 && Math.random() > 0.5; }
+                } else { wantsDiscard = !isJokerMode && topVal < 6 && Math.random() > 0.5; }
             }
 
             if (Engine.state.phase === 'play' && activePlayer.botDifficulty >= 4) {
@@ -408,7 +411,7 @@ const Bot = {
                 }
             }
             if (wantsDiscard) {
-                if (Engine.state.gameMode !== 'joker') {
+                if (!isJokerMode) {
                     Engine.processAction({ type: 'DRAW_DISCARD' }, activePlayer.id);
                 }
             }
@@ -423,6 +426,32 @@ const Bot = {
             if (ability.type.startsWith('holding')) {
                 let hCard = ability.card;
                 let cardVal = Bot.getNumericValue(hCard.value, hCard.isRed);
+                const isFromDiscard = ability.type === 'holding_discard';
+
+                // If drawn from discard, be more likely to keep it (swap into layout)
+                if (isFromDiscard && activePlayer.botDifficulty >= 3) {
+                    let targetToSwap = null;
+                    let worstKnownVal = cardVal;
+                    for (let key in mem) {
+                        let c = Engine.getCardById(key);
+                        if (c && c.ownerId === activePlayer.id && (c.loc === 'hand' || c.loc === 'penalty') && mem[key].numVal > worstKnownVal) {
+                            targetToSwap = c; worstKnownVal = mem[key].numVal;
+                        }
+                    }
+                    if (!targetToSwap && cardVal <= 4) {
+                        let unknownOwn = activePlayer.hand.find(c => !mem[c.id]);
+                        if (unknownOwn) targetToSwap = unknownOwn;
+                    }
+                    if (targetToSwap) {
+                        Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: targetToSwap.id }, activePlayer.id);
+                        return;
+                    }
+                    // If no good swap target, still keep it if it's decent
+                    if (cardVal <= 5) {
+                        Engine.processAction({ type: 'PLAY_HOLDING', action: 'add_to_layout' }, activePlayer.id);
+                        return;
+                    }
+                }
 
                 if (activePlayer.botDifficulty >= 3) {
                     let memoryMatchFound = false;

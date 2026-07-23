@@ -37,10 +37,11 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background-color: var(--bg-color); color: var(--text-light); overflow: hidden; touch-action: manipulation; }
+    
     /* Layouts */
     #app { width: 100vw; height: 100vh; position: relative; display: flex; flex-direction: column; }
     .hidden { display: none !important; }
-
+    
     /* Lobby */
     #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; text-align: center; background: radial-gradient(circle at top, #1e293b 0%, var(--bg-color) 100%); z-index: 100; position: absolute; top:0; left:0; width: 100%; }
     .lobby-box { background: var(--surface); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); max-width: 420px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
@@ -55,15 +56,15 @@
     button.secondary { background: #475569; color: white; }
     button.danger { background: var(--danger); color: white; }
     button.success { background: var(--success); color: white; }
-
+    
     #qr-container { background: white; padding: 15px; display: inline-block; margin: 15px 0; border-radius: 12px; }
     .player-list { text-align: left; margin-top: 15px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 5px; }
     .player-item { padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
-
+    
     /* Game Table */
     #game-view { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; perspective: 1200px; }
     #table { width: 96%; height: 88%; background: radial-gradient(circle, var(--table-center) 0%, var(--table-edge) 100%); border-radius: 50%; border: 15px solid var(--table-border); position: relative; box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 30px 60px rgba(0,0,0,0.8); }
-
+    
     #table-rim-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border-radius: 50%; overflow: visible; }
     .table-arrow-text { font-size: 24px; font-weight: 900; fill: rgba(251, 191, 36, 0.4); letter-spacing: 12px; dominant-baseline: central; }
 
@@ -71,7 +72,7 @@
     #card-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: auto; z-index: 10; touch-action: manipulation; }
     .card {
         width: var(--card-w); height: var(--card-h); position: absolute;
-        transition: left 0.8s cubic-bezier(0.22, 1, 0.36, 1), top 0.8s cubic-bezier(0.22, 1, 0.36, 1), scale 0.2s, rotate 0.2s, translate 0.2s;
+        transition: left 0.4s cubic-bezier(0.22, 1, 0.36, 1), top 0.4s cubic-bezier(0.22, 1, 0.36, 1), scale 0.2s, rotate 0.2s, translate 0.2s;
         pointer-events: auto; cursor: pointer; touch-action: manipulation; border-radius: 6px; transform-origin: center center; box-shadow: 2px 4px 10px rgba(0,0,0,0.4);
         scale: var(--local-scale, 1);
         rotate: var(--local-rot, 0deg);
@@ -79,31 +80,31 @@
     }
     .card.no-anim { transition: none !important; }
     .card.no-anim .card-inner { transition: none !important; }
-
+    
     .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius: 6px; }
     .card-inner.is-flipped { transform: rotateY(180deg); }
-
+    
     /* Fixed Card Bleeding & Artifacts */
-    .card-face {
-        position: absolute; width: 100%; height: 100%;
-        backface-visibility: hidden; -webkit-backface-visibility: hidden;
-        border-radius: 6px; border: 1px solid #cbd5e1;
-        display: flex; flex-direction: column; justify-content: space-between;
-        padding: 4px; background: #fff; overflow: hidden;
+    .card-face { 
+        position: absolute; width: 100%; height: 100%; 
+        backface-visibility: hidden; -webkit-backface-visibility: hidden; 
+        border-radius: 6px; border: 1px solid #cbd5e1; 
+        display: flex; flex-direction: column; justify-content: space-between; 
+        padding: 4px; background: #fff; overflow: hidden; 
     }
     .card-front { transform: rotateY(0deg) translateZ(1px); }
-    .card-back {
-        background: repeating-linear-gradient(45deg, #1e293b, #1e293b 10px, #0f172a 10px, #0f172a 20px);
-        transform: rotateY(180deg) translateZ(1px); border: 2px solid #e2e8f0;
+    .card-back { 
+        background: repeating-linear-gradient(45deg, #1e293b, #1e293b 10px, #0f172a 10px, #0f172a 20px); 
+        transform: rotateY(180deg) translateZ(1px); border: 2px solid #e2e8f0; 
     }
     .card-back::after { content: 'B'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: bold; }
-
+    
     .card .val { font-size: 1.1rem; font-weight: 800; line-height: 1; }
     .card .suit { font-size: 1.5rem; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; }
     .card .val.bottom { transform: rotate(180deg); margin-top: auto; }
     .card.red .card-front { color: #ef4444; }
     .card.black .card-front { color: #1e293b; }
-
+    
     .card.disconnected { filter: grayscale(100%) opacity(0.5); pointer-events: none; }
     .player-badge.disconnected { filter: grayscale(100%) opacity(0.5); }
 
@@ -115,27 +116,26 @@
     .card.deck-glow .card-inner { box-shadow: 0 0 15px var(--success); }
     .card.holding-card { scale: 1.3 !important; z-index: 1000 !important; }
     .card.highlight-recent .card-inner { box-shadow: 0 0 15px 5px var(--accent); animation: pulse-recent 2s infinite; }
-    .card.public-peeked .card-inner { box-shadow: 0 0 0 3px var(--accent), 0 0 15px var(--accent); border: 2px solid var(--accent); }
-
+    
     @keyframes pulse-target { 0% { box-shadow: 0 0 10px 2px var(--info); } 50% { box-shadow: 0 0 20px 6px var(--info); } 100% { box-shadow: 0 0 10px 2px var(--info); } }
     @keyframes pulse-recent { 0%, 100% { box-shadow: 0 0 10px var(--accent); } 50% { box-shadow: 0 0 25px var(--accent); } }
 
     /* UI Overlays */
     #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; display: flex; flex-direction: column; justify-content: space-between; }
-
+    
     #status-banner { background: rgba(0,0,0,0.85); color: white; text-align: center; padding: 10px 15px; font-size: 1rem; font-weight: 600; backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,0.1); pointer-events: auto; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
     #status-text { flex: 1; text-align: center; color: var(--accent); letter-spacing: 0.5px; font-size: 0.9rem; }
-
-    .player-badge {
-        position: absolute; background: var(--surface); border-radius: 22px; font-size: 0.85rem; pointer-events: auto; cursor: pointer; text-align: center; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; backdrop-filter: blur(4px); white-space: nowrap; z-index: 150;
-        width: 44px; height: 44px; padding: 0; justify-content: center; overflow: visible; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    .player-badge { 
+        position: absolute; background: var(--surface); border-radius: 22px; font-size: 0.85rem; pointer-events: auto; cursor: pointer; text-align: center; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; backdrop-filter: blur(4px); white-space: nowrap; z-index: 150; 
+        width: 44px; height: 44px; padding: 0; justify-content: center; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
+    
     .player-badge .icon { font-size: 1.4rem; line-height: 44px; margin: 0; transition: all 0.3s; }
     .player-badge .name-text, .player-badge .meta { display: none; opacity: 0; transition: opacity 0.2s; height: 0; }
-    .player-badge .turn-text { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); opacity: 0; color: var(--accent); font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; transition: opacity 0.3s, top 0.3s; pointer-events: none; }
-
-    .player-badge:hover, .player-badge.expanded {
+    .player-badge .turn-text { display: none; color: var(--accent); font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 2px; }
+    
+    .player-badge:hover, .player-badge.expanded { 
         width: auto; height: auto; max-width: 200px; padding: 8px 16px; border-radius: 16px; z-index: 250; background: rgba(30, 41, 59, 0.95); border-color: rgba(255,255,255,0.3);
     }
     .player-badge:hover .icon, .player-badge.expanded .icon { line-height: normal; font-size: 1.1rem; margin-right: 6px; }
@@ -143,28 +143,27 @@
     .player-badge:hover .meta, .player-badge.expanded .meta { display: block; opacity: 1; font-size: 0.75rem; color: #94a3b8; margin-top: 2px; height: auto; }
 
     .player-badge.active-turn { border-color: var(--accent); box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
-    .player-badge.active-turn .turn-text { opacity: 1; transform: translateY(-4px); transition: transform 0.2s ease-out, opacity 0.2s; }
+    .player-badge.active-turn .turn-text { display: block; }
     .player-badge.bazunga { background: var(--danger); border-color: #fff; animation: pulse-danger 1s infinite; }
 
-    #action-bar { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 600; pointer-events: auto; backdrop-filter: blur(10px); transition: opacity 0.3s, transform 0.3s; width: 110px; }
-    #action-bar.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(20px); display: flex !important; }
+    #action-bar { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 300; pointer-events: auto; backdrop-filter: blur(10px); transition: right 0.3s, opacity 0.3s; width: 110px; }
+    #action-bar.hidden { right: -150px; opacity: 0; pointer-events: none; display: flex !important; }
     #action-bar button { margin: 0; padding: 10px 8px; font-size: 0.85rem; border-radius: 8px; width: 100%; text-align: center; line-height: 1.2; }
     #action-bar button.primary { background: var(--success); color: white; font-size: 0.95rem; padding: 12px 8px; }
 
     @media (max-width: 768px) {
-        #action-bar { top: auto; bottom: 110px; left: 50%; transform: translateX(-50%); width: 120px; gap: 10px; }
+        #action-bar { top: auto; bottom: 85px; right: 15px; transform: none; width: 120px; }
         #action-bar button { font-size: 0.9rem; padding: 12px 10px; }
     }
 
-    #toast-container { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 550; pointer-events: none; }
+    #toast-container { position: absolute; top: 60px; right: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 300; pointer-events: none; }
     .toast { background: var(--surface); color: white; padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--info); box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; animation: slideInRight 0.3s forwards, fadeOut 0.3s 4.7s forwards; backdrop-filter: blur(4px); max-width: 280px; line-height: 1.3; }
     .toast.success { border-color: var(--success); }
     .toast.danger { border-color: var(--danger); }
     .toast.warning { border-color: var(--accent); }
     
-    #chat-bubble-container { position: absolute; bottom: 10px; left: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 550; pointer-events: none; align-items: flex-start; }
-    #chat-bubble-container.hidden { display: none !important; }
-    .chat-bubble { background: rgba(255,255,255,0.95); color: #000; padding: 10px 15px; border-radius: 16px; border-bottom-left-radius: 4px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s 3.7s forwards; max-width: 250px; word-wrap: break-word; pointer-events: auto; }
+    #chat-bubble-container { position: absolute; bottom: 90px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 350; pointer-events: none; align-items: flex-end; }
+    .chat-bubble { background: rgba(255,255,255,0.95); color: #000; padding: 10px 15px; border-radius: 16px; border-bottom-right-radius: 4px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s 3.7s forwards; max-width: 250px; word-wrap: break-word; }
     .chat-bubble.pirate { background: #fee2e2; border: 1px solid #ef4444; }
     .chat-bubble strong { color: var(--accent-hover); }
     .chat-bubble.pirate strong { color: var(--danger); }
@@ -173,21 +172,13 @@
     @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
     @keyframes popIn { from { transform: scale(0.8) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
 
-    .vfx-slap { position: absolute; font-size: 3rem; font-weight: 900; color: var(--accent); text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; pointer-events: none; z-index: 600; transform: translate(-50%, -50%) scale(0); animation: slapPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .vfx-slap { position: absolute; font-size: 3rem; font-weight: 900; color: var(--accent); text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; pointer-events: none; z-index: 400; transform: translate(-50%, -50%) scale(0); animation: slapPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     .vfx-slap.miss { color: var(--danger); }
     @keyframes slapPop { 0% { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 0; } }
 
-    #chat-fab { position: fixed; bottom: 10px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
+    #chat-fab { position: fixed; bottom: 20px; left: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 90; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
     #chat-fab:hover { background: rgba(255,255,255,0.2); }
-    #btn-toggle-bubbles { position: absolute; top: 65px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
-    #btn-toggle-clutter { position: absolute; top: 115px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
-    #btn-toggle-bubbles.toggled-off, #btn-toggle-clutter.toggled-off { opacity: 0.5; }
-    .clutter-hidden #status-banner,
-    .clutter-hidden #chat-drawer,
-    .clutter-hidden #chat-bubble-container { display: none !important; }
-    #btn-toggle-bubbles.toggled-off { opacity: 0.5; }
-    
-    #chat-drawer { position: fixed; left: -300px; top: 0; width: 300px; height: 100vh; background: rgba(15, 23, 42, 0.95); border-right: 1px solid rgba(255,255,255,0.1); transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 650; display: flex; flex-direction: column; pointer-events: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
+    #chat-drawer { position: fixed; left: -300px; top: 0; width: 300px; height: 100vh; background: rgba(15, 23, 42, 0.95); border-right: 1px solid rgba(255,255,255,0.1); transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 450; display: flex; flex-direction: column; pointer-events: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
     #chat-drawer.open { left: 0; }
     .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); }
     .chat-header h3 { margin: 0; color: var(--text-light); font-size: 1.1rem; }
@@ -206,7 +197,7 @@
     .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); z-index: 410; text-align: center; pointer-events: auto; min-width: 300px; max-width: 90vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
     .modal h2 { color: var(--accent); margin-bottom: 10px; font-size: 1.8rem; }
     .modal-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 25px; flex-wrap: wrap; }
-
+    
     .endgame-player { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
     .endgame-player.winner { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
     .endgame-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
@@ -231,13 +222,13 @@
             <input type="text" id="join-id" placeholder="Paste Game ID">
             <button id="btn-join" class="secondary">Join Game</button>
         </div>
-        <div class="lobby-box hidden" id="lobby-room" style="max-height: 90vh; overflow-y: auto; padding-bottom: 30px;">
+        <div class="lobby-box hidden" id="lobby-room">
             <h2 style="color: white; margin-bottom: 10px;">Game Lobby</h2>
             <div id="room-id-display" style="font-family: monospace; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; margin-bottom: 10px; word-break: break-all; color: var(--accent); font-size: 1rem; letter-spacing: 1px;"></div>
             <div id="qr-container"></div>
-
+            
             <div class="player-list" id="lobby-players"></div>
-
+            
             <div id="host-controls" class="hidden" style="margin-top: 15px;">
                 <div style="display: flex; gap: 8px;">
                     <select id="bot-difficulty" style="flex: 2; margin: 0;">
@@ -246,16 +237,8 @@
                         <option value="3">Hard Bot</option>
                         <option value="4">Expert Bot</option>
                         <option value="5">The Pirate</option>
-                        <option value="6">Baba Gupta</option>
                     </select>
                     <button id="btn-add-bot" class="secondary" style="flex: 1; margin: 0;">+ Bot</button>
-                </div>
-                <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center;">
-                    <select id="game-mode" style="flex: 1; margin: 0;">
-                        <option value="rhino">🦏 Rhino Mode (Standard)</option>
-                        <option value="joker">🃏 Joker Mode (Hardcore)</option>
-                    </select>
-                    <button id="btn-mode-info" class="secondary" style="flex: 0 0 45px; padding: 0; font-size: 1.2rem; margin: 0;" title="Game Mode Info">?</button>
                 </div>
                 <button id="btn-start-game" style="margin-top: 15px; font-size: 1.1rem; padding: 12px;">START GAME</button>
             </div>
@@ -265,21 +248,19 @@
 
     <!-- Game View -->
     <div id="game-view" class="hidden">
-        <div id="zoom-wrapper" style="width: 100%; height: 100%; position: absolute; top:0; left:0; transform: scale(var(--zoom, 1)); transform-origin: center center; transition: transform 0.3s;">
-            <div id="table">
-                <svg id="table-rim-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
-                    <!-- 500 is center. Border is 15px. Middle of border is 7.5px from edge. 500 - 7.5 = 492.5 -->
-                    <path id="rim-path" d="M 500 7.5 A 492.5 492.5 0 0 1 500 992.5 A 492.5 492.5 0 0 1 500 7.5" fill="none" />
-                    <text class="table-arrow-text">
-                        <textPath href="#rim-path" startOffset="0%">
-                            » » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »
-                        </textPath>
-                    </text>
-                </svg>
-            </div>
-            <div id="card-layer"></div>
+        <div id="table">
+            <svg id="table-rim-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+                <!-- 500 is center. Border is 15px. Middle of border is 7.5px from edge. 500 - 7.5 = 492.5 -->
+                <path id="rim-path" d="M 500 7.5 A 492.5 492.5 0 0 1 500 992.5 A 492.5 492.5 0 0 1 500 7.5" fill="none" />
+                <text class="table-arrow-text">
+                    <textPath href="#rim-path" startOffset="0%">
+                        » » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;» » »
+                    </textPath>
+                </text>
+            </svg>
         </div>
-        <!-- Moved UI elements outside zoom-wrapper -->
+        <div id="card-layer"></div>
+        
         <div id="ui-layer">
             <div id="status-banner">
                 <div style="font-size: 0.75rem; color: #94a3b8; font-weight:800;" id="phase-display">PHASE</div>
@@ -289,23 +270,13 @@
                     <button id="btn-toggle-anim" class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Anim: ON</button>
                 </div>
             </div>
-            <div id="action-bar" class="hidden">
-                <button id="btn-pass" class="secondary" style="margin-right:8px; display:none;">Pass</button>
-                <!-- other action buttons will be appended dynamically -->
-            </div>
-        </div>
-        <div id="toast-container"></div>
-        <div id="chat-bubble-container"></div>
-
-        <div id="zoom-controls" style="position: absolute; top: 60px; right: 10px; z-index: 550; display: flex; flex-direction: column; gap: 5px;">
-            <button id="btn-zoom-in" class="secondary" style="width:36px; height:36px; padding:0; border-radius:18px; margin:0; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">+</button>
-            <button id="btn-zoom-out" class="secondary" style="width:36px; height:36px; padding:0; border-radius:18px; margin:0; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">-</button>
+            
+            <div id="toast-container"></div>
+            <div id="chat-bubble-container"></div>
+            <div id="action-bar" class="hidden"></div>
         </div>
 
         <button id="chat-fab">💬</button>
-        <button id="btn-toggle-bubbles" title="Toggle Bubbles">👁️</button>
-        <button id="btn-toggle-clutter" title="Reduced Clutter Mode">🧽</button>
-        
         <div id="chat-drawer">
             <div class="chat-header">
                 <h3 style="margin:0; color:white; font-size:1rem;">Game Log</h3>
@@ -330,15 +301,6 @@
             <button id="btn-return-lobby" class="danger">Leave Game</button>
         </div>
     </div>
-    <div id="modal-bazunga-confirm" class="modal hidden">
-        <h2 style="font-size: 2rem; margin-bottom: 10px; color: var(--danger);">⚠️ CALL BAZUNGA?</h2>
-        <p style="margin-bottom: 20px; font-size: 1.1rem; color: #e2e8f0;">This triggers the final orbit! All players get one last turn. Only call if you have the lowest score!</p>
-        <div class="modal-buttons">
-            <button id="btn-bazunga-confirm" class="danger" style="background: var(--danger);">YES, CALL BAZUNGA!</button>
-            <button id="btn-bazunga-cancel" class="secondary">Cancel</button>
-        </div>
-    </div>
-</div>
 </div>
 
 <script>
@@ -376,21 +338,13 @@ const App = {
 
 // --- GAME ENGINE (HOST ONLY) ---
 const Engine = {
-    state: { phase: 'lobby', players: [], deck: [], discardPile: [], logs: [], activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, turnStartTime: 0, peekPhaseCompleted: false, publicPeekedCards: [] },
+    state: { phase: 'lobby', players: [], deck: [], discardPile: [], logs: [], activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, turnStartTime: 0 },
     botMemory: {}
 };
 
 Engine.memorizeForBot = (botId, card) => {
     if (!Engine.botMemory[botId]) Engine.botMemory[botId] = {};
-    // Only memorize when card is publicly visible (peek phase or already face‑up on discard)
-    if (Engine.state.phase === 'peek' || (card.isFaceUp && card.loc === 'discard')) {
-        Engine.botMemory[botId][card.id] = { id: card.id, value: card.value, numVal: window.Bot ? window.Bot.getNumericValue(card.value, card.isRed) : 0, time: Utils.timestamp() };
-    }
-};
-
-Engine.recordBotPeek = function({playerId, cardId, ability}) {
-    Engine.state.botPeekLog.push({playerId, cardId, ability, time: Utils.timestamp()});
-    console.log(`Bot ${playerId} peeked card ${cardId} via ${ability}`);
+    Engine.botMemory[botId][card.id] = { id: card.id, value: card.value, numVal: window.Bot ? window.Bot.getNumericValue(card.value, card.isRed) : 0, time: Utils.timestamp() };
 };
 
 Engine.initDeck = () => {
@@ -430,9 +384,7 @@ Engine.startGame = () => {
     Engine.state.deck = Engine.initDeck();
     Engine.state.discardPile = [];
     Engine.state.phase = 'peek';
-    Engine.state.peekPhaseCompleted = false;
     Engine.state.turnIndex = Math.floor(Math.random() * Engine.state.players.length);
-    Engine.state.gameMode = document.getElementById('game-mode') ? document.getElementById('game-mode').value : 'standard';
     Engine.state.bazungaCallerId = null;
     Engine.state.orbitCount = 0;
     Engine.state.activeAbility = null;
@@ -441,7 +393,6 @@ Engine.startGame = () => {
     Engine.state.lastSlap = null;
     Engine.state.lastActionTargetId = null;
     Engine.state.turnStartTime = Utils.timestamp();
-    Engine.state.publicPeekedCards = [];
     Engine.botMemory = {};
 
     App.uiState.hasPeeked.clear();
@@ -483,12 +434,7 @@ Engine.getCardById = (id) => {
 
 Engine.drawPenalty = (playerId) => {
     let p = Engine.state.players.find(p => p.id === playerId);
-    if (!p) return;
-    if (Engine.state.deck.length === 0) Engine.checkDeckEmpty();
-    if (Engine.state.deck.length === 0) {
-        Engine.sysLog(`No cards available for penalty.`, "warning");
-        return;
-    }
+    if (!p || Engine.state.deck.length === 0) return;
 
     let c = Engine.state.deck.pop();
     Engine.checkDeckEmpty();
@@ -544,35 +490,22 @@ Engine.endGame = () => {
     let caller = Engine.state.players.find(p => p.id === Engine.state.bazungaCallerId);
     let lowestScore = Math.min(...Engine.state.players.map(p => p.roundScore));
     let winners = [];
-    let isJoker = Engine.state.gameMode === 'joker';
 
     if (caller) {
-        let lowestCount = Engine.state.players.filter(p => p.roundScore === lowestScore).length;
-        let isStrictlyLowest = caller.roundScore === lowestScore && lowestCount === 1;
-        
+        let isStrictlyLowest = caller.roundScore === lowestScore && Engine.state.players.filter(p => p.roundScore === lowestScore).length === 1;
         if (isStrictlyLowest) {
             winners.push(caller.name);
             Engine.sysLog(`${caller.name} successfully called BAZUNGA and wins!`, "success");
             Engine.state.players.forEach(p => {
-                p.scoreAdded = (p.id === caller.id && !isJoker) ? 0 : p.roundScore;
-                if (!isJoker) p.totalScore = (p.totalScore || 0) + p.scoreAdded;
-                else p.totalScore = p.scoreAdded; // Only round score matters
-            });
-        } else if (isJoker && caller.roundScore === lowestScore && lowestCount > 1) {
-            // Joker mode draw
-            winners = Engine.state.players.filter(p => p.roundScore === lowestScore).map(p => p.name);
-            Engine.sysLog(`Bazunga call resulted in a draw! No penalties.`, "info");
-            Engine.state.players.forEach(p => {
-                p.scoreAdded = p.roundScore;
-                p.totalScore = p.scoreAdded;
+                p.scoreAdded = (p.id === caller.id) ? 0 : p.roundScore;
+                p.totalScore = (p.totalScore || 0) + p.scoreAdded;
             });
         } else {
             winners = Engine.state.players.filter(p => p.id !== caller.id).map(p => p.name);
             Engine.sysLog(`${caller.name} failed Bazunga! They take all points.`, "danger");
             Engine.state.players.forEach(p => {
                 p.scoreAdded = (p.id === caller.id) ? totalTableScore : 0;
-                if (!isJoker) p.totalScore = (p.totalScore || 0) + p.scoreAdded;
-                else p.totalScore = p.scoreAdded;
+                p.totalScore = (p.totalScore || 0) + p.scoreAdded;
             });
         }
     } else {
@@ -580,8 +513,7 @@ Engine.endGame = () => {
         Engine.sysLog(`Game ended naturally.`, "info");
         Engine.state.players.forEach(p => {
             p.scoreAdded = p.roundScore;
-            if (!isJoker) p.totalScore = (p.totalScore || 0) + p.scoreAdded;
-            else p.totalScore = p.scoreAdded;
+            p.totalScore = (p.totalScore || 0) + p.scoreAdded;
         });
     }
 
@@ -608,7 +540,6 @@ Engine.processAction = (action, peerId) => {
             player.ready = true;
             if (Engine.state.players.every(p => p.ready || (!p.connected && !p.isBot))) {
                 Engine.state.phase = 'play';
-                Engine.state.peekPhaseCompleted = true;
                 Engine.state.turnStartTime = now;
                 Engine.sysLog("Play phase started!", "success");
             }
@@ -627,11 +558,11 @@ Engine.processAction = (action, peerId) => {
 
             let transitTime = Math.max(0, now - (action.timestamp || now));
             let adjustedSlapTime = now - transitTime;
-
+            
             // Race condition fix: If the top discard was slapped within the last 1.5s, reject new slaps
             let isLateSlap = topDiscard.slappedAt && (now - topDiscard.slappedAt < 1500);
 
-            if (targetCard.value === topDiscard.value && !isLateSlap && !topDiscard.isSlapped) {
+            if (targetCard.value === topDiscard.value && !isLateSlap) {
                 Engine.state.lastSlapTime = now;
                 Engine.state.lastSlapTargetId = action.targetId;
 
@@ -640,9 +571,7 @@ Engine.processAction = (action, peerId) => {
 
                 targetCard.loc = 'discard'; targetCard.ownerId = null; targetCard.isFaceUp = true;
                 targetCard.slappedAt = now; // Mark new top card as slapped
-                targetCard.isSlapped = true;
                 topDiscard.slappedAt = now; // Mark old top card as slapped to prevent race conditions
-                topDiscard.isSlapped = true;
                 
                 Engine.state.discardPile.push(targetCard);
                 Engine.state.lastActionTargetId = targetCard.id;
@@ -655,8 +584,8 @@ Engine.processAction = (action, peerId) => {
                 }
                 Engine.state.lastSlap = { id: targetCard.id, success: true, time: now, playerId: player.id, targetOwnerId: owner.id };
             } else {
-                if ((isLateSlap || topDiscard.isSlapped) && targetCard.value === topDiscard.value) {
-                    Engine.sysLog(`${player.name} slapped a card that was already slapped! Penalty!`, "warning");
+                if (isLateSlap && targetCard.value === topDiscard.value) {
+                    Engine.sysLog(`${player.name} slapped just a millisecond too late! Penalty!`, "warning");
                 } else {
                     Engine.sysLog(`${player.name} incorrectly slapped ${owner.name}'s ${targetCard.value} onto a ${topDiscard.value}! Penalty!`, "danger");
                 }
@@ -669,12 +598,7 @@ Engine.processAction = (action, peerId) => {
 
         case 'DRAW_DECK':
             if (!isTurn || Engine.state.activeAbility) return;
-            if (Engine.state.phase === 'peek' || !Engine.state.peekPhaseCompleted) {
-                Engine.sysLog(`${player.name} cannot draw from the deck before peek phase is completed.`, 'warning');
-                return;
-            }
-            if (Engine.state.deck.length === 0) Engine.checkDeckEmpty();
-            if (Engine.state.deck.length === 0) { Engine.nextTurn(); return; }
+            if (Engine.state.deck.length === 0) return;
             let drawn = Engine.state.deck.pop();
             Engine.checkDeckEmpty();
             drawn.loc = 'holding'; drawn.ownerId = player.id; drawn.isFaceUp = true;
@@ -685,11 +609,6 @@ Engine.processAction = (action, peerId) => {
 
         case 'DRAW_DISCARD':
             if (!isTurn || Engine.state.activeAbility) return;
-            if (Engine.state.phase === 'peek') return;
-            if (Engine.state.gameMode === 'joker') {
-                Engine.sysLog(`${player.name} tried to draw from discard in Joker mode! (Denied)`, "warning");
-                return;
-            }
             if (Engine.state.discardPile.length === 0) return;
             let disc = Engine.state.discardPile.pop();
             disc.loc = 'holding'; disc.ownerId = player.id;
@@ -751,25 +670,14 @@ Engine.processAction = (action, peerId) => {
         case 'RESOLVE_MAGIC':
             if (!isTurn || !Engine.state.activeAbility) return;
             let mType = Engine.state.activeAbility.type;
-            
-            if (action.action === 'pass') {
-                Engine.sysLog(`${player.name} passed on using their magic.`, "info");
-                Engine.nextTurn();
-                break;
-            }
 
             if (mType === 'magic_9') {
-                Engine.sysLog(`${player.name} used a 9 to peek at their own card (public knowledge).`, "info");
-                if (!Engine.state.publicPeekedCards.includes(action.targetId)) {
-                    Engine.state.publicPeekedCards.push(action.targetId);
-                }
-                Engine.recordBotPeek({playerId: player.id, cardId: action.targetId, ability: 'magic_9'});
+                Engine.sysLog(`${player.name} used a 9 to secretly peek at their own card.`, "info");
                 if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.memorizeForBot(player.id, c); }
                 Engine.nextTurn();
             } else if (mType === 'magic_10') {
                 let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
                 Engine.sysLog(`${player.name} used a 10 to secretly peek at one of ${targetOwner ? targetOwner.name + "'s" : "an opponent's"} cards.`, "info");
-                Engine.recordBotPeek({playerId: player.id, cardId: action.targetId, ability: 'magic_10'});
                 if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.memorizeForBot(player.id, c); }
                 Engine.nextTurn();
             } else if (mType === 'magic_Q') {
@@ -990,7 +898,7 @@ const UI = {
         document.getElementById('btn-add-bot').onclick = () => {
             let select = document.getElementById('bot-difficulty');
             let diff = parseInt(select.value); let diffText = select.options[select.selectedIndex].text;
-            let name = diff === 5 ? "Blackbeard" : diff === 6 ? "Baba Gupta" : BOT_NAMES[Math.floor(Math.random() * (BOT_NAMES.length-1))] + ` [${diffText.split(' ')[0]}]`;
+            let name = diff === 5 ? "Blackbeard" : BOT_NAMES[Math.floor(Math.random() * (BOT_NAMES.length-1))] + ` [${diffText.split(' ')[0]}]`;
             Engine.state.players.push({ id: Utils.uuid(), name: name, isHost: false, isBot: true, botDifficulty: diff, connected: true });
             Engine.broadcast();
         };
@@ -1011,62 +919,14 @@ const UI = {
         document.getElementById('chat-fab').onclick = () => document.getElementById('chat-drawer').classList.add('open');
         document.getElementById('chat-close').onclick = () => document.getElementById('chat-drawer').classList.remove('open');
         document.getElementById('chat-send').onclick = UI.sendChat;
-        document.getElementById('btn-toggle-bubbles').onclick = (e) => {
-            let container = document.getElementById('chat-bubble-container');
-            container.classList.toggle('hidden');
-            e.target.classList.toggle('toggled-off');
-        };
-        document.getElementById('btn-toggle-clutter').onclick = (e) => {
-            let ui = document.getElementById('ui-layer');
-            ui.classList.toggle('clutter-hidden');
-            e.target.classList.toggle('toggled-off');
-        };
+        document.getElementById('chat-input').onkeypress = (e) => { if(e.key === 'Enter') UI.sendChat(); };
 
-        // Zoom Controls
-        App.uiState.zoomLevel = 0.85;
-        document.getElementById('zoom-wrapper').style.setProperty('--zoom', App.uiState.zoomLevel);
-        document.getElementById('btn-zoom-in').onclick = () => {
-            App.uiState.zoomLevel = Math.min(App.uiState.zoomLevel + 0.1, 1.5);
-            document.getElementById('zoom-wrapper').style.setProperty('--zoom', App.uiState.zoomLevel);
-        };
-        document.getElementById('btn-zoom-out').onclick = () => {
-            App.uiState.zoomLevel = Math.max(App.uiState.zoomLevel - 0.1, 0.4);
-            document.getElementById('zoom-wrapper').style.setProperty('--zoom', App.uiState.zoomLevel);
-        };
-
-        // Modal for game mode info
-        const modeInfoModal = document.createElement('div');
-        modeInfoModal.id = 'mode-info-modal';
-        modeInfoModal.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:700;';
-        modeInfoModal.innerHTML = `<div style='background:#222;padding:20px;border-radius:8px;max-width:400px;text-align:center;color:#eee;'>
-            <h3 id='modal-title'>Game Mode</h3>
-            <p id='modal-desc'>Description here.</p>
-            <button id='modal-close' style='margin-top:10px;padding:5px 10px;'>Close</button>
-        </div>`;
-        document.body.appendChild(modeInfoModal);
-        document.getElementById('modal-close').onclick = () => modeInfoModal.style.display = 'none';
-        document.getElementById('btn-mode-info').onclick = () => {
-            const mode = document.getElementById('game-mode').value;
-            const titles = {rhino: 'Rhino', joker: 'Joker'};
-            const descs = {
-                rhino: 'Rhino Mode (Standard): Normal gameplay with all abilities. Draw from discard pile allowed.',
-                joker: 'Joker Mode (Hardcore): Special rules, no discard draws, extra abilities, harder scoring.'
-            };
-            document.getElementById('modal-title').innerText = titles[mode] + ' Mode';
-            document.getElementById('modal-desc').innerText = descs[mode];
-            modeInfoModal.style.display = 'flex';
-        };
-
-        // Bazunga confirmation modal
-        const bazungaModal = document.getElementById('modal-bazunga-confirm');
-        document.getElementById('btn-bazunga-confirm').onclick = () => {
-            bazungaModal.style.display = 'none';
+        document.getElementById('btn-return-lobby').onclick = () => location.reload();
+        document.getElementById('btn-hide-gameover').onclick = () => {
+            document.getElementById('modal-gameover').classList.add('hidden');
             document.getElementById('modal-overlay').classList.add('hidden');
-            Net.sendAction({ type: 'CALL_BAZUNGA' });
-        };
-        document.getElementById('btn-bazunga-cancel').onclick = () => {
-            bazungaModal.style.display = 'none';
-            document.getElementById('modal-overlay').classList.add('hidden');
+            App.uiState.showingResults = false;
+            UI.render(App.gameState);
         };
 
         // Use pointerdown for instant, reliable mobile taps
@@ -1103,11 +963,6 @@ const UI = {
         bubble.innerHTML = `<strong>${name}:</strong> ${msg}`;
         container.appendChild(bubble);
         setTimeout(() => bubble.remove(), 4000);
-    },
-
-    showBazungaConfirm: () => {
-        document.getElementById('modal-bazunga-confirm').style.display = 'flex';
-        document.getElementById('modal-overlay').classList.remove('hidden');
     },
 
     createCardDOM: (card) => {
@@ -1236,7 +1091,7 @@ const UI = {
 
         let rx = Math.min(window.innerWidth * 0.35, window.innerWidth / 2 - 80);
         let ry = Math.min(window.innerHeight * 0.38, window.innerHeight / 2 - 90);
-
+        
         // Tighter vertical radius on mobile to prevent top cards from hiding behind banner
         if (window.innerWidth <= 768) {
             ry = Math.min(window.innerHeight * 0.35, window.innerHeight / 2 - 110);
@@ -1251,33 +1106,15 @@ const UI = {
             let relIndex = (i - localPlayerIndex + state.players.length) % state.players.length;
             let angle = (Math.PI / 2) + (relIndex * (2 * Math.PI / state.players.length));
 
-            // For local player (relIndex 0), position layout more bottom-left
-            let px, py;
-            if (relIndex === 0) {
-                px = cx - rx * 0.6;
-                py = cy + ry * 0.9;
-            } else {
-                px = cx + Math.cos(angle) * rx;
-                py = cy + Math.sin(angle) * ry;
-            }
+            let px = cx + Math.cos(angle) * rx;
+            let py = cy + Math.sin(angle) * ry;
 
             let isBottomHalf = py > cy;
             let yDirToCenter = isBottomHalf ? -1 : 1;
 
-            // For local player (relIndex 0), position badge to the left of their layout
-            // For other players, keep badges on outer ellipse
-            let bOffset, badgePx, badgePy;
-            if (relIndex === 0) {
-                // Local player: badge to the left of their layout
-                bOffset = window.innerWidth <= 768 ? 180 : 220;
-                badgePx = cx - rx - bOffset;
-                badgePy = cy + ry + (window.innerWidth <= 768 ? 60 : 80);
-            } else {
-                // Other players: badges on outer ellipse
-                bOffset = window.innerWidth <= 768 ? 180 : 220;
-                badgePx = cx + Math.cos(angle) * (rx + bOffset);
-                badgePy = cy + Math.sin(angle) * (ry + bOffset);
-            }
+            let bOffset = window.innerWidth <= 768 ? 90 : 130;
+            let badgePx = cx + Math.cos(angle) * (rx + bOffset);
+            let badgePy = cy + Math.sin(angle) * (ry + bOffset);
 
             let badgeId = 'badge-' + p.id;
             currentBadgeIds.add(badgeId);
@@ -1309,7 +1146,7 @@ const UI = {
             let allCards = [...p.hand, ...p.penaltyCards];
             let baseHandW = window.innerWidth <= 768 ? 48 : 56;
             let baseHandH = window.innerWidth <= 768 ? 66 : 78;
-
+            
             let scale = 1;
             if (allCards.length > 12) scale = 0.65;
             else if (allCards.length > 8) scale = 0.8;
@@ -1341,7 +1178,7 @@ const UI = {
                 el.style.left = `${px + ox - (baseHandW * 0.5)}px`;
                 el.style.top = `${py + oy - (baseHandH * 0.5)}px`;
                 el.style.zIndex = 20 + idx;
-
+                
                 el.style.setProperty('--local-scale', scale);
                 el.style.setProperty('--local-rot', '0deg');
 
@@ -1355,9 +1192,8 @@ const UI = {
 
                 if (!p.connected && !p.isBot) el.classList.add('disconnected'); else el.classList.remove('disconnected');
 
-                el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent', 'public-peeked');
+                el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent');
                 if (state.lastActionTargetId === c.id) el.classList.add('highlight-recent');
-                if (state.publicPeekedCards && state.publicPeekedCards.includes(c.id)) el.classList.add('public-peeked');
 
                 let mode = App.uiState.targetingMode;
                 if (mode) {
@@ -1365,6 +1201,10 @@ const UI = {
                     else if (mode === 'peek_self' && p.id === App.localId) el.classList.add('targetable');
                     else if (mode === 'peek_opp' && p.id !== App.localId) el.classList.add('targetable');
                     else if (mode === 'q_peek') el.classList.add('targetable');
+                    else if (mode === 'q_swap_1') {
+                        el.classList.add('targetable');
+                        if (c.id === App.uiState.selectedCardId) el.classList.add('selected-target');
+                    }
                     else if (mode === 'q_swap_2') {
                         el.classList.add('targetable');
                         if (c.id === App.uiState.selectedCardId) el.classList.add('selected-target');
@@ -1390,7 +1230,7 @@ const UI = {
             el.style.left = `${cx - 45 - cWidthScale}px`; el.style.top = `${cy - deckOffsetY - (i*0.5)}px`; el.style.zIndex = i;
             el.style.setProperty('--local-scale', '1');
             el.style.setProperty('--local-rot', '0deg');
-
+            
             el.querySelector('.card-inner').classList.add('is-flipped');
             el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent');
 
@@ -1402,11 +1242,11 @@ const UI = {
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
             el.style.left = `${cx + 45 - cWidthScale}px`; el.style.top = `${cy - deckOffsetY}px`; el.style.zIndex = 100 + i;
-
+            
             el.style.setProperty('--local-scale', '1');
             if (!el.dataset.rot) el.dataset.rot = (Math.random() * 20 - 10);
             el.style.setProperty('--local-rot', `${el.dataset.rot}deg`);
-
+            
             el.querySelector('.card-inner').classList.remove('is-flipped');
             el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent');
 
@@ -1424,7 +1264,7 @@ const UI = {
             let angle = (Math.PI / 2) + (relIndex * (2 * Math.PI / state.players.length));
 
             let px, py;
-            if (state.activeAbility.player === App.localId) { px = cx; py = cy + ry * 0.35; }
+            if (state.activeAbility.player === App.localId) { px = cx; py = cy + ry * 0.35; } 
             else { px = cx + Math.cos(angle) * (rx * 0.4); py = cy + Math.sin(angle) * (ry * 0.4); }
 
             el.style.left = `${px - cWidthScale}px`; el.style.top = `${py - 37}px`; el.style.zIndex = 1000;
@@ -1461,24 +1301,19 @@ const UI = {
                     <div class="endgame-player ${isWinner ? 'winner' : ''}">
                         <div class="endgame-header">
                             <span class="endgame-name">${p.name} ${isWinner ? '👑' : ''} ${state.bazungaCallerId === p.id ? '(Bazunga Caller)' : ''}</span>
-                            <span class="endgame-score">
-                                ${state.gameMode === 'joker' ? 
-                                    `Score: ${p.totalScore}` : 
-                                    `Total: ${p.totalScore} <span style="font-size:0.8rem; color:#94a3b8;">(+${p.scoreAdded})</span>`
-                                }
-                            </span>
+                            <span class="endgame-score">Total: ${p.totalScore} <span style="font-size:0.8rem; color:#94a3b8;">(+${p.scoreAdded})</span></span>
                         </div>
                         <div class="endgame-cards">${cardsHtml}</div>
                         <div class="endgame-math">${mathStr}</div>
                     </div>`;
                 });
                 document.getElementById('gameover-results').innerHTML = html;
-
+                
                 // Add Play Again button for host
                 let btnContainer = document.getElementById('gameover-buttons');
                 let oldBtn = document.getElementById('btn-play-again');
                 if (oldBtn) oldBtn.remove();
-
+                
                 if (App.isHost) {
                     let btnPlayAgain = document.createElement('button');
                     btnPlayAgain.id = 'btn-play-again';
@@ -1513,7 +1348,8 @@ const UI = {
                 else if (App.uiState.targetingMode === 'peek_self') statusText.innerText = "Select one of your cards to peek at (9 Magic).";
                 else if (App.uiState.targetingMode === 'peek_opp') statusText.innerText = "Select an opponent's card to peek at (10 Magic).";
                 else if (App.uiState.targetingMode === 'q_peek') statusText.innerText = "Queen Magic: Click ANY card to PEEK at it.";
-                else if (App.uiState.targetingMode === 'q_swap_2') statusText.innerText = "Queen Magic: Select SECOND card to swap, or same card to Pass.";
+                else if (App.uiState.targetingMode === 'q_swap_1') statusText.innerText = "Queen Magic: Select FIRST card to swap.";
+                else if (App.uiState.targetingMode === 'q_swap_2') statusText.innerText = "Queen Magic: Select SECOND card to swap.";
                 else if (App.uiState.targetingMode === 'peeking') statusText.innerText = "Memorize this card...";
                 else if (App.uiState.targetingMode === 'blind_swap_1') statusText.innerText = "Select the FIRST card to blind swap (Jack Magic).";
                 else if (App.uiState.targetingMode === 'blind_swap_2') statusText.innerText = "Select the SECOND card to blind swap.";
@@ -1554,7 +1390,7 @@ const UI = {
 
                 if (state.phase === 'play') {
                     let btnBaz = document.createElement('button'); btnBaz.innerText = "Call BAZUNGA"; btnBaz.className = "danger";
-                    btnBaz.onclick = () => UI.showBazungaConfirm();
+                    btnBaz.onclick = () => { if(confirm("Are you sure you want to call BAZUNGA? This triggers the final orbit!")) Net.sendAction({ type: 'CALL_BAZUNGA' }); };
                     actionBar.appendChild(btnBaz);
                 }
             }
@@ -1565,8 +1401,7 @@ const UI = {
 
                 if (ab.type.startsWith('holding')) {
                     let btnPlay = document.createElement('button');
-                    let isBlackKing = ab.card.value === 'K' && !ab.card.isRed;
-                    btnPlay.innerText = MAGIC_VALUES.includes(ab.card.value) && ab.type === 'holding' && !isBlackKing ? "Play Magic" : "Discard";
+                    btnPlay.innerText = MAGIC_VALUES.includes(ab.card.value) && ab.type === 'holding' ? "Play Magic" : "Discard";
                     btnPlay.className = "primary";
                     btnPlay.onclick = () => Net.sendAction({ type: 'PLAY_HOLDING', action: 'discard' });
                     actionBar.appendChild(btnPlay);
@@ -1595,23 +1430,17 @@ const UI = {
                     btnPass.onclick = () => {
                         App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear();
                         UI.render(state); // Force immediate local UI update to clear hues
-                        Net.sendAction({ type: 'RESOLVE_MAGIC', action: 'pass' });
+                        Net.sendAction({ type: 'RESOLVE_MAGIC' });
                     };
                     actionBar.appendChild(btnPass);
                 } else if (App.uiState.targetingMode && App.uiState.targetingMode !== 'peeking') {
-                    if (state.activeAbility && state.activeAbility.type.startsWith('magic_')) {
-                        let btnPass = document.createElement('button'); btnPass.innerText = "Pass Magic"; btnPass.className = "secondary";
-                        btnPass.onclick = () => {
-                            App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear();
-                            UI.render(state);
-                            Net.sendAction({ type: 'RESOLVE_MAGIC', action: 'pass' });
-                        };
-                        actionBar.appendChild(btnPass);
-                    } else {
-                        let btnCancel = document.createElement('button'); btnCancel.innerText = "Cancel Action"; btnCancel.className = "danger";
-                        btnCancel.onclick = () => { App.uiState.targetingMode = null; App.uiState.selectedCardId = null; UI.render(state); };
-                        actionBar.appendChild(btnCancel);
-                    }
+                    let btnCancel = document.createElement('button'); btnCancel.innerText = "Cancel Action"; btnCancel.className = "danger";
+                    btnCancel.onclick = () => {
+                        App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear();
+                        UI.render(state); // Force immediate local UI update to clear hues
+                        if (ab.step === 1) Net.sendAction({ type: 'RESOLVE_MAGIC' });
+                    };
+                    actionBar.appendChild(btnCancel);
                 }
             }
         }
@@ -1642,7 +1471,7 @@ const UI = {
 
         if (App.uiState.targetingMode) {
             let mode = App.uiState.targetingMode;
-            if (mode === 'peeking') return;
+            if (mode === 'peeking') return; 
 
             if (mode === 'swap' && clickedCard.ownerId === App.localId) {
                 App.uiState.targetingMode = null; UI.render(state);
@@ -1664,18 +1493,18 @@ const UI = {
             }
             else if (mode === 'q_peek' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 App.uiState.peekedCards.add(cardId);
+                App.uiState.targetingMode = 'q_swap_1';
+                UI.render(state);
+                UI.showToast("Card peeked. Select FIRST card to swap, or click Pass.", "info");
+            }
+            else if (mode === 'q_swap_1' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 App.uiState.selectedCardId = cardId;
                 App.uiState.targetingMode = 'q_swap_2';
                 UI.render(state);
-                UI.showToast("Card peeked. Select a second card to swap, or click it again to cancel.", "info");
+                UI.showToast("Select SECOND card to swap.", "info");
             }
             else if (mode === 'q_swap_2' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
-                if (cardId === App.uiState.selectedCardId) {
-                    // Pressed the same card again to cancel swap
-                    App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear(); UI.render(state);
-                    Net.sendAction({ type: 'RESOLVE_MAGIC', targetId: cardId });
-                    return;
-                }
+                if (cardId === App.uiState.selectedCardId) return; // Can't swap with itself
                 let target1 = App.uiState.selectedCardId;
                 App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear(); UI.render(state);
                 Net.sendAction({ type: 'RESOLVE_MAGIC', swapTarget1: target1, swapTarget2: cardId });

@@ -145,7 +145,7 @@
     .player-badge.active-turn .turn-text { opacity: 1; transform: translateY(-4px); transition: transform 0.2s ease-out, opacity 0.2s; }
     .player-badge.bazunga { background: var(--danger); border-color: #fff; animation: pulse-danger 1s infinite; }
 
-    #action-bar { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 300; pointer-events: auto; backdrop-filter: blur(10px); transition: right 0.3s, opacity 0.3s; width: 110px; }
+    #action-bar { position: absolute; right: 12px; bottom: 12px; background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 600; pointer-events: auto; backdrop-filter: blur(10px); transition: right 0.3s, opacity 0.3s; width: 110px; }
     #action-bar.hidden { right: -150px; opacity: 0; pointer-events: none; display: flex !important; }
     #action-bar button { margin: 0; padding: 10px 8px; font-size: 0.85rem; border-radius: 8px; width: 100%; text-align: center; line-height: 1.2; }
     #action-bar button.primary { background: var(--success); color: white; font-size: 0.95rem; padding: 12px 8px; }
@@ -176,7 +176,7 @@
     .vfx-slap.miss { color: var(--danger); }
     @keyframes slapPop { 0% { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 0; } }
 
-    #chat-fab { position: absolute; top: 10px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
+    #chat-fab { position: fixed; bottom: 10px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
     #chat-fab:hover { background: rgba(255,255,255,0.2); }
     #btn-toggle-bubbles { position: absolute; top: 65px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
     #btn-toggle-clutter { position: absolute; top: 115px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
@@ -302,7 +302,7 @@
 
         <button id="chat-fab">💬</button>
         <button id="btn-toggle-bubbles" title="Toggle Bubbles">👁️</button>
-        <button id="btn-toggle-clutter" title="Reduced Clutter Mode">🧹</button>
+        <button id="btn-toggle-clutter" title="Reduced Clutter Mode">🧽</button>
         
         <div id="chat-drawer">
             <div class="chat-header">
@@ -377,6 +377,11 @@ Engine.memorizeForBot = (botId, card) => {
     }
 };
 
+Engine.recordBotPeek = function({playerId, cardId, ability}) {
+    Engine.state.botPeekLog.push({playerId, cardId, ability, time: Utils.timestamp()});
+    console.log(`Bot ${playerId} peeked card ${cardId} via ${ability}`);
+};
+
 Engine.initDeck = () => {
     let deck = []; let idCounter = 0;
     for (let suit of SUITS) {
@@ -416,7 +421,7 @@ Engine.startGame = () => {
     Engine.state.phase = 'peek';
     Engine.state.peekPhaseCompleted = false;
     Engine.state.turnIndex = Math.floor(Math.random() * Engine.state.players.length);
-    Engine.state.gameMode = document.getElementById('game-mode') ? document.getElementById('game-mode').value : 'rhino';
+    Engine.state.gameMode = document.getElementById('game-mode') ? document.getElementById('game-mode').value : 'standard';
     Engine.state.bazungaCallerId = null;
     Engine.state.orbitCount = 0;
     Engine.state.activeAbility = null;
@@ -743,11 +748,13 @@ Engine.processAction = (action, peerId) => {
 
             if (mType === 'magic_9') {
                 Engine.sysLog(`${player.name} used a 9 to secretly peek at their own card.`, "info");
+                Engine.recordBotPeek({playerId: player.id, cardId: action.targetId, ability: 'magic_9'});
                 if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.memorizeForBot(player.id, c); }
                 Engine.nextTurn();
             } else if (mType === 'magic_10') {
                 let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
                 Engine.sysLog(`${player.name} used a 10 to secretly peek at one of ${targetOwner ? targetOwner.name + "'s" : "an opponent's"} cards.`, "info");
+                Engine.recordBotPeek({playerId: player.id, cardId: action.targetId, ability: 'magic_10'});
                 if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.memorizeForBot(player.id, c); }
                 Engine.nextTurn();
             } else if (mType === 'magic_Q') {
@@ -1009,6 +1016,29 @@ const UI = {
         document.getElementById('btn-zoom-out').onclick = () => {
             App.uiState.zoomLevel = Math.max(App.uiState.zoomLevel - 0.1, 0.4);
             document.getElementById('zoom-wrapper').style.setProperty('--zoom', App.uiState.zoomLevel);
+        };
+
+        // Modal for game mode info
+        const modeInfoModal = document.createElement('div');
+        modeInfoModal.id = 'mode-info-modal';
+        modeInfoModal.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:700;';
+        modeInfoModal.innerHTML = `<div style='background:#222;padding:20px;border-radius:8px;max-width:400px;text-align:center;color:#eee;'>
+            <h3 id='modal-title'>Game Mode</h3>
+            <p id='modal-desc'>Description here.</p>
+            <button id='modal-close' style='margin-top:10px;padding:5px 10px;'>Close</button>
+        </div>`;
+        document.body.appendChild(modeInfoModal);
+        document.getElementById('modal-close').onclick = () => modeInfoModal.style.display = 'none';
+        document.getElementById('btn-mode-info').onclick = () => {
+            const mode = document.getElementById('game-mode').value;
+            const titles = {standard: 'Standard', joker: 'Joker'};
+            const descs = {
+                standard: 'Standard mode: normal gameplay with all abilities.',
+                joker: 'Joker mode: special rules, no discard draws, extra abilities.'
+            };
+            document.getElementById('modal-title').innerText = titles[mode] + ' Mode';
+            document.getElementById('modal-desc').innerText = descs[mode];
+            modeInfoModal.style.display = 'flex';
         };
 
         // Use pointerdown for instant, reliable mobile taps

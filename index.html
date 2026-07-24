@@ -73,10 +73,12 @@
         width: var(--card-w); height: var(--card-h); position: absolute;
         transition: left 0.8s cubic-bezier(0.22, 1, 0.36, 1), top 0.8s cubic-bezier(0.22, 1, 0.36, 1), scale 0.2s, rotate 0.2s, translate 0.2s;
         pointer-events: auto; cursor: pointer; touch-action: manipulation; border-radius: 6px; transform-origin: center center; box-shadow: 2px 4px 10px rgba(0,0,0,0.4);
+        -webkit-touch-callout: none; -webkit-user-drag: none;
         scale: var(--local-scale, 1);
         rotate: var(--local-rot, 0deg);
         translate: 0 0;
     }
+    .card * { -webkit-touch-callout: none; -webkit-user-drag: none; }
     .card.no-anim { transition: none !important; }
     .card.no-anim .card-inner { transition: none !important; }
 
@@ -259,14 +261,6 @@
         background: rgba(56, 189, 248, 0.12);
         box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35);
     }
-    .card.tap-confirmed .card-inner {
-        animation: tap-confirm 180ms ease-out;
-    }
-    @keyframes tap-confirm {
-        0% { filter: brightness(1); }
-        45% { filter: brightness(1.55); box-shadow: 0 0 0 5px rgba(251, 191, 36, 0.55), 0 0 30px rgba(251, 191, 36, 0.8); }
-        100% { filter: brightness(1); }
-    }
     #status-banner {
         background: linear-gradient(180deg, rgba(7,17,31,0.97), rgba(7,17,31,0.88));
         border-bottom-color: rgba(255,255,255,0.08);
@@ -278,8 +272,8 @@
 
     @media (max-width: 768px) {
         :root {
-            --card-w: 50px;
-            --card-h: 72px;
+            --card-w: 46px;
+            --card-h: 66px;
         }
         body { overscroll-behavior: none; position: fixed; inset: 0; }
         #app { overflow: hidden; padding: 0; }
@@ -344,13 +338,13 @@
             top: auto;
             bottom: calc(8px + env(safe-area-inset-bottom));
             width: auto;
-            min-height: 68px;
-            padding: 8px;
-            border-radius: 19px;
+            min-height: 56px;
+            padding: 6px;
+            border-radius: 16px;
             transform: translateY(0);
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
-            gap: 7px;
+            grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+            gap: 5px;
             box-shadow: 0 16px 50px rgba(0,0,0,0.72), 0 0 0 1px rgba(255,255,255,0.06);
         }
         #action-bar.hidden {
@@ -360,11 +354,11 @@
         }
         #action-bar button,
         #action-bar button.primary {
-            min-height: 48px;
-            padding: 9px 10px;
+            min-height: 40px;
+            padding: 6px 8px;
             margin: 0;
-            border-radius: 12px;
-            font-size: 0.78rem;
+            border-radius: 10px;
+            font-size: 0.72rem;
             line-height: 1.15;
             box-shadow: none;
         }
@@ -385,6 +379,7 @@
             background: rgba(9,20,36,0.92);
         }
         .player-badge .icon { font-size: 1.08rem; line-height: 38px; }
+        .player-badge .turn-text { display: none; }
         .player-badge.expanded {
             max-width: 132px;
             padding: 5px 9px;
@@ -396,18 +391,24 @@
         #zoom-controls { display: none !important; }
         #btn-toggle-bubbles, #btn-toggle-clutter {
             top: calc(64px + env(safe-area-inset-top));
-            width: 36px;
-            height: 36px;
-            font-size: 0.95rem;
+            width: 32px;
+            height: 32px;
+            min-height: 32px !important;
+            margin: 0;
+            padding: 0;
+            font-size: 0.82rem;
             background: rgba(9,20,36,0.88);
         }
         #btn-toggle-bubbles { left: 9px; }
-        #btn-toggle-clutter { left: 51px; }
+        #btn-toggle-clutter { left: 47px; }
         #chat-fab {
             right: 10px;
             bottom: calc(86px + env(safe-area-inset-bottom));
             width: 44px;
             height: 44px;
+            min-height: 44px !important;
+            margin: 0;
+            padding: 0;
             font-size: 1rem;
             background: rgba(9,20,36,0.94);
         }
@@ -460,7 +461,7 @@
     }
 
     @media (max-width: 390px) {
-        :root { --card-w: 46px; --card-h: 66px; }
+        :root { --card-w: 43px; --card-h: 61px; }
         #action-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         #status-text { font-size: 0.72rem; }
     }
@@ -644,7 +645,7 @@ const BOT_NAMES = ["BeepBoop", "CardShark", "DeepBlue", "AlphaGo", "Blackbeard"]
 // --- GLOBAL APP STATE ---
 const App = {
     isHost: false, localId: null, localName: '', sessionToken: null, peer: null, connections: {}, hostConn: null, gameState: null, animEnabled: true,
-    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null },
+    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null, cardPress: null },
     botInterval: null
 };
 
@@ -1400,9 +1401,16 @@ const UI = {
             document.getElementById('modal-overlay').classList.add('hidden');
         };
 
-        // Pointerup avoids accidental actions during a touch while remaining delay-free.
-        document.getElementById('card-layer').addEventListener('pointerup', UI.handleCardClick);
-        document.getElementById('card-layer').addEventListener('keydown', UI.handleCardKeyDown);
+        // Pointerup keeps taps reliable while the press tracker rejects long holds.
+        const cardLayer = document.getElementById('card-layer');
+        cardLayer.addEventListener('pointerdown', UI.handleCardPointerDown);
+        cardLayer.addEventListener('pointerup', UI.handleCardClick);
+        cardLayer.addEventListener('pointercancel', UI.cancelCardPress);
+        cardLayer.addEventListener('pointerleave', UI.cancelCardPress);
+        cardLayer.addEventListener('keydown', UI.handleCardKeyDown);
+        ['contextmenu', 'dragstart', 'selectstart'].forEach(type => {
+            cardLayer.addEventListener(type, event => event.preventDefault());
+        });
 
         let resizeTimeout;
         window.addEventListener('resize', () => {
@@ -1477,6 +1485,19 @@ const UI = {
         if (index < gridMap.length) return gridMap[index];
         let extra = index - gridMap.length;
         return { c: 5 + Math.floor(extra/2), r: extra % 2 === 0 ? 1 : 0 };
+    },
+
+    canLocallyRevealCard: (card, state) => {
+        if (!card || !App.uiState.peekedCards.has(card.id)) return false;
+        if (card.loc !== 'hand' && card.loc !== 'penalty') return false;
+        if (state.phase === 'peek') return card.ownerId === App.localId;
+
+        const ability = state.activeAbility;
+        if (!ability || ability.player !== App.localId || !ability.type.startsWith('magic_')) return false;
+        if (ability.type === 'magic_9') return card.ownerId === App.localId;
+        if (ability.type === 'magic_10') return card.ownerId !== App.localId;
+        if (ability.type === 'magic_Q') return true;
+        return false;
     },
 
     getStateToken: (state) => {
@@ -1698,15 +1719,18 @@ const UI = {
             `;
 
             let allCards = [...p.hand, ...p.penaltyCards];
-            let baseHandW = isMobile ? (window.innerWidth <= 390 ? 46 : 50) : 56;
-            let baseHandH = isMobile ? (window.innerWidth <= 390 ? 66 : 72) : 78;
+            let baseHandW = isMobile ? (window.innerWidth <= 390 ? 43 : 46) : 56;
+            let baseHandH = isMobile ? (window.innerWidth <= 390 ? 61 : 66) : 78;
 
             let scale = 1;
             if (allCards.length > 12) scale = 0.65;
             else if (allCards.length > 8) scale = 0.8;
 
-            let handW = baseHandW * scale;
-            let handH = baseHandH * scale;
+            const cardGap = isMobile ? Math.max(3, 4 * scale) : 0;
+            const scaledCardW = baseHandW * scale;
+            const scaledCardH = baseHandH * scale;
+            let handW = scaledCardW + cardGap;
+            let handH = scaledCardH + cardGap;
 
             let minC = 0, maxC = 1, minR = 0, maxR = 1;
             if (App.uiState.layoutMode === 'line') {
@@ -1725,14 +1749,15 @@ const UI = {
 
             if (isMobile) {
                 const availableWidth = window.innerWidth - 28;
-                handW = Math.min(handW, (availableWidth - baseHandW * scale) / columnSpan);
-                handW = Math.max(baseHandW * 0.62, handW);
+                handW = Math.min(handW, (availableWidth - scaledCardW) / columnSpan);
+                handW = Math.max(scaledCardW * 0.72, handW);
 
-                const groupWidth = columnSpan * handW + baseHandW * scale;
-                const groupHeight = rowSpan * handH + baseHandH * scale;
+                const groupWidth = columnSpan * handW + scaledCardW;
+                const groupHeight = rowSpan * handH + scaledCardH;
                 const sidePadding = 10;
-                const topLimit = 64 + groupHeight / 2;
-                const bottomLimit = viewportHeight - 108 - groupHeight / 2;
+                // Keep every layout below the mobile emoji controls and above actions.
+                const topLimit = 108 + groupHeight / 2;
+                const bottomLimit = viewportHeight - 126 - groupHeight / 2;
                 px = Math.max(sidePadding + groupWidth / 2, Math.min(window.innerWidth - sidePadding - groupWidth / 2, px));
                 py = Math.max(topLimit, Math.min(bottomLimit, py));
 
@@ -1740,8 +1765,17 @@ const UI = {
                     badgePx = px;
                     badgePy = Math.min(viewportHeight - 102, py + groupHeight / 2 + 24);
                 } else {
-                    badgePx = Math.max(22, Math.min(window.innerWidth - 22, px + Math.cos(angle) * (groupWidth / 2 + 24)));
-                    badgePy = Math.max(78, Math.min(viewportHeight - 112, py + Math.sin(angle) * (groupHeight / 2 + 22)));
+                    const radialBadgeX = px + Math.cos(angle) * (groupWidth / 2 + 24);
+                    const radialBadgeY = py + Math.sin(angle) * (groupHeight / 2 + 22);
+                    if (radialBadgeX < 22 || radialBadgeX > window.innerWidth - 22) {
+                        // Side layouts have no room outside the table; dock their
+                        // emoji above the group instead of clamping it onto a card.
+                        badgePx = px;
+                        badgePy = Math.max(78, py - groupHeight / 2 - 26);
+                    } else {
+                        badgePx = radialBadgeX;
+                        badgePy = Math.max(78, Math.min(viewportHeight - 112, radialBadgeY));
+                    }
                 }
                 badge.style.left = `${badgePx}px`;
                 badge.style.top = `${badgePy}px`;
@@ -1764,7 +1798,7 @@ const UI = {
 
                 let isFaceUp = false;
                 if (state.phase === 'game_over') isFaceUp = true;
-                else if (App.uiState.peekedCards.has(c.id)) isFaceUp = true;
+                else if (UI.canLocallyRevealCard(c, state)) isFaceUp = true;
                 else if (state.lastSlap && state.lastSlap.id === c.id && !state.lastSlap.success && (Utils.timestamp() - state.lastSlap.time < 2500)) isFaceUp = true;
 
                 let inner = el.querySelector('.card-inner');
@@ -2056,6 +2090,26 @@ const UI = {
         }
     },
 
+    handleCardPointerDown: (e) => {
+        if (!e.isPrimary || (e.button !== undefined && e.button !== 0)) return;
+        const cardEl = e.target.closest('.card');
+        if (!cardEl) return;
+        App.uiState.cardPress = {
+            cardId: cardEl.id,
+            pointerId: e.pointerId,
+            startedAt: Utils.timestamp(),
+            x: e.clientX,
+            y: e.clientY
+        };
+        if (cardEl.setPointerCapture) {
+            try { cardEl.setPointerCapture(e.pointerId); } catch (_) {}
+        }
+    },
+
+    cancelCardPress: () => {
+        App.uiState.cardPress = null;
+    },
+
     handleCardKeyDown: (e) => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
         e.preventDefault();
@@ -2071,6 +2125,14 @@ const UI = {
         if (!state) return;
 
         let now = Utils.timestamp();
+        if (e.type === 'pointerup') {
+            const press = App.uiState.cardPress;
+            App.uiState.cardPress = null;
+            if (!press || press.pointerId !== e.pointerId || press.cardId !== cardId) return;
+            const heldMs = now - press.startedAt;
+            const movedPx = Math.hypot(e.clientX - press.x, e.clientY - press.y);
+            if (heldMs > 500 || movedPx > 18) return;
+        }
         App.lastClickedCardId = cardId;
         App.lastClickTime = now;
 
@@ -2078,12 +2140,6 @@ const UI = {
         // Looking up against Engine.state made every remote/mobile card tap silently fail.
         let clickedCard = Engine.getCardById(cardId, state);
         if (!clickedCard) return;
-
-        cardEl.classList.remove('tap-confirmed');
-        void cardEl.offsetWidth;
-        cardEl.classList.add('tap-confirmed');
-        setTimeout(() => cardEl.classList.remove('tap-confirmed'), 220);
-        if (navigator.vibrate) navigator.vibrate(8);
 
         let isMyTurn = state.players[state.turnIndex]?.id === App.localId;
         let isHolding = state.activeAbility && state.activeAbility.player === App.localId && state.activeAbility.type.startsWith('holding');

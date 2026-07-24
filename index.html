@@ -605,12 +605,12 @@
             <button id="btn-return-lobby" class="danger">Leave Game</button>
         </div>
     </div>
-    <div id="modal-bazunga-confirm" class="modal hidden">
-        <h2 style="font-size: 2rem; margin-bottom: 10px; color: var(--danger);">⚠️ CALL BAZUNGA?</h2>
-        <p style="margin-bottom: 20px; font-size: 1.1rem; color: #e2e8f0;">This triggers the final orbit! All players get one last turn. Only call if you have the lowest score!</p>
+    <div id="modal-bazunga-confirm" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="bazunga-confirm-title" aria-describedby="bazunga-confirm-description">
+        <h2 id="bazunga-confirm-title" style="font-size: 2rem; margin-bottom: 10px; color: var(--danger);">⚠️ CALL BAZUNGA?</h2>
+        <p id="bazunga-confirm-description" style="margin-bottom: 20px; font-size: 1.1rem; color: #e2e8f0;">This starts the final orbit. Every player gets one last turn, and a failed call can cost you the round. Are you sure?</p>
         <div class="modal-buttons">
-            <button id="btn-bazunga-confirm" class="danger" style="background: var(--danger);">YES, CALL BAZUNGA!</button>
-            <button id="btn-bazunga-cancel" class="secondary">Cancel</button>
+            <button id="btn-bazunga-confirm" class="danger" style="background: var(--danger);">Yes, Call BAZUNGA</button>
+            <button id="btn-bazunga-cancel" class="secondary">Cancel — Keep Playing</button>
         </div>
     </div>
 </div>
@@ -645,7 +645,7 @@ const BOT_NAMES = ["BeepBoop", "CardShark", "DeepBlue", "AlphaGo", "Blackbeard"]
 // --- GLOBAL APP STATE ---
 const App = {
     isHost: false, localId: null, localName: '', sessionToken: null, peer: null, connections: {}, hostConn: null, gameState: null, animEnabled: true,
-    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null, cardPress: null },
+    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null, cardPress: null, bazungaConfirmOpen: false },
     botInterval: null
 };
 
@@ -1390,16 +1390,21 @@ const UI = {
         };
 
         // Bazunga confirmation modal
-        const bazungaModal = document.getElementById('modal-bazunga-confirm');
         document.getElementById('btn-bazunga-confirm').onclick = () => {
-            bazungaModal.style.display = 'none';
-            document.getElementById('modal-overlay').classList.add('hidden');
+            if (!App.uiState.bazungaConfirmOpen || App.uiState.pendingAction) return;
+            UI.hideBazungaConfirm();
             UI.submitAction({ type: 'CALL_BAZUNGA' });
         };
-        document.getElementById('btn-bazunga-cancel').onclick = () => {
-            bazungaModal.style.display = 'none';
-            document.getElementById('modal-overlay').classList.add('hidden');
-        };
+        document.getElementById('btn-bazunga-cancel').onclick = UI.hideBazungaConfirm;
+        document.getElementById('modal-overlay').addEventListener('click', () => {
+            if (App.uiState.bazungaConfirmOpen) UI.hideBazungaConfirm();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && App.uiState.bazungaConfirmOpen) {
+                event.preventDefault();
+                UI.hideBazungaConfirm();
+            }
+        });
 
         // Pointerup keeps taps reliable while the press tracker rejects long holds.
         const cardLayer = document.getElementById('card-layer');
@@ -1446,8 +1451,31 @@ const UI = {
     },
 
     showBazungaConfirm: () => {
-        document.getElementById('modal-bazunga-confirm').style.display = 'flex';
+        const state = App.gameState;
+        const isMyTurn = state?.players?.[state.turnIndex]?.id === App.localId;
+        if (!state || state.phase !== 'play' || !isMyTurn || state.activeAbility || App.uiState.pendingAction) {
+            UI.showToast("BAZUNGA can only be called at the start of your turn.", "warning");
+            return;
+        }
+
+        App.uiState.bazungaConfirmOpen = true;
+        const modal = document.getElementById('modal-bazunga-confirm');
+        modal.style.removeProperty('display');
+        modal.classList.remove('hidden');
         document.getElementById('modal-overlay').classList.remove('hidden');
+        document.getElementById('btn-bazunga-confirm').disabled = false;
+        setTimeout(() => document.getElementById('btn-bazunga-cancel').focus(), 0);
+    },
+
+    hideBazungaConfirm: () => {
+        App.uiState.bazungaConfirmOpen = false;
+        const modal = document.getElementById('modal-bazunga-confirm');
+        modal.classList.add('hidden');
+        modal.style.removeProperty('display');
+        document.getElementById('btn-bazunga-confirm').disabled = false;
+        if (document.getElementById('modal-gameover').classList.contains('hidden')) {
+            document.getElementById('modal-overlay').classList.add('hidden');
+        }
     },
 
     createCardDOM: (card) => {
@@ -1587,11 +1615,16 @@ const UI = {
             App.uiState.selectedCardId = null;
             App.uiState.peekedCards.clear();
         }
+        if (App.uiState.bazungaConfirmOpen && (state.phase !== 'play' || !isMyTurn || state.activeAbility || App.uiState.pendingAction)) {
+            UI.hideBazungaConfirm();
+        }
 
         if (state.phase !== 'game_over') {
             App.uiState.showingResults = false;
             document.getElementById('modal-gameover').classList.add('hidden');
-            document.getElementById('modal-overlay').classList.add('hidden');
+            if (!App.uiState.bazungaConfirmOpen) {
+                document.getElementById('modal-overlay').classList.add('hidden');
+            }
         }
 
         document.getElementById('lobby').classList.add('hidden');

@@ -119,6 +119,8 @@ const Bot = {
     frustration: {}, grudges: {}, eventCache: {}, deckMemory: {},
     lastMagicProcessed: {}, // Track last magic processing time per bot
     lastResolvedMagicType: {}, // Track last resolved magic type per bot to prevent duplicate processing
+    lastGlobalChatTime: 0, // Global cooldown to prevent bot chat spam
+    lastChatSpeaker: null, // Track who last spoke
     
     start: () => {
         if (App.botInterval) clearInterval(App.botInterval);
@@ -158,9 +160,19 @@ const Bot = {
         return words.join(" ");
     },
 
-    chat: (bot, trigger) => {
+chat: (bot, trigger) => {
         let now = Utils.timestamp();
         if (now - (Bot.lastChatTime[bot.id] || 0) < 5000) return;
+        
+        // Global chat cooldown - prevent multiple bots talking at once
+        if (now - Bot.lastGlobalChatTime < 3000) return;
+        
+        // Don't let bots spam if another bot just spoke (unless human spoke in between)
+        if (Bot.lastChatSpeaker && Bot.lastChatSpeaker !== bot.id && Bot.lastChatSpeaker.startsWith('bot_')) {
+            // Wait longer after another bot spoke
+            if (now - Bot.lastGlobalChatTime < 5000) return;
+        }
+        
         let profile = BotConfig.profiles[bot.botDifficulty];
         
         if (Math.random() > profile.extroversion) return;
@@ -175,16 +187,18 @@ const Bot = {
         if (bot.botDifficulty === 6 && trigger === 'magic' && Math.random() > 0.5) {
             actualTrigger = 'counting';
         }
-
+ 
         let lines = BotConfig.chatBank[profile.type][actualTrigger];
         if (lines) {
             let msg = Bot.getUniqueResponse(bot.id, actualTrigger, lines);
             Engine.chatLog(bot.name, msg, profile.type === 'pirate');
             Bot.lastChatTime[bot.id] = Utils.timestamp();
+            Bot.lastGlobalChatTime = Utils.timestamp();
+            Bot.lastChatSpeaker = bot.id;
         }
     },
 
-    listenToChat: (senderName, message, isBotSender) => {
+listenToChat: (senderName, message, isBotSender) => {
         Bot.chatHistory.push({ sender: senderName, isBot: isBotSender, text: message });
         if (Bot.chatHistory.length > 10) Bot.chatHistory.shift();
         
@@ -193,6 +207,12 @@ const Bot = {
         
         let upperMsg = message.toUpperCase();
         let bots = Engine.state.players.filter(p => p.isBot);
+        
+        // If human spoke, reset global bot chat cooldown so they can respond
+        if (!isBotSender) {
+            Bot.lastGlobalChatTime = 0;
+            Bot.lastChatSpeaker = 'human';
+        }
         
         bots.forEach(bot => {
             if (bot.name === senderName) return;
@@ -204,6 +224,10 @@ const Bot = {
             }
             
             if (Math.random() > profile.extroversion * 0.8) return;
+            
+            // Global cooldown check - don't let bots spam
+            let now = Utils.timestamp();
+            if (now - Bot.lastGlobalChatTime < 4000) return;
             
             // ELIZA Pattern matching & Reflection Engine execution
             for (let pattern of BotConfig.elizaPatterns) {
@@ -217,11 +241,13 @@ const Bot = {
                              replyTemplate = `Oh, "${reflected}"? ` + replyTemplate;
                          }
                     }
-
+ 
                     setTimeout(() => {
                         Engine.chatLog(bot.name, `@${senderName} ${replyTemplate}`, profile.type === 'pirate');
                         Bot.lastChatTime[bot.id] = Utils.timestamp();
-                    }, Math.random() * 2000 + 1000);
+                        Bot.lastGlobalChatTime = Utils.timestamp();
+                        Bot.lastChatSpeaker = bot.id;
+                    }, Math.random() * 3000 + 2000);
                     return;
                 }
             }
@@ -525,8 +551,9 @@ const Bot = {
                     // Magic 9: peek at OWN card (public knowledge)
                     let unknownOwn = activePlayer.hand.find(c => !mem[c.id]);
                     if (!unknownOwn) unknownOwn = activePlayer.penaltyCards.find(c => !mem[c.id]);
-                    if (unknownOwn) { payload.targetId = unknownOwn.id; }
-                    else { payload.targetId = activePlayer.hand[0]?.id || activePlayer.penaltyCards[0]?.id; }
+                    let targetCard = unknownOwn || activePlayer.hand[0] || activePlayer.penaltyCards[0];
+                    if (!targetCard) return; // No valid card to peek at
+                    payload.targetId = targetCard.id;
                 } else if (mType === 'magic_10') {
                     // Magic 10: peek at OPPONENT's card (secret)
                     let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
@@ -556,15 +583,16 @@ const Bot = {
                             }
                         }
                     }
-                    if (myWorst && oppBest && (myWorstVal > oppBestVal || targetOppId)) { 
+                    // Validate we have valid targets
+                    if (!myWorst || !oppBest) return;
+                    if (myWorstVal > oppBestVal || targetOppId) { 
                         payload.swapTarget1 = myWorst.id; payload.swapTarget2 = oppBest.id; 
                     } else {
                         let opps = Engine.state.players.filter(p => p.id !== activePlayer.id);
                         if (targetOppId) opps = opps.filter(p => p.id === targetOppId);
-                        if (opps.length > 0 && activePlayer.hand.length > 0) {
-                            payload.swapTarget1 = activePlayer.hand[0].id;
-                            payload.swapTarget2 = opps[0].hand[0].id;
-                        }
+                        if (opps.length === 0 || activePlayer.hand.length === 0) return;
+                        payload.swapTarget1 = activePlayer.hand[0].id;
+                        payload.swapTarget2 = opps[0].hand[0].id;
                     }
                 }
                 Engine.processAction(payload, activePlayer.id);

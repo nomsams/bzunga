@@ -767,6 +767,7 @@ Engine.processAction = (action, peerId) => {
 
             if (mType === 'magic_9') {
                 Engine.sysLog(`${player.name} used a 9 to peek at their own card (public knowledge).`, "info");
+                if (!action.targetId) { Engine.nextTurn(); return; } // Safety check
                 if (!Engine.state.publicPeekedCards.includes(action.targetId)) {
                     Engine.state.publicPeekedCards.push(action.targetId);
                 }
@@ -774,6 +775,7 @@ Engine.processAction = (action, peerId) => {
                 if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.memorizeForBot(player.id, c); }
                 Engine.nextTurn();
             } else if (mType === 'magic_10') {
+                if (!action.targetId || !action.targetPlayerId) { Engine.nextTurn(); return; } // Safety check
                 let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
                 Engine.sysLog(`${player.name} used a 10 to secretly peek at one of ${targetOwner ? targetOwner.name + "'s" : "an opponent's"} cards.`, "info");
                 Engine.recordBotPeek({playerId: player.id, cardId: action.targetId, ability: 'magic_10'});

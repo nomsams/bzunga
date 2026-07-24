@@ -164,6 +164,9 @@
      
     #chat-bubble-container { position: absolute; bottom: 70px; left: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 550; pointer-events: none; align-items: flex-start; }
     #chat-bubble-container.hidden { display: none !important; }
+    #bot-typing-indicator { position: fixed; top: 72px; left: 50%; transform: translateX(-50%); z-index: 575; padding: 7px 13px; border: 1px solid rgba(129,140,248,0.34); border-radius: 999px; color: #c7d2fe; background: rgba(9,20,36,0.92); box-shadow: 0 8px 22px rgba(0,0,0,0.35); backdrop-filter: blur(10px); font-size: 0.76rem; font-weight: 800; letter-spacing: 0.02em; pointer-events: none; animation: typingPulse 1.25s ease-in-out infinite; }
+    #bot-typing-indicator.hidden { display: none !important; }
+    @keyframes typingPulse { 0%, 100% { opacity: 0.68; } 50% { opacity: 1; } }
     .chat-bubble { background: rgba(255,255,255,0.95); color: #000; padding: 10px 15px; border-radius: 16px; border-bottom-left-radius: 4px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s 3.7s forwards; max-width: 250px; word-wrap: break-word; pointer-events: auto; }
     .chat-bubble.pirate { background: #fee2e2; border: 1px solid #ef4444; }
     .chat-bubble strong { color: var(--accent-hover); }
@@ -185,6 +188,7 @@
     .clutter-hidden #status-banner,
     .clutter-hidden #chat-drawer,
     .clutter-hidden #chat-bubble-container,
+    .clutter-hidden #bot-typing-indicator,
     .clutter-hidden #toast-container { display: none !important; }
     .clutter-hidden .player-badge { display: flex !important; }
     #btn-toggle-bubbles.toggled-off { opacity: 0.5; }
@@ -420,6 +424,15 @@
             right: 58px;
             bottom: calc(90px + env(safe-area-inset-bottom));
         }
+        #bot-typing-indicator {
+            top: calc(66px + env(safe-area-inset-top));
+            max-width: calc(100vw - 118px);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.7rem;
+            padding: 6px 10px;
+        }
         .chat-bubble { max-width: min(80vw, 290px); font-size: 0.78rem; padding: 8px 11px; }
         #chat-drawer {
             width: min(90vw, 360px);
@@ -552,6 +565,7 @@
         </div>
         <div id="toast-container"></div>
         <div id="chat-bubble-container"></div>
+        <div id="bot-typing-indicator" class="hidden" aria-live="polite"></div>
 
         <!-- Zoom controls on RIGHT side -->
         <div id="zoom-controls" style="position: fixed; top: 80px; right: 20px; z-index: 550; display: flex; flex-direction: column; gap: 5px;">
@@ -636,7 +650,7 @@ const App = {
 
 // --- GAME ENGINE (HOST ONLY) ---
 const Engine = {
-    state: { phase: 'lobby', players: [], deck: [], discardPile: [], logs: [], activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, turnStartTime: 0, peekPhaseCompleted: false, publicPeekedCards: [], botPeekLog: [] },
+    state: { phase: 'lobby', players: [], deck: [], discardPile: [], logs: [], activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, turnStartTime: 0, peekPhaseCompleted: false, publicPeekedCards: [], botPeekLog: [], thinkingBots: [], typingBots: [] },
     botMemory: {}
 };
 
@@ -683,6 +697,18 @@ Engine.broadcast = () => {
     UI.render(Engine.state);
 };
 
+Engine.setBotActivity = (botId, activity, active) => {
+    if (!App.isHost || !['thinking', 'typing'].includes(activity)) return;
+    const key = activity === 'typing' ? 'typingBots' : 'thinkingBots';
+    if (!Array.isArray(Engine.state[key])) Engine.state[key] = [];
+    const hasBot = Engine.state[key].includes(botId);
+    if (active === hasBot) return;
+    Engine.state[key] = active
+        ? [...Engine.state[key], botId]
+        : Engine.state[key].filter(id => id !== botId);
+    Engine.broadcast();
+};
+
 Engine.sysLog = (msg, type = 'info') => {
     Engine.state.logs.push({ type: 'sys', msg, logType: type, time: Utils.timestamp() });
     if (Engine.state.logs.length > 60) Engine.state.logs.shift();
@@ -716,6 +742,8 @@ Engine.startGame = () => {
     Engine.state.turnStartTime = Utils.timestamp();
     Engine.state.publicPeekedCards = [];
     Engine.state.botPeekLog = [];
+    Engine.state.thinkingBots = [];
+    Engine.state.typingBots = [];
     Engine.botMemory = {};
 
     App.uiState.hasPeeked.clear();
@@ -804,6 +832,8 @@ Engine.nextTurn = () => {
 Engine.endGame = () => {
     Engine.state.phase = 'game_over';
     if (App.botInterval) { clearInterval(App.botInterval); App.botInterval = null; }
+    Engine.state.thinkingBots = [];
+    Engine.state.typingBots = [];
 
     let totalTableScore = 0;
     Engine.state.players.forEach(p => {
@@ -1492,6 +1522,17 @@ const UI = {
             App.uiState.pendingToken = null;
         }
 
+        const typingIndicator = document.getElementById('bot-typing-indicator');
+        const typingNames = (state.typingBots || [])
+            .map(id => state.players.find(player => player.id === id)?.name)
+            .filter(Boolean);
+        if (typingIndicator) {
+            typingIndicator.classList.toggle('hidden', typingNames.length === 0);
+            typingIndicator.textContent = typingNames.length > 1
+                ? `${typingNames.slice(0, 2).join(' & ')} are typing…`
+                : typingNames.length === 1 ? `${typingNames[0]} is typing…` : '';
+        }
+
         if (state.phase === 'lobby') {
             let list = document.getElementById('lobby-players'); list.innerHTML = '';
             state.players.forEach(p => {
@@ -1898,7 +1939,14 @@ const UI = {
 
         if (state.phase === 'peek') {
             if (me && !me.ready) statusText.innerText = "Tap ANY TWO cards to peek. Then click Ready.";
-            else statusText.innerText = "Waiting for others to finish peeking...";
+            else {
+                const memorizing = (state.thinkingBots || [])
+                    .map(id => state.players.find(player => player.id === id)?.name)
+                    .filter(Boolean);
+                statusText.innerText = memorizing.length
+                    ? `${memorizing.slice(0, 2).join(' & ')} ${memorizing.length > 1 ? 'are' : 'is'} memorizing cards…`
+                    : "Waiting for others to finish peeking...";
+            }
         } else if (state.phase === 'play' || state.phase === 'orbit') {
             if (isMyTurn) {
                 if (App.uiState.targetingMode === 'swap') statusText.innerText = "Select a card in your layout to swap out.";
@@ -1913,7 +1961,10 @@ const UI = {
                 else if (state.activeAbility) statusText.innerText = "Play or Swap your drawn card.";
                 else statusText.innerText = "Your Turn: Draw a card or Slap!";
             } else {
-                statusText.innerText = `Waiting for ${activePlayer ? activePlayer.name : '...'} to play.`;
+                const isThinking = activePlayer && (state.thinkingBots || []).includes(activePlayer.id);
+                statusText.innerText = isThinking
+                    ? `${activePlayer.name} is thinking…`
+                    : `Waiting for ${activePlayer ? activePlayer.name : '...'} to play.`;
             }
         }
 

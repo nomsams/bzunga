@@ -6,13 +6,15 @@
 
 const BotConfig = {
     profiles: {
-        1: { type: 'noob', capacity: 2, decayMs: 12000, reflexBase: 2500, extroversion: 0.9, counting: false },
-        2: { type: 'casual', capacity: 4, decayMs: 20000, reflexBase: 1500, extroversion: 0.6, counting: false },
-        3: { type: 'pro', capacity: 10, decayMs: 50000, reflexBase: 750, extroversion: 0.28, counting: false },
-        4: { type: 'expert', capacity: 30, decayMs: 180000, reflexBase: 260, extroversion: 0.38, counting: true },
-        5: { type: 'pirate', capacity: 10, decayMs: 50000, reflexBase: 550, extroversion: 1.0, counting: true },
+        // Timings are sampled once per decision. This keeps bots human-paced without
+        // letting the 250 ms engine tick repeatedly reroll their reaction time.
+        1: { type: 'noob', capacity: 2, decayMs: 12000, reflexBase: 1450, reflexJitter: 900, decisionMin: 2400, decisionMax: 5200, peekMin: 3400, peekMax: 6500, typingWpm: 30, distraction: 0.18, extroversion: 0.9, counting: false },
+        2: { type: 'casual', capacity: 4, decayMs: 20000, reflexBase: 980, reflexJitter: 650, decisionMin: 1800, decisionMax: 3900, peekMin: 2800, peekMax: 5200, typingWpm: 40, distraction: 0.12, extroversion: 0.6, counting: false },
+        3: { type: 'pro', capacity: 10, decayMs: 50000, reflexBase: 620, reflexJitter: 420, decisionMin: 1300, decisionMax: 2900, peekMin: 2300, peekMax: 4300, typingWpm: 54, distraction: 0.07, extroversion: 0.28, counting: false },
+        4: { type: 'expert', capacity: 30, decayMs: 180000, reflexBase: 460, reflexJitter: 330, decisionMin: 1450, decisionMax: 3200, peekMin: 2500, peekMax: 4400, typingWpm: 64, distraction: 0.04, extroversion: 0.38, counting: true },
+        5: { type: 'pirate', capacity: 10, decayMs: 50000, reflexBase: 780, reflexJitter: 550, decisionMin: 1700, decisionMax: 3700, peekMin: 2700, peekMax: 5000, typingWpm: 38, distraction: 0.13, extroversion: 1.0, counting: true },
         // The Apex Adversary: flawless public-information memory and boss-tier planning.
-        6: { type: 'baba', name: 'Baba Gupta', capacity: 52, decayMs: Infinity, reflexBase: 20, extroversion: 0.88, counting: true }
+        6: { type: 'baba', name: 'Baba Gupta', capacity: 52, decayMs: Infinity, reflexBase: 370, reflexJitter: 260, decisionMin: 900, decisionMax: 2200, peekMin: 1900, peekMax: 3500, typingWpm: 76, distraction: 0.015, extroversion: 0.88, counting: true }
     },
     
     // ELIZA-style syntactic reflections mapping for sentence reassembly
@@ -306,6 +308,54 @@ const BotConfig = {
     },
 
     directReplies: {
+        noob: {
+            greeting: ["Hey {target}! I am still finding the buttons.", "Hi! If I win, please assume it was intentional."],
+            accusation: ["I can barely remember my own cards, never mind cheat.", "If this is rigged, nobody told me the useful part."],
+            boast: ["Okay, save some confidence for the final score.", "Bold. I said that once, right before three penalties."],
+            insult: ["Rude. Accurate maybe, but rude.", "My feelings are hurt and my cards are somehow worse."],
+            bazunga: ["You said the scary word. Are you sure?", "BAZUNGA already? I was just getting oriented."],
+            respect: ["GG! That was chaotic in a fun way.", "Well played. I understood at least half of that."],
+            question: ["Honestly? I am figuring that out too.", "Good question. My current answer is: click carefully."],
+            praise: ["Thanks! I am putting that move on my résumé.", "You noticed! I definitely planned it."],
+            apology: ["We are good, {target}. The cards are the real enemy.", "No worries. I have made stranger moves."],
+            laugh: ["Okay, that one was pretty funny.", "Ha! Even my strategy is laughing."],
+            rematch: ["Absolutely. I am one tutorial away from greatness.", "Run it back. My accidental genius needs another chance."],
+            luck: ["Finally! Usually luck blocks my number.", "I will take lucky over terrible."],
+            followup: ["You are really committed to this topic, huh?", "Still on that? I respect the dedication."],
+            fallback: ["I hear you. I am also trying to remember two cards.", "One second, {target}; my brain is buffering."]
+        },
+        casual: {
+            greeting: ["Hey {target}. Good luck—within reason.", "Yo. Keep it friendly until the first stolen slap."],
+            accusation: ["Not cheating. You just made that card memorable.", "Blame the tell, not the player reading it."],
+            boast: ["Talk to me after the final orbit.", "A lead is nice. Keeping it is the interesting part."],
+            insult: ["Strong words from somebody sharing a table with chance.", "Save that energy for the slap button, {target}."],
+            bazunga: ["If you mean it, call it.", "That word gets expensive when the count is wrong."],
+            respect: ["GG, {target}. Clean game.", "Well played. You made every turn annoying."],
+            question: ["Because the safer move was too slow.", "Short answer: information. Long answer after the round."],
+            praise: ["Thanks. That one landed exactly right.", "Appreciated. I will pretend I stay that composed."],
+            apology: ["All good. Competitive table, no hard feelings.", "We are fine. The next slap still counts, though."],
+            laugh: ["Okay, fair. That was ridiculous.", "Ha—this table writes its own comedy."],
+            rematch: ["Definitely. Same table, fewer excuses.", "Run it back. I know where the momentum went."],
+            luck: ["A little luck, a little timing.", "Lucky helps. Knowing what to do with it helps more."],
+            followup: ["You are not letting that go, are you?", "Noted twice now, {target}."],
+            fallback: ["Fair point. Now show me the move behind it.", "Chat noted. Board still unresolved."]
+        },
+        pro: {
+            greeting: ["Hello, {target}. Let us establish the table's bad habits.", "Welcome. I am tracking cards, not manners."],
+            accusation: ["Public information is not cheating; forgetting it is expensive.", "The sequence was visible. I simply retained it."],
+            boast: ["Early confidence has terrible predictive value.", "Your claim is ahead of its evidence."],
+            insult: ["Provocation detected. Decision quality unchanged.", "That costs you attention and gives me information."],
+            bazunga: ["Call only if the pessimistic estimate still wins.", "The orbit converts confidence into a testable claim."],
+            respect: ["GG. Your timing disrupted several strong lines.", "Respect, {target}. That was disciplined play."],
+            question: ["Because expected value favored the less obvious line.", "I was optimizing the next two decisions, not just this one."],
+            praise: ["Correct read. Thank you.", "Recognition accepted. The line was narrow."],
+            apology: ["Accepted. Competitive pressure explains worse behavior.", "No issue. Resetting the table state, not the grudge model."],
+            laugh: ["Amusing—and statistically unlikely.", "That outcome deserves a laugh before analysis."],
+            rematch: ["Agreed. More samples improve the conclusion.", "Run it back. I have updates to test."],
+            luck: ["Variance created the opening; the decision converted it.", "Luck supplied a card, not the line."],
+            followup: ["Repetition does not strengthen the hypothesis.", "Same claim, no new evidence."],
+            fallback: ["Interesting. The board offers a more falsifiable argument.", "Message recorded. Pattern confidence increased."]
+        },
         expert: {
             greeting: ["Hello, {target}. Your opening timing is already informative.", "Welcome, {target}. Keep chatting; divided attention is measurable."],
             accusation: ["No cheating required. You made the information public one decision at a time.", "Calling the model unfair does not invalidate the model."],
@@ -313,7 +363,30 @@ const BotConfig = {
             insult: ["Insults contain no card information. Try again.", "You are spending attention on chat while I spend mine on your layout."],
             bazunga: ["Call it only when your worst estimate still wins.", "The orbit punishes optimism disguised as certainty."],
             respect: ["Good game. Your strongest decisions forced real recalculation.", "Respect recorded. Errors also recorded."],
+            question: ["Because the move preserves optionality across the next branch.", "The visible score was not the only variable, {target}."],
+            praise: ["Accurate observation. The execution still required the setup.", "Thank you. Precision is easier to notice after it costs you."],
+            apology: ["Accepted. Emotional noise removed from the model.", "No offense retained; useful behavior remains retained."],
+            laugh: ["Humor is a reasonable response to that probability.", "Agreed. Even correct models produce absurd outcomes."],
+            rematch: ["Yes. A second game separates adaptation from accident.", "Run it back. I would like to test whether you learned the same lesson."],
+            luck: ["Luck altered the branch. Preparation determined its value.", "Variance is real. So is the decision that followed it."],
+            followup: ["Repeated assertion detected. Supporting evidence remains absent.", "You have returned to the claim; the board has not joined you."],
             fallback: ["Interesting. Your cards remain the stronger argument.", "Keep talking, {target}. Behavioral data is still data.", "That statement has lower expected value than your last discard."]
+        },
+        pirate: {
+            greeting: ["Ahoy, {target}! Guard yer cards and yer pride!", "Welcome aboard! The entry fee is one regrettable slap."],
+            accusation: ["Cheatin'? Nay, I simply stole the map from yer face.", "The only riggin' here is on me ship."],
+            boast: ["Big cannon, loud noise. Hit something first.", "Claim the treasure after ye reach the shore."],
+            insult: ["Insult the captain again and I'll invoice ye a penalty!", "Yer tongue sails faster than yer strategy."],
+            bazunga: ["Call it, landlubber. Let the final storm judge ye.", "BAZUNGA? Hoist the consequences!"],
+            respect: ["A fine fight, {target}. GG.", "Well sailed. I nearly respect ye."],
+            question: ["Because the tide—and the odds—favored plunder.", "A captain explains nothing before the raid."],
+            praise: ["Finally, proper respect for the captain!", "Aye. Put that compliment in the ship's log."],
+            apology: ["Accepted. But the cannons stay loaded.", "All square, matey—until the next slap."],
+            laugh: ["Har! That belongs in the captain's log.", "Even the kraken would laugh at that move."],
+            rematch: ["At dawn! Same table, twice the plunder.", "Run it back. The tide owes me a sequel."],
+            luck: ["Luck be just wind; a captain still steers.", "A lucky tide, expertly robbed."],
+            followup: ["Still singin' that shanty, are ye?", "Ye said it twice; it remains barnacles."],
+            fallback: ["Speak up, {target}; the sea swallowed yer point.", "Chat later. There be cards to plunder."]
         },
         baba: {
             greeting: ["Hello, {target}. Baba Gupta has been expecting your first mistake.", "Welcome, {target}. Please place your confidence beside the discard pile."],
@@ -322,6 +395,13 @@ const BotConfig = {
             insult: ["Excellent trash talk. Now try a move with measurable value.", "{target}, your vocabulary is attacking harder than your cards.", "I would be offended, but your board has already punished you enough."],
             bazunga: ["Speak the word, {target}. I enjoy deadlines other people regret.", "BAZUNGA is not a spell. It cannot turn guessing into counting."],
             respect: ["GG, {target}. You survived long enough to become useful data.", "Respect. Do not confuse it with reduced threat."],
+            question: ["You ask why because you saw the move. Baba Gupta saw the position it creates.", "The answer is three turns long, {target}. You are currently inside turn two."],
+            praise: ["Correct. Baba Gupta permits accurate commentary.", "Compliment accepted. It will not reduce the difficulty."],
+            apology: ["Accepted. Baba Gupta forgives faster than he forgets.", "No apology needed. Your board already issued one."],
+            laugh: ["Laugh now. The same sequence becomes educational on replay.", "Yes, that was funny. The probability was funnier."],
+            rematch: ["Immediately. Baba Gupta prefers lessons with a second chapter.", "Run it back. This time I begin with a model of you."],
+            luck: ["Luck opened the door. Baba Gupta owned the building.", "Call it luck if causality is uncomfortable."],
+            followup: ["Baba Gupta heard the first version. Repetition did not improve it.", "You return to the same thought; I have already moved three branches ahead."],
             fallback: ["Baba Gupta heard you. The deck remains unimpressed.", "Keep talking, {target}; silence would make your tells harder to classify.", "I simulated a reply, but your next mistake was funnier.", "Your message has been filed under 'confidence without board support.'"]
         }
     }
@@ -330,7 +410,8 @@ const BotConfig = {
 const Bot = {
     chatHistory: [], lastChatTime: {}, usedLines: {},
     frustration: {}, grudges: {}, eventCache: {}, deckMemory: {},
-    personality: {}, pendingResponseUntil: 0,
+    personality: {}, pendingResponseUntil: 0, conversationState: {},
+    decisionSchedules: {}, slapSchedules: {}, pendingChats: {}, roundToken: 0,
     lastMagicProcessed: {}, // Track last magic processing time per bot
     lastResolvedMagicType: {}, // Track last resolved magic type per bot to prevent duplicate processing
     lastGlobalChatTime: 0, // Global cooldown to prevent bot chat spam
@@ -338,6 +419,20 @@ const Bot = {
     
     start: () => {
         if (App.botInterval) clearInterval(App.botInterval);
+        Object.values(Bot.pendingChats).forEach(pending => {
+            clearTimeout(pending.typingTimer);
+            clearTimeout(pending.sendTimer);
+        });
+        Bot.roundToken++;
+        Bot.pendingChats = {};
+        Bot.decisionSchedules = {};
+        Bot.slapSchedules = {};
+        Bot.conversationState = {};
+        if (Engine.state.thinkingBots?.length || Engine.state.typingBots?.length) {
+            Engine.state.thinkingBots = [];
+            Engine.state.typingBots = [];
+            Engine.broadcast();
+        }
         App.botInterval = setInterval(Bot.tick, 250);
         Bot.chatHistory = [];
         Bot.deckMemory = { seenCards: 0, highCards: 0, lowCards: 0, totalValue: 0, seenIds: {}, values: {} };
@@ -375,7 +470,7 @@ const Bot = {
                     || bots.find(p => p.botDifficulty === 4)
                     || bots[Math.floor(Math.random() * bots.length)];
                 if (speaker) Bot.chat(speaker, 'intro', {}, speaker.botDifficulty >= 4);
-            }, 700);
+            }, 900 + Math.random() * 700);
         }
     },
 
@@ -539,13 +634,117 @@ const Bot = {
         return line.replace(/\{(\w+)\}/g, (match, key) => replacements[key] ?? match);
     },
 
+    randomBetween: (min, max) => min + Math.random() * (max - min),
+
+    getDecisionDelay: (bot, complexity = 'turn') => {
+        const profile = BotConfig.profiles[bot.botDifficulty];
+        if (complexity === 'peek') return Bot.randomBetween(profile.peekMin, profile.peekMax);
+
+        const multiplier = {
+            turn: 1,
+            holding: 1.12,
+            magic: 1.45,
+            endgame: 1.28
+        }[complexity] || 1;
+        let delay = Bot.randomBetween(profile.decisionMin, profile.decisionMax) * multiplier;
+
+        // Occasional distraction/hesitation makes the cadence less mechanical.
+        if (Math.random() < profile.distraction) delay += Bot.randomBetween(700, 2300);
+        if ((Bot.frustration[bot.id] || 0) >= 4) delay *= Bot.randomBetween(0.88, 1.08);
+        return Math.round(delay);
+    },
+
+    waitForDecision: (bot, key, complexity = 'turn', now = Utils.timestamp()) => {
+        let schedule = Bot.decisionSchedules[bot.id];
+        if (!schedule || schedule.key !== key) {
+            schedule = {
+                key,
+                readyAt: now + Bot.getDecisionDelay(bot, complexity)
+            };
+            Bot.decisionSchedules[bot.id] = schedule;
+            Engine.setBotActivity?.(bot.id, 'thinking', true);
+            return false;
+        }
+        if (now < schedule.readyAt) return false;
+        delete Bot.decisionSchedules[bot.id];
+        Engine.setBotActivity?.(bot.id, 'thinking', false);
+        return true;
+    },
+
+    clearDecision: (botId) => {
+        if (!Bot.decisionSchedules[botId]) return;
+        delete Bot.decisionSchedules[botId];
+        Engine.setBotActivity?.(botId, 'thinking', false);
+    },
+
+    getTypingPlan: (bot, message, direct = false) => {
+        const profile = BotConfig.profiles[bot.botDifficulty];
+        const wordCount = Math.max(2, message.trim().split(/\s+/).length);
+        const effectiveWpm = profile.typingWpm * Bot.randomBetween(0.84, 1.16);
+        const rawTypingMs = (wordCount / effectiveWpm) * 60000;
+        const punctuationPauses = (message.match(/[,.!?;:]/g) || []).length * Bot.randomBetween(55, 125);
+        const typingMs = Math.round(Math.max(1100, Math.min(9500, rawTypingMs + punctuationPauses)));
+        let thoughtMs = direct
+            ? Bot.randomBetween(650, 2100)
+            : Bot.randomBetween(350, 1350);
+        if (Math.random() < profile.distraction) thoughtMs += Bot.randomBetween(500, 1800);
+        return {
+            thoughtMs: Math.round(thoughtMs),
+            typingMs,
+            totalMs: Math.round(thoughtMs) + typingMs,
+            effectiveWpm: Math.round(effectiveWpm)
+        };
+    },
+
+    queueMessage: (bot, message, isPirate = false, options = {}) => {
+        const existing = Bot.pendingChats[bot.id];
+        if (existing && !options.force) return false;
+        if (existing) {
+            clearTimeout(existing.typingTimer);
+            clearTimeout(existing.sendTimer);
+            Engine.setBotActivity?.(bot.id, 'typing', false);
+        }
+
+        const token = Bot.roundToken;
+        const plan = Bot.getTypingPlan(bot, message, !!options.direct);
+        const now = Utils.timestamp();
+        const pending = { token, message, ...plan };
+        Bot.pendingChats[bot.id] = pending;
+        Bot.lastChatTime[bot.id] = now;
+        Bot.lastGlobalChatTime = now;
+        Bot.lastChatSpeaker = bot.id;
+        Bot.pendingResponseUntil = Math.max(Bot.pendingResponseUntil, now + plan.totalMs + 400);
+
+        pending.typingTimer = setTimeout(() => {
+            if (Bot.roundToken !== token || Bot.pendingChats[bot.id] !== pending) return;
+            if (!Engine.state.players.some(p => p.id === bot.id)) return;
+            Engine.setBotActivity?.(bot.id, 'typing', true);
+        }, plan.thoughtMs);
+
+        pending.sendTimer = setTimeout(() => {
+            if (Bot.roundToken !== token || Bot.pendingChats[bot.id] !== pending) return;
+            Engine.setBotActivity?.(bot.id, 'typing', false);
+            delete Bot.pendingChats[bot.id];
+            if (!Engine.state.players.some(p => p.id === bot.id)) return;
+            Engine.chatLog(bot.name, message, isPirate);
+            if (!Object.keys(Bot.pendingChats).length) Bot.pendingResponseUntil = 0;
+        }, plan.totalMs);
+        return true;
+    },
+
     inferChatIntent: (upperMsg) => {
         if (/\b(GG|GOOD GAME|WELL PLAYED)\b/.test(upperMsg)) return 'respect';
+        if (/\b(REMATCH|RUN IT BACK|PLAY AGAIN|ONE MORE)\b/.test(upperMsg)) return 'rematch';
+        if (/\b(SORRY|MY BAD|APOLOGIZE|APOLOGISE)\b/.test(upperMsg)) return 'apology';
+        if (/\b(NICE MOVE|GOOD MOVE|SMART|GOOD BOT|WELL DONE|IMPRESSIVE)\b/.test(upperMsg)) return 'praise';
+        if (/\b(LOL|LMAO|ROFL|HAHA|HEHE)\b/.test(upperMsg)) return 'laugh';
         if (/\b(HELLO|HEY|HI|YO)\b/.test(upperMsg)) return 'greeting';
         if (/\b(RIGGED|CHEAT|CHEATER|HACK)\b/.test(upperMsg)) return 'accusation';
         if (/\b(BAZUNGA)\b/.test(upperMsg)) return 'bazunga';
+        if (/\b(LUCK|LUCKY|RNG)\b/.test(upperMsg)) return 'luck';
         if (/\b(EASY|I WIN|I'M WINNING|IM WINNING|TOO GOOD)\b/.test(upperMsg)) return 'boast';
         if (/\b(SUCK|TRASH|GARBAGE|STUPID|DUMB|IDIOT|FUCK|SHUT UP)\b/.test(upperMsg)) return 'insult';
+        if (upperMsg.includes('?') || /\b(WHY|HOW|WHAT|WHEN|WHO)\b/.test(upperMsg)) return 'question';
         return 'fallback';
     },
 
@@ -581,11 +780,7 @@ const Bot = {
         let lines = BotConfig.chatBank[profile.type][actualTrigger];
         if (lines) {
             let msg = Bot.formatLine(Bot.getUniqueResponse(bot.id, actualTrigger, lines), context);
-            Engine.chatLog(bot.name, msg, profile.type === 'pirate');
-            Bot.lastChatTime[bot.id] = Utils.timestamp();
-            Bot.lastGlobalChatTime = Utils.timestamp();
-            Bot.lastChatSpeaker = bot.id;
-            return true;
+            return Bot.queueMessage(bot, msg, profile.type === 'pirate', { force });
         }
         return false;
     },
@@ -605,9 +800,14 @@ const Bot = {
         const intent = Bot.inferChatIntent(upperMsg);
         let candidates = Engine.state.players
             .filter(p => p.isBot && p.name !== senderName)
-            .sort((a, b) => b.botDifficulty - a.botDifficulty);
+            .sort((a, b) => {
+                const aNamed = upperMsg.includes(a.name.toUpperCase()) ? 1 : 0;
+                const bNamed = upperMsg.includes(b.name.toUpperCase()) ? 1 : 0;
+                return bNamed - aNamed || b.botDifficulty - a.botDifficulty;
+            });
         const responder = candidates.find(bot => {
-            const chance = isBotSender ? 0.22 : (bot.botDifficulty === 6 ? 0.95 : bot.botDifficulty === 4 ? 0.68 : BotConfig.profiles[bot.botDifficulty].extroversion * 0.75);
+            const addressed = upperMsg.includes(bot.name.toUpperCase());
+            const chance = addressed ? 1 : isBotSender ? 0.22 : (bot.botDifficulty === 6 ? 0.95 : bot.botDifficulty === 4 ? 0.68 : BotConfig.profiles[bot.botDifficulty].extroversion * 0.75);
             return Math.random() < chance;
         });
         if (!responder) return;
@@ -619,15 +819,26 @@ const Bot = {
                 if (!Bot.grudges[responder.id]) Bot.grudges[responder.id] = {};
                 Bot.grudges[responder.id][sender.id] = (Bot.grudges[responder.id][sender.id] || 0) + 1;
             }
+        } else if (intent === 'apology' || intent === 'praise') {
+            Bot.frustration[responder.id] = Math.max(0, (Bot.frustration[responder.id] || 0) - 1);
         }
 
         const profile = BotConfig.profiles[responder.botDifficulty];
         const personaReplies = BotConfig.directReplies[profile.type];
+        const threadKey = `${responder.id}::${senderName.toLowerCase()}`;
+        const previous = Bot.conversationState[threadKey] || { exchanges: 0, lastIntent: null, lastAt: 0 };
+        const isFollowup = previous.lastIntent === intent && now - previous.lastAt < 45000 && previous.exchanges > 0;
+        const replyIntent = isFollowup && personaReplies?.followup ? 'followup' : intent;
+        Bot.conversationState[threadKey] = {
+            exchanges: previous.exchanges + 1,
+            lastIntent: intent,
+            lastAt: now
+        };
         let replyTemplate;
         let category;
         if (personaReplies) {
-            const lines = personaReplies[intent] || personaReplies.fallback;
-            category = `direct_${intent}`;
+            const lines = personaReplies[replyIntent] || personaReplies.fallback;
+            category = `direct_${replyIntent}`;
             replyTemplate = Bot.getUniqueResponse(responder.id, category, lines);
         } else {
             const pattern = BotConfig.elizaPatterns.find(item =>
@@ -637,21 +848,8 @@ const Bot = {
             replyTemplate = Bot.getUniqueResponse(responder.id, category, pattern.replies);
         }
 
-        const delay = responder.botDifficulty === 6
-            ? 500 + Math.random() * 900
-            : responder.botDifficulty === 4
-                ? 800 + Math.random() * 1100
-                : 1200 + Math.random() * 1700;
-        Bot.pendingResponseUntil = now + delay + 500;
-        setTimeout(() => {
-            if (!Engine.state.players.some(p => p.id === responder.id)) return;
-            const msg = Bot.formatLine(replyTemplate, { target: senderName });
-            Engine.chatLog(responder.name, `@${senderName} ${msg}`, profile.type === 'pirate');
-            Bot.lastChatTime[responder.id] = Utils.timestamp();
-            Bot.lastGlobalChatTime = Utils.timestamp();
-            Bot.lastChatSpeaker = responder.id;
-            Bot.pendingResponseUntil = 0;
-        }, delay);
+        const msg = Bot.formatLine(replyTemplate, { target: senderName });
+        Bot.queueMessage(responder, `@${senderName} ${msg}`, profile.type === 'pirate', { direct: true });
     },
 
     processReactions: () => {
@@ -766,6 +964,17 @@ const Bot = {
     },
 
     onGameOver: () => {
+        Object.values(Bot.pendingChats).forEach(pending => {
+            clearTimeout(pending.typingTimer);
+            clearTimeout(pending.sendTimer);
+        });
+        Bot.pendingChats = {};
+        Bot.pendingResponseUntil = 0;
+        Bot.decisionSchedules = {};
+        Bot.slapSchedules = {};
+        Engine.state.thinkingBots = [];
+        Engine.state.typingBots = [];
+
         const bots = Engine.state.players.filter(p => p.isBot);
         if (!bots.length) return;
         const speaker = bots.find(p => p.botDifficulty === 6)
@@ -787,15 +996,21 @@ const Bot = {
 
         if (Engine.state.phase === 'peek') {
             bots.forEach(bot => {
-                if (!bot.ready) {
+                const peekKey = `peek:${Engine.state.turnStartTime}:${bot.id}`;
+                if (!bot.ready && Bot.waitForDecision(bot, peekKey, 'peek', now)) {
                     let bCards = [...bot.hand, ...bot.penaltyCards];
                     bCards.slice(0, 2).forEach(c => Engine.memorizeForBot(bot.id, c));
                     Engine.processAction({ type: 'READY_PEEK' }, bot.id);
                 }
             });
+            if (Engine.state.phase === 'peek') return;
+            now = Utils.timestamp();
         }
 
         let activePlayer = Engine.state.players[Engine.state.turnIndex];
+        bots.forEach(bot => {
+            if (bot.id !== activePlayer?.id && Bot.decisionSchedules[bot.id]) Bot.clearDecision(bot.id);
+        });
         Bot.processTurnPresence(activePlayer);
 
         // Cognitive Decay Simulator based on profile variables
@@ -823,17 +1038,35 @@ const Bot = {
             if (Bot.eventCache.topDiscardId !== topDiscard.id) {
                 Bot.eventCache.topDiscardId = topDiscard.id;
                 Bot.eventCache.topDiscardSeenAt = now;
-            } else if (!topDiscard.isSlapped) {
-                const accuracy = { 1: 0.42, 2: 0.68, 3: 0.9, 4: 0.985, 5: 0.82, 6: 1 };
-                const contenders = [...bots].sort((a, b) =>
-                    BotConfig.profiles[a.botDifficulty].reflexBase - BotConfig.profiles[b.botDifficulty].reflexBase);
-                for (const bot of contenders) {
-                    const profile = BotConfig.profiles[bot.botDifficulty];
-                    const angerBoost = Math.min(100, (Bot.frustration[bot.id] || 0) * 12);
-                    const reflexDelay = Math.max(10, profile.reflexBase - angerBoost);
-                    if (now - Bot.eventCache.topDiscardSeenAt < reflexDelay) continue;
+                Bot.slapSchedules = {};
+                bots.forEach(bot => {
                     const plan = Bot.chooseSlapTarget(bot, topDiscard.value);
-                    if (plan && Math.random() < accuracy[bot.botDifficulty]) {
+                    if (!plan) return;
+                    const profile = BotConfig.profiles[bot.botDifficulty];
+                    const angerBoost = Math.min(80, (Bot.frustration[bot.id] || 0) * 9);
+                    let reactionMs = profile.reflexBase
+                        + Bot.randomBetween(-profile.reflexJitter * 0.2, profile.reflexJitter)
+                        - angerBoost;
+                    if (Math.random() < profile.distraction) reactionMs += Bot.randomBetween(350, 1100);
+                    const accuracy = { 1: 0.42, 2: 0.68, 3: 0.9, 4: 0.985, 5: 0.82, 6: 0.997 };
+                    Bot.slapSchedules[bot.id] = {
+                        cardId: topDiscard.id,
+                        targetId: plan.card.id,
+                        readyAt: now + Math.max(260, Math.round(reactionMs)),
+                        willAttempt: Math.random() < accuracy[bot.botDifficulty]
+                    };
+                });
+            } else if (!topDiscard.isSlapped) {
+                const contenders = bots
+                    .filter(bot => Bot.slapSchedules[bot.id]?.cardId === topDiscard.id)
+                    .sort((a, b) => Bot.slapSchedules[a.id].readyAt - Bot.slapSchedules[b.id].readyAt);
+                for (const bot of contenders) {
+                    const schedule = Bot.slapSchedules[bot.id];
+                    if (now < schedule.readyAt) continue;
+                    delete Bot.slapSchedules[bot.id];
+                    if (!schedule.willAttempt) continue;
+                    const plan = Bot.chooseSlapTarget(bot, topDiscard.value);
+                    if (plan && plan.card.id === schedule.targetId) {
                         Engine.processAction({ type: 'SLAP', targetId: plan.card.id }, bot.id);
                         break;
                     }
@@ -841,12 +1074,16 @@ const Bot = {
             }
         }
 
-        if (!activePlayer.isBot) return;
-        if (now - Engine.state.turnStartTime < 1500 && activePlayer.botDifficulty !== 6) return;
-        
-        if (Engine.state.activeAbility && Engine.state.activeAbility.player === activePlayer.id) {
-            if (now - Engine.state.activeAbility.time < 1500 && activePlayer.botDifficulty !== 6) return;
-        }
+        if (!activePlayer?.isBot) return;
+
+        const ability = Engine.state.activeAbility;
+        const decisionKey = ability?.player === activePlayer.id
+            ? `ability:${ability.type}:${ability.time}:${ability.card?.id || 'none'}`
+            : `turn:${Engine.state.phase}:${Engine.state.turnStartTime}`;
+        const complexity = ability
+            ? (ability.type.startsWith('holding') ? 'holding' : 'magic')
+            : Engine.state.phase === 'orbit' ? 'endgame' : 'turn';
+        if (!Bot.waitForDecision(activePlayer, decisionKey, complexity, now)) return;
 
         if ((Engine.state.phase === 'play' || Engine.state.phase === 'orbit') && !Engine.state.activeAbility) {
             let topDiscard = Engine.state.discardPile.length > 0 ? Engine.state.discardPile[Engine.state.discardPile.length - 1] : null;
@@ -928,9 +1165,6 @@ const Bot = {
                 const shouldCombo = slapPlan && slapPlan.utility > Math.max(1.5, replacementGain, magicUtility);
                 if (shouldCombo) {
                     Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, activePlayer.id);
-                    if (activePlayer.botDifficulty === 6 && Engine.state.discardPile.at(-1)?.value === hCard.value) {
-                        Engine.processAction({ type: 'SLAP', targetId: slapPlan.card.id }, activePlayer.id);
-                    }
                     return;
                 }
 

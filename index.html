@@ -219,6 +219,260 @@
     .mini-card.red { color: var(--danger); }
     .mini-card.black { color: #000; }
     .endgame-math { font-size: 0.75rem; color: #94a3b8; font-family: monospace; }
+
+    /* Presentation-grade interaction polish */
+    html, body { width: 100%; height: 100%; min-height: 100dvh; }
+    body {
+        background:
+            radial-gradient(circle at 50% -20%, rgba(16, 185, 129, 0.18), transparent 38%),
+            radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.08), transparent 34%),
+            #07111f;
+    }
+    #app { height: 100dvh; min-height: 100dvh; }
+    #table {
+        background:
+            radial-gradient(circle at 50% 42%, rgba(16, 185, 129, 0.16), transparent 24%),
+            radial-gradient(circle, #07533e 0%, #043528 58%, #021d18 100%);
+        border-color: #6b3f1e;
+        box-shadow:
+            inset 0 0 0 2px rgba(255,255,255,0.06),
+            inset 0 0 90px rgba(0,0,0,0.82),
+            0 24px 70px rgba(0,0,0,0.72);
+    }
+    .card {
+        will-change: left, top, scale, translate;
+        isolation: isolate;
+    }
+    .card::before {
+        content: "";
+        position: absolute;
+        inset: -5px;
+        border-radius: 11px;
+        z-index: -1;
+    }
+    .card:active { translate: 0 2px; }
+    .card.targetable::before {
+        background: rgba(56, 189, 248, 0.12);
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35);
+    }
+    .card.tap-confirmed .card-inner {
+        animation: tap-confirm 180ms ease-out;
+    }
+    @keyframes tap-confirm {
+        0% { filter: brightness(1); }
+        45% { filter: brightness(1.55); box-shadow: 0 0 0 5px rgba(251, 191, 36, 0.55), 0 0 30px rgba(251, 191, 36, 0.8); }
+        100% { filter: brightness(1); }
+    }
+    #status-banner {
+        background: linear-gradient(180deg, rgba(7,17,31,0.97), rgba(7,17,31,0.88));
+        border-bottom-color: rgba(255,255,255,0.08);
+    }
+    #action-bar {
+        background: rgba(9, 20, 36, 0.9);
+        border-color: rgba(255,255,255,0.12);
+    }
+
+    @media (max-width: 768px) {
+        :root {
+            --card-w: 50px;
+            --card-h: 72px;
+        }
+        body { overscroll-behavior: none; position: fixed; inset: 0; }
+        #app { overflow: hidden; padding: 0; }
+        #game-view { width: 100%; height: 100dvh; align-items: stretch; }
+        #zoom-wrapper { transform: none !important; }
+        #table {
+            width: calc(100% - 12px);
+            height: calc(100% - 146px);
+            margin: 60px 6px 86px;
+            border-width: 7px;
+            border-radius: 34px;
+        }
+        #table-rim-svg { display: none; }
+        #card-layer { touch-action: none; }
+        .card {
+            touch-action: none;
+            border-radius: 9px;
+            filter: drop-shadow(0 7px 8px rgba(0,0,0,0.4));
+        }
+        .card::before { inset: -7px; border-radius: 14px; }
+        .card-face { border-radius: 8px; border-width: 1.5px; }
+        .card.targetable {
+            scale: calc(var(--local-scale, 1) * 1.09);
+        }
+        .card.targetable .card-inner {
+            animation: pulse-mobile-target 1s ease-in-out infinite;
+        }
+        @keyframes pulse-mobile-target {
+            0%, 100% { box-shadow: 0 0 0 3px #38bdf8, 0 0 14px rgba(56,189,248,0.55); }
+            50% { box-shadow: 0 0 0 5px #fbbf24, 0 0 24px rgba(251,191,36,0.7); }
+        }
+        #status-banner {
+            min-height: calc(56px + env(safe-area-inset-top));
+            padding: calc(7px + env(safe-area-inset-top)) 10px 7px;
+            gap: 8px;
+        }
+        #phase-display {
+            padding: 4px 7px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.08);
+            font-size: 0.62rem !important;
+        }
+        #status-text {
+            font-size: 0.78rem;
+            line-height: 1.2;
+            letter-spacing: 0;
+        }
+        #status-banner > div:last-child { gap: 3px !important; }
+        #status-banner > div:last-child button {
+            width: 32px !important;
+            min-width: 32px;
+            min-height: 32px;
+            padding: 0 !important;
+            overflow: hidden;
+            font-size: 0 !important;
+        }
+        #btn-toggle-layout::after { content: "▦"; font-size: 1rem; }
+        #btn-toggle-anim::after { content: "✦"; font-size: 0.9rem; }
+        #action-bar {
+            left: 8px;
+            right: 8px;
+            top: auto;
+            bottom: calc(8px + env(safe-area-inset-bottom));
+            width: auto;
+            min-height: 68px;
+            padding: 8px;
+            border-radius: 19px;
+            transform: translateY(0);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+            gap: 7px;
+            box-shadow: 0 16px 50px rgba(0,0,0,0.72), 0 0 0 1px rgba(255,255,255,0.06);
+        }
+        #action-bar.hidden {
+            opacity: 0;
+            transform: translateY(130%);
+            pointer-events: none;
+        }
+        #action-bar button,
+        #action-bar button.primary {
+            min-height: 48px;
+            padding: 9px 10px;
+            margin: 0;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            line-height: 1.15;
+            box-shadow: none;
+        }
+        #action-bar button.primary {
+            background: linear-gradient(135deg, #22c55e, #059669);
+        }
+        #action-bar button.danger {
+            background: linear-gradient(135deg, #f43f5e, #dc2626);
+        }
+        #action-bar > button:last-child:nth-child(odd) {
+            grid-column: 1 / -1;
+        }
+        .player-badge {
+            width: 38px;
+            height: 38px;
+            z-index: 9;
+            pointer-events: none;
+            background: rgba(9,20,36,0.92);
+        }
+        .player-badge .icon { font-size: 1.08rem; line-height: 38px; }
+        .player-badge.expanded {
+            max-width: 132px;
+            padding: 5px 9px;
+            font-size: 0.7rem;
+        }
+        .player-badge.active-turn {
+            box-shadow: 0 0 0 2px rgba(251,191,36,0.8), 0 0 18px rgba(251,191,36,0.55);
+        }
+        #zoom-controls { display: none !important; }
+        #btn-toggle-bubbles, #btn-toggle-clutter {
+            top: calc(64px + env(safe-area-inset-top));
+            width: 36px;
+            height: 36px;
+            font-size: 0.95rem;
+            background: rgba(9,20,36,0.88);
+        }
+        #btn-toggle-bubbles { left: 9px; }
+        #btn-toggle-clutter { left: 51px; }
+        #chat-fab {
+            right: 10px;
+            bottom: calc(86px + env(safe-area-inset-bottom));
+            width: 44px;
+            height: 44px;
+            font-size: 1rem;
+            background: rgba(9,20,36,0.94);
+        }
+        #toast-container {
+            top: calc(62px + env(safe-area-inset-top));
+            left: 50%;
+            right: auto;
+            width: min(92vw, 360px);
+            transform: translateX(-50%);
+        }
+        .toast { max-width: none; width: 100%; text-align: center; }
+        #chat-bubble-container {
+            left: 8px;
+            right: 58px;
+            bottom: calc(90px + env(safe-area-inset-bottom));
+        }
+        .chat-bubble { max-width: min(80vw, 290px); font-size: 0.78rem; padding: 8px 11px; }
+        #chat-drawer {
+            width: min(90vw, 360px);
+            left: -100vw;
+            height: 100dvh;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .modal {
+            width: calc(100% - 24px);
+            min-width: 0;
+            max-height: calc(100dvh - 24px);
+            padding: 20px 16px;
+            border-radius: 22px;
+        }
+        #lobby {
+            min-height: 100dvh;
+            overflow-y: auto;
+            justify-content: flex-start;
+            padding: calc(18px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom));
+        }
+        .lobby-box { padding: 22px 18px; border-radius: 22px; margin: auto 0; }
+        h1 { font-size: clamp(2rem, 12vw, 3rem); }
+        input, select, button { min-height: 48px; }
+    }
+
+    @media (max-width: 390px) {
+        :root { --card-w: 46px; --card-h: 66px; }
+        #action-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        #status-text { font-size: 0.72rem; }
+    }
+
+    @media (max-height: 620px) and (orientation: landscape) {
+        #game-view { width: 100%; height: 100dvh; }
+        #zoom-wrapper { transform: none !important; }
+        #table { height: calc(100% - 76px); margin: 54px 6px 22px; }
+        #action-bar {
+            top: auto;
+            left: auto;
+            right: 8px;
+            bottom: 8px;
+            width: 180px;
+            transform: none;
+            grid-template-columns: 1fr;
+            max-height: calc(100dvh - 70px);
+            overflow-y: auto;
+        }
+        #action-bar.hidden { transform: translateX(120%); }
+        #card-layer, .card { touch-action: none; }
+        #status-banner { min-height: 52px; padding: 6px 10px; }
+        #zoom-controls { display: none !important; }
+        #chat-fab { bottom: 10px; right: 198px; }
+    }
 </style>
 </head>
 <body>
@@ -376,7 +630,7 @@ const BOT_NAMES = ["BeepBoop", "CardShark", "DeepBlue", "AlphaGo", "Blackbeard"]
 // --- GLOBAL APP STATE ---
 const App = {
     isHost: false, localId: null, localName: '', sessionToken: null, peer: null, connections: {}, hostConn: null, gameState: null, animEnabled: true,
-    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid' },
+    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null },
     botInterval: null
 };
 
@@ -497,10 +751,11 @@ Engine.checkDeckEmpty = () => {
     }
 };
 
-Engine.getCardById = (id) => {
-    let allCards = [...Engine.state.deck, ...Engine.state.discardPile];
-    Engine.state.players.forEach(p => { allCards.push(...p.hand, ...p.penaltyCards); });
-    if (Engine.state.activeAbility && Engine.state.activeAbility.card) allCards.push(Engine.state.activeAbility.card);
+Engine.getCardById = (id, sourceState = Engine.state) => {
+    if (!sourceState) return null;
+    let allCards = [...(sourceState.deck || []), ...(sourceState.discardPile || [])];
+    (sourceState.players || []).forEach(p => { allCards.push(...(p.hand || []), ...(p.penaltyCards || [])); });
+    if (sourceState.activeAbility && sourceState.activeAbility.card) allCards.push(sourceState.activeAbility.card);
     return allCards.find(c => c.id === id);
 };
 
@@ -1108,15 +1363,16 @@ const UI = {
         document.getElementById('btn-bazunga-confirm').onclick = () => {
             bazungaModal.style.display = 'none';
             document.getElementById('modal-overlay').classList.add('hidden');
-            Net.sendAction({ type: 'CALL_BAZUNGA' });
+            UI.submitAction({ type: 'CALL_BAZUNGA' });
         };
         document.getElementById('btn-bazunga-cancel').onclick = () => {
             bazungaModal.style.display = 'none';
             document.getElementById('modal-overlay').classList.add('hidden');
         };
 
-        // Use pointerdown for instant, reliable mobile taps
-        document.getElementById('card-layer').addEventListener('pointerdown', UI.handleCardClick);
+        // Pointerup avoids accidental actions during a touch while remaining delay-free.
+        document.getElementById('card-layer').addEventListener('pointerup', UI.handleCardClick);
+        document.getElementById('card-layer').addEventListener('keydown', UI.handleCardKeyDown);
 
         let resizeTimeout;
         window.addEventListener('resize', () => {
@@ -1159,6 +1415,9 @@ const UI = {
     createCardDOM: (card) => {
         let el = document.createElement('div');
         el.id = card.id; el.className = `card ${card.isRed ? 'red' : 'black'}`;
+        el.setAttribute('role', 'button');
+        el.setAttribute('tabindex', '0');
+        el.setAttribute('aria-label', 'Hidden card');
         let inner = document.createElement('div'); inner.className = 'card-inner';
         let front = document.createElement('div'); front.className = 'card-face card-front';
         front.innerHTML = `<div class="val">${card.value}</div><div class="suit">${card.suit}</div><div class="val bottom">${card.value}</div>`;
@@ -1190,8 +1449,48 @@ const UI = {
         return { c: 5 + Math.floor(extra/2), r: extra % 2 === 0 ? 1 : 0 };
     },
 
+    getStateToken: (state) => {
+        const ability = state?.activeAbility;
+        return [
+            state?.phase,
+            state?.turnIndex,
+            state?.turnStartTime,
+            ability?.player,
+            ability?.type,
+            ability?.time,
+            state?.lastSlap?.time,
+            state?.deck?.length,
+            state?.discardPile?.length,
+            state?.players?.map(p => `${p.id}:${p.ready ? 1 : 0}:${p.hand?.length || 0}:${p.penaltyCards?.length || 0}`).join(',')
+        ].join('|');
+    },
+
+    submitAction: (action) => {
+        if (App.uiState.pendingAction) return;
+        App.uiState.pendingAction = true;
+        App.uiState.pendingToken = UI.getStateToken(App.gameState);
+        App.uiState.targetingMode = null;
+        App.uiState.selectedCardId = null;
+        App.uiState.peekedCards.clear();
+        if (App.gameState) UI.render(App.gameState);
+        Net.sendAction(action);
+        const pendingToken = App.uiState.pendingToken;
+        setTimeout(() => {
+            if (!App.uiState.pendingAction || App.uiState.pendingToken !== pendingToken) return;
+            App.uiState.pendingAction = false;
+            App.uiState.pendingToken = null;
+            if (App.gameState) UI.render(App.gameState);
+            UI.showToast("No response yet. You can try again.", "warning");
+        }, 3000);
+    },
+
     render: (state) => {
         App.gameState = state;
+
+        if (App.uiState.pendingAction && UI.getStateToken(state) !== App.uiState.pendingToken) {
+            App.uiState.pendingAction = false;
+            App.uiState.pendingToken = null;
+        }
 
         if (state.phase === 'lobby') {
             let list = document.getElementById('lobby-players'); list.innerHTML = '';
@@ -1277,16 +1576,15 @@ const UI = {
             setTimeout(() => { if (App.gameState) UI.render(App.gameState); }, 2500);
         }
 
-        let cx = window.innerWidth / 2; let cy = window.innerHeight / 2;
-        if (window.innerWidth <= 768) cy -= 45;
+        const isMobile = window.innerWidth <= 768;
+        const viewportHeight = window.visualViewport?.height || window.innerHeight;
+        let cx = window.innerWidth / 2;
+        let cy = isMobile ? 60 + (viewportHeight - 150) / 2 : viewportHeight / 2;
 
-        let rx = Math.min(window.innerWidth * 0.35, window.innerWidth / 2 - 80);
-        let ry = Math.min(window.innerHeight * 0.38, window.innerHeight / 2 - 90);
-
-        // Tighter vertical radius on mobile to prevent top cards from hiding behind banner
-        if (window.innerWidth <= 768) {
-            ry = Math.min(window.innerHeight * 0.35, window.innerHeight / 2 - 110);
-        }
+        let rx = Math.min(window.innerWidth * (isMobile ? 0.37 : 0.35), window.innerWidth / 2 - (isMobile ? 52 : 80));
+        let ry = isMobile
+            ? Math.max(115, Math.min((viewportHeight - 210) * 0.42, viewportHeight / 2 - 112))
+            : Math.min(viewportHeight * 0.38, viewportHeight / 2 - 90);
 
         let localPlayerIndex = state.players.findIndex(p => p.id === App.localId);
         if (localPlayerIndex === -1) localPlayerIndex = 0;
@@ -1312,14 +1610,20 @@ const UI = {
 
             // Badges positioned just outside the table edge
             let bOffset, badgePx, badgePy;
-            if (relIndex === 0) {
+            if (isMobile && relIndex === 0) {
+                badgePx = px;
+                badgePy = py + 98;
+            } else if (isMobile) {
+                badgePx = px + Math.cos(angle) * 52;
+                badgePy = py + Math.sin(angle) * 58;
+            } else if (relIndex === 0) {
                 // Local player: badge below their cards, centered
-                bOffset = window.innerWidth <= 768 ? 160 : 200;
+                bOffset = 200;
                 badgePx = cx;
                 badgePy = cy + ry + bOffset;
             } else {
                 // Other players: badges on outer ellipse
-                bOffset = window.innerWidth <= 768 ? 180 : 220;
+                bOffset = 220;
                 badgePx = cx + Math.cos(angle) * (rx + bOffset);
                 badgePy = cy + Math.sin(angle) * (ry + bOffset);
             }
@@ -1332,13 +1636,14 @@ const UI = {
                 document.getElementById('ui-layer').appendChild(badge);
             }
 
-            let isExpanded = state.phase === 'peek' ? 'expanded' : '';
-            badge.className = `player-badge ${isExpanded} ${i === state.turnIndex ? 'active-turn' : ''} ${state.bazungaCallerId === p.id ? 'bazunga' : ''} ${!p.connected && !p.isBot ? 'disconnected' : ''}`;
+            let isExpanded = state.phase === 'peek' && !isMobile ? 'expanded' : '';
+            let isActiveTurn = i === state.turnIndex && state.phase !== 'peek' ? 'active-turn' : '';
+            badge.className = `player-badge ${isExpanded} ${isActiveTurn} ${state.bazungaCallerId === p.id ? 'bazunga' : ''} ${!p.connected && !p.isBot ? 'disconnected' : ''}`;
             badge.style.left = `${badgePx}px`; badge.style.top = `${badgePy}px`;
 
             let icon = p.isBot ? '🤖' : '👤';
             let cardCount = p.hand.length + p.penaltyCards.length;
-            let turnIndicator = i === state.turnIndex ? `<div class="turn-text">CURRENT TURN</div>` : '';
+            let turnIndicator = i === state.turnIndex && state.phase !== 'peek' ? `<div class="turn-text">CURRENT TURN</div>` : '';
             let statusText = !p.connected && !p.isBot ? `<div style="color:var(--danger); font-size:0.6rem; font-weight:bold; margin-top:2px;">DISCONNECTED</div>` : '';
 
             badge.innerHTML = `
@@ -1352,8 +1657,8 @@ const UI = {
             `;
 
             let allCards = [...p.hand, ...p.penaltyCards];
-            let baseHandW = window.innerWidth <= 768 ? 48 : 56;
-            let baseHandH = window.innerWidth <= 768 ? 66 : 78;
+            let baseHandW = isMobile ? (window.innerWidth <= 390 ? 46 : 50) : 56;
+            let baseHandH = isMobile ? (window.innerWidth <= 390 ? 66 : 72) : 78;
 
             let scale = 1;
             if (allCards.length > 12) scale = 0.65;
@@ -1374,6 +1679,32 @@ const UI = {
             }
             let centerC = (minC + maxC) / 2;
             let centerR = (minR + maxR) / 2;
+            const columnSpan = Math.max(1, maxC - minC);
+            const rowSpan = Math.max(0, maxR - minR);
+
+            if (isMobile) {
+                const availableWidth = window.innerWidth - 28;
+                handW = Math.min(handW, (availableWidth - baseHandW * scale) / columnSpan);
+                handW = Math.max(baseHandW * 0.62, handW);
+
+                const groupWidth = columnSpan * handW + baseHandW * scale;
+                const groupHeight = rowSpan * handH + baseHandH * scale;
+                const sidePadding = 10;
+                const topLimit = 64 + groupHeight / 2;
+                const bottomLimit = viewportHeight - 108 - groupHeight / 2;
+                px = Math.max(sidePadding + groupWidth / 2, Math.min(window.innerWidth - sidePadding - groupWidth / 2, px));
+                py = Math.max(topLimit, Math.min(bottomLimit, py));
+
+                if (relIndex === 0) {
+                    badgePx = px;
+                    badgePy = Math.min(viewportHeight - 102, py + groupHeight / 2 + 24);
+                } else {
+                    badgePx = Math.max(22, Math.min(window.innerWidth - 22, px + Math.cos(angle) * (groupWidth / 2 + 24)));
+                    badgePy = Math.max(78, Math.min(viewportHeight - 112, py + Math.sin(angle) * (groupHeight / 2 + 22)));
+                }
+                badge.style.left = `${badgePx}px`;
+                badge.style.top = `${badgePy}px`;
+            }
 
             allCards.forEach((c, idx) => {
                 let el = document.getElementById(c.id) || UI.createCardDOM(c);
@@ -1397,6 +1728,8 @@ const UI = {
 
                 let inner = el.querySelector('.card-inner');
                 if (!isFaceUp) inner.classList.add('is-flipped'); else inner.classList.remove('is-flipped');
+                el.setAttribute('aria-label', isFaceUp ? `${c.value} of ${c.suit}` : `${p.name}'s hidden card`);
+                el.setAttribute('tabindex', '0');
 
                 if (!p.connected && !p.isBot) el.classList.add('disconnected'); else el.classList.remove('disconnected');
 
@@ -1438,6 +1771,8 @@ const UI = {
 
             el.querySelector('.card-inner').classList.add('is-flipped');
             el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent');
+            el.setAttribute('aria-label', i === state.deck.length - 1 ? 'Draw from deck' : 'Card in deck');
+            el.setAttribute('tabindex', i === state.deck.length - 1 ? '0' : '-1');
 
             if (isMyTurn && !state.activeAbility && !App.uiState.targetingMode) el.classList.add('deck-glow');
             else el.classList.remove('deck-glow');
@@ -1454,6 +1789,8 @@ const UI = {
 
             el.querySelector('.card-inner').classList.remove('is-flipped');
             el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent');
+            el.setAttribute('aria-label', `${c.value} of ${c.suit} on discard pile`);
+            el.setAttribute('tabindex', i === state.discardPile.length - 1 ? '0' : '-1');
 
             if (state.lastActionTargetId === c.id) el.classList.add('highlight-recent');
 
@@ -1483,6 +1820,8 @@ const UI = {
                 if (!isFaceUp) inner.classList.add('is-flipped'); else inner.classList.remove('is-flipped');
 
                 el.classList.add('holding-card'); el.classList.remove('highlight-recent');
+                el.setAttribute('aria-label', isFaceUp ? `Drawn ${c.value} of ${c.suit}. Tap to play.` : 'Opponent drawn card');
+                el.setAttribute('tabindex', state.activeAbility.player === App.localId ? '0' : '-1');
             }
         }
 
@@ -1552,6 +1891,11 @@ const UI = {
         let me = state.players.find(p => p.id === App.localId);
         let activePlayer = state.players[state.turnIndex];
 
+        if (App.uiState.pendingAction) {
+            statusText.innerText = "Move sent — syncing with the table...";
+            return;
+        }
+
         if (state.phase === 'peek') {
             if (me && !me.ready) statusText.innerText = "Tap ANY TWO cards to peek. Then click Ready.";
             else statusText.innerText = "Waiting for others to finish peeking...";
@@ -1583,7 +1927,7 @@ const UI = {
         if (state.phase === 'peek' && me && !me.ready) {
             actionBar.classList.remove('hidden');
             let btn = document.createElement('button'); btn.innerText = "Ready (Finished Peeking)"; btn.className = "primary";
-            btn.onclick = () => { App.uiState.peekedCards.clear(); Net.sendAction({ type: 'READY_PEEK' }); };
+            btn.onclick = () => UI.submitAction({ type: 'READY_PEEK' });
             actionBar.appendChild(btn); return;
         }
 
@@ -1591,12 +1935,12 @@ const UI = {
             if (isMyTurn && !state.activeAbility) {
                 actionBar.classList.remove('hidden');
                 let btnDeck = document.createElement('button'); btnDeck.innerText = "Draw Deck"; btnDeck.className = "primary";
-                btnDeck.onclick = () => Net.sendAction({ type: 'DRAW_DECK' });
+                btnDeck.onclick = () => UI.submitAction({ type: 'DRAW_DECK' });
                 actionBar.appendChild(btnDeck);
 
-                if (state.discardPile.length > 0) {
+                if (state.discardPile.length > 0 && state.gameMode !== 'joker') {
                     let btnDisc = document.createElement('button'); btnDisc.innerText = "Draw Discard"; btnDisc.className = "secondary";
-                    btnDisc.onclick = () => Net.sendAction({ type: 'DRAW_DISCARD' });
+                    btnDisc.onclick = () => UI.submitAction({ type: 'DRAW_DISCARD' });
                     actionBar.appendChild(btnDisc);
                 }
 
@@ -1616,7 +1960,7 @@ const UI = {
                     let isBlackKing = ab.card.value === 'K' && !ab.card.isRed;
                     btnPlay.innerText = MAGIC_VALUES.includes(ab.card.value) && ab.type === 'holding' && !isBlackKing ? "Play Magic" : "Discard";
                     btnPlay.className = "primary";
-                    btnPlay.onclick = () => Net.sendAction({ type: 'PLAY_HOLDING', action: 'discard' });
+                    btnPlay.onclick = () => UI.submitAction({ type: 'PLAY_HOLDING', action: 'discard' });
                     actionBar.appendChild(btnPlay);
 
                     let btnSwap = document.createElement('button'); btnSwap.innerText = "Swap with Layout"; btnSwap.className = "secondary";
@@ -1625,7 +1969,7 @@ const UI = {
 
                     if (me.hand.length + me.penaltyCards.length === 0) {
                         let btnAdd = document.createElement('button'); btnAdd.innerText = "Place in Empty Layout"; btnAdd.className = "secondary";
-                        btnAdd.onclick = () => Net.sendAction({ type: 'PLAY_HOLDING', action: 'add_to_layout' });
+                        btnAdd.onclick = () => UI.submitAction({ type: 'PLAY_HOLDING', action: 'add_to_layout' });
                         actionBar.appendChild(btnAdd);
                     }
                 } else if (ab.step === 1 && !App.uiState.targetingMode) {
@@ -1641,19 +1985,14 @@ const UI = {
                 if (App.uiState.targetingMode && App.uiState.targetingMode.startsWith('q_')) {
                     let btnPass = document.createElement('button'); btnPass.innerText = "Pass (Finish)"; btnPass.className = "secondary";
                     btnPass.onclick = () => {
-                        App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear();
-                        UI.render(state); // Force immediate local UI update to clear hues
-                        Net.sendAction({ type: 'RESOLVE_MAGIC', action: 'pass' });
+                        UI.submitAction({ type: 'RESOLVE_MAGIC', action: 'pass' });
                     };
                     actionBar.appendChild(btnPass);
-                } else if (App.uiState.targetingMode && App.uiState.targetingMode !== 'peeking' && 
-                           App.uiState.targetingMode !== 'peek_self' && App.uiState.targetingMode !== 'peek_opp') {
+                } else if (App.uiState.targetingMode && App.uiState.targetingMode !== 'peeking') {
                     if (state.activeAbility && state.activeAbility.type.startsWith('magic_')) {
                         let btnPass = document.createElement('button'); btnPass.innerText = "Pass Magic"; btnPass.className = "secondary";
                         btnPass.onclick = () => {
-                            App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear();
-                            UI.render(state);
-                            Net.sendAction({ type: 'RESOLVE_MAGIC', action: 'pass' });
+                            UI.submitAction({ type: 'RESOLVE_MAGIC', action: 'pass' });
                         };
                         actionBar.appendChild(btnPass);
                     } else {
@@ -1666,7 +2005,14 @@ const UI = {
         }
     },
 
+    handleCardKeyDown: (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        UI.handleCardClick(e);
+    },
+
     handleCardClick: (e) => {
+        e.preventDefault();
         let cardEl = e.target.closest('.card');
         if (!cardEl) return;
         let cardId = cardEl.id;
@@ -1677,15 +2023,23 @@ const UI = {
         App.lastClickedCardId = cardId;
         App.lastClickTime = now;
 
-        let clickedCard = Engine.getCardById(cardId);
+        // Clients render App.gameState; Engine.state is authoritative only on the host.
+        // Looking up against Engine.state made every remote/mobile card tap silently fail.
+        let clickedCard = Engine.getCardById(cardId, state);
         if (!clickedCard) return;
+
+        cardEl.classList.remove('tap-confirmed');
+        void cardEl.offsetWidth;
+        cardEl.classList.add('tap-confirmed');
+        setTimeout(() => cardEl.classList.remove('tap-confirmed'), 220);
+        if (navigator.vibrate) navigator.vibrate(8);
 
         let isMyTurn = state.players[state.turnIndex]?.id === App.localId;
         let isHolding = state.activeAbility && state.activeAbility.player === App.localId && state.activeAbility.type.startsWith('holding');
 
-        // Allow discarding drawn card by clicking the discard pile
-        if (isHolding && clickedCard.loc === 'discard') {
-            Net.sendAction({ type: 'PLAY_HOLDING', action: 'discard' });
+        // Fast mobile gesture: tap the floating drawn card (or discard pile) to play/discard it.
+        if (isHolding && (clickedCard.id === state.activeAbility.card?.id || clickedCard.loc === 'discard')) {
+            UI.submitAction({ type: 'PLAY_HOLDING', action: 'discard' });
             return;
         }
 
@@ -1694,21 +2048,18 @@ const UI = {
             if (mode === 'peeking') return;
 
             if (mode === 'swap' && clickedCard.ownerId === App.localId) {
-                App.uiState.targetingMode = null; UI.render(state);
-                Net.sendAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: cardId });
+                UI.submitAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: cardId });
             }
             else if (mode === 'peek_self' && clickedCard.ownerId === App.localId) {
                 App.uiState.targetingMode = 'peeking'; App.uiState.peekedCards.add(cardId); UI.render(state);
                 setTimeout(() => {
-                    App.uiState.peekedCards.delete(cardId); App.uiState.targetingMode = null; UI.render(App.gameState);
-                    Net.sendAction({ type: 'RESOLVE_MAGIC', targetId: cardId });
+                    UI.submitAction({ type: 'RESOLVE_MAGIC', targetId: cardId });
                 }, 2000);
             }
             else if (mode === 'peek_opp' && clickedCard.ownerId !== App.localId && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 App.uiState.targetingMode = 'peeking'; App.uiState.peekedCards.add(cardId); UI.render(state);
                 setTimeout(() => {
-                    App.uiState.peekedCards.delete(cardId); App.uiState.targetingMode = null; UI.render(App.gameState);
-                    Net.sendAction({ type: 'RESOLVE_MAGIC', targetPlayerId: clickedCard.ownerId, targetId: cardId });
+                    UI.submitAction({ type: 'RESOLVE_MAGIC', targetPlayerId: clickedCard.ownerId, targetId: cardId });
                 }, 2000);
             }
             else if (mode === 'q_peek' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
@@ -1721,13 +2072,11 @@ const UI = {
             else if (mode === 'q_swap_2' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 if (cardId === App.uiState.selectedCardId) {
                     // Pressed the same card again to cancel swap
-                    App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear(); UI.render(state);
-                    Net.sendAction({ type: 'RESOLVE_MAGIC', targetId: cardId });
+                    UI.submitAction({ type: 'RESOLVE_MAGIC', targetId: cardId });
                     return;
                 }
                 let target1 = App.uiState.selectedCardId;
-                App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear(); UI.render(state);
-                Net.sendAction({ type: 'RESOLVE_MAGIC', swapTarget1: target1, swapTarget2: cardId });
+                UI.submitAction({ type: 'RESOLVE_MAGIC', swapTarget1: target1, swapTarget2: cardId });
             }
             else if (mode === 'blind_swap_1' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 App.uiState.selectedCardId = cardId; App.uiState.targetingMode = 'blind_swap_2'; UI.render(state);
@@ -1735,30 +2084,36 @@ const UI = {
             else if (mode === 'blind_swap_2' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 if (cardId === App.uiState.selectedCardId) return;
                 let target1 = App.uiState.selectedCardId;
-                App.uiState.targetingMode = null; App.uiState.selectedCardId = null; App.uiState.peekedCards.clear(); UI.render(state);
-                Net.sendAction({ type: 'RESOLVE_MAGIC', swapTarget1: target1, swapTarget2: cardId });
+                UI.submitAction({ type: 'RESOLVE_MAGIC', swapTarget1: target1, swapTarget2: cardId });
             }
             else if (mode === 'force_penalty' && clickedCard.ownerId !== App.localId && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
-                App.uiState.targetingMode = null; UI.render(state);
-                Net.sendAction({ type: 'RESOLVE_MAGIC', targetPlayerId: clickedCard.ownerId });
+                UI.submitAction({ type: 'RESOLVE_MAGIC', targetPlayerId: clickedCard.ownerId });
+            }
+            else {
+                UI.showToast("That card is not a valid target. Choose a glowing card.", "warning");
+                if (navigator.vibrate) navigator.vibrate([16, 28, 16]);
             }
             return;
         }
 
         if (isHolding && clickedCard.ownerId === App.localId && (clickedCard.loc === 'hand' || clickedCard.loc === 'penalty')) {
-            Net.sendAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: cardId });
+            UI.submitAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: cardId });
             return;
         }
 
         if (!isHolding && (state.phase === 'play' || state.phase === 'orbit') && (clickedCard.loc === 'hand' || clickedCard.loc === 'penalty')) {
             cardEl.style.zIndex = 999;
-            Net.sendAction({ type: 'SLAP', targetId: cardId, timestamp: now });
+            UI.submitAction({ type: 'SLAP', targetId: cardId, timestamp: now });
             return;
         }
 
         if (isMyTurn && !state.activeAbility) {
-            if (clickedCard.loc === 'deck') { Net.sendAction({ type: 'DRAW_DECK' }); return; }
-            if (clickedCard.loc === 'discard') { Net.sendAction({ type: 'DRAW_DISCARD' }); return; }
+            if (clickedCard.loc === 'deck') { UI.submitAction({ type: 'DRAW_DECK' }); return; }
+            if (clickedCard.loc === 'discard') {
+                if (state.gameMode === 'joker') UI.showToast("Discard draws are disabled in Joker mode.", "warning");
+                else UI.submitAction({ type: 'DRAW_DISCARD' });
+                return;
+            }
         }
 
         if (state.phase === 'peek' && clickedCard.ownerId === App.localId) {
@@ -1769,6 +2124,12 @@ const UI = {
                 } else { UI.showToast("You can only peek at two cards!", "warning"); }
             } else { UI.showToast("You already peeked at this card!", "warning"); }
             return;
+        }
+
+        if (state.phase === 'peek') {
+            UI.showToast("Peek at one of your own cards.", "warning");
+        } else if ((clickedCard.loc === 'deck' || clickedCard.loc === 'discard') && !isMyTurn) {
+            UI.showToast("Wait for your turn to draw.", "info");
         }
     }
 };

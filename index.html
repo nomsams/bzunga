@@ -382,19 +382,32 @@ const App = {
 
 // --- GAME ENGINE (HOST ONLY) ---
 const Engine = {
-    state: { phase: 'lobby', players: [], deck: [], discardPile: [], logs: [], activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, turnStartTime: 0, peekPhaseCompleted: false, publicPeekedCards: [] },
+    state: { phase: 'lobby', players: [], deck: [], discardPile: [], logs: [], activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, turnStartTime: 0, peekPhaseCompleted: false, publicPeekedCards: [], botPeekLog: [] },
     botMemory: {}
+};
+
+Engine.rememberCardForBot = (botId, card) => {
+    if (!card) return;
+    if (!Engine.botMemory[botId]) Engine.botMemory[botId] = {};
+    Engine.botMemory[botId][card.id] = {
+        id: card.id,
+        value: card.value,
+        isRed: card.isRed,
+        numVal: window.Bot ? window.Bot.getNumericValue(card.value, card.isRed) : 0,
+        time: Utils.timestamp()
+    };
 };
 
 Engine.memorizeForBot = (botId, card) => {
     if (!Engine.botMemory[botId]) Engine.botMemory[botId] = {};
     // Only memorize when card is publicly visible (peek phase or already face‑up on discard)
     if (Engine.state.phase === 'peek' || (card.isFaceUp && card.loc === 'discard')) {
-        Engine.botMemory[botId][card.id] = { id: card.id, value: card.value, numVal: window.Bot ? window.Bot.getNumericValue(card.value, card.isRed) : 0, time: Utils.timestamp() };
+        Engine.rememberCardForBot(botId, card);
     }
 };
 
 Engine.recordBotPeek = function({playerId, cardId, ability}) {
+    if (!Engine.state.botPeekLog) Engine.state.botPeekLog = [];
     Engine.state.botPeekLog.push({playerId, cardId, ability, time: Utils.timestamp()});
     console.log(`Bot ${playerId} peeked card ${cardId} via ${ability}`);
 };
@@ -448,6 +461,7 @@ Engine.startGame = () => {
     Engine.state.lastActionTargetId = null;
     Engine.state.turnStartTime = Utils.timestamp();
     Engine.state.publicPeekedCards = [];
+    Engine.state.botPeekLog = [];
     Engine.botMemory = {};
 
     App.uiState.hasPeeked.clear();
@@ -473,7 +487,10 @@ Engine.checkDeckEmpty = () => {
         Engine.sysLog("Deck empty! True shuffling discard pile into deck...", "warning");
         let topDiscard = Engine.state.discardPile.pop();
         let toShuffle = [...Engine.state.discardPile];
-        toShuffle.forEach(c => { c.loc = 'deck'; c.isFaceUp = false; c.ownerId = null; });
+        toShuffle.forEach(c => {
+            c.loc = 'deck'; c.isFaceUp = false; c.ownerId = null;
+            c.isSlapped = false; c.slappedAt = null;
+        });
         Engine.state.deck = Utils.shuffle(toShuffle);
         Engine.state.discardPile = [topDiscard];
         Engine.broadcast();
@@ -592,6 +609,7 @@ Engine.endGame = () => {
     }
 
     Engine.state.winners = winners;
+    if (window.Bot?.onGameOver) window.Bot.onGameOver();
     Engine.broadcast();
 };
 
@@ -668,7 +686,7 @@ Engine.processAction = (action, peerId) => {
                 }
                 Engine.drawPenalty(player.id);
                 Engine.state.lastSlap = { id: targetCard.id, success: false, time: now, playerId: player.id, targetOwnerId: owner.id };
-                Engine.state.players.filter(p => p.isBot).forEach(bot => { Engine.memorizeForBot(bot.id, targetCard); });
+                Engine.state.players.filter(p => p.isBot).forEach(bot => { Engine.rememberCardForBot(bot.id, targetCard); });
             }
             Engine.broadcast();
             break;
@@ -683,6 +701,7 @@ Engine.processAction = (action, peerId) => {
             if (Engine.state.deck.length === 0) { Engine.nextTurn(); return; }
             let drawn = Engine.state.deck.pop();
             Engine.checkDeckEmpty();
+            drawn.isSlapped = false; drawn.slappedAt = null;
             drawn.loc = 'holding'; drawn.ownerId = player.id; drawn.isFaceUp = true;
             Engine.state.activeAbility = { player: player.id, card: drawn, type: 'holding', step: 0, time: now };
             Engine.sysLog(`${player.name} drew from the deck.`);
@@ -698,6 +717,9 @@ Engine.processAction = (action, peerId) => {
             }
             if (Engine.state.discardPile.length === 0) return;
             let disc = Engine.state.discardPile.pop();
+            disc.isSlapped = false; disc.slappedAt = null;
+            let newlyExposed = Engine.state.discardPile[Engine.state.discardPile.length - 1];
+            if (newlyExposed) { newlyExposed.isSlapped = false; newlyExposed.slappedAt = null; }
             disc.loc = 'holding'; disc.ownerId = player.id;
             Engine.state.activeAbility = { player: player.id, card: disc, type: 'holding_discard', step: 0, time: now };
             Engine.sysLog(`${player.name} drew from the discard pile.`);
@@ -709,6 +731,7 @@ Engine.processAction = (action, peerId) => {
             let hCard = Engine.state.activeAbility.card;
 
             if (action.action === 'discard') {
+                hCard.isSlapped = false; hCard.slappedAt = null;
                 hCard.loc = 'discard'; hCard.ownerId = null; hCard.isFaceUp = true;
                 Engine.state.discardPile.push(hCard);
                 Engine.state.lastActionTargetId = hCard.id;
@@ -738,6 +761,7 @@ Engine.processAction = (action, peerId) => {
                 if (replaced) {
                     hCard.ownerId = player.id; hCard.gridIndex = target.gridIndex; hCard.isFaceUp = false;
                     Engine.state.lastActionTargetId = hCard.id;
+                    target.isSlapped = false; target.slappedAt = null;
                     target.loc = 'discard'; target.ownerId = null; target.isFaceUp = true;
                     Engine.state.discardPile.push(target);
                     Engine.sysLog(`${player.name} swapped their drawn card with a card in their layout.`, "info");
@@ -772,14 +796,17 @@ Engine.processAction = (action, peerId) => {
                     Engine.state.publicPeekedCards.push(action.targetId);
                 }
                 Engine.recordBotPeek({playerId: player.id, cardId: action.targetId, ability: 'magic_9'});
-                if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.memorizeForBot(player.id, c); }
+                if (action.targetId) {
+                    let c = Engine.getCardById(action.targetId);
+                    if (c) Engine.state.players.filter(p => p.isBot).forEach(bot => Engine.rememberCardForBot(bot.id, c));
+                }
                 Engine.nextTurn();
             } else if (mType === 'magic_10') {
                 if (!action.targetId || !action.targetPlayerId) { Engine.nextTurn(); return; } // Safety check
                 let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
                 Engine.sysLog(`${player.name} used a 10 to secretly peek at one of ${targetOwner ? targetOwner.name + "'s" : "an opponent's"} cards.`, "info");
                 Engine.recordBotPeek({playerId: player.id, cardId: action.targetId, ability: 'magic_10'});
-                if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.memorizeForBot(player.id, c); }
+                if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.rememberCardForBot(player.id, c); }
                 Engine.nextTurn();
             } else if (mType === 'magic_Q') {
                 if (action.swapTarget1 && action.swapTarget2) {
@@ -787,7 +814,7 @@ Engine.processAction = (action, peerId) => {
                     Engine.sysLog(`${player.name} used a Queen to peek and swap a card!`, "warning");
                 } else {
                     Engine.sysLog(`${player.name} used a Queen to secretly peek at a card.`, "info");
-                    if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.memorizeForBot(player.id, c); }
+                    if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.rememberCardForBot(player.id, c); }
                 }
                 Engine.nextTurn();
             } else if (mType === 'magic_J') {

@@ -520,7 +520,7 @@ const Bot = {
                 const card = Engine.getCardById(id);
                 if (card) {
                     Bot.rememberVisibleCard(card);
-                    Engine.rememberCardForBot(bot.id, card);
+                    Engine.rememberCardForBot(bot.id, card, 'public_reveal');
                 }
             });
         });
@@ -897,7 +897,7 @@ const Bot = {
         latestLogs.forEach(l => {
             if (l.type === 'sys' && l.msg.includes("forced a penalty on")) {
                 let parts = l.msg.split('forced a penalty on');
-                let aggrName = parts[0].replace('😈', '').trim();
+                let aggrName = parts[0].trim();
                 let victimName = parts[1].split('using')[0].trim();
                 
                 let aggrPlayer = Engine.state.players.find(p => p.name === aggrName);
@@ -1152,7 +1152,7 @@ const Bot = {
                 const magicUtility = isMagic ? (hCard.value === 'K' ? 7 : ['J', 'Q'].includes(hCard.value) ? 5 : 3) : 0;
 
                 // A bot always remembers a card it personally drew, even after putting it face-down.
-                Engine.rememberCardForBot(activePlayer.id, hCard);
+                Engine.rememberCardForBot(activePlayer.id, hCard, 'own_draw');
 
                 if (!layout.length && !isMagic) {
                     Bot.chat(activePlayer, cardVal <= 2 ? 'goodDraw' : 'badDraw', { cardValue: hCard.value });

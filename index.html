@@ -133,14 +133,14 @@
         width: 44px; height: 44px; padding: 0; justify-content: center; overflow: visible; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .player-badge .icon { font-size: 1.4rem; line-height: 44px; margin: 0; transition: all 0.3s; }
+    .player-badge .icon { font-size: 0.64rem; line-height: 44px; font-weight: 800; letter-spacing: 0.04em; margin: 0; transition: all 0.3s; }
     .player-badge .name-text, .player-badge .meta { display: none; opacity: 0; transition: opacity 0.2s; height: 0; }
     .player-badge .turn-text { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); opacity: 0; color: var(--accent); font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; transition: opacity 0.3s, top 0.3s; pointer-events: none; }
 
     .player-badge:hover, .player-badge.expanded {
         width: auto; height: auto; max-width: 200px; padding: 8px 16px; border-radius: 16px; z-index: 250; background: rgba(30, 41, 59, 0.95); border-color: rgba(255,255,255,0.3);
     }
-    .player-badge:hover .icon, .player-badge.expanded .icon { line-height: normal; font-size: 1.1rem; margin-right: 6px; }
+    .player-badge:hover .icon, .player-badge.expanded .icon { line-height: normal; font-size: 0.68rem; margin-right: 6px; }
     .player-badge:hover .name-text, .player-badge.expanded .name-text { display: inline-block; opacity: 1; font-weight: 600; height: auto; }
     .player-badge:hover .meta, .player-badge.expanded .meta { display: block; opacity: 1; font-size: 0.75rem; color: #94a3b8; margin-top: 2px; height: auto; }
 
@@ -182,10 +182,10 @@
     .vfx-slap.miss { color: var(--danger); }
     @keyframes slapPop { 0% { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 0; } }
 
-    #chat-fab { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
+    #chat-fab { position: fixed; bottom: 20px; left: 20px; right: auto; width: 58px; height: 42px; border-radius: 14px; background: var(--surface); color: white; font-size: 0.62rem; letter-spacing: 0.04em; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.2s; }
     #chat-fab:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
-    #btn-toggle-bubbles { position: fixed; top: 80px; left: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
-    #btn-toggle-clutter { position: fixed; top: 135px; left: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
+    #btn-toggle-bubbles { position: fixed; top: 80px; left: 20px; width: 52px; height: 34px; border-radius: 10px; background: var(--surface); color: white; font-size: 0.58rem; letter-spacing: 0.04em; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
+    #btn-toggle-clutter { position: fixed; top: 122px; left: 20px; width: 52px; height: 34px; border-radius: 10px; background: var(--surface); color: white; font-size: 0.58rem; letter-spacing: 0.04em; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 590; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; }
     #btn-toggle-bubbles.toggled-off, #btn-toggle-clutter.toggled-off { opacity: 0.5; }
     .clutter-hidden #status-banner,
     .clutter-hidden #chat-drawer,
@@ -270,7 +270,7 @@
         border-color: rgba(255,255,255,0.12);
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 768px), (max-width: 1024px) and (max-height: 620px) and (orientation: landscape) {
         :root {
             --card-w: 46px;
             --card-h: 66px;
@@ -278,7 +278,6 @@
         body { overscroll-behavior: none; position: fixed; inset: 0; }
         #app { overflow: hidden; padding: 0; }
         #game-view { width: 100%; height: 100dvh; align-items: stretch; }
-        #zoom-wrapper { transform: none !important; }
         #table {
             width: calc(100% - 12px);
             height: calc(100% - 146px);
@@ -330,8 +329,12 @@
             overflow: hidden;
             font-size: 0 !important;
         }
-        #btn-toggle-layout::after { content: "▦"; font-size: 1rem; }
-        #btn-toggle-anim::after { content: "✦"; font-size: 0.9rem; }
+        #btn-toggle-layout::after, #btn-toggle-anim::after {
+            content: attr(data-short-label);
+            font-size: 0.55rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
         #action-bar {
             left: 8px;
             right: 8px;
@@ -378,7 +381,7 @@
             pointer-events: none;
             background: rgba(9,20,36,0.92);
         }
-        .player-badge .icon { font-size: 1.08rem; line-height: 38px; }
+        .player-badge .icon { font-size: 0.54rem; line-height: 38px; }
         .player-badge .turn-text { display: none; }
         .player-badge.expanded {
             max-width: 132px;
@@ -388,28 +391,43 @@
         .player-badge.active-turn {
             box-shadow: 0 0 0 2px rgba(251,191,36,0.8), 0 0 18px rgba(251,191,36,0.55);
         }
-        #zoom-controls { display: none !important; }
+        #zoom-controls {
+            display: flex !important;
+            flex-direction: row !important;
+            top: calc(64px + env(safe-area-inset-top)) !important;
+            right: 8px !important;
+            gap: 5px !important;
+        }
+        #zoom-controls button {
+            width: 32px !important;
+            height: 32px !important;
+            min-height: 32px !important;
+            font-size: 1rem !important;
+        }
         #btn-toggle-bubbles, #btn-toggle-clutter {
             top: calc(64px + env(safe-area-inset-top));
-            width: 32px;
+            width: 52px;
             height: 32px;
             min-height: 32px !important;
             margin: 0;
             padding: 0;
-            font-size: 0.82rem;
+            font-size: 0.52rem;
+            letter-spacing: 0.03em;
             background: rgba(9,20,36,0.88);
         }
         #btn-toggle-bubbles { left: 9px; }
-        #btn-toggle-clutter { left: 47px; }
+        #btn-toggle-clutter { left: 66px; }
         #chat-fab {
-            right: 10px;
+            left: 10px;
+            right: auto;
             bottom: calc(86px + env(safe-area-inset-bottom));
-            width: 44px;
-            height: 44px;
-            min-height: 44px !important;
+            width: 52px;
+            height: 38px;
+            min-height: 38px !important;
             margin: 0;
             padding: 0;
-            font-size: 1rem;
+            border-radius: 12px;
+            font-size: 0.56rem;
             background: rgba(9,20,36,0.94);
         }
         #toast-container {
@@ -466,16 +484,20 @@
         #status-text { font-size: 0.72rem; }
     }
 
-    @media (max-height: 620px) and (orientation: landscape) {
+    @media (max-width: 1024px) and (max-height: 620px) and (orientation: landscape) {
         #game-view { width: 100%; height: 100dvh; }
-        #zoom-wrapper { transform: none !important; }
-        #table { height: calc(100% - 76px); margin: 54px 6px 22px; }
+        #table {
+            width: calc(100% - 174px);
+            height: calc(100% - 64px);
+            margin: 54px 168px 10px 6px;
+            border-radius: 28px;
+        }
         #action-bar {
             top: auto;
             left: auto;
             right: 8px;
             bottom: 8px;
-            width: 180px;
+            width: 150px;
             transform: none;
             grid-template-columns: 1fr;
             max-height: calc(100dvh - 70px);
@@ -484,8 +506,8 @@
         #action-bar.hidden { transform: translateX(120%); }
         #card-layer, .card { touch-action: none; }
         #status-banner { min-height: 52px; padding: 6px 10px; }
-        #zoom-controls { display: none !important; }
-        #chat-fab { bottom: 10px; right: 198px; }
+        #zoom-controls { top: 58px !important; right: 8px !important; }
+        #chat-fab { bottom: 10px; left: 10px; right: auto; }
     }
 </style>
 </head>
@@ -522,8 +544,8 @@
                 </div>
                 <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center;">
                     <select id="game-mode" style="flex: 1; margin: 0;">
-                        <option value="rhino">🦏 Rhino Mode (Standard)</option>
-                        <option value="joker">🃏 Joker Mode (Hardcore)</option>
+                        <option value="rhino">Rhino Mode (Standard)</option>
+                        <option value="joker">Joker Mode (Hardcore)</option>
                     </select>
                     <button id="btn-mode-info" class="secondary" style="flex: 0 0 45px; padding: 0; font-size: 1.2rem; margin: 0;" title="Game Mode Info">?</button>
                 </div>
@@ -555,8 +577,8 @@
                 <div style="font-size: 0.75rem; color: #94a3b8; font-weight:800;" id="phase-display">PHASE</div>
                 <div id="status-text">Waiting for players...</div>
                 <div style="display: flex; gap: 5px;">
-                    <button id="btn-toggle-layout" class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Layout: GRID</button>
-                    <button id="btn-toggle-anim" class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Anim: ON</button>
+                    <button id="btn-toggle-layout" class="secondary" data-short-label="GRID" aria-label="Switch card layout" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Layout: GRID</button>
+                    <button id="btn-toggle-anim" class="secondary" data-short-label="FX ON" aria-label="Toggle animations" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Anim: ON</button>
                 </div>
             </div>
             <div id="action-bar" class="hidden">
@@ -570,21 +592,21 @@
 
         <!-- Zoom controls on RIGHT side -->
         <div id="zoom-controls" style="position: fixed; top: 80px; right: 20px; z-index: 550; display: flex; flex-direction: column; gap: 5px;">
-            <button id="btn-zoom-in" class="secondary" style="width:36px; height:36px; padding:0; border-radius:18px; margin:0; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">+</button>
-            <button id="btn-zoom-out" class="secondary" style="width:36px; height:36px; padding:0; border-radius:18px; margin:0; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">-</button>
+            <button id="btn-zoom-in" class="secondary" aria-label="Zoom in" title="Zoom in" style="width:36px; height:36px; padding:0; border-radius:18px; margin:0; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">+</button>
+            <button id="btn-zoom-out" class="secondary" aria-label="Zoom out" title="Zoom out" style="width:36px; height:36px; padding:0; border-radius:18px; margin:0; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">-</button>
         </div>
 
         <!-- Toggle buttons on LEFT side -->
-        <button id="btn-toggle-bubbles" title="Toggle Bubbles">👁️</button>
-        <button id="btn-toggle-clutter" title="Toggle Game Logs">🧽</button>
+        <button id="btn-toggle-bubbles" title="Toggle chat bubbles" aria-label="Toggle chat bubbles">BUBBLE</button>
+        <button id="btn-toggle-clutter" title="Toggle table information" aria-label="Toggle table information">INFO</button>
         
-        <!-- Chat FAB on bottom right -->
-        <button id="chat-fab">💬</button>
+        <!-- Chat control on bottom left -->
+        <button id="chat-fab" aria-label="Open chat">CHAT</button>
         
         <div id="chat-drawer">
             <div class="chat-header">
                 <h3 style="margin:0; color:white; font-size:1rem;">Game Log</h3>
-                <button id="chat-close" style="background:none; border:none; color:white; font-size:1.2rem;">✖</button>
+                <button id="chat-close" aria-label="Close chat" style="background:none; border:none; color:white; font-size:1rem;">X</button>
             </div>
             <div id="chat-messages"></div>
             <div id="chat-input-container">
@@ -606,7 +628,7 @@
         </div>
     </div>
     <div id="modal-bazunga-confirm" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="bazunga-confirm-title" aria-describedby="bazunga-confirm-description">
-        <h2 id="bazunga-confirm-title" style="font-size: 2rem; margin-bottom: 10px; color: var(--danger);">⚠️ CALL BAZUNGA?</h2>
+        <h2 id="bazunga-confirm-title" style="font-size: 2rem; margin-bottom: 10px; color: var(--danger);">CALL BAZUNGA?</h2>
         <p id="bazunga-confirm-description" style="margin-bottom: 20px; font-size: 1.1rem; color: #e2e8f0;">This starts the final orbit. Every player gets one last turn, and a failed call can cost you the round. Are you sure?</p>
         <div class="modal-buttons">
             <button id="btn-bazunga-confirm" class="danger" style="background: var(--danger);">Yes, Call BAZUNGA</button>
@@ -655,24 +677,61 @@ const Engine = {
     botMemory: {}
 };
 
-Engine.rememberCardForBot = (botId, card) => {
-    if (!card) return;
+Engine.rememberCardForBot = (botId, card, source = 'unauthorized') => {
+    if (!card) return false;
+    const bot = Engine.state.players.find(player => player.id === botId && player.isBot);
+    if (!bot) return false;
+    const existingMemory = Engine.botMemory[botId] || {};
+    const openingPeekCount = Object.values(existingMemory)
+        .filter(item => item.source === 'initial_peek').length;
+
+    const isOwnOpeningPeek = source === 'initial_peek'
+        && Engine.state.phase === 'peek'
+        && card.ownerId === botId
+        && (card.loc === 'hand' || card.loc === 'penalty')
+        && (existingMemory[card.id]?.source === 'initial_peek' || openingPeekCount < 2);
+    const isOwnDraw = source === 'own_draw'
+        && card.ownerId === botId
+        && card.loc === 'holding'
+        && Engine.state.activeAbility?.player === botId
+        && Engine.state.activeAbility?.card?.id === card.id;
+    const isRecentFailedSlap = Engine.state.lastSlap?.id === card.id
+        && Engine.state.lastSlap?.success === false
+        && Utils.timestamp() - Engine.state.lastSlap.time < 3000;
+    const isPublicReveal = source === 'public_reveal'
+        && (
+            (card.loc === 'discard' && card.isFaceUp)
+            || Engine.state.publicPeekedCards?.includes(card.id)
+            || isRecentFailedSlap
+        );
+    const isPrivateMagic = source === 'private_magic'
+        && Engine.state.activeAbility?.player === botId
+        && ['magic_10', 'magic_Q'].includes(Engine.state.activeAbility?.type)
+        && (card.loc === 'hand' || card.loc === 'penalty');
+    if (!isOwnOpeningPeek && !isOwnDraw && !isPublicReveal && !isPrivateMagic) return false;
+
     if (!Engine.botMemory[botId]) Engine.botMemory[botId] = {};
     Engine.botMemory[botId][card.id] = {
         id: card.id,
         value: card.value,
         isRed: card.isRed,
         numVal: window.Bot ? window.Bot.getNumericValue(card.value, card.isRed) : 0,
+        ownerId: card.ownerId,
+        source,
         time: Utils.timestamp()
     };
+    return true;
 };
 
 Engine.memorizeForBot = (botId, card) => {
     if (!Engine.botMemory[botId]) Engine.botMemory[botId] = {};
-    // Only memorize when card is publicly visible (peek phase or already face‑up on discard)
-    if (Engine.state.phase === 'peek' || (card.isFaceUp && card.loc === 'discard')) {
-        Engine.rememberCardForBot(botId, card);
+    if (Engine.state.phase === 'peek') {
+        return Engine.rememberCardForBot(botId, card, 'initial_peek');
     }
+    if (card.isFaceUp && card.loc === 'discard') {
+        return Engine.rememberCardForBot(botId, card, 'public_reveal');
+    }
+    return false;
 };
 
 Engine.recordBotPeek = function({playerId, cardId, ability}) {
@@ -972,7 +1031,7 @@ Engine.processAction = (action, peerId) => {
                 }
                 Engine.drawPenalty(player.id);
                 Engine.state.lastSlap = { id: targetCard.id, success: false, time: now, playerId: player.id, targetOwnerId: owner.id };
-                Engine.state.players.filter(p => p.isBot).forEach(bot => { Engine.rememberCardForBot(bot.id, targetCard); });
+                Engine.state.players.filter(p => p.isBot).forEach(bot => { Engine.rememberCardForBot(bot.id, targetCard, 'public_reveal'); });
             }
             Engine.broadcast();
             break;
@@ -1084,7 +1143,7 @@ Engine.processAction = (action, peerId) => {
                 Engine.recordBotPeek({playerId: player.id, cardId: action.targetId, ability: 'magic_9'});
                 if (action.targetId) {
                     let c = Engine.getCardById(action.targetId);
-                    if (c) Engine.state.players.filter(p => p.isBot).forEach(bot => Engine.rememberCardForBot(bot.id, c));
+                    if (c) Engine.state.players.filter(p => p.isBot).forEach(bot => Engine.rememberCardForBot(bot.id, c, 'public_reveal'));
                 }
                 Engine.nextTurn();
             } else if (mType === 'magic_10') {
@@ -1092,7 +1151,7 @@ Engine.processAction = (action, peerId) => {
                 let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
                 Engine.sysLog(`${player.name} used a 10 to secretly peek at one of ${targetOwner ? targetOwner.name + "'s" : "an opponent's"} cards.`, "info");
                 Engine.recordBotPeek({playerId: player.id, cardId: action.targetId, ability: 'magic_10'});
-                if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.rememberCardForBot(player.id, c); }
+                if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.rememberCardForBot(player.id, c, 'private_magic'); }
                 Engine.nextTurn();
             } else if (mType === 'magic_Q') {
                 if (action.swapTarget1 && action.swapTarget2) {
@@ -1100,7 +1159,7 @@ Engine.processAction = (action, peerId) => {
                     Engine.sysLog(`${player.name} used a Queen to peek and swap a card!`, "warning");
                 } else {
                     Engine.sysLog(`${player.name} used a Queen to secretly peek at a card.`, "info");
-                    if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.rememberCardForBot(player.id, c); }
+                    if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.rememberCardForBot(player.id, c, 'private_magic'); }
                 }
                 Engine.nextTurn();
             } else if (mType === 'magic_J') {
@@ -1109,13 +1168,13 @@ Engine.processAction = (action, peerId) => {
                     let c1 = Engine.getCardById(action.swapTarget1); let c2 = Engine.getCardById(action.swapTarget2);
                     let p1 = Engine.state.players.find(p => p.id === c1?.ownerId); let p2 = Engine.state.players.find(p => p.id === c2?.ownerId);
                     Engine.executeSwap(action.swapTarget1, action.swapTarget2, true);
-                    Engine.sysLog(`🌪️ ${player.name} used a Jack to blind-swap a card from ${p1?.name} and ${p2?.name}!`, "warning");
+                    Engine.sysLog(`${player.name} used a Jack to blind-swap a card from ${p1?.name} and ${p2?.name}!`, "warning");
                 }
                 Engine.nextTurn();
             } else if (mType === 'magic_K') {
                 if (action.targetPlayerId) {
                     let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
-                    Engine.sysLog(`😈 ${player.name} forced a penalty on ${targetOwner ? targetOwner.name : "an opponent"} using the Red King!`, "danger");
+                    Engine.sysLog(`${player.name} forced a penalty on ${targetOwner ? targetOwner.name : "an opponent"} using the Red King!`, "danger");
                     Engine.drawPenalty(action.targetPlayerId);
                 }
                 Engine.nextTurn();
@@ -1125,7 +1184,7 @@ Engine.processAction = (action, peerId) => {
         case 'CALL_BAZUNGA':
             if (!isTurn || Engine.state.phase !== 'play') return;
             Engine.state.phase = 'orbit'; Engine.state.bazungaCallerId = player.id;
-            Engine.sysLog(`🚨 ${player.name} called BAZUNGA! Final orbit begins!`, "danger");
+            Engine.sysLog(`${player.name} called BAZUNGA! Final orbit begins!`, "danger");
             Engine.nextTurn();
             break;
 
@@ -1322,11 +1381,13 @@ const UI = {
         document.getElementById('btn-toggle-anim').onclick = (e) => {
             App.animEnabled = !App.animEnabled;
             e.target.innerText = `Anim: ${App.animEnabled ? 'ON' : 'OFF'}`;
+            e.target.dataset.shortLabel = App.animEnabled ? 'FX ON' : 'FX OFF';
         };
 
         document.getElementById('btn-toggle-layout').onclick = (e) => {
             App.uiState.layoutMode = App.uiState.layoutMode === 'grid' ? 'line' : 'grid';
             e.target.innerText = `Layout: ${App.uiState.layoutMode.toUpperCase()}`;
+            e.target.dataset.shortLabel = App.uiState.layoutMode.toUpperCase();
             if (App.gameState) UI.render(App.gameState);
         };
 
@@ -1334,28 +1395,22 @@ const UI = {
         document.getElementById('chat-close').onclick = () => document.getElementById('chat-drawer').classList.remove('open');
         document.getElementById('chat-send').onclick = UI.sendChat;
         document.getElementById('btn-toggle-bubbles').onclick = (e) => {
-            let container = document.getElementById('chat-bubble-container');
-            container.classList.toggle('hidden');
+            const container = document.getElementById('chat-bubble-container');
+            const nowHidden = container.classList.toggle('hidden');
             e.target.classList.toggle('toggled-off');
-            
-            // Also toggle clutter (notifications, status, etc)
-            let ui = document.getElementById('ui-layer');
-            ui.classList.toggle('clutter-hidden');
-            document.getElementById('btn-toggle-clutter').classList.toggle('toggled-off');
+            e.target.setAttribute('aria-pressed', String(nowHidden));
         };
         document.getElementById('btn-toggle-clutter').onclick = (e) => {
-            let ui = document.getElementById('ui-layer');
-            ui.classList.toggle('clutter-hidden');
+            const app = document.getElementById('app');
+            const nowHidden = app.classList.toggle('clutter-hidden');
             e.target.classList.toggle('toggled-off');
-            
-            // Also toggle bubbles to keep in sync
-            let container = document.getElementById('chat-bubble-container');
-            container.classList.toggle('hidden');
-            document.getElementById('btn-toggle-bubbles').classList.toggle('toggled-off');
+            e.target.setAttribute('aria-pressed', String(nowHidden));
         };
 
         // Zoom Controls
-        App.uiState.zoomLevel = 0.85;
+        const mobileViewport = Math.min(window.innerWidth, window.innerHeight) <= 768
+            && Math.max(window.innerWidth, window.innerHeight) <= 1024;
+        App.uiState.zoomLevel = mobileViewport ? 1 : 0.85;
         document.getElementById('zoom-wrapper').style.setProperty('--zoom', App.uiState.zoomLevel);
         document.getElementById('btn-zoom-in').onclick = () => {
             App.uiState.zoomLevel = Math.min(App.uiState.zoomLevel + 0.1, 1.5);
@@ -1591,7 +1646,7 @@ const UI = {
                 if (App.isHost && p.isBot && p.id !== App.localId) {
                     removeBtn = `<button class="danger" style="width:auto; padding:4px 10px; font-size:0.75rem; margin-left:8px;" data-bot-id="${p.id}">Remove</button>`;
                 }
-                item.innerHTML = `<strong>${p.name}</strong> <span style="color:#94a3b8;">${p.isHost ? '👑 Host' : p.isBot ? '🤖 Bot' : '👤 Player'} ${status}</span> ${removeBtn}`;
+                item.innerHTML = `<strong>${p.name}</strong> <span style="color:#94a3b8;">${p.isHost ? 'Host' : p.isBot ? 'Bot' : 'Player'} ${status}</span> ${removeBtn}`;
                 list.appendChild(item);
             });
 
@@ -1671,14 +1726,28 @@ const UI = {
             setTimeout(() => { if (App.gameState) UI.render(App.gameState); }, 2500);
         }
 
-        const isMobile = window.innerWidth <= 768;
         const viewportHeight = window.visualViewport?.height || window.innerHeight;
-        let cx = window.innerWidth / 2;
-        let cy = isMobile ? 60 + (viewportHeight - 150) / 2 : viewportHeight / 2;
+        const viewportWidth = window.visualViewport?.width || window.innerWidth;
+        const isMobile = Math.min(viewportWidth, viewportHeight) <= 768
+            && Math.max(viewportWidth, viewportHeight) <= 1024;
+        const isLandscapeMobile = isMobile && viewportWidth > viewportHeight;
+        const landscapeActionRail = isLandscapeMobile ? 168 : 0;
+        const playfieldLeft = isLandscapeMobile ? 6 : 0;
+        const playfieldRight = viewportWidth - landscapeActionRail;
+        const playfieldTop = isMobile ? (isLandscapeMobile ? 54 : 60) : 0;
+        const playfieldBottom = isMobile
+            ? (isLandscapeMobile ? viewportHeight - 10 : viewportHeight - 86)
+            : viewportHeight;
+        const playfieldWidth = playfieldRight - playfieldLeft;
+        const playfieldHeight = playfieldBottom - playfieldTop;
+        let cx = playfieldLeft + playfieldWidth / 2;
+        let cy = playfieldTop + playfieldHeight / 2;
 
-        let rx = Math.min(window.innerWidth * (isMobile ? 0.37 : 0.35), window.innerWidth / 2 - (isMobile ? 52 : 80));
+        let rx = isMobile
+            ? Math.max(72, Math.min(playfieldWidth * 0.38, playfieldWidth / 2 - 50))
+            : Math.min(viewportWidth * 0.35, viewportWidth / 2 - 80);
         let ry = isMobile
-            ? Math.max(115, Math.min((viewportHeight - 210) * 0.42, viewportHeight / 2 - 112))
+            ? Math.max(72, Math.min(playfieldHeight * (isLandscapeMobile ? 0.3 : 0.42), playfieldHeight / 2 - 66))
             : Math.min(viewportHeight * 0.38, viewportHeight / 2 - 90);
 
         let localPlayerIndex = state.players.findIndex(p => p.id === App.localId);
@@ -1690,9 +1759,24 @@ const UI = {
             let relIndex = (i - localPlayerIndex + state.players.length) % state.players.length;
             let angle = (Math.PI / 2) + (relIndex * (2 * Math.PI / state.players.length));
 
-            // Local player (relIndex 0) at bottom CENTER of table
+            // Portrait uses the familiar table ellipse. Short landscape screens use
+            // explicit edge seats so the layouts rotate around a clear center lane
+            // instead of being crushed above and below the deck.
             let px, py;
-            if (relIndex === 0) {
+            const landscapeSeats = {
+                2: [[0.22, 0.70], [0.78, 0.30]],
+                3: [[0.22, 0.72], [0.22, 0.28], [0.78, 0.50]],
+                4: [[0.22, 0.72], [0.22, 0.28], [0.78, 0.28], [0.78, 0.72]],
+                5: [[0.19, 0.78], [0.19, 0.22], [0.50, 0.18], [0.81, 0.22], [0.81, 0.78]],
+                6: [[0.19, 0.82], [0.19, 0.18], [0.50, 0.18], [0.81, 0.18], [0.81, 0.82], [0.50, 0.82]]
+            };
+            const landscapeSeat = isLandscapeMobile
+                ? landscapeSeats[state.players.length]?.[relIndex]
+                : null;
+            if (landscapeSeat) {
+                px = playfieldLeft + playfieldWidth * landscapeSeat[0];
+                py = playfieldTop + playfieldHeight * landscapeSeat[1];
+            } else if (relIndex === 0) {
                 px = cx;
                 py = cy + ry * 0.75;
             } else {
@@ -1736,7 +1820,7 @@ const UI = {
             badge.className = `player-badge ${isExpanded} ${isActiveTurn} ${state.bazungaCallerId === p.id ? 'bazunga' : ''} ${!p.connected && !p.isBot ? 'disconnected' : ''}`;
             badge.style.left = `${badgePx}px`; badge.style.top = `${badgePy}px`;
 
-            let icon = p.isBot ? '🤖' : '👤';
+            let icon = p.isBot ? 'BOT' : (p.id === App.localId ? 'YOU' : 'P');
             let cardCount = p.hand.length + p.penaltyCards.length;
             let turnIndicator = i === state.turnIndex && state.phase !== 'peek' ? `<div class="turn-text">CURRENT TURN</div>` : '';
             let statusText = !p.connected && !p.isBot ? `<div style="color:var(--danger); font-size:0.6rem; font-weight:bold; margin-top:2px;">DISCONNECTED</div>` : '';
@@ -1758,6 +1842,12 @@ const UI = {
             let scale = 1;
             if (allCards.length > 12) scale = 0.65;
             else if (allCards.length > 8) scale = 0.8;
+            if (isMobile && isLandscapeMobile) scale *= 0.82;
+            else if (isMobile && viewportHeight < 650) scale *= 0.9;
+            if (isMobile && state.players.length >= 5) {
+                scale *= isLandscapeMobile ? 0.70 : 0.88;
+            }
+            scale = Math.max(0.58, scale);
 
             const cardGap = isMobile ? Math.max(3, 4 * scale) : 0;
             const scaledCardW = baseHandW * scale;
@@ -1781,34 +1871,57 @@ const UI = {
             const rowSpan = Math.max(0, maxR - minR);
 
             if (isMobile) {
-                const availableWidth = window.innerWidth - 28;
+                const availableWidth = playfieldWidth - 20;
                 handW = Math.min(handW, (availableWidth - scaledCardW) / columnSpan);
                 handW = Math.max(scaledCardW * 0.72, handW);
 
                 const groupWidth = columnSpan * handW + scaledCardW;
                 const groupHeight = rowSpan * handH + scaledCardH;
                 const sidePadding = 10;
-                // Keep every layout below the mobile emoji controls and above actions.
-                const topLimit = 108 + groupHeight / 2;
-                const bottomLimit = viewportHeight - 126 - groupHeight / 2;
-                px = Math.max(sidePadding + groupWidth / 2, Math.min(window.innerWidth - sidePadding - groupWidth / 2, px));
+                const controlsBottom = isLandscapeMobile ? playfieldTop + 8 : 108;
+                const topLimit = controlsBottom + groupHeight / 2;
+                const bottomPadding = relIndex === 0 ? (isLandscapeMobile ? 50 : 40) : 8;
+                const bottomLimit = playfieldBottom - bottomPadding - groupHeight / 2;
+                px = Math.max(playfieldLeft + sidePadding + groupWidth / 2, Math.min(playfieldRight - sidePadding - groupWidth / 2, px));
                 py = Math.max(topLimit, Math.min(bottomLimit, py));
 
-                if (relIndex === 0) {
+                if (isLandscapeMobile) {
+                    const isCenterSeat = Math.abs(px - cx) < groupWidth;
+                    if (isCenterSeat) {
+                        badgePx = px + groupWidth / 2 + 23;
+                        badgePy = py;
+                    } else {
+                        const horizontalDirection = px < cx ? -1 : 1;
+                        badgePx = px + horizontalDirection * (groupWidth / 2 + 23);
+                        badgePy = py;
+                    }
+                    badgePx = Math.max(playfieldLeft + 19, Math.min(playfieldRight - 19, badgePx));
+                    badgePy = Math.max(playfieldTop + 19, Math.min(playfieldBottom - 19, badgePy));
+                } else if (relIndex === 0) {
                     badgePx = px;
-                    badgePy = Math.min(viewportHeight - 102, py + groupHeight / 2 + 24);
+                    badgePy = Math.min(playfieldBottom - 20, py + groupHeight / 2 + 24);
                 } else {
                     const radialBadgeX = px + Math.cos(angle) * (groupWidth / 2 + 24);
                     const radialBadgeY = py + Math.sin(angle) * (groupHeight / 2 + 22);
-                    if (radialBadgeX < 22 || radialBadgeX > window.innerWidth - 22) {
+                    if (radialBadgeX < playfieldLeft + 22 || radialBadgeX > playfieldRight - 22) {
                         // Side layouts have no room outside the table; dock their
-                        // emoji above the group instead of clamping it onto a card.
+                        // badge above the group instead of clamping it onto a card.
                         badgePx = px;
-                        badgePy = Math.max(78, py - groupHeight / 2 - 26);
+                        badgePy = Math.max(playfieldTop + 22, py - groupHeight / 2 - 26);
                     } else {
                         badgePx = radialBadgeX;
-                        badgePy = Math.max(78, Math.min(viewportHeight - 112, radialBadgeY));
+                        badgePy = Math.max(playfieldTop + 22, Math.min(playfieldBottom - 22, radialBadgeY));
                     }
+                }
+                const badgeTouchesCards = Math.abs(badgePx - px) < groupWidth / 2 + 19
+                    && Math.abs(badgePy - py) < groupHeight / 2 + 19;
+                if (badgeTouchesCards) {
+                    const above = py - groupHeight / 2 - 26;
+                    const below = py + groupHeight / 2 + 26;
+                    badgePx = px;
+                    badgePy = above >= playfieldTop + 19
+                        ? above
+                        : Math.min(playfieldBottom - 19, below);
                 }
                 badge.style.left = `${badgePx}px`;
                 badge.style.top = `${badgePy}px`;
@@ -1867,13 +1980,19 @@ const UI = {
 
         document.querySelectorAll('.player-badge').forEach(badge => { if (!currentBadgeIds.has(badge.id)) badge.remove(); });
 
+        const mobileCardWidth = viewportWidth <= 390 ? 43 : 46;
+        const mobileCardHeight = viewportWidth <= 390 ? 61 : 66;
         let deckOffsetY = ry * 0.45;
-        let cWidthScale = window.innerWidth <= 768 ? 22 : 26;
+        let cWidthScale = isMobile ? mobileCardWidth / 2 : 26;
+        const deckGap = isMobile ? 14 : 18;
+        const deckLeft = isMobile ? cx - deckGap / 2 - mobileCardWidth : cx - 45 - cWidthScale;
+        const discardLeft = isMobile ? cx + deckGap / 2 : cx + 45 - cWidthScale;
+        const deckTop = isMobile ? cy - mobileCardHeight / 2 : cy - deckOffsetY;
 
         state.deck.forEach((c, i) => {
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
-            el.style.left = `${cx - 45 - cWidthScale}px`; el.style.top = `${cy - deckOffsetY - (i*0.5)}px`; el.style.zIndex = i;
+            el.style.left = `${deckLeft}px`; el.style.top = `${deckTop - Math.min(i, 6) * 0.45}px`; el.style.zIndex = i;
             el.style.setProperty('--local-scale', '1');
             el.style.setProperty('--local-rot', '0deg');
 
@@ -1889,7 +2008,7 @@ const UI = {
         state.discardPile.forEach((c, i) => {
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
-            el.style.left = `${cx + 45 - cWidthScale}px`; el.style.top = `${cy - deckOffsetY}px`; el.style.zIndex = 100 + i;
+            el.style.left = `${discardLeft}px`; el.style.top = `${deckTop}px`; el.style.zIndex = 100 + i;
 
             el.style.setProperty('--local-scale', '1');
             if (!el.dataset.rot) el.dataset.rot = (Math.random() * 20 - 10);
@@ -1919,7 +2038,9 @@ const UI = {
                 if (state.activeAbility.player === App.localId) { px = cx; py = cy + ry * 0.35; }
                 else { px = cx + Math.cos(angle) * (rx * 0.4); py = cy + Math.sin(angle) * (ry * 0.4); }
 
-                el.style.left = `${px - cWidthScale}px`; el.style.top = `${py - 37}px`; el.style.zIndex = 1000;
+                el.style.left = `${px - cWidthScale}px`;
+                el.style.top = `${py - (isMobile ? mobileCardHeight / 2 : 37)}px`;
+                el.style.zIndex = 1000;
                 el.style.setProperty('--local-scale', '1');
                 el.style.setProperty('--local-rot', '0deg');
 
@@ -1955,7 +2076,7 @@ const UI = {
                     html += `
                     <div class="endgame-player ${isWinner ? 'winner' : ''}">
                         <div class="endgame-header">
-                            <span class="endgame-name">${p.name} ${isWinner ? '👑' : ''} ${state.bazungaCallerId === p.id ? '(Bazunga Caller)' : ''}</span>
+                            <span class="endgame-name">${p.name} ${isWinner ? '(Winner)' : ''} ${state.bazungaCallerId === p.id ? '(Bazunga Caller)' : ''}</span>
                             <span class="endgame-score">
                                 ${state.gameMode === 'joker' ? 
                                     `Score: ${p.totalScore}` : 

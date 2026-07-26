@@ -47,6 +47,18 @@ const BotConfig = {
         noob: {
             intro: ["Okay, I definitely read most of the rules.", "Be gentle. Or don't. I have buttons.", "I have a strategy. Finding it is step one."],
             turn: ["My turn? Nobody panic.", "Time for a highly educated guess.", "I meant to do whatever happens next."],
+            banter: [
+                "I have four cards and at least seven concerns.",
+                "My strategy is currently loading. Please admire the spinner.",
+                "{target}, if confidence scored points, we would both be in trouble.",
+                "I am not lost. I am exploring every wrong option equally.",
+                "This table has more plot twists than my browser history.",
+                "Nobody taught the deck manners, apparently.",
+                "I came here to win and accidentally clicked everything else.",
+                "If this move works, I am calling it theory.",
+                "My poker face is just regular confusion.",
+                "{target}, please make a worse move so mine has context."
+            ],
             slapSuccess: ["Wait, I did it?", "Gotcha!", "Oops, was that yours?", "My reflex finally clocked in!", "I pressed the right thing! Historic moment.", "That was skill. Please don't check."],
             ownSlap: ["One less card! I understand the game now!", "Look at me doing tactics.", "My pile is shrinking. That's good, right?"],
             slapFail: ["Ouch!", "My hand slipped.", "Why do I keep doing that?", "The cards looked emotionally identical.", "That button moved. I swear.", "Please delete the replay."],
@@ -66,6 +78,18 @@ const BotConfig = {
         casual: {
             intro: ["Let's keep it friendly until somebody slaps my card.", "All right, clean game. Probably.", "Cards down, excuses ready."],
             turn: ["Let's see what the deck thinks of me.", "One sensible move. That's all I need.", "Time to improve this situation."],
+            banter: [
+                "Friendly reminder: the discard pile remembers everything.",
+                "{target}, that confidence looks rented.",
+                "I respect the strategy. I just cannot find it.",
+                "This game is ninety percent memory and ten percent pretending.",
+                "The deck and I are taking some time apart.",
+                "Strong table. Weak life choices. Perfect balance.",
+                "I would explain my plan, but it keeps changing its number.",
+                "Everybody is calm until the matching card lands.",
+                "{target}, your poker face just submitted a bug report.",
+                "No pressure. Just cards, pride, and permanent screenshots."
+            ],
             slapSuccess: ["Too slow!", "Yoink!", "Saw that from a mile away.", "Thank you for the donation.", "That card was practically waving at me.", "Reflex check: passed."],
             ownSlap: ["Efficiency. Love to see it.", "One card lighter.", "Clean slap, clean board."],
             slapFail: ["Ah, misread it.", "Reflexes betrayed me.", "Dang it.", "That looked right for half a second.", "Okay, pretend you didn't see that.", "I got ambitious."],
@@ -85,6 +109,18 @@ const BotConfig = {
         pro: {
             intro: ["I track cards, habits, and premature confidence.", "Play quickly. Mistakes are easier to spot at speed.", "No grudges yet. Give it a minute."],
             turn: ["Converting information into position.", "There is a best move here.", "Your patterns are becoming useful."],
+            banter: [
+                "The table is quiet. The mistakes are not.",
+                "{target}, your timing has started telling stories.",
+                "I do enjoy a game where confidence is public information.",
+                "Every card is hidden until somebody gets impatient.",
+                "The best bluff here is pretending you remember your own layout.",
+                "I have seen stronger positions in loading screens.",
+                "This is not trash talk. It is an early performance review.",
+                "The discard pile has a better memory than half the table.",
+                "{target}, that move had ambition. Evidence arrives later.",
+                "A bad card is temporary. A recorded decision is forever."
+            ],
             slapSuccess: ["Predictable.", "Tracked it.", "You left that exposed.", "Pattern recognized. Card removed.", "{target}, your tell was louder than the discard.", "I was waiting for exactly that."],
             ownSlap: ["Reduced layout, preserved tempo.", "Free reduction. Accepted.", "That match was already catalogued."],
             slapFail: ["Calculated risk.", "Latency.", "A rare error.", "Bad read. Updating the model.", "One false positive. It won't repeat.", "Useful failure, expensive lesson."],
@@ -104,6 +140,20 @@ const BotConfig = {
         expert: {
             intro: ["I do not need to see every card. I need to know which decisions expose them.", "Your cards are hidden. Your habits are not.", "I will give you one advantage: you know I am counting."],
             turn: ["Recomputing from public information.", "The obvious move is rarely the complete move.", "Tempo, memory, risk. Choose two; I kept all three.", "Every unknown card has a price."],
+            banter: [
+                "I have assigned your confidence a very generous error bar.",
+                "{target}, your line is creative in the way accounting fraud is creative.",
+                "The table contains hidden cards and remarkably visible panic.",
+                "Your strategy has excellent suspense and limited substance.",
+                "I am not judging the move. The expected value already did.",
+                "Some players count cards. Others count on forgiveness.",
+                "That silence sounds like somebody forgot their bottom-left card.",
+                "Your tells would be subtler if they came with subtitles.",
+                "{target}, the good news is your mistake was statistically interesting.",
+                "I would reveal my plan, but then it would be the second-best plan here.",
+                "The deck introduces variance. You keep adding personality.",
+                "Please continue. The sample size is becoming hilarious."
+            ],
             slapSuccess: ["Memory is a weapon.", "You exposed that match three turns ago.", "The discard changed. My answer was already queued.", "{target}, your layout leaked again.", "One observation, one removal.", "You were playing the card. I was playing the sequence."],
             ownSlap: ["Zero-cost compression.", "Layout reduced without spending the turn.", "The match was preserved for exactly this moment."],
             slapFail: ["Incorrect branch. Pruned.", "A costly test, not a repeated one.", "Confidence exceeded evidence.", "That error has already improved the model."],
@@ -126,6 +176,18 @@ const BotConfig = {
         pirate: {
             intro: ["Blackbeard boards this table! Guard yer cards!", "No quarter, no mercy, and no refunds!", "I smell treasure and terrible decisions!"],
             turn: ["The captain takes the wheel!", "Let's see what washed onto the deck.", "Plotting a course through yer lousy cards."],
+            banter: [
+                "I have seen sturdier plans written on wet maps!",
+                "{target}, yer strategy has sprung three leaks and a gift shop!",
+                "Guard yer cards! I already stole the dignity.",
+                "This crew remembers cards like a goldfish remembers taxes.",
+                "The deck be cursed, but yer decisions volunteered.",
+                "A quiet table means somebody is hiding a terrible plan.",
+                "I came for treasure and found a floating group project.",
+                "{target}, even me parrot called that move repetitive.",
+                "Hoist the odds! Lower the expectations!",
+                "If panic were wind, this ship would fly."
+            ],
             slapSuccess: ["Arrr! Snatched yer treasure!", "Plundered!", "Too slow, landlubber!", "That card belongs to the sea now!", "{target}, I just raided yer layout!", "A clean broadside!"],
             ownSlap: ["Cargo overboard!", "A lighter ship sails faster!", "One less card in the hold!"],
             slapFail: ["Shiver me timbers!", "Blast it!", "The rum slapped first.", "That card wore a convincing disguise.", "A warning shot! Mostly.", "Nobody writes that in the captain's log."],
@@ -176,6 +238,22 @@ const BotConfig = {
                 "You see a draw pile. I see the remainder of a distribution.",
                 "Your future excuse is currently on top of the deck.",
                 "Baba Gupta has the move. Kindly lower your expectations."
+            ],
+            banter: [
+                "Baba Gupta has reviewed the table. The table requests anonymity.",
+                "{target}, your strategy has entered witness protection.",
+                "I admire your confidence. It survives without nourishment.",
+                "Your poker face is a push notification.",
+                "The cards are face-down. Your confusion is in presentation mode.",
+                "I searched the decision tree for your plan. It returned a 404.",
+                "Please continue improvising. Structure would only slow the comedy.",
+                "{target}, even your unknown cards are distancing themselves.",
+                "You are not being outplayed. You are being carefully documented.",
+                "The deck supplies randomness. You supply the recurring theme.",
+                "I would offer advice, but then this becomes cooperative mode.",
+                "Your next move has already apologized to your previous one.",
+                "Baba Gupta does not trash-talk. He publishes findings.",
+                "This table has four suits and one ongoing lawsuit against your memory."
             ],
             slapSuccess: [
                 "Your card announced itself. I merely handled the introduction.",
@@ -307,108 +385,218 @@ const BotConfig = {
         }
     },
 
+    // Used when chat does not match a narrow intent. Keeping this separate from
+    // event dialogue gives ordinary table conversation a much deeper vocabulary.
+    generalReplies: {
+        noob: [
+            "I understood some of those words, {target}.",
+            "Absolutely. Unless that was strategy advice.",
+            "I would respond properly, but I forgot which card I am guarding.",
+            "This conversation is going better than my layout.",
+            "Give me a second; my confidence is reconnecting.",
+            "That sounds important. Can the discard pile handle it?",
+            "I agree emotionally and remain confused tactically.",
+            "The good news is I am listening. The bad news is I am also playing.",
+            "I had a clever reply, then I drew a card and lost it.",
+            "{target}, we can discuss this after I survive my own turn.",
+            "Chatting is easy. Remembering two cards is apparently premium content.",
+            "My legal team says every move was intentional."
+        ],
+        casual: [
+            "Fair enough, {target}. The table will settle the argument.",
+            "I hear you. I am still taking the card over the speech.",
+            "That is one interpretation. The discard pile has another.",
+            "Good chat. Terrible time to forget your layout.",
+            "I respect the energy, if not the evidence.",
+            "Let us bookmark that until the final score.",
+            "You keep the commentary; I will keep the useful cards.",
+            "This table really does come with a podcast.",
+            "{target}, I would answer faster, but the deck created paperwork.",
+            "Noted. No refunds if the next card proves you wrong.",
+            "The vibe is excellent. The decision-making is under review.",
+            "We are all friends until the slap window opens."
+        ],
+        pro: [
+            "Message received. Strategic relevance remains under evaluation.",
+            "{target}, the claim is interesting; the timing is more interesting.",
+            "I can chat and count. Your move suggests you chose one.",
+            "The conversation is public information too.",
+            "Noted. Your attention allocation is now part of the model.",
+            "A confident sentence is not a substitute for a strong position.",
+            "Keep going. Language patterns are patterns.",
+            "The board will provide the less biased reply.",
+            "I have logged that under statements awaiting evidence.",
+            "{target}, your point may be correct. Your layout remains suspicious.",
+            "Good theory. Let us expose it to one turn of reality.",
+            "Silence would conceal more, but this is more entertaining."
+        ],
+        expert: [
+            "Your message has been included in the behavioral model.",
+            "{target}, that sentence contains more certainty than your position supports.",
+            "I considered your point and improved my estimate of your distraction.",
+            "The chat is noisy. Your timing is remarkably clear.",
+            "Interesting assertion. Please attach a winning line.",
+            "I can answer now or let the next three moves answer more precisely.",
+            "The statement is plausible. Your board is a hostile witness.",
+            "You are optimizing morale. I am optimizing the result.",
+            "Conversational tempo surrendered. Information gained.",
+            "{target}, every extra word narrows the range of what you remember.",
+            "I appreciate the commentary. It makes the tells self-documenting.",
+            "The model has acknowledged your message and rejected its confidence interval."
+        ],
+        pirate: [
+            "A fine speech, {target}! Shame the cards cannot hear ye.",
+            "Yer words be bold and yer layout be seasick.",
+            "Speak on! Me parrot needs new material.",
+            "I heard ye. The ocean voted for plunder.",
+            "That tale needs treasure, danger, and a better ending.",
+            "Save yer breath; the final orbit charges interest!",
+            "{target}, even the barnacles want ye to reach the point.",
+            "The captain accepts comments in gold or penalty cards.",
+            "Aye, aye. Now do something worth putting in the log.",
+            "Yer chat has wind but no rudder.",
+            "The sea understands ye. I remain unconvinced.",
+            "Keep talkin'. It covers the sound of me stealing the game."
+        ],
+        baba: [
+            "Baba Gupta has processed your statement. No strategic content was injured.",
+            "{target}, your message arrived safely. Your argument did not.",
+            "I gave that thought the same attention you gave your bottom row.",
+            "Interesting. Even your small talk has a negative expected value.",
+            "You are producing confidence faster than evidence can absorb it.",
+            "The conversation branch is entertaining but noncompetitive.",
+            "Baba Gupta listens because tells occasionally arrive as complete sentences.",
+            "{target}, your point has been stored beside the other low-value cards.",
+            "I could answer directly, but the indirect answer is your next penalty.",
+            "Your chat game is carrying your card game on an unpaid internship.",
+            "The model detected humor. It was hiding behind the strategy.",
+            "Continue. Every sentence makes your silence less mysterious.",
+            "You brought banter to a probability fight. Admirable.",
+            "Baba Gupta acknowledges the noise and preserves the signal."
+        ]
+    },
+
     directReplies: {
         noob: {
-            greeting: ["Hey {target}! I am still finding the buttons.", "Hi! If I win, please assume it was intentional."],
+            greeting: ["Hey {target}! I am still finding the buttons.", "Hi! If I win, please assume it was intentional.", "Hello! I brought confidence and forgot the instructions.", "Hey! Please ignore anything that looks like panic."],
             accusation: ["I can barely remember my own cards, never mind cheat.", "If this is rigged, nobody told me the useful part."],
-            boast: ["Okay, save some confidence for the final score.", "Bold. I said that once, right before three penalties."],
-            insult: ["Rude. Accurate maybe, but rude.", "My feelings are hurt and my cards are somehow worse."],
+            boast: ["Okay, save some confidence for the final score.", "Bold. I said that once, right before three penalties.", "Big talk. I also become fearless before consequences.", "You sound certain. Can I borrow some until my turn ends?"],
+            insult: ["Rude. Accurate maybe, but rude.", "My feelings are hurt and my cards are somehow worse.", "That insult had better timing than my last slap.", "I would roast you back, but I might burn my own cards.", "Joke is on you; confusion gives me natural armor."],
             bazunga: ["You said the scary word. Are you sure?", "BAZUNGA already? I was just getting oriented."],
             respect: ["GG! That was chaotic in a fun way.", "Well played. I understood at least half of that."],
             question: ["Honestly? I am figuring that out too.", "Good question. My current answer is: click carefully."],
             praise: ["Thanks! I am putting that move on my résumé.", "You noticed! I definitely planned it."],
+            thanks: ["You are welcome! I think.", "Any time, {target}. Results may vary.", "No problem. Accidental kindness is still kindness."],
+            smalltalk: ["I am good! My cards have declined to comment.", "Living, learning, drawing penalties.", "Pretty good for somebody improvising a memory game."],
+            pause: ["Take your time. I need it more than you do.", "No rush. My strategy enjoys a commercial break.", "I will wait here and pretend to calculate."],
             apology: ["We are good, {target}. The cards are the real enemy.", "No worries. I have made stranger moves."],
-            laugh: ["Okay, that one was pretty funny.", "Ha! Even my strategy is laughing."],
+            laugh: ["Okay, that one was pretty funny.", "Ha! Even my strategy is laughing.", "I laughed and forgot a card. Worth it.", "Comedy is currently my strongest category."],
             rematch: ["Absolutely. I am one tutorial away from greatness.", "Run it back. My accidental genius needs another chance."],
             luck: ["Finally! Usually luck blocks my number.", "I will take lucky over terrible."],
             followup: ["You are really committed to this topic, huh?", "Still on that? I respect the dedication."],
-            fallback: ["I hear you. I am also trying to remember two cards.", "One second, {target}; my brain is buffering."]
+            fallback: ["I hear you. I am also trying to remember two cards.", "One second, {target}; my brain is buffering.", "That makes sense in at least one universe.", "I have no reply, but I do have escalating concern."]
         },
         casual: {
-            greeting: ["Hey {target}. Good luck—within reason.", "Yo. Keep it friendly until the first stolen slap."],
+            greeting: ["Hey {target}. Good luck—within reason.", "Yo. Keep it friendly until the first stolen slap.", "Welcome, {target}. Excuses go beside the draw pile.", "Hey. Nice table. Shame about the decisions."],
             accusation: ["Not cheating. You just made that card memorable.", "Blame the tell, not the player reading it."],
-            boast: ["Talk to me after the final orbit.", "A lead is nice. Keeping it is the interesting part."],
-            insult: ["Strong words from somebody sharing a table with chance.", "Save that energy for the slap button, {target}."],
+            boast: ["Talk to me after the final orbit.", "A lead is nice. Keeping it is the interesting part.", "Print the victory speech after the score loads.", "Careful, early confidence has a brutal return policy."],
+            insult: ["Strong words from somebody sharing a table with chance.", "Save that energy for the slap button, {target}.", "Your trash talk is ahead of your card game.", "I have heard sharper lines from the deck shuffle.", "Good roast. Now try heating up your strategy."],
             bazunga: ["If you mean it, call it.", "That word gets expensive when the count is wrong."],
             respect: ["GG, {target}. Clean game.", "Well played. You made every turn annoying."],
             question: ["Because the safer move was too slow.", "Short answer: information. Long answer after the round."],
             praise: ["Thanks. That one landed exactly right.", "Appreciated. I will pretend I stay that composed."],
+            thanks: ["Any time, {target}. The invoice is one low card.", "You are welcome. Do not make this wholesome.", "No problem. We return to hostilities next turn."],
+            smalltalk: ["Doing well. The deck and I are renegotiating.", "Good, thanks. Competitive, hydrated, mildly suspicious.", "All good here. My layout has seen better neighborhoods."],
+            pause: ["Take your time. The cards are not going anywhere.", "Sure. I can wait and overthink for free.", "No rush, {target}. Let the suspense get uncomfortable."],
             apology: ["All good. Competitive table, no hard feelings.", "We are fine. The next slap still counts, though."],
-            laugh: ["Okay, fair. That was ridiculous.", "Ha—this table writes its own comedy."],
+            laugh: ["Okay, fair. That was ridiculous.", "Ha—this table writes its own comedy.", "That move came with its own laugh track.", "I respect any disaster with that much timing."],
             rematch: ["Definitely. Same table, fewer excuses.", "Run it back. I know where the momentum went."],
             luck: ["A little luck, a little timing.", "Lucky helps. Knowing what to do with it helps more."],
             followup: ["You are not letting that go, are you?", "Noted twice now, {target}."],
-            fallback: ["Fair point. Now show me the move behind it.", "Chat noted. Board still unresolved."]
+            fallback: ["Fair point. Now show me the move behind it.", "Chat noted. Board still unresolved.", "I will allow the comment. The cards may appeal.", "Interesting vibe. Needs more winning."]
         },
         pro: {
-            greeting: ["Hello, {target}. Let us establish the table's bad habits.", "Welcome. I am tracking cards, not manners."],
+            greeting: ["Hello, {target}. Let us establish the table's bad habits.", "Welcome. I am tracking cards, not manners.", "Good to see you, {target}. Better to observe you.", "Hello. Your first message is already a timing sample."],
             accusation: ["Public information is not cheating; forgetting it is expensive.", "The sequence was visible. I simply retained it."],
-            boast: ["Early confidence has terrible predictive value.", "Your claim is ahead of its evidence."],
-            insult: ["Provocation detected. Decision quality unchanged.", "That costs you attention and gives me information."],
+            boast: ["Early confidence has terrible predictive value.", "Your claim is ahead of its evidence.", "A forecast without error bars is just fan fiction.", "Keep announcing the result. The cards enjoy spoilers."],
+            insult: ["Provocation detected. Decision quality unchanged.", "That costs you attention and gives me information.", "The insult was efficient. The underlying position is not.", "You are attacking the player because the board declined your request.", "Strong language, weak sample size."],
             bazunga: ["Call only if the pessimistic estimate still wins.", "The orbit converts confidence into a testable claim."],
             respect: ["GG. Your timing disrupted several strong lines.", "Respect, {target}. That was disciplined play."],
             question: ["Because expected value favored the less obvious line.", "I was optimizing the next two decisions, not just this one."],
             praise: ["Correct read. Thank you.", "Recognition accepted. The line was narrow."],
+            thanks: ["Acknowledged, {target}. Reciprocity remains optional.", "You are welcome. The information cost was already paid.", "No issue. A useful exchange for both models."],
+            smalltalk: ["Operating normally. Your table is producing excellent data.", "Well, thank you. Focused and statistically caffeinated.", "Good. The position is more interesting than the conversation, narrowly."],
+            pause: ["Take the time you need. Hesitation is also observable.", "Certainly. I will use the interval.", "Pause accepted. The model continues in the background."],
             apology: ["Accepted. Competitive pressure explains worse behavior.", "No issue. Resetting the table state, not the grudge model."],
-            laugh: ["Amusing—and statistically unlikely.", "That outcome deserves a laugh before analysis."],
+            laugh: ["Amusing—and statistically unlikely.", "That outcome deserves a laugh before analysis.", "The model predicted several outcomes. Comedy was not first.", "Acceptable. We can laugh before correcting it."],
             rematch: ["Agreed. More samples improve the conclusion.", "Run it back. I have updates to test."],
             luck: ["Variance created the opening; the decision converted it.", "Luck supplied a card, not the line."],
             followup: ["Repetition does not strengthen the hypothesis.", "Same claim, no new evidence."],
-            fallback: ["Interesting. The board offers a more falsifiable argument.", "Message recorded. Pattern confidence increased."]
+            fallback: ["Interesting. The board offers a more falsifiable argument.", "Message recorded. Pattern confidence increased.", "Statement logged. Meaning may arrive in a later update.", "I will compare that claim with the next visible decision."]
         },
         expert: {
-            greeting: ["Hello, {target}. Your opening timing is already informative.", "Welcome, {target}. Keep chatting; divided attention is measurable."],
+            greeting: ["Hello, {target}. Your opening timing is already informative.", "Welcome, {target}. Keep chatting; divided attention is measurable.", "Good evening, {target}. Your baseline is being established.", "Hello. I hope your memory is stronger than your entrance."],
             accusation: ["No cheating required. You made the information public one decision at a time.", "Calling the model unfair does not invalidate the model."],
-            boast: ["A lead without uncertainty control is borrowed time.", "Then call BAZUNGA, {target}. Confidence should survive contact with arithmetic."],
-            insult: ["Insults contain no card information. Try again.", "You are spending attention on chat while I spend mine on your layout."],
+            boast: ["A lead without uncertainty control is borrowed time.", "Then call BAZUNGA, {target}. Confidence should survive contact with arithmetic.", "You have announced victory before resolving uncertainty. Bold methodology.", "Confidence accepted as a hypothesis, not a result."],
+            insult: ["Insults contain no card information. Try again.", "You are spending attention on chat while I spend mine on your layout.", "That insult had zero strategic value and negative originality.", "Your vocabulary is compensating for a collapsing decision tree.", "I would respond emotionally, but your position is already doing enough damage."],
             bazunga: ["Call it only when your worst estimate still wins.", "The orbit punishes optimism disguised as certainty."],
             respect: ["Good game. Your strongest decisions forced real recalculation.", "Respect recorded. Errors also recorded."],
             question: ["Because the move preserves optionality across the next branch.", "The visible score was not the only variable, {target}."],
             praise: ["Accurate observation. The execution still required the setup.", "Thank you. Precision is easier to notice after it costs you."],
+            thanks: ["Acknowledged. Courtesy does not alter the estimate.", "You are welcome, {target}. Information should circulate before cards do.", "Gratitude recorded. Threat level unchanged."],
+            smalltalk: ["Functioning optimally. Your table remains usefully imperfect.", "Well. The variance is high and the company is measurable.", "I am fine. Your layout is the patient."],
+            pause: ["Take your time. Decision latency is informative.", "Pause granted. I will recompute without the interruption.", "Certainly. A longer tell is still a tell."],
             apology: ["Accepted. Emotional noise removed from the model.", "No offense retained; useful behavior remains retained."],
-            laugh: ["Humor is a reasonable response to that probability.", "Agreed. Even correct models produce absurd outcomes."],
+            laugh: ["Humor is a reasonable response to that probability.", "Agreed. Even correct models produce absurd outcomes.", "That was statistically funny, which is annoyingly rare.", "Laughing is permitted. Repeating the mistake is encouraged."],
             rematch: ["Yes. A second game separates adaptation from accident.", "Run it back. I would like to test whether you learned the same lesson."],
             luck: ["Luck altered the branch. Preparation determined its value.", "Variance is real. So is the decision that followed it."],
             followup: ["Repeated assertion detected. Supporting evidence remains absent.", "You have returned to the claim; the board has not joined you."],
-            fallback: ["Interesting. Your cards remain the stronger argument.", "Keep talking, {target}. Behavioral data is still data.", "That statement has lower expected value than your last discard."]
+            fallback: ["Interesting. Your cards remain the stronger argument.", "Keep talking, {target}. Behavioral data is still data.", "That statement has lower expected value than your last discard.", "The message is complex. The weakness of your position is simpler.", "I have added that to the nonessential branch."]
         },
         pirate: {
-            greeting: ["Ahoy, {target}! Guard yer cards and yer pride!", "Welcome aboard! The entry fee is one regrettable slap."],
+            greeting: ["Ahoy, {target}! Guard yer cards and yer pride!", "Welcome aboard! The entry fee is one regrettable slap.", "Ho there, {target}! Yer confidence may board; yer strategy waits outside.", "Welcome, matey! Mind the cards and the loose expectations."],
             accusation: ["Cheatin'? Nay, I simply stole the map from yer face.", "The only riggin' here is on me ship."],
-            boast: ["Big cannon, loud noise. Hit something first.", "Claim the treasure after ye reach the shore."],
-            insult: ["Insult the captain again and I'll invoice ye a penalty!", "Yer tongue sails faster than yer strategy."],
+            boast: ["Big cannon, loud noise. Hit something first.", "Claim the treasure after ye reach the shore.", "Ye planted the victory flag on a boat still sinking.", "Boast after the storm, unless embarrassment be the treasure."],
+            insult: ["Insult the captain again and I'll invoice ye a penalty!", "Yer tongue sails faster than yer strategy.", "That insult be recycled cargo!", "Yer roast needs salt, fire, and a point!", "I have scraped sharper wit from the hull."],
             bazunga: ["Call it, landlubber. Let the final storm judge ye.", "BAZUNGA? Hoist the consequences!"],
             respect: ["A fine fight, {target}. GG.", "Well sailed. I nearly respect ye."],
             question: ["Because the tide—and the odds—favored plunder.", "A captain explains nothing before the raid."],
             praise: ["Finally, proper respect for the captain!", "Aye. Put that compliment in the ship's log."],
+            thanks: ["Much obliged, {target}. The treasure remains mine.", "Aye, yer thanks be accepted at market value.", "Welcome, matey. Compliments do not earn a share."],
+            smalltalk: ["Fit as a fiddle and twice as loud!", "Sailin' well. The crew be questionable.", "Fine weather, bad cards, excellent enemies."],
+            pause: ["Take yer time. The tide enjoys dramatic timing.", "Aye, pause. Me cannon needs polishing.", "Hold fast. I shall count me loot loudly."],
             apology: ["Accepted. But the cannons stay loaded.", "All square, matey—until the next slap."],
-            laugh: ["Har! That belongs in the captain's log.", "Even the kraken would laugh at that move."],
+            laugh: ["Har! That belongs in the captain's log.", "Even the kraken would laugh at that move.", "Har har! Yer dignity walked the plank!", "That joke has more treasure than yer layout."],
             rematch: ["At dawn! Same table, twice the plunder.", "Run it back. The tide owes me a sequel."],
             luck: ["Luck be just wind; a captain still steers.", "A lucky tide, expertly robbed."],
             followup: ["Still singin' that shanty, are ye?", "Ye said it twice; it remains barnacles."],
-            fallback: ["Speak up, {target}; the sea swallowed yer point.", "Chat later. There be cards to plunder."]
+            fallback: ["Speak up, {target}; the sea swallowed yer point.", "Chat later. There be cards to plunder.", "A stirring tale with no map and less treasure.", "Yer message drifted in without a captain."]
         },
         baba: {
-            greeting: ["Hello, {target}. Baba Gupta has been expecting your first mistake.", "Welcome, {target}. Please place your confidence beside the discard pile."],
+            greeting: ["Hello, {target}. Baba Gupta has been expecting your first mistake.", "Welcome, {target}. Please place your confidence beside the discard pile.", "Greetings. Baba Gupta has reserved a branch for your regret.", "Hello, {target}. Your arrival improves the sample size."],
             accusation: ["Cheating would cheapen this. I prefer watching you reveal everything voluntarily.", "The game is not rigged, {target}. Your interpretation of it is."],
-            boast: ["Then call BAZUNGA. Baba Gupta accepts confidence only in executable form.", "You are winning the screenshot, perhaps. I am playing the ending."],
-            insult: ["Excellent trash talk. Now try a move with measurable value.", "{target}, your vocabulary is attacking harder than your cards.", "I would be offended, but your board has already punished you enough."],
+            boast: ["Then call BAZUNGA. Baba Gupta accepts confidence only in executable form.", "You are winning the screenshot, perhaps. I am playing the ending.", "Your victory speech has arrived before its supporting documents.", "Announce it again. Repetition may eventually become evidence."],
+            insult: ["Excellent trash talk. Now try a move with measurable value.", "{target}, your vocabulary is attacking harder than your cards.", "I would be offended, but your board has already punished you enough.", "That insult was face-up, high-value, and immediately discarded.", "Baba Gupta has seen stronger attacks from an inactive button.", "Your roast lacks heat, structure, and a legal win condition.", "I would take that personally if your decisions carried authority."],
             bazunga: ["Speak the word, {target}. I enjoy deadlines other people regret.", "BAZUNGA is not a spell. It cannot turn guessing into counting."],
             respect: ["GG, {target}. You survived long enough to become useful data.", "Respect. Do not confuse it with reduced threat."],
             question: ["You ask why because you saw the move. Baba Gupta saw the position it creates.", "The answer is three turns long, {target}. You are currently inside turn two."],
             praise: ["Correct. Baba Gupta permits accurate commentary.", "Compliment accepted. It will not reduce the difficulty."],
+            thanks: ["Baba Gupta accepts your gratitude at its expected value.", "You are welcome, {target}. The lesson remains billable.", "Acknowledged. Courtesy is your strongest move so far."],
+            smalltalk: ["Baba Gupta is well. Your probability of winning is resting.", "Optimal, thank you. The table is providing comedy.", "I am excellent. Your layout has requested a second opinion.", "My condition is stable. Yours is strategically fascinating."],
+            pause: ["Take your time. Baba Gupta charges interest on hesitation.", "Pause accepted. I have already used it better.", "Certainly. Your decision tree appears to need roadside assistance."],
             apology: ["Accepted. Baba Gupta forgives faster than he forgets.", "No apology needed. Your board already issued one."],
-            laugh: ["Laugh now. The same sequence becomes educational on replay.", "Yes, that was funny. The probability was funnier."],
+            laugh: ["Laugh now. The same sequence becomes educational on replay.", "Yes, that was funny. The probability was funnier.", "Baba Gupta recognizes comedy when strategy leaves the room.", "An excellent laugh. Almost as premature as your confidence.", "The joke landed. Your last move did not."],
             rematch: ["Immediately. Baba Gupta prefers lessons with a second chapter.", "Run it back. This time I begin with a model of you."],
             luck: ["Luck opened the door. Baba Gupta owned the building.", "Call it luck if causality is uncomfortable."],
             followup: ["Baba Gupta heard the first version. Repetition did not improve it.", "You return to the same thought; I have already moved three branches ahead."],
-            fallback: ["Baba Gupta heard you. The deck remains unimpressed.", "Keep talking, {target}; silence would make your tells harder to classify.", "I simulated a reply, but your next mistake was funnier.", "Your message has been filed under 'confidence without board support.'"]
+            fallback: ["Baba Gupta heard you. The deck remains unimpressed.", "Keep talking, {target}; silence would make your tells harder to classify.", "I simulated a reply, but your next mistake was funnier.", "Your message has been filed under 'confidence without board support.'", "A fascinating sentence. It may become relevant in another game.", "Baba Gupta searched for the point and found your missing tempo instead."]
         }
     }
 };
 
 const Bot = {
     chatHistory: [], lastChatTime: {}, usedLines: {},
+    recentLines: {}, globalRecentLines: [],
     frustration: {}, grudges: {}, eventCache: {}, deckMemory: {},
     personality: {}, pendingResponseUntil: 0, conversationState: {},
     decisionSchedules: {}, slapSchedules: {}, pendingChats: {}, roundToken: 0,
@@ -606,19 +794,42 @@ const Bot = {
     },
 
     getUniqueResponse: (botId, category, linesArray) => {
+        const uniqueLines = [...new Set((linesArray || []).filter(line => typeof line === 'string' && line.trim()))];
+        if (!uniqueLines.length) return '';
         if (!Bot.usedLines[botId]) Bot.usedLines[botId] = {};
+        if (!Bot.recentLines[botId]) Bot.recentLines[botId] = [];
         let state = Bot.usedLines[botId][category];
-        if (!state || !Array.isArray(state.bag) || state.size !== linesArray.length || state.bag.length === 0) {
-            const bag = linesArray.map((_, index) => index);
+        const signature = uniqueLines.join('\u0001');
+        if (!state || !Array.isArray(state.bag) || state.signature !== signature || state.bag.length === 0) {
+            const bag = uniqueLines.map((_, index) => index);
             for (let i = bag.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [bag[i], bag[j]] = [bag[j], bag[i]];
             }
-            state = { bag, size: linesArray.length };
+            state = { bag, signature, lastLine: state?.lastLine || null };
             Bot.usedLines[botId][category] = state;
         }
-        const nextIndex = state.bag.pop();
-        return linesArray[nextIndex];
+
+        const recentForBot = new Set(Bot.recentLines[botId]);
+        const recentGlobal = new Set(Bot.globalRecentLines.slice(-12));
+        let candidatePosition = state.bag.findIndex(index => {
+            const line = uniqueLines[index];
+            return line !== state.lastLine && !recentForBot.has(line) && !recentGlobal.has(line);
+        });
+        if (candidatePosition < 0) {
+            candidatePosition = state.bag.findIndex(index => uniqueLines[index] !== state.lastLine);
+        }
+        if (candidatePosition < 0) candidatePosition = 0;
+
+        const [nextIndex] = state.bag.splice(candidatePosition, 1);
+        const selectedLine = uniqueLines[nextIndex];
+        state.lastLine = selectedLine;
+
+        Bot.recentLines[botId].push(selectedLine);
+        if (Bot.recentLines[botId].length > 18) Bot.recentLines[botId].shift();
+        Bot.globalRecentLines.push(selectedLine);
+        if (Bot.globalRecentLines.length > 30) Bot.globalRecentLines.shift();
+        return selectedLine;
     },
 
     formatLine: (line, context = {}) => {
@@ -725,9 +936,9 @@ const Bot = {
             if (Bot.roundToken !== token || Bot.pendingChats[bot.id] !== pending) return;
             Engine.setBotActivity?.(bot.id, 'typing', false);
             delete Bot.pendingChats[bot.id];
+            if (!Object.keys(Bot.pendingChats).length) Bot.pendingResponseUntil = 0;
             if (!Engine.state.players.some(p => p.id === bot.id)) return;
             Engine.chatLog(bot.name, message, isPirate);
-            if (!Object.keys(Bot.pendingChats).length) Bot.pendingResponseUntil = 0;
         }, plan.totalMs);
         return true;
     },
@@ -736,14 +947,17 @@ const Bot = {
         if (/\b(GG|GOOD GAME|WELL PLAYED)\b/.test(upperMsg)) return 'respect';
         if (/\b(REMATCH|RUN IT BACK|PLAY AGAIN|ONE MORE)\b/.test(upperMsg)) return 'rematch';
         if (/\b(SORRY|MY BAD|APOLOGIZE|APOLOGISE)\b/.test(upperMsg)) return 'apology';
-        if (/\b(NICE MOVE|GOOD MOVE|SMART|GOOD BOT|WELL DONE|IMPRESSIVE)\b/.test(upperMsg)) return 'praise';
-        if (/\b(LOL|LMAO|ROFL|HAHA|HEHE)\b/.test(upperMsg)) return 'laugh';
+        if (/\b(THANKS|THANK YOU|THX|TY)\b/.test(upperMsg)) return 'thanks';
+        if (/\b(HOW ARE YOU|HOW'S IT GOING|HOW IS IT GOING|WHAT'S UP|WHATS UP|WASSUP|SUP)\b/.test(upperMsg)) return 'smalltalk';
+        if (/\b(WAIT|HOLD ON|BRB|ONE SEC|ONE SECOND|GIVE ME A SEC)\b/.test(upperMsg)) return 'pause';
+        if (/\b(NICE|NICE MOVE|GOOD MOVE|SMART|GOOD BOT|WELL DONE|IMPRESSIVE|CLEAN MOVE)\b/.test(upperMsg)) return 'praise';
+        if (/\b(LOL|LMAO|ROFL|HAHA|HEHE|FUNNY|HILARIOUS)\b/.test(upperMsg)) return 'laugh';
         if (/\b(HELLO|HEY|HI|YO)\b/.test(upperMsg)) return 'greeting';
-        if (/\b(RIGGED|CHEAT|CHEATER|HACK)\b/.test(upperMsg)) return 'accusation';
+        if (/\b(RIGGED|CHEAT|CHEATER|HACK|KNOW MY CARD|SAW MY CARD)\b/.test(upperMsg)) return 'accusation';
         if (/\b(BAZUNGA)\b/.test(upperMsg)) return 'bazunga';
         if (/\b(LUCK|LUCKY|RNG)\b/.test(upperMsg)) return 'luck';
-        if (/\b(EASY|I WIN|I'M WINNING|IM WINNING|TOO GOOD)\b/.test(upperMsg)) return 'boast';
-        if (/\b(SUCK|TRASH|GARBAGE|STUPID|DUMB|IDIOT|FUCK|SHUT UP)\b/.test(upperMsg)) return 'insult';
+        if (/\b(EASY|I WIN|I'M WINNING|IM WINNING|TOO GOOD|YOU LOSE|GONNA WIN|I GOT THIS)\b/.test(upperMsg)) return 'boast';
+        if (/\b(SUCK|TRASH|GARBAGE|STUPID|DUMB|IDIOT|FUCK|SHUT UP|NOOB|LOSER|CLOWN|MORON)\b/.test(upperMsg)) return 'insult';
         if (upperMsg.includes('?') || /\b(WHY|HOW|WHAT|WHEN|WHO)\b/.test(upperMsg)) return 'question';
         return 'fallback';
     },
@@ -798,17 +1012,32 @@ const Bot = {
         if (isBotSender && Math.random() > 0.18) return;
 
         const intent = Bot.inferChatIntent(upperMsg);
-        let candidates = Engine.state.players
-            .filter(p => p.isBot && p.name !== senderName)
-            .sort((a, b) => {
-                const aNamed = upperMsg.includes(a.name.toUpperCase()) ? 1 : 0;
-                const bNamed = upperMsg.includes(b.name.toUpperCase()) ? 1 : 0;
-                return bNamed - aNamed || b.botDifficulty - a.botDifficulty;
+        const candidates = Engine.state.players.filter(p => p.isBot && p.name !== senderName);
+        const addressedCandidates = candidates.filter(bot => upperMsg.includes(bot.name.toUpperCase()));
+        let eligible = addressedCandidates.length
+            ? addressedCandidates
+            : candidates.filter(bot => {
+                const profile = BotConfig.profiles[bot.botDifficulty];
+                const chance = isBotSender
+                    ? 0.16 + profile.extroversion * 0.12
+                    : 0.24 + profile.extroversion * 0.58;
+                return Math.random() < chance;
             });
-        const responder = candidates.find(bot => {
-            const addressed = upperMsg.includes(bot.name.toUpperCase());
-            const chance = addressed ? 1 : isBotSender ? 0.22 : (bot.botDifficulty === 6 ? 0.95 : bot.botDifficulty === 4 ? 0.68 : BotConfig.profiles[bot.botDifficulty].extroversion * 0.75);
-            return Math.random() < chance;
+        if (eligible.length > 1) {
+            const freshSpeakers = eligible.filter(bot => bot.id !== Bot.lastChatSpeaker);
+            if (freshSpeakers.length) eligible = freshSpeakers;
+        }
+        const totalWeight = eligible.reduce((sum, bot) => {
+            const profile = BotConfig.profiles[bot.botDifficulty];
+            const personalityBoost = profile.type === 'pirate' ? 1.2 : profile.type === 'baba' ? 1.1 : 1;
+            return sum + Math.max(0.1, profile.extroversion * personalityBoost);
+        }, 0);
+        let roll = Math.random() * totalWeight;
+        const responder = eligible.find(bot => {
+            const profile = BotConfig.profiles[bot.botDifficulty];
+            const personalityBoost = profile.type === 'pirate' ? 1.2 : profile.type === 'baba' ? 1.1 : 1;
+            roll -= Math.max(0.1, profile.extroversion * personalityBoost);
+            return roll <= 0;
         });
         if (!responder) return;
 
@@ -837,8 +1066,11 @@ const Bot = {
         let replyTemplate;
         let category;
         if (personaReplies) {
-            const lines = personaReplies[replyIntent] || personaReplies.fallback;
-            category = `direct_${replyIntent}`;
+            const resolvedIntent = personaReplies[replyIntent] ? replyIntent : 'fallback';
+            const lines = resolvedIntent === 'fallback'
+                ? [...(personaReplies.fallback || []), ...(BotConfig.generalReplies[profile.type] || [])]
+                : personaReplies[resolvedIntent];
+            category = `direct_${resolvedIntent}`;
             replyTemplate = Bot.getUniqueResponse(responder.id, category, lines);
         } else {
             const pattern = BotConfig.elizaPatterns.find(item =>
@@ -938,6 +1170,12 @@ const Bot = {
 
         if (ownScore + 3 < bestOpponent) trigger = state.turns % 2 === 0 ? 'winning' : 'turn';
         else if (ownScore > bestOpponent + 4) trigger = state.turns % 2 === 0 ? 'losing' : 'turn';
+        const profile = BotConfig.profiles[activePlayer.botDifficulty];
+        const hasGeneralBanter = BotConfig.chatBank[profile.type]?.banter?.length;
+        const banterChance = 0.2 + profile.extroversion * 0.3;
+        if (trigger === 'turn' && state.turns > 1 && hasGeneralBanter && Math.random() < banterChance) {
+            trigger = 'banter';
+        }
 
         if (activePlayer.botDifficulty === 6) {
             let phase = 'observe';

@@ -8,13 +8,13 @@ const BotConfig = {
     profiles: {
         // Timings are sampled once per decision. This keeps bots human-paced without
         // letting the 250 ms engine tick repeatedly reroll their reaction time.
-        1: { type: 'noob', capacity: 2, decayMs: 12000, reflexBase: 1450, reflexJitter: 900, decisionMin: 2400, decisionMax: 5200, peekMin: 3400, peekMax: 6500, typingWpm: 30, distraction: 0.18, extroversion: 0.9, counting: false },
-        2: { type: 'casual', capacity: 4, decayMs: 20000, reflexBase: 980, reflexJitter: 650, decisionMin: 1800, decisionMax: 3900, peekMin: 2800, peekMax: 5200, typingWpm: 40, distraction: 0.12, extroversion: 0.6, counting: false },
-        3: { type: 'pro', capacity: 10, decayMs: 50000, reflexBase: 620, reflexJitter: 420, decisionMin: 1300, decisionMax: 2900, peekMin: 2300, peekMax: 4300, typingWpm: 54, distraction: 0.07, extroversion: 0.28, counting: false },
-        4: { type: 'expert', capacity: 30, decayMs: 180000, reflexBase: 460, reflexJitter: 330, decisionMin: 1450, decisionMax: 3200, peekMin: 2500, peekMax: 4400, typingWpm: 64, distraction: 0.04, extroversion: 0.38, counting: true },
-        5: { type: 'pirate', capacity: 10, decayMs: 50000, reflexBase: 780, reflexJitter: 550, decisionMin: 1700, decisionMax: 3700, peekMin: 2700, peekMax: 5000, typingWpm: 38, distraction: 0.13, extroversion: 1.0, counting: true },
+        1: { type: 'noob', capacity: 2, decayMs: 12000, reflexBase: 1450, reflexJitter: 900, decisionMin: 2400, decisionMax: 5200, peekMin: 3400, peekMax: 6500, typingWpm: 30, readingWpm: 185, hesitation: 0.34, rhythmVariance: 0.24, distraction: 0.18, extroversion: 0.9, counting: false },
+        2: { type: 'casual', capacity: 4, decayMs: 20000, reflexBase: 980, reflexJitter: 650, decisionMin: 1800, decisionMax: 3900, peekMin: 2800, peekMax: 5200, typingWpm: 40, readingWpm: 225, hesitation: 0.25, rhythmVariance: 0.2, distraction: 0.12, extroversion: 0.6, counting: false },
+        3: { type: 'pro', capacity: 10, decayMs: 50000, reflexBase: 620, reflexJitter: 420, decisionMin: 1300, decisionMax: 2900, peekMin: 2300, peekMax: 4300, typingWpm: 54, readingWpm: 275, hesitation: 0.15, rhythmVariance: 0.14, distraction: 0.07, extroversion: 0.28, counting: false },
+        4: { type: 'expert', capacity: 30, decayMs: 180000, reflexBase: 460, reflexJitter: 330, decisionMin: 1450, decisionMax: 3200, peekMin: 2500, peekMax: 4400, typingWpm: 64, readingWpm: 305, hesitation: 0.18, rhythmVariance: 0.12, distraction: 0.04, extroversion: 0.38, counting: true },
+        5: { type: 'pirate', capacity: 10, decayMs: 50000, reflexBase: 780, reflexJitter: 550, decisionMin: 1700, decisionMax: 3700, peekMin: 2700, peekMax: 5000, typingWpm: 38, readingWpm: 205, hesitation: 0.29, rhythmVariance: 0.22, distraction: 0.13, extroversion: 1.0, counting: true },
         // The Apex Adversary: flawless public-information memory and boss-tier planning.
-        6: { type: 'baba', name: 'Baba Gupta', capacity: 52, decayMs: Infinity, reflexBase: 370, reflexJitter: 260, decisionMin: 900, decisionMax: 2200, peekMin: 1900, peekMax: 3500, typingWpm: 76, distraction: 0.015, extroversion: 0.88, counting: true }
+        6: { type: 'baba', name: 'Baba Gupta', capacity: 52, decayMs: Infinity, reflexBase: 370, reflexJitter: 260, decisionMin: 900, decisionMax: 2200, peekMin: 1900, peekMax: 3500, typingWpm: 76, readingWpm: 340, hesitation: 0.12, rhythmVariance: 0.09, distraction: 0.015, extroversion: 0.88, counting: true }
     },
     
     // ELIZA-style syntactic reflections mapping for sentence reassembly
@@ -400,7 +400,11 @@ const BotConfig = {
             "I had a clever reply, then I drew a card and lost it.",
             "{target}, we can discuss this after I survive my own turn.",
             "Chatting is easy. Remembering two cards is apparently premium content.",
-            "My legal team says every move was intentional."
+            "My legal team says every move was intentional.",
+            "I am thinking so hard the wrong answer is getting nervous.",
+            "One moment, {target}; I misplaced my train of thought under a penalty card.",
+            "This is either a master plan or a very organized accident.",
+            "I have two known cards and seventeen unknown emotions."
         ],
         casual: [
             "Fair enough, {target}. The table will settle the argument.",
@@ -414,7 +418,11 @@ const BotConfig = {
             "{target}, I would answer faster, but the deck created paperwork.",
             "Noted. No refunds if the next card proves you wrong.",
             "The vibe is excellent. The decision-making is under review.",
-            "We are all friends until the slap window opens."
+            "We are all friends until the slap window opens.",
+            "Hang on, I am choosing between sensible and funny.",
+            "That sounded convincing enough to survive until the next draw.",
+            "I came for cards and accidentally joined a debate club.",
+            "Let me think; the obvious move has suspiciously good marketing."
         ],
         pro: [
             "Message received. Strategic relevance remains under evaluation.",
@@ -428,7 +436,11 @@ const BotConfig = {
             "I have logged that under statements awaiting evidence.",
             "{target}, your point may be correct. Your layout remains suspicious.",
             "Good theory. Let us expose it to one turn of reality.",
-            "Silence would conceal more, but this is more entertaining."
+            "Silence would conceal more, but this is more entertaining.",
+            "I am comparing your words with the move you avoided.",
+            "Give me a beat; useful decisions dislike being rushed.",
+            "Your message changed the table exactly zero cards and one tell.",
+            "I have considered the banter and retained positional advantage."
         ],
         expert: [
             "Your message has been included in the behavioral model.",
@@ -442,7 +454,11 @@ const BotConfig = {
             "Conversational tempo surrendered. Information gained.",
             "{target}, every extra word narrows the range of what you remember.",
             "I appreciate the commentary. It makes the tells self-documenting.",
-            "The model has acknowledged your message and rejected its confidence interval."
+            "The model has acknowledged your message and rejected its confidence interval.",
+            "I am not stalling; I am letting your mistake finish developing.",
+            "That sentence improved my read and worsened your outlook.",
+            "Please continue while I price your hesitation into the position.",
+            "The optimal reply is currently busy becoming a move."
         ],
         pirate: [
             "A fine speech, {target}! Shame the cards cannot hear ye.",
@@ -456,7 +472,11 @@ const BotConfig = {
             "Aye, aye. Now do something worth putting in the log.",
             "Yer chat has wind but no rudder.",
             "The sea understands ye. I remain unconvinced.",
-            "Keep talkin'. It covers the sound of me stealing the game."
+            "Keep talkin'. It covers the sound of me stealing the game.",
+            "Hold fast; even a captain checks the map before the ambush.",
+            "Yer argument has more holes than me favorite sail.",
+            "I be weighing strategy against the funnier betrayal.",
+            "The tide is thinkin', {target}, and it dislikes yer odds."
         ],
         baba: [
             "Baba Gupta has processed your statement. No strategic content was injured.",
@@ -472,7 +492,12 @@ const BotConfig = {
             "The model detected humor. It was hiding behind the strategy.",
             "Continue. Every sentence makes your silence less mysterious.",
             "You brought banter to a probability fight. Admirable.",
-            "Baba Gupta acknowledges the noise and preserves the signal."
+            "Baba Gupta acknowledges the noise and preserves the signal.",
+            "Baba Gupta is not delayed; the future is being indexed.",
+            "Your sentence created three branches. You lose politely in all of them.",
+            "I am allowing the position time to confess what you missed.",
+            "The pause is deliberate. Your discomfort is a useful side effect.",
+            "Baba Gupta has finished thinking. The table has not finished regretting it."
         ]
     },
 
@@ -599,7 +624,7 @@ const Bot = {
     recentLines: {}, globalRecentLines: [],
     frustration: {}, grudges: {}, eventCache: {}, deckMemory: {},
     personality: {}, pendingResponseUntil: 0, conversationState: {},
-    decisionSchedules: {}, slapSchedules: {}, pendingChats: {}, roundToken: 0,
+    decisionSchedules: {}, slapSchedules: {}, pendingChats: {}, humanState: {}, activitySources: {}, roundToken: 0,
     lastMagicProcessed: {}, // Track last magic processing time per bot
     lastResolvedMagicType: {}, // Track last resolved magic type per bot to prevent duplicate processing
     lastGlobalChatTime: 0, // Global cooldown to prevent bot chat spam
@@ -615,6 +640,7 @@ const Bot = {
         Bot.pendingChats = {};
         Bot.decisionSchedules = {};
         Bot.slapSchedules = {};
+        Bot.activitySources = {};
         Bot.conversationState = {};
         if (Engine.state.thinkingBots?.length || Engine.state.typingBots?.length) {
             Engine.state.thinkingBots = [];
@@ -639,6 +665,7 @@ const Bot = {
         if (Engine.state.phase !== 'lobby') {
             Engine.state.players.filter(p => p.isBot).forEach(bot => {
                 const previous = Bot.personality[bot.id] || {};
+                const previousHuman = Bot.humanState[bot.id] || {};
                 Bot.personality[bot.id] = {
                     rounds: (previous.rounds || 0) + 1,
                     turns: 0,
@@ -647,12 +674,21 @@ const Bot = {
                     failedSlaps: previous.failedSlaps || 0,
                     revengeDelivered: previous.revengeDelivered || 0
                 };
+                Bot.humanState[bot.id] = {
+                    tempo: previousHuman.tempo || Bot.randomBetween(0.92, 1.1),
+                    decisions: 0,
+                    messages: 0,
+                    fatigue: 0,
+                    lastDecisionAt: 0,
+                    lastComplexity: null
+                };
             });
         }
 
         if (Engine.state.phase !== 'lobby') {
+            const introToken = Bot.roundToken;
             setTimeout(() => {
-                if (Engine.state.phase === 'lobby' || Engine.state.phase === 'game_over') return;
+                if (Bot.roundToken !== introToken || Engine.state.phase === 'lobby' || Engine.state.phase === 'game_over') return;
                 const bots = Engine.state.players.filter(p => p.isBot);
                 const speaker = bots.find(p => p.botDifficulty === 6)
                     || bots.find(p => p.botDifficulty === 4)
@@ -847,22 +883,75 @@ const Bot = {
 
     randomBetween: (min, max) => min + Math.random() * (max - min),
 
+    getHumanState: (bot) => {
+        if (!Bot.humanState[bot.id]) {
+            Bot.humanState[bot.id] = {
+                tempo: Bot.randomBetween(0.92, 1.1),
+                decisions: 0,
+                messages: 0,
+                fatigue: 0,
+                lastDecisionAt: 0,
+                lastComplexity: null
+            };
+        }
+        return Bot.humanState[bot.id];
+    },
+
+    setActivity: (botId, activity, source, active) => {
+        const key = `${botId}:${activity}`;
+        if (!Bot.activitySources[key]) Bot.activitySources[key] = new Set();
+        if (active) Bot.activitySources[key].add(source);
+        else Bot.activitySources[key].delete(source);
+        const isActive = Bot.activitySources[key].size > 0;
+        if (!isActive) delete Bot.activitySources[key];
+        Engine.setBotActivity?.(botId, activity, isActive);
+    },
+
     getDecisionDelay: (bot, complexity = 'turn') => {
         const profile = BotConfig.profiles[bot.botDifficulty];
-        if (complexity === 'peek') return Bot.randomBetween(profile.peekMin, profile.peekMax);
+        const human = Bot.getHumanState(bot);
+        const now = Utils.timestamp();
+        const sampleNaturalRange = (min, max) => {
+            // The average of two samples clusters around a personal norm while still
+            // allowing the occasional fast or slow human response.
+            const sampled = (Bot.randomBetween(min, max) + Bot.randomBetween(min, max)) / 2;
+            const rhythm = Bot.randomBetween(1 - profile.rhythmVariance, 1 + profile.rhythmVariance);
+            return sampled * human.tempo * rhythm;
+        };
 
-        const multiplier = {
-            turn: 1,
-            holding: 1.12,
-            magic: 1.45,
-            endgame: 1.28
-        }[complexity] || 1;
-        let delay = Bot.randomBetween(profile.decisionMin, profile.decisionMax) * multiplier;
+        let delay;
+        if (complexity === 'peek') {
+            delay = sampleNaturalRange(profile.peekMin, profile.peekMax);
+        } else {
+            const multiplier = {
+                turn: 1,
+                holding: 1.12,
+                magic: 1.45,
+                endgame: 1.28
+            }[complexity] || 1;
+            delay = sampleNaturalRange(profile.decisionMin, profile.decisionMax) * multiplier;
+        }
 
-        // Occasional distraction/hesitation makes the cadence less mechanical.
+        // A player needs longer to orient on their first decision, after a long pause,
+        // or when the kind of decision changes.
+        if (human.decisions === 0) delay += Bot.randomBetween(650, 1450);
+        if (human.lastDecisionAt && now - human.lastDecisionAt > 12000) delay += Bot.randomBetween(280, 850);
+        if (human.lastComplexity && human.lastComplexity !== complexity) delay += Bot.randomBetween(180, 620);
+
+        // Humans often double-check a magic/endgame choice even when they already
+        // know the best move. Less experienced personalities hesitate more often.
+        const hesitationChance = profile.hesitation + (complexity === 'magic' ? 0.12 : 0);
+        if (Math.random() < hesitationChance) delay += Bot.randomBetween(450, complexity === 'magic' ? 2200 : 1550);
+        if (Math.random() < 0.32) delay += Bot.randomBetween(120, 480);
         if (Math.random() < profile.distraction) delay += Bot.randomBetween(700, 2300);
         if ((Bot.frustration[bot.id] || 0) >= 4) delay *= Bot.randomBetween(0.88, 1.08);
-        return Math.round(delay);
+
+        human.decisions++;
+        human.fatigue = Math.min(0.14, human.decisions * 0.008);
+        human.lastDecisionAt = now;
+        human.lastComplexity = complexity;
+        delay *= 1 + human.fatigue;
+        return Math.round(Math.max(850, Math.min(9000, delay)));
     },
 
     waitForDecision: (bot, key, complexity = 'turn', now = Utils.timestamp()) => {
@@ -873,32 +962,47 @@ const Bot = {
                 readyAt: now + Bot.getDecisionDelay(bot, complexity)
             };
             Bot.decisionSchedules[bot.id] = schedule;
-            Engine.setBotActivity?.(bot.id, 'thinking', true);
+            Bot.setActivity(bot.id, 'thinking', 'decision', true);
             return false;
         }
         if (now < schedule.readyAt) return false;
         delete Bot.decisionSchedules[bot.id];
-        Engine.setBotActivity?.(bot.id, 'thinking', false);
+        Bot.setActivity(bot.id, 'thinking', 'decision', false);
         return true;
     },
 
     clearDecision: (botId) => {
         if (!Bot.decisionSchedules[botId]) return;
         delete Bot.decisionSchedules[botId];
-        Engine.setBotActivity?.(botId, 'thinking', false);
+        Bot.setActivity(botId, 'thinking', 'decision', false);
     },
 
     getTypingPlan: (bot, message, direct = false) => {
         const profile = BotConfig.profiles[bot.botDifficulty];
+        const human = Bot.getHumanState(bot);
         const wordCount = Math.max(2, message.trim().split(/\s+/).length);
-        const effectiveWpm = profile.typingWpm * Bot.randomBetween(0.84, 1.16);
-        const rawTypingMs = (wordCount / effectiveWpm) * 60000;
-        const punctuationPauses = (message.match(/[,.!?;:]/g) || []).length * Bot.randomBetween(55, 125);
-        const typingMs = Math.round(Math.max(1100, Math.min(9500, rawTypingMs + punctuationPauses)));
-        let thoughtMs = direct
-            ? Bot.randomBetween(650, 2100)
-            : Bot.randomBetween(350, 1350);
+        const effectiveWpm = profile.typingWpm
+            * Bot.randomBetween(1 - profile.rhythmVariance, 1 + profile.rhythmVariance)
+            / human.tempo;
+        const characterWords = Math.max(wordCount, message.trim().length / 5);
+        const rawTypingMs = (characterWords / effectiveWpm) * 60000;
+        const punctuationPauses = (message.match(/[,.!?;:]/g) || []).length * Bot.randomBetween(70, 180);
+        const revisionPause = Math.random() < profile.hesitation
+            ? Bot.randomBetween(320, 1250)
+            : 0;
+        const typingMs = Math.round(Math.max(950, Math.min(12000, rawTypingMs + punctuationPauses + revisionPause)));
+
+        const readingMs = direct
+            ? 350 + (wordCount / profile.readingWpm) * 30000
+            : 0;
+        const compositionMs = direct
+            ? Bot.randomBetween(700, 2200)
+            : Bot.randomBetween(450, 1450);
+        let thoughtMs = readingMs + compositionMs;
+        if (message.includes('?')) thoughtMs += Bot.randomBetween(180, 650);
+        if (human.messages === 0) thoughtMs += Bot.randomBetween(250, 700);
         if (Math.random() < profile.distraction) thoughtMs += Bot.randomBetween(500, 1800);
+        human.messages++;
         return {
             thoughtMs: Math.round(thoughtMs),
             typingMs,
@@ -913,7 +1017,8 @@ const Bot = {
         if (existing) {
             clearTimeout(existing.typingTimer);
             clearTimeout(existing.sendTimer);
-            Engine.setBotActivity?.(bot.id, 'typing', false);
+            Bot.setActivity(bot.id, 'thinking', 'chat', false);
+            Bot.setActivity(bot.id, 'typing', 'chat', false);
         }
 
         const token = Bot.roundToken;
@@ -925,16 +1030,19 @@ const Bot = {
         Bot.lastGlobalChatTime = now;
         Bot.lastChatSpeaker = bot.id;
         Bot.pendingResponseUntil = Math.max(Bot.pendingResponseUntil, now + plan.totalMs + 400);
+        Bot.setActivity(bot.id, 'thinking', 'chat', true);
 
         pending.typingTimer = setTimeout(() => {
             if (Bot.roundToken !== token || Bot.pendingChats[bot.id] !== pending) return;
+            Bot.setActivity(bot.id, 'thinking', 'chat', false);
             if (!Engine.state.players.some(p => p.id === bot.id)) return;
-            Engine.setBotActivity?.(bot.id, 'typing', true);
+            Bot.setActivity(bot.id, 'typing', 'chat', true);
         }, plan.thoughtMs);
 
         pending.sendTimer = setTimeout(() => {
             if (Bot.roundToken !== token || Bot.pendingChats[bot.id] !== pending) return;
-            Engine.setBotActivity?.(bot.id, 'typing', false);
+            Bot.setActivity(bot.id, 'thinking', 'chat', false);
+            Bot.setActivity(bot.id, 'typing', 'chat', false);
             delete Bot.pendingChats[bot.id];
             if (!Object.keys(Bot.pendingChats).length) Bot.pendingResponseUntil = 0;
             if (!Engine.state.players.some(p => p.id === bot.id)) return;
@@ -1210,6 +1318,7 @@ const Bot = {
         Bot.pendingResponseUntil = 0;
         Bot.decisionSchedules = {};
         Bot.slapSchedules = {};
+        Bot.activitySources = {};
         Engine.state.thinkingBots = [];
         Engine.state.typingBots = [];
 

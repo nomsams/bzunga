@@ -168,6 +168,8 @@
     #chat-bubble-container.hidden { display: none !important; }
     #bot-typing-indicator { position: fixed; top: 72px; left: 50%; transform: translateX(-50%); z-index: 575; padding: 7px 13px; border: 1px solid rgba(129,140,248,0.34); border-radius: 999px; color: #c7d2fe; background: rgba(9,20,36,0.92); box-shadow: 0 8px 22px rgba(0,0,0,0.35); backdrop-filter: blur(10px); font-size: 0.76rem; font-weight: 800; letter-spacing: 0.02em; pointer-events: none; animation: typingPulse 1.25s ease-in-out infinite; }
     #bot-typing-indicator.hidden { display: none !important; }
+    .chat-open #bot-typing-indicator,
+    .chat-open #chat-bubble-container { display: none !important; }
     @keyframes typingPulse { 0%, 100% { opacity: 0.68; } 50% { opacity: 1; } }
     .chat-bubble { background: rgba(255,255,255,0.95); color: #000; padding: 10px 15px; border-radius: 16px; border-bottom-left-radius: 4px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s 3.7s forwards; max-width: 250px; word-wrap: break-word; pointer-events: auto; }
     .chat-bubble.pirate { background: #fee2e2; border: 1px solid #ef4444; }
@@ -210,8 +212,8 @@
     #chat-input { flex: 1; margin: 0; border-radius: 8px 0 0 8px; padding: 10px 15px; font-size: 0.9rem; }
     #chat-send { width: auto; margin: 0; border-radius: 0 8px 8px 0; padding: 0 20px; font-size: 0.9rem; }
 
-    #modal-overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:400; backdrop-filter: blur(5px); }
-    .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); z-index: 410; text-align: center; pointer-events: auto; min-width: 300px; max-width: 90vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
+    #modal-overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1200; backdrop-filter: blur(5px); }
+    .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); z-index: 1210; text-align: center; pointer-events: auto; min-width: 300px; max-width: 90vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
     .modal h2 { color: var(--accent); margin-bottom: 10px; font-size: 1.8rem; }
     .modal-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 25px; flex-wrap: wrap; }
 
@@ -601,16 +603,16 @@
         <button id="btn-toggle-clutter" title="Toggle table information" aria-label="Toggle table information">INFO</button>
         
         <!-- Chat control on bottom left -->
-        <button id="chat-fab" aria-label="Open chat">CHAT</button>
+        <button id="chat-fab" aria-label="Open chat" aria-controls="chat-drawer" aria-expanded="false">CHAT</button>
         
-        <div id="chat-drawer">
+        <div id="chat-drawer" role="dialog" aria-label="Game log and chat">
             <div class="chat-header">
                 <h3 style="margin:0; color:white; font-size:1rem;">Game Log</h3>
                 <button id="chat-close" aria-label="Close chat" style="background:none; border:none; color:white; font-size:1rem;">X</button>
             </div>
             <div id="chat-messages"></div>
             <div id="chat-input-container">
-                <input type="text" id="chat-input" placeholder="Message...">
+                <input type="text" id="chat-input" placeholder="Message..." maxlength="240" autocomplete="off">
                 <button id="chat-send">Send</button>
             </div>
         </div>
@@ -647,6 +649,17 @@
 const Utils = {
     uuid: () => Math.random().toString(36).substr(2, 9),
     timestamp: () => Date.now(),
+    cleanText: (value, maxLength, fallback = '') => {
+        const cleaned = String(value ?? '')
+            .replace(/[\u0000-\u001f\u007f]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, maxLength);
+        return cleaned || fallback;
+    },
+    escapeHTML: (value) => String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[char]),
     shuffle: (array) => {
         let currentIndex = array.length, randomIndex;
         while (currentIndex != 0) {
@@ -663,6 +676,7 @@ const SUITS = ['♠', '♥', '♦', '♣'];
 const VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 const MAGIC_VALUES = ['9', '10', 'J', 'Q', 'K'];
 const BOT_NAMES = ["BeepBoop", "CardShark", "DeepBlue", "AlphaGo", "Blackbeard"];
+const MAX_PLAYERS = 8;
 
 // --- GLOBAL APP STATE ---
 const App = {
@@ -673,7 +687,7 @@ const App = {
 
 // --- GAME ENGINE (HOST ONLY) ---
 const Engine = {
-    state: { phase: 'lobby', players: [], deck: [], discardPile: [], logs: [], activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, turnStartTime: 0, peekPhaseCompleted: false, publicPeekedCards: [], botPeekLog: [], thinkingBots: [], typingBots: [] },
+    state: { phase: 'lobby', gameMode: 'rhino', players: [], deck: [], discardPile: [], logs: [], nextLogId: 0, turnIndex: 0, activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, turnStartTime: 0, peekPhaseCompleted: false, publicPeekedCards: [], orbitPendingPlayerIds: [], thinkingBots: [], typingBots: [] },
     botMemory: {}
 };
 
@@ -734,12 +748,6 @@ Engine.memorizeForBot = (botId, card) => {
     return false;
 };
 
-Engine.recordBotPeek = function({playerId, cardId, ability}) {
-    if (!Engine.state.botPeekLog) Engine.state.botPeekLog = [];
-    Engine.state.botPeekLog.push({playerId, cardId, ability, time: Utils.timestamp()});
-    console.log(`Bot ${playerId} peeked card ${cardId} via ${ability}`);
-};
-
 Engine.initDeck = () => {
     let deck = []; let idCounter = 0;
     for (let suit of SUITS) {
@@ -753,7 +761,11 @@ Engine.initDeck = () => {
 Engine.broadcast = () => {
     if (!App.isHost) return;
     const payload = { type: 'STATE_UPDATE', state: Engine.state };
-    Object.values(App.connections).forEach(conn => { if (conn.open) conn.send(payload); });
+    Object.values(App.connections).forEach(conn => {
+        if (!conn.open) return;
+        try { conn.send(payload); }
+        catch (error) { console.warn('Skipped an unavailable peer connection.'); }
+    });
     UI.render(Engine.state);
 };
 
@@ -769,31 +781,45 @@ Engine.setBotActivity = (botId, activity, active) => {
     Engine.broadcast();
 };
 
+Engine.appendLog = (entry) => {
+    Engine.state.nextLogId = (Engine.state.nextLogId || 0) + 1;
+    Engine.state.logs.push({ ...entry, id: Engine.state.nextLogId, time: Utils.timestamp() });
+    if (Engine.state.logs.length > 120) {
+        Engine.state.logs.splice(0, Engine.state.logs.length - 120);
+    }
+};
+
 Engine.sysLog = (msg, type = 'info') => {
-    Engine.state.logs.push({ type: 'sys', msg, logType: type, time: Utils.timestamp() });
-    if (Engine.state.logs.length > 60) Engine.state.logs.shift();
+    Engine.appendLog({ type: 'sys', msg: Utils.cleanText(msg, 240), logType: type });
     Engine.broadcast();
 };
 
 Engine.chatLog = (name, msg, isPirate = false) => {
-    Engine.state.logs.push({ type: isPirate ? 'pirate' : 'chat', name, msg, time: Utils.timestamp() });
+    const safeName = Utils.cleanText(name, 24, 'Player');
+    const safeMessage = Utils.cleanText(msg, 240);
+    if (!safeMessage) return false;
+    Engine.appendLog({ type: isPirate ? 'pirate' : 'chat', name: safeName, msg: safeMessage });
     Engine.broadcast();
     if (App.isHost && window.Bot && window.Bot.listenToChat) {
-        let isBotSender = Engine.state.players.some(p => p.name === name && p.isBot);
-        window.Bot.listenToChat(name, msg, isBotSender);
+        let isBotSender = Engine.state.players.some(p => p.name === safeName && p.isBot);
+        window.Bot.listenToChat(safeName, safeMessage, isBotSender);
     }
+    return true;
 };
 
 Engine.startGame = () => {
-    if (Engine.state.players.length < 2) return UI.showToast("Need at least 2 players!", "danger");
+    const activePlayers = Engine.state.players.filter(player => player.isBot || player.connected);
+    if (activePlayers.length < 2) return UI.showToast("Need at least 2 players!", "danger");
+    if (activePlayers.length > MAX_PLAYERS) return UI.showToast(`Maximum ${MAX_PLAYERS} players.`, "danger");
+    Engine.state.players = activePlayers;
     Engine.state.deck = Engine.initDeck();
     Engine.state.discardPile = [];
     Engine.state.phase = 'peek';
     Engine.state.peekPhaseCompleted = false;
     Engine.state.turnIndex = Math.floor(Math.random() * Engine.state.players.length);
-    Engine.state.gameMode = document.getElementById('game-mode') ? document.getElementById('game-mode').value : 'standard';
+    Engine.state.gameMode = document.getElementById('game-mode') ? document.getElementById('game-mode').value : 'rhino';
     Engine.state.bazungaCallerId = null;
-    Engine.state.orbitCount = 0;
+    Engine.state.orbitPendingPlayerIds = [];
     Engine.state.activeAbility = null;
     Engine.state.lastSlapTime = 0;
     Engine.state.lastSlapTargetId = null;
@@ -801,7 +827,6 @@ Engine.startGame = () => {
     Engine.state.lastActionTargetId = null;
     Engine.state.turnStartTime = Utils.timestamp();
     Engine.state.publicPeekedCards = [];
-    Engine.state.botPeekLog = [];
     Engine.state.thinkingBots = [];
     Engine.state.typingBots = [];
     Engine.botMemory = {};
@@ -826,7 +851,6 @@ Engine.startGame = () => {
 
 Engine.checkDeckEmpty = () => {
     if (Engine.state.deck.length === 0 && Engine.state.discardPile.length > 1) {
-        Engine.sysLog("Deck empty! True shuffling discard pile into deck...", "warning");
         let topDiscard = Engine.state.discardPile.pop();
         let toShuffle = [...Engine.state.discardPile];
         toShuffle.forEach(c => {
@@ -835,8 +859,10 @@ Engine.checkDeckEmpty = () => {
         });
         Engine.state.deck = Utils.shuffle(toShuffle);
         Engine.state.discardPile = [topDiscard];
-        Engine.broadcast();
+        Engine.appendLog({ type: 'sys', msg: 'Deck empty! Shuffling the discard pile into the deck...', logType: 'warning' });
+        return true;
     }
+    return false;
 };
 
 Engine.getCardById = (id, sourceState = Engine.state) => {
@@ -845,6 +871,16 @@ Engine.getCardById = (id, sourceState = Engine.state) => {
     (sourceState.players || []).forEach(p => { allCards.push(...(p.hand || []), ...(p.penaltyCards || [])); });
     if (sourceState.activeAbility && sourceState.activeAbility.card) allCards.push(sourceState.activeAbility.card);
     return allCards.find(c => c.id === id);
+};
+
+Engine.isLayoutCard = (card) => !!card
+    && (card.loc === 'hand' || card.loc === 'penalty')
+    && Engine.state.players.some(player => player.id === card.ownerId);
+
+Engine.isValidSwap = (firstId, secondId) => {
+    if (!firstId || !secondId || firstId === secondId) return false;
+    return Engine.isLayoutCard(Engine.getCardById(firstId))
+        && Engine.isLayoutCard(Engine.getCardById(secondId));
 };
 
 Engine.drawPenalty = (playerId) => {
@@ -875,8 +911,27 @@ Engine.nextTurn = () => {
     Engine.state.activeAbility = null;
 
     if (Engine.state.phase === 'orbit') {
-        Engine.state.orbitCount++;
-        if (Engine.state.orbitCount >= Engine.state.players.length) { Engine.endGame(); return; }
+        const currentPlayerId = Engine.state.players[Engine.state.turnIndex]?.id;
+        if (currentPlayerId && currentPlayerId !== Engine.state.bazungaCallerId) {
+            Engine.state.orbitPendingPlayerIds = (Engine.state.orbitPendingPlayerIds || [])
+                .filter(id => id !== currentPlayerId);
+        }
+        const eligibleIds = new Set(Engine.state.players
+            .filter(player => player.isBot || player.connected)
+            .map(player => player.id));
+        Engine.state.orbitPendingPlayerIds = (Engine.state.orbitPendingPlayerIds || [])
+            .filter(id => eligibleIds.has(id));
+        if (!Engine.state.orbitPendingPlayerIds.length) { Engine.endGame(); return; }
+
+        let loopCount = 0;
+        do {
+            Engine.state.turnIndex = (Engine.state.turnIndex + 1) % Engine.state.players.length;
+            loopCount++;
+        } while (!Engine.state.orbitPendingPlayerIds.includes(Engine.state.players[Engine.state.turnIndex].id)
+            && loopCount < Engine.state.players.length);
+        Engine.state.turnStartTime = Utils.timestamp();
+        Engine.broadcast();
+        return;
     }
 
     let loopCount = 0;
@@ -960,15 +1015,17 @@ Engine.endGame = () => {
 
 Engine.processAction = (action, peerId) => {
     if (!App.isHost) return;
+    if (!action || typeof action !== 'object' || typeof action.type !== 'string') return;
     const player = Engine.state.players.find(p => p.id === peerId);
     if (!player) return;
 
-    const isTurn = Engine.state.players[Engine.state.turnIndex].id === peerId;
+    const activePlayer = Engine.state.players[Engine.state.turnIndex];
+    const isTurn = activePlayer?.id === peerId;
     let now = Utils.timestamp();
 
     switch (action.type) {
         case 'PLAY_AGAIN':
-            if (Engine.state.phase !== 'game_over') return;
+            if (!player.isHost || Engine.state.phase !== 'game_over') return;
             Engine.startGame();
             break;
 
@@ -993,9 +1050,7 @@ Engine.processAction = (action, peerId) => {
 
             let topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
             let owner = Engine.state.players.find(p => p.id === targetCard.ownerId);
-
-            let transitTime = Math.max(0, now - (action.timestamp || now));
-            let adjustedSlapTime = now - transitTime;
+            if (!owner) return;
 
             // Race condition fix: If the top discard was slapped within the last 1.5s, reject new slaps
             let isLateSlap = topDiscard.slappedAt && (now - topDiscard.slappedAt < 1500);
@@ -1038,12 +1093,16 @@ Engine.processAction = (action, peerId) => {
 
         case 'DRAW_DECK':
             if (!isTurn || Engine.state.activeAbility) return;
-            if (Engine.state.phase === 'peek' || !Engine.state.peekPhaseCompleted) {
+            if (!['play', 'orbit'].includes(Engine.state.phase) || !Engine.state.peekPhaseCompleted) {
                 Engine.sysLog(`${player.name} cannot draw from the deck before peek phase is completed.`, 'warning');
                 return;
             }
             if (Engine.state.deck.length === 0) Engine.checkDeckEmpty();
-            if (Engine.state.deck.length === 0) { Engine.nextTurn(); return; }
+            if (Engine.state.deck.length === 0) {
+                Engine.sysLog('No drawable cards remain. Ending the round.', 'warning');
+                Engine.endGame();
+                return;
+            }
             let drawn = Engine.state.deck.pop();
             Engine.checkDeckEmpty();
             drawn.isSlapped = false; drawn.slappedAt = null;
@@ -1055,7 +1114,7 @@ Engine.processAction = (action, peerId) => {
 
         case 'DRAW_DISCARD':
             if (!isTurn || Engine.state.activeAbility) return;
-            if (Engine.state.phase === 'peek') return;
+            if (!['play', 'orbit'].includes(Engine.state.phase) || !Engine.state.peekPhaseCompleted) return;
             if (Engine.state.gameMode === 'joker') {
                 Engine.sysLog(`${player.name} tried to draw from discard in Joker mode! (Denied)`, "warning");
                 return;
@@ -1072,7 +1131,11 @@ Engine.processAction = (action, peerId) => {
             break;
 
         case 'PLAY_HOLDING':
-            if (!isTurn || !Engine.state.activeAbility) return;
+            if (!isTurn || !['play', 'orbit'].includes(Engine.state.phase)) return;
+            if (!Engine.state.activeAbility
+                || Engine.state.activeAbility.player !== player.id
+                || !Engine.state.activeAbility.type.startsWith('holding')
+                || !Engine.state.activeAbility.card) return;
             let hCard = Engine.state.activeAbility.card;
 
             if (action.action === 'discard') {
@@ -1093,7 +1156,7 @@ Engine.processAction = (action, peerId) => {
                 } else Engine.nextTurn();
             } else if (action.action === 'swap') {
                 let target = Engine.getCardById(action.targetId);
-                if (!target || target.ownerId !== player.id) return;
+                if (!Engine.isLayoutCard(target) || target.ownerId !== player.id) return;
 
                 let replaced = false;
                 let iHand = player.hand.findIndex(c => c.id === target.id);
@@ -1113,6 +1176,7 @@ Engine.processAction = (action, peerId) => {
                     Engine.nextTurn();
                 }
             } else if (action.action === 'add_to_layout') {
+                if (player.hand.length + player.penaltyCards.length !== 0) return;
                 hCard.ownerId = player.id; hCard.loc = 'hand'; hCard.isFaceUp = false;
                 let usedIndices = new Set([...player.hand, ...player.penaltyCards].map(c => c.gridIndex));
                 let newIndex = 0; while(usedIndices.has(newIndex)) newIndex++;
@@ -1125,7 +1189,10 @@ Engine.processAction = (action, peerId) => {
             break;
 
         case 'RESOLVE_MAGIC':
-            if (!isTurn || !Engine.state.activeAbility) return;
+            if (!isTurn || !['play', 'orbit'].includes(Engine.state.phase)) return;
+            if (!Engine.state.activeAbility
+                || Engine.state.activeAbility.player !== player.id
+                || !Engine.state.activeAbility.type.startsWith('magic_')) return;
             let mType = Engine.state.activeAbility.type;
             
             if (action.action === 'pass') {
@@ -1135,68 +1202,79 @@ Engine.processAction = (action, peerId) => {
             }
 
             if (mType === 'magic_9') {
+                const target = Engine.getCardById(action.targetId);
+                if (!Engine.isLayoutCard(target) || target.ownerId !== player.id) return;
                 Engine.sysLog(`${player.name} used a 9 to peek at their own card (public knowledge).`, "info");
-                if (!action.targetId) { Engine.nextTurn(); return; } // Safety check
                 if (!Engine.state.publicPeekedCards.includes(action.targetId)) {
                     Engine.state.publicPeekedCards.push(action.targetId);
                 }
-                Engine.recordBotPeek({playerId: player.id, cardId: action.targetId, ability: 'magic_9'});
                 if (action.targetId) {
                     let c = Engine.getCardById(action.targetId);
                     if (c) Engine.state.players.filter(p => p.isBot).forEach(bot => Engine.rememberCardForBot(bot.id, c, 'public_reveal'));
                 }
                 Engine.nextTurn();
             } else if (mType === 'magic_10') {
-                if (!action.targetId || !action.targetPlayerId) { Engine.nextTurn(); return; } // Safety check
+                const target = Engine.getCardById(action.targetId);
                 let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
+                if (!Engine.isLayoutCard(target)
+                    || !targetOwner
+                    || targetOwner.id === player.id
+                    || target.ownerId !== targetOwner.id) return;
                 Engine.sysLog(`${player.name} used a 10 to secretly peek at one of ${targetOwner ? targetOwner.name + "'s" : "an opponent's"} cards.`, "info");
-                Engine.recordBotPeek({playerId: player.id, cardId: action.targetId, ability: 'magic_10'});
                 if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.rememberCardForBot(player.id, c, 'private_magic'); }
                 Engine.nextTurn();
             } else if (mType === 'magic_Q') {
                 if (action.swapTarget1 && action.swapTarget2) {
-                    Engine.executeSwap(action.swapTarget1, action.swapTarget2, false);
+                    if (!Engine.isValidSwap(action.swapTarget1, action.swapTarget2)) return;
+                    Engine.executeSwap(action.swapTarget1, action.swapTarget2);
                     Engine.sysLog(`${player.name} used a Queen to peek and swap a card!`, "warning");
                 } else {
+                    const target = Engine.getCardById(action.targetId);
+                    if (!Engine.isLayoutCard(target)) return;
                     Engine.sysLog(`${player.name} used a Queen to secretly peek at a card.`, "info");
                     if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.rememberCardForBot(player.id, c, 'private_magic'); }
                 }
                 Engine.nextTurn();
             } else if (mType === 'magic_J') {
                 if (action.swapTarget1 && action.swapTarget2) {
-                    if (action.swapTarget1 === action.swapTarget2) return;
+                    if (!Engine.isValidSwap(action.swapTarget1, action.swapTarget2)) return;
                     let c1 = Engine.getCardById(action.swapTarget1); let c2 = Engine.getCardById(action.swapTarget2);
                     let p1 = Engine.state.players.find(p => p.id === c1?.ownerId); let p2 = Engine.state.players.find(p => p.id === c2?.ownerId);
-                    Engine.executeSwap(action.swapTarget1, action.swapTarget2, true);
+                    Engine.executeSwap(action.swapTarget1, action.swapTarget2);
                     Engine.sysLog(`${player.name} used a Jack to blind-swap a card from ${p1?.name} and ${p2?.name}!`, "warning");
-                }
+                } else return;
                 Engine.nextTurn();
             } else if (mType === 'magic_K') {
-                if (action.targetPlayerId) {
-                    let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
-                    Engine.sysLog(`${player.name} forced a penalty on ${targetOwner ? targetOwner.name : "an opponent"} using the Red King!`, "danger");
-                    Engine.drawPenalty(action.targetPlayerId);
-                }
+                let targetOwner = Engine.state.players.find(p => p.id === action.targetPlayerId);
+                if (!targetOwner || targetOwner.id === player.id) return;
+                Engine.sysLog(`${player.name} forced a penalty on ${targetOwner.name} using the Red King!`, "danger");
+                Engine.drawPenalty(targetOwner.id);
                 Engine.nextTurn();
             }
             break;
 
         case 'CALL_BAZUNGA':
-            if (!isTurn || Engine.state.phase !== 'play') return;
+            if (!isTurn || Engine.state.phase !== 'play' || Engine.state.activeAbility) return;
             Engine.state.phase = 'orbit'; Engine.state.bazungaCallerId = player.id;
+            Engine.state.orbitPendingPlayerIds = Engine.state.players
+                .filter(candidate => candidate.id !== player.id && (candidate.isBot || candidate.connected))
+                .map(candidate => candidate.id);
             Engine.sysLog(`${player.name} called BAZUNGA! Final orbit begins!`, "danger");
-            Engine.nextTurn();
+            if (Engine.state.orbitPendingPlayerIds.length) Engine.nextTurn();
+            else Engine.endGame();
             break;
 
         case 'CHAT':
+            if (now - (player.lastChatAt || 0) < 650) return;
+            player.lastChatAt = now;
             Engine.chatLog(player.name, action.msg);
             break;
     }
 };
 
-Engine.executeSwap = (id1, id2, isBlindSwap) => {
+Engine.executeSwap = (id1, id2) => {
     let c1 = Engine.getCardById(id1); let c2 = Engine.getCardById(id2);
-    if (!c1 || !c2) return;
+    if (!Engine.isValidSwap(id1, id2)) return false;
 
     let p1 = Engine.state.players.find(p => p.id === c1.ownerId);
     let p2 = Engine.state.players.find(p => p.id === c2.ownerId);
@@ -1220,13 +1298,14 @@ Engine.executeSwap = (id1, id2, isBlindSwap) => {
     if (c1.loc === 'hand' || c1.loc === 'penalty') c1.isFaceUp = false;
     if (c2.loc === 'hand' || c2.loc === 'penalty') c2.isFaceUp = false;
     Engine.state.lastActionTargetId = c1.id;
+    return true;
 };
 
 // --- NETWORKING ---
 const Net = {
     init: (name, providedId) => {
-        App.localName = name || "Player_" + Math.floor(Math.random()*1000);
-        App.sessionToken = localStorage.getItem('bazunga_token') || Utils.uuid();
+        App.localName = Utils.cleanText(name, 24, "Player_" + Math.floor(Math.random()*1000));
+        App.sessionToken = String(localStorage.getItem('bazunga_token') || Utils.uuid()).slice(0, 80);
         localStorage.setItem('bazunga_token', App.sessionToken);
 
         App.peer = new Peer(Utils.uuid(), { secure: true, config: { 'iceServers': [ { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' } ] } });
@@ -1260,20 +1339,52 @@ const Net = {
         App.peer.on('connection', (conn) => {
             if (!App.isHost) return;
             conn.on('data', (data) => {
+                if (!data || typeof data !== 'object') return;
                 if (data.type === 'JOIN') {
-                    App.connections[conn.peer] = conn;
-                    let existing = Engine.state.players.find(p => p.sessionToken === data.sessionToken && !p.connected && !p.isBot);
+                    if (Engine.state.players.some(existingPlayer => existingPlayer.id === conn.peer)) {
+                        App.connections[conn.peer] = conn;
+                        Engine.broadcast();
+                        return;
+                    }
+                    const sessionToken = String(data.sessionToken || '').slice(0, 80);
+                    let existing = sessionToken.length >= 6
+                        ? Engine.state.players.find(p => p.sessionToken === sessionToken && !p.connected && !p.isBot)
+                        : null;
                     if (existing) {
+                        App.connections[conn.peer] = conn;
                         let oldId = existing.id; existing.id = conn.peer; existing.connected = true;
                         let allCards = [...Engine.state.deck, ...Engine.state.discardPile];
                         Engine.state.players.forEach(p => allCards.push(...p.hand, ...p.penaltyCards));
                         if (Engine.state.activeAbility && Engine.state.activeAbility.card) allCards.push(Engine.state.activeAbility.card);
                         allCards.forEach(c => { if (c.ownerId === oldId) c.ownerId = conn.peer; });
                         if (Engine.state.bazungaCallerId === oldId) Engine.state.bazungaCallerId = conn.peer;
-                        Engine.sysLog(`${data.name} reconnected!`, "success");
+                        if (Engine.state.activeAbility?.player === oldId) Engine.state.activeAbility.player = conn.peer;
+                        Object.values(Engine.botMemory).forEach(memory => {
+                            Object.values(memory).forEach(item => {
+                                if (item.ownerId === oldId) item.ownerId = conn.peer;
+                            });
+                        });
+                        Engine.sysLog(`${existing.name} reconnected!`, "success");
                     } else {
-                        Engine.state.players.push({ id: conn.peer, name: data.name, sessionToken: data.sessionToken, isHost: false, isBot: false, connected: true });
-                        Engine.sysLog(`${data.name} joined the lobby.`, "info");
+                        if (Engine.state.phase !== 'lobby') {
+                            conn.send({ type: 'JOIN_REJECTED', reason: 'This round is already in progress.' });
+                            return;
+                        }
+                        if (Engine.state.players.length >= MAX_PLAYERS) {
+                            conn.send({ type: 'JOIN_REJECTED', reason: `This lobby is full (${MAX_PLAYERS} players).` });
+                            return;
+                        }
+                        App.connections[conn.peer] = conn;
+                        const requestedName = Utils.cleanText(data.name, 24, 'Player');
+                        const usedNames = new Set(Engine.state.players.map(p => p.name.toLowerCase()));
+                        let uniqueName = requestedName;
+                        let suffix = 2;
+                        while (usedNames.has(uniqueName.toLowerCase())) {
+                            const suffixText = ` ${suffix++}`;
+                            uniqueName = requestedName.slice(0, 24 - suffixText.length) + suffixText;
+                        }
+                        Engine.state.players.push({ id: conn.peer, name: uniqueName, sessionToken, isHost: false, isBot: false, connected: true });
+                        Engine.sysLog(`${uniqueName} joined the lobby.`, "info");
                     }
                     Engine.broadcast();
                 } else { Engine.processAction(data, conn.peer); }
@@ -1288,7 +1399,7 @@ const Net = {
                             Engine.state.phase = 'play'; Engine.state.turnStartTime = Utils.timestamp();
                             Engine.sysLog("Play phase started!", "success");
                         }
-                    } else if (Engine.state.players[Engine.state.turnIndex].id === p.id) {
+                    } else if (Engine.state.players[Engine.state.turnIndex]?.id === p.id) {
                         Engine.nextTurn();
                     } else {
                         Engine.broadcast();
@@ -1312,7 +1423,21 @@ const Net = {
         });
 
         App.hostConn.on('data', (data) => {
-            if (data.type === 'STATE_UPDATE') { App.gameState = data.state; UI.render(data.state); }
+            if (!data || typeof data !== 'object') return;
+            if (data.type === 'STATE_UPDATE'
+                && data.state
+                && Array.isArray(data.state.players)
+                && Array.isArray(data.state.logs)) {
+                App.gameState = data.state;
+                UI.render(data.state);
+            }
+            else if (data.type === 'JOIN_REJECTED') {
+                UI.showToast(Utils.cleanText(data.reason, 120, 'Unable to join this game.'), "danger");
+                document.getElementById('lobby-init').classList.remove('hidden');
+                document.getElementById('lobby-room').classList.add('hidden');
+                const btnJoin = document.getElementById('btn-join');
+                if (btnJoin) { btnJoin.innerText = "Join Game"; btnJoin.disabled = false; }
+            }
         });
 
         App.hostConn.on('error', err => {
@@ -1330,7 +1455,7 @@ const Net = {
 
 // --- UI & RENDERING ---
 const UI = {
-    lastLogCount: 0, lastSlapTime: 0,
+    lastSeenLogId: 0, lastSlapTime: 0,
 
     init: () => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -1371,7 +1496,16 @@ const UI = {
         document.getElementById('btn-add-bot').onclick = () => {
             let select = document.getElementById('bot-difficulty');
             let diff = parseInt(select.value); let diffText = select.options[select.selectedIndex].text;
-            let name = diff === 5 ? "Blackbeard" : diff === 6 ? "Baba Gupta" : BOT_NAMES[Math.floor(Math.random() * (BOT_NAMES.length-1))] + ` [${diffText.split(' ')[0]}]`;
+            if (Engine.state.phase !== 'lobby') return UI.showToast("Bots can only join from the lobby.", "warning");
+            if (Engine.state.players.length >= MAX_PLAYERS) return UI.showToast(`Maximum ${MAX_PLAYERS} players.`, "warning");
+            if (diff === 6 && Engine.state.players.some(player => player.isBot && player.botDifficulty === 6)) {
+                return UI.showToast("There is only one Baba Gupta.", "warning");
+            }
+            const baseName = diff === 5 ? "Blackbeard" : diff === 6 ? "Baba Gupta" : BOT_NAMES[Math.floor(Math.random() * (BOT_NAMES.length-1))] + ` [${diffText.split(' ')[0]}]`;
+            const usedNames = new Set(Engine.state.players.map(player => player.name.toLowerCase()));
+            let name = baseName;
+            let suffix = 2;
+            while (usedNames.has(name.toLowerCase())) name = `${baseName} ${suffix++}`;
             Engine.state.players.push({ id: Utils.uuid(), name: name, isHost: false, isBot: true, botDifficulty: diff, connected: true });
             Engine.broadcast();
         };
@@ -1391,9 +1525,17 @@ const UI = {
             if (App.gameState) UI.render(App.gameState);
         };
 
-        document.getElementById('chat-fab').onclick = () => document.getElementById('chat-drawer').classList.add('open');
-        document.getElementById('chat-close').onclick = () => document.getElementById('chat-drawer').classList.remove('open');
+        document.getElementById('chat-fab').onclick = () => UI.setChatOpen(true);
+        document.getElementById('chat-close').onclick = () => UI.setChatOpen(false);
         document.getElementById('chat-send').onclick = UI.sendChat;
+        document.getElementById('chat-input').addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                UI.sendChat();
+            } else if (event.key === 'Escape') {
+                UI.setChatOpen(false);
+            }
+        });
         document.getElementById('btn-toggle-bubbles').onclick = (e) => {
             const container = document.getElementById('chat-bubble-container');
             const nowHidden = container.classList.toggle('hidden');
@@ -1403,6 +1545,7 @@ const UI = {
         document.getElementById('btn-toggle-clutter').onclick = (e) => {
             const app = document.getElementById('app');
             const nowHidden = app.classList.toggle('clutter-hidden');
+            if (nowHidden) UI.setChatOpen(false);
             e.target.classList.toggle('toggled-off');
             e.target.setAttribute('aria-pressed', String(nowHidden));
         };
@@ -1479,9 +1622,24 @@ const UI = {
         });
     },
 
+    setChatOpen: (open) => {
+        const drawer = document.getElementById('chat-drawer');
+        const gameView = document.getElementById('game-view');
+        const fab = document.getElementById('chat-fab');
+        drawer.classList.toggle('open', open);
+        gameView.classList.toggle('chat-open', open);
+        fab.setAttribute('aria-expanded', String(open));
+        if (open) {
+            const chatBox = document.getElementById('chat-messages');
+            chatBox.scrollTop = chatBox.scrollHeight;
+            setTimeout(() => document.getElementById('chat-input').focus(), 180);
+        }
+    },
+
     sendChat: () => {
         let input = document.getElementById('chat-input');
-        if (input.value.trim()) { Net.sendAction({ type: 'CHAT', msg: input.value.trim() }); input.value = ''; }
+        const message = Utils.cleanText(input.value, 240);
+        if (message) { Net.sendAction({ type: 'CHAT', msg: message }); input.value = ''; }
     },
 
     showToast: (msg, type = 'info') => {
@@ -1494,13 +1652,14 @@ const UI = {
 
     showChatBubble: (name, msg, isPirate) => {
         let container = document.getElementById('chat-bubble-container');
+        if (document.getElementById('chat-drawer')?.classList.contains('open')) return;
         if (!container) {
             container = document.createElement('div'); container.id = 'chat-bubble-container';
             document.getElementById('ui-layer').appendChild(container);
         }
         let bubble = document.createElement('div');
         bubble.className = `chat-bubble ${isPirate ? 'pirate' : ''}`;
-        bubble.innerHTML = `<strong>${name}:</strong> ${msg}`;
+        bubble.innerHTML = `<strong>${Utils.escapeHTML(name)}:</strong> ${Utils.escapeHTML(msg)}`;
         container.appendChild(bubble);
         setTimeout(() => bubble.remove(), 4000);
     },
@@ -1541,11 +1700,26 @@ const UI = {
         el.setAttribute('aria-label', 'Hidden card');
         let inner = document.createElement('div'); inner.className = 'card-inner';
         let front = document.createElement('div'); front.className = 'card-face card-front';
-        front.innerHTML = `<div class="val">${card.value}</div><div class="suit">${card.suit}</div><div class="val bottom">${card.value}</div>`;
+        front.setAttribute('aria-hidden', 'true');
         let back = document.createElement('div'); back.className = 'card-face card-back';
         inner.appendChild(front); inner.appendChild(back); el.appendChild(inner);
         document.getElementById('card-layer').appendChild(el);
         return el;
+    },
+
+    setCardFace: (el, card, isFaceUp) => {
+        const front = el.querySelector('.card-front');
+        if (!front) return;
+        const faceKey = isFaceUp ? `${card.value}:${card.suit}` : 'hidden';
+        if (front.dataset.faceKey === faceKey) return;
+        front.dataset.faceKey = faceKey;
+        front.replaceChildren();
+        front.setAttribute('aria-hidden', String(!isFaceUp));
+        if (!isFaceUp) return;
+        const topValue = document.createElement('div'); topValue.className = 'val'; topValue.textContent = card.value;
+        const suit = document.createElement('div'); suit.className = 'suit'; suit.textContent = card.suit;
+        const bottomValue = document.createElement('div'); bottomValue.className = 'val bottom'; bottomValue.textContent = card.value;
+        front.append(topValue, suit, bottomValue);
     },
 
     getCardScoreString: (c) => {
@@ -1627,17 +1801,33 @@ const UI = {
         }
 
         const typingIndicator = document.getElementById('bot-typing-indicator');
-        const typingNames = (state.typingBots || [])
+        const typingIds = new Set(state.typingBots || []);
+        const typingNames = [...typingIds]
+            .map(id => state.players.find(player => player.id === id)?.name)
+            .filter(Boolean);
+        const thinkingNames = (state.thinkingBots || [])
+            .filter(id => !typingIds.has(id))
             .map(id => state.players.find(player => player.id === id)?.name)
             .filter(Boolean);
         if (typingIndicator) {
-            typingIndicator.classList.toggle('hidden', typingNames.length === 0);
-            typingIndicator.textContent = typingNames.length > 1
-                ? `${typingNames.slice(0, 2).join(' & ')} are typing…`
-                : typingNames.length === 1 ? `${typingNames[0]} is typing…` : '';
+            const activityText = [];
+            if (typingNames.length) {
+                activityText.push(typingNames.length > 1
+                    ? `${typingNames.slice(0, 2).join(' & ')} are typing…`
+                    : `${typingNames[0]} is typing…`);
+            }
+            if (thinkingNames.length) {
+                activityText.push(thinkingNames.length > 1
+                    ? `${thinkingNames.slice(0, 2).join(' & ')} are thinking…`
+                    : `${thinkingNames[0]} is thinking…`);
+            }
+            typingIndicator.classList.toggle('hidden', activityText.length === 0);
+            typingIndicator.textContent = activityText.join(' • ');
         }
 
         if (state.phase === 'lobby') {
+            const latestLobbyLogId = state.logs.reduce((latest, log) => Math.max(latest, Number(log.id) || 0), 0);
+            UI.lastSeenLogId = Math.max(UI.lastSeenLogId, latestLobbyLogId);
             let list = document.getElementById('lobby-players'); list.innerHTML = '';
             state.players.forEach(p => {
                 let item = document.createElement('div'); item.className = 'player-item';
@@ -1646,7 +1836,7 @@ const UI = {
                 if (App.isHost && p.isBot && p.id !== App.localId) {
                     removeBtn = `<button class="danger" style="width:auto; padding:4px 10px; font-size:0.75rem; margin-left:8px;" data-bot-id="${p.id}">Remove</button>`;
                 }
-                item.innerHTML = `<strong>${p.name}</strong> <span style="color:#94a3b8;">${p.isHost ? 'Host' : p.isBot ? 'Bot' : 'Player'} ${status}</span> ${removeBtn}`;
+                item.innerHTML = `<strong>${Utils.escapeHTML(p.name)}</strong> <span style="color:#94a3b8;">${p.isHost ? 'Host' : p.isBot ? 'Bot' : 'Player'} ${status}</span> ${removeBtn}`;
                 list.appendChild(item);
             });
 
@@ -1693,20 +1883,20 @@ const UI = {
         let wasAtBottom = chatBox.scrollHeight - chatBox.scrollTop <= chatBox.clientHeight + 20;
         chatBox.innerHTML = '';
 
-        if (state.logs.length > UI.lastLogCount) {
-            let newLogs = state.logs.slice(UI.lastLogCount);
+        const newLogs = state.logs.filter(log => Number.isFinite(log.id) && log.id > UI.lastSeenLogId);
+        if (newLogs.length) {
             newLogs.forEach(l => {
                 if (l.type === 'sys') UI.showToast(l.msg, l.logType);
                 else UI.showChatBubble(l.name, l.msg, l.type === 'pirate');
             });
-            UI.lastLogCount = state.logs.length;
+            UI.lastSeenLogId = Math.max(UI.lastSeenLogId, ...newLogs.map(log => log.id));
         }
 
         state.logs.forEach(l => {
             let d = document.createElement('div');
             if (l.type === 'sys') { d.className = 'msg-sys'; d.innerText = l.msg; }
-            else if (l.type === 'pirate') { d.className = 'msg-pirate'; d.innerHTML = `<strong>${l.name}:</strong> ${l.msg}`; }
-            else { d.className = 'msg-chat'; d.innerHTML = `<strong>${l.name}:</strong> ${l.msg}`; }
+            else if (l.type === 'pirate') { d.className = 'msg-pirate'; d.innerHTML = `<strong>${Utils.escapeHTML(l.name)}:</strong> ${Utils.escapeHTML(l.msg)}`; }
+            else { d.className = 'msg-chat'; d.innerHTML = `<strong>${Utils.escapeHTML(l.name)}:</strong> ${Utils.escapeHTML(l.msg)}`; }
             chatBox.appendChild(d);
         });
         if (wasAtBottom) chatBox.scrollTop = chatBox.scrollHeight;
@@ -1828,7 +2018,7 @@ const UI = {
             badge.innerHTML = `
                 <div style="display:flex; align-items:center; justify-content:center; width:100%;">
                     <span class="icon">${icon}</span>
-                    <span class="name-text">${p.name}</span>
+                    <span class="name-text">${Utils.escapeHTML(p.name)}</span>
                 </div>
                 <span class="meta">${cardCount} Cards</span>
                 ${turnIndicator}
@@ -1949,6 +2139,10 @@ const UI = {
 
                 let inner = el.querySelector('.card-inner');
                 if (!isFaceUp) inner.classList.add('is-flipped'); else inner.classList.remove('is-flipped');
+                UI.setCardFace(el, c, isFaceUp);
+                el.removeAttribute('aria-hidden');
+                el.setAttribute('role', 'button');
+                el.style.removeProperty('pointer-events');
                 el.setAttribute('aria-label', isFaceUp ? `${c.value} of ${c.suit}` : `${p.name}'s hidden card`);
                 el.setAttribute('tabindex', '0');
 
@@ -1997,9 +2191,21 @@ const UI = {
             el.style.setProperty('--local-rot', '0deg');
 
             el.querySelector('.card-inner').classList.add('is-flipped');
+            UI.setCardFace(el, c, false);
             el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent');
-            el.setAttribute('aria-label', i === state.deck.length - 1 ? 'Draw from deck' : 'Card in deck');
-            el.setAttribute('tabindex', i === state.deck.length - 1 ? '0' : '-1');
+            if (i === state.deck.length - 1) {
+                el.setAttribute('role', 'button');
+                el.setAttribute('aria-label', 'Draw from deck');
+                el.setAttribute('tabindex', '0');
+                el.removeAttribute('aria-hidden');
+                el.style.removeProperty('pointer-events');
+            } else {
+                el.removeAttribute('role');
+                el.removeAttribute('aria-label');
+                el.setAttribute('tabindex', '-1');
+                el.setAttribute('aria-hidden', 'true');
+                el.style.pointerEvents = 'none';
+            }
 
             if (isMyTurn && !state.activeAbility && !App.uiState.targetingMode) el.classList.add('deck-glow');
             else el.classList.remove('deck-glow');
@@ -2015,9 +2221,21 @@ const UI = {
             el.style.setProperty('--local-rot', `${el.dataset.rot}deg`);
 
             el.querySelector('.card-inner').classList.remove('is-flipped');
+            UI.setCardFace(el, c, true);
             el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent');
-            el.setAttribute('aria-label', `${c.value} of ${c.suit} on discard pile`);
-            el.setAttribute('tabindex', i === state.discardPile.length - 1 ? '0' : '-1');
+            if (i === state.discardPile.length - 1) {
+                el.setAttribute('role', 'button');
+                el.setAttribute('aria-label', `${c.value} of ${c.suit} on discard pile`);
+                el.setAttribute('tabindex', '0');
+                el.removeAttribute('aria-hidden');
+                el.style.removeProperty('pointer-events');
+            } else {
+                el.removeAttribute('role');
+                el.removeAttribute('aria-label');
+                el.setAttribute('tabindex', '-1');
+                el.setAttribute('aria-hidden', 'true');
+                el.style.pointerEvents = 'none';
+            }
 
             if (state.lastActionTargetId === c.id) el.classList.add('highlight-recent');
 
@@ -2047,10 +2265,20 @@ const UI = {
                 let isFaceUp = (state.activeAbility.player === App.localId || state.activeAbility.step > 0);
                 let inner = el.querySelector('.card-inner');
                 if (!isFaceUp) inner.classList.add('is-flipped'); else inner.classList.remove('is-flipped');
+                UI.setCardFace(el, c, isFaceUp);
 
                 el.classList.add('holding-card'); el.classList.remove('highlight-recent');
                 el.setAttribute('aria-label', isFaceUp ? `Drawn ${c.value} of ${c.suit}. Tap to play.` : 'Opponent drawn card');
                 el.setAttribute('tabindex', state.activeAbility.player === App.localId ? '0' : '-1');
+                if (state.activeAbility.player === App.localId) {
+                    el.setAttribute('role', 'button');
+                    el.removeAttribute('aria-hidden');
+                    el.style.removeProperty('pointer-events');
+                } else {
+                    el.removeAttribute('role');
+                    el.setAttribute('aria-hidden', 'true');
+                    el.style.pointerEvents = 'none';
+                }
             }
         }
 
@@ -2076,7 +2304,7 @@ const UI = {
                     html += `
                     <div class="endgame-player ${isWinner ? 'winner' : ''}">
                         <div class="endgame-header">
-                            <span class="endgame-name">${p.name} ${isWinner ? '(Winner)' : ''} ${state.bazungaCallerId === p.id ? '(Bazunga Caller)' : ''}</span>
+                            <span class="endgame-name">${Utils.escapeHTML(p.name)} ${isWinner ? '(Winner)' : ''} ${state.bazungaCallerId === p.id ? '(Bazunga Caller)' : ''}</span>
                             <span class="endgame-score">
                                 ${state.gameMode === 'joker' ? 
                                     `Score: ${p.totalScore}` : 

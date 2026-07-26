@@ -1346,7 +1346,9 @@ const Bot = {
                 const peekKey = `peek:${Engine.state.turnStartTime}:${bot.id}`;
                 if (!bot.ready && Bot.waitForDecision(bot, peekKey, 'peek', now)) {
                     let bCards = [...bot.hand, ...bot.penaltyCards];
-                    bCards.slice(0, 2).forEach(c => Engine.memorizeForBot(bot.id, c));
+                    bCards.slice(0, 2).forEach(c => {
+                        Engine.processAction({ type: 'PEEK_CARD', targetId: c.id }, bot.id);
+                    });
                     Engine.processAction({ type: 'READY_PEEK' }, bot.id);
                 }
             });

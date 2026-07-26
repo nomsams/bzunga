@@ -17,16 +17,18 @@ const processAction = sliceBetween('Engine.processAction =', 'Engine.executeSwap
 const context = { result: {} };
 vm.runInNewContext(`
     const App = { isHost: true };
-    const Utils = { timestamp: () => 10000 };
+    let uuidCount = 0;
+    const Utils = { timestamp: () => 10000, uuid: () => 'bazunga-nonce-' + (++uuidCount) };
     const MAGIC_VALUES = ['9', '10', 'J', 'Q', 'K'];
     const window = {};
     const Engine = {
         state: {
             phase: 'lobby', players: [], turnIndex: 0, activeAbility: null,
             deck: [], discardPile: [], publicPeekedCards: [], orbitPendingPlayerIds: [],
-            peekPhaseCompleted: false
+            openingPeekedCards: [], peekPhaseCompleted: false
         },
         botMemory: {},
+        lastBazungaVariant: 0,
         cards: [],
         getCardById(id) { return this.cards.find(card => card.id === id); },
         startCalls: 0,
@@ -52,9 +54,10 @@ const host = { id: 'host', name: 'Host', isHost: true, isBot: false, connected: 
 const guest = { id: 'guest', name: 'Guest', isHost: false, isBot: false, connected: true, hand: [], penaltyCards: [] };
 const offline = { id: 'offline', name: 'Offline', isHost: false, isBot: false, connected: false, hand: [], penaltyCards: [] };
 const ownCard = { id: 'own', ownerId: 'host', loc: 'hand', value: '4' };
+const ownCardTwo = { id: 'own-two', ownerId: 'host', loc: 'hand', value: '6' };
 const guestCard = { id: 'guest-card', ownerId: 'guest', loc: 'hand', value: '8' };
 Engine.state.players = [host, guest, offline];
-Engine.cards = [ownCard, guestCard];
+Engine.cards = [ownCard, ownCardTwo, guestCard];
 
 Engine.state.turnIndex = 99;
 assert.doesNotThrow(() => Engine.processAction({ type: 'CHAT', msg: 'hello' }, host.id), 'Lobby chat must not require an active turn');
@@ -65,6 +68,20 @@ Engine.processAction({ type: 'PLAY_AGAIN' }, guest.id);
 assert.strictEqual(Engine.startCalls, 0, 'A guest must not restart the game');
 Engine.processAction({ type: 'PLAY_AGAIN' }, host.id);
 assert.strictEqual(Engine.startCalls, 1, 'The host should be able to restart the game');
+
+Engine.state.phase = 'peek';
+Engine.state.openingPeekedCards = [];
+Engine.processAction({ type: 'READY_PEEK' }, host.id);
+assert.notStrictEqual(host.ready, true, 'A player cannot skip the two-card opening peek');
+Engine.processAction({ type: 'PEEK_CARD', targetId: guestCard.id }, host.id);
+assert.deepStrictEqual(Array.from(Engine.state.openingPeekedCards), [], 'A player cannot peek at an opponent opening card');
+Engine.processAction({ type: 'PEEK_CARD', targetId: ownCard.id }, host.id);
+Engine.processAction({ type: 'PEEK_CARD', targetId: ownCardTwo.id }, host.id);
+assert.deepStrictEqual(Array.from(Engine.state.openingPeekedCards), ['own', 'own-two'], 'The host should track exactly two authorized opening peeks');
+Engine.processAction({ type: 'PEEK_CARD', targetId: ownCard.id }, host.id);
+assert.strictEqual(Engine.state.openingPeekedCards.length, 2, 'Repeated opening peeks must not create extra entries');
+Engine.processAction({ type: 'READY_PEEK' }, host.id);
+assert.strictEqual(host.ready, true, 'Ready should succeed after two authorized opening peeks');
 
 Engine.state.phase = 'play';
 Engine.state.turnIndex = 0;
@@ -93,6 +110,15 @@ assert.strictEqual(Engine.endCalls, 1, 'A round with no drawable cards must end 
 
 Engine.processAction({ type: 'CALL_BAZUNGA' }, host.id);
 assert.deepStrictEqual(Array.from(Engine.state.orbitPendingPlayerIds), ['guest'], 'Disconnected seats must not enter the final orbit');
+assert.strictEqual(Engine.state.bazungaEffect.callerId, host.id, 'BAZUNGA alert must identify the caller');
+assert.strictEqual(Engine.state.bazungaEffect.nonce, 'bazunga-nonce-1', 'BAZUNGA alert must carry a synchronized nonce');
+assert(Engine.state.bazungaEffect.variant >= 1 && Engine.state.bazungaEffect.variant <= 3, 'BAZUNGA alert must select a supported animation variant');
+const firstBazungaVariant = Engine.state.bazungaEffect.variant;
+Engine.state.phase = 'play';
+Engine.state.turnIndex = 0;
+Engine.processAction({ type: 'CALL_BAZUNGA' }, host.id);
+assert.notStrictEqual(Engine.state.bazungaEffect.variant, firstBazungaVariant, 'Consecutive BAZUNGA calls must use different alert variants');
+assert.strictEqual(Engine.state.bazungaEffect.nonce, 'bazunga-nonce-2', 'Every BAZUNGA alert must carry a fresh nonce');
 
 const orbitContext = { result: {} };
 vm.runInNewContext(`
@@ -120,4 +146,4 @@ OrbitEngine.nextTurn();
 assert.strictEqual(OrbitEngine.ends, 1, 'Orbit should end after the last eligible opponent');
 assert.strictEqual(OrbitEngine.state.players[OrbitEngine.state.turnIndex].id, 'guest', 'Caller must not receive an accidental extra orbit turn');
 
-console.log('Engine action guards: lobby chat, host authority, magic targets, swaps, and orbit eligibility passed.');
+console.log('Engine action guards: opening peeks, host authority, magic targets, swaps, and BAZUNGA orbit passed.');

@@ -18,6 +18,7 @@
         --card-h: 74px;
         --text-light: #f8fafc;
         --accent: #fbbf24;
+        --card-glow-rgb: 251, 191, 36;
         --danger: #ef4444;
         --info: #38bdf8;
         --success: #10b981;
@@ -29,10 +30,10 @@
             --card-w: 44px;
             --card-h: 62px;
         }
-        /* Simplify card face on mobile to prevent overflow */
-        .card .val.bottom { display: none !important; }
-        .card .suit { font-size: 1.2rem !important; margin-top: -4px; }
-        .card .val { font-size: 1rem !important; }
+        .card-face { padding: 3px; }
+        .card .suit { font-size: 1.08rem !important; margin: 0; line-height: 1; }
+        .card .val { font-size: 0.86rem !important; line-height: 0.95; }
+        .card .val.bottom { display: block !important; }
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -62,7 +63,7 @@
 
     /* Game Table */
     #game-view { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; perspective: 1200px; }
-    #table { width: 96%; height: 88%; background: radial-gradient(circle, var(--table-center) 0%, var(--table-edge) 100%); border-radius: 50%; border: 15px solid var(--table-border); position: relative; box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 30px 60px rgba(0,0,0,0.8); }
+    #table { width: 96%; height: 88%; background: radial-gradient(circle, var(--table-center) 0%, var(--table-edge) 100%); border-radius: 50%; border: 11px solid var(--table-border); position: relative; box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 30px 60px rgba(0,0,0,0.8); }
 
     #table-rim-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border-radius: 50%; overflow: visible; }
     .table-arrow-text { font-size: 24px; font-weight: 900; fill: rgba(251, 191, 36, 0.4); letter-spacing: 12px; dominant-baseline: central; }
@@ -111,16 +112,20 @@
 
     /* Targeting & Selection VFX */
     .card.targetable { scale: calc(var(--local-scale, 1) * 1.05); z-index: 100 !important; }
-    .card.targetable .card-inner { box-shadow: 0 0 0 3px var(--info), 0 0 20px var(--info); animation: pulse-target 1.5s infinite; }
+    .card.targetable .card-inner { box-shadow: 0 0 0 2px rgba(var(--card-glow-rgb), 0.48), 0 0 18px rgba(var(--card-glow-rgb), 0.38), inset 0 0 10px rgba(var(--card-glow-rgb), 0.08); animation: pulse-target 1.5s infinite; }
     .card.selected-target { translate: 0 -15px; scale: calc(var(--local-scale, 1) * 1.1) !important; z-index: 105 !important; }
-    .card.selected-target .card-inner { box-shadow: 0 0 0 4px var(--accent), 0 0 25px var(--accent); }
-    .card.deck-glow .card-inner { box-shadow: 0 0 15px var(--success); }
+    .card.selected-target .card-inner { box-shadow: 0 0 0 3px rgba(var(--card-glow-rgb), 0.68), 0 0 25px rgba(var(--card-glow-rgb), 0.58), inset 0 0 12px rgba(var(--card-glow-rgb), 0.12); }
+    .card.deck-glow .card-inner { box-shadow: 0 0 0 2px rgba(var(--card-glow-rgb), 0.42), 0 0 17px rgba(var(--card-glow-rgb), 0.34), inset 0 0 10px rgba(var(--card-glow-rgb), 0.08); }
     .card.holding-card { scale: 1.3 !important; z-index: 1000 !important; }
-    .card.highlight-recent .card-inner { box-shadow: 0 0 15px 5px var(--accent); animation: pulse-recent 2s infinite; }
-    .card.public-peeked .card-inner { box-shadow: 0 0 0 3px var(--accent), 0 0 15px var(--accent); border: 2px solid var(--accent); }
+    .card.highlight-recent .card-inner { box-shadow: 0 0 0 2px rgba(var(--card-glow-rgb), 0.5), 0 0 18px rgba(var(--card-glow-rgb), 0.42); animation: pulse-recent 2s infinite; }
+    .card.public-peeked .card-inner { box-shadow: 0 0 0 2px rgba(var(--card-glow-rgb), 0.46), 0 0 15px rgba(var(--card-glow-rgb), 0.34), inset 0 0 9px rgba(var(--card-glow-rgb), 0.08); }
+    .card.peek-preview .card-inner,
+    .card.opening-peeked.peek-preview .card-inner { box-shadow: 0 0 0 2px rgba(var(--card-glow-rgb), 0.55), 0 0 20px rgba(var(--card-glow-rgb), 0.45), inset 0 0 10px rgba(var(--card-glow-rgb), 0.1); animation: none; }
+    .card.opening-peeked .card-inner { box-shadow: 0 0 0 1px rgba(var(--card-glow-rgb), 0.28), 0 0 12px rgba(var(--card-glow-rgb), 0.2), inset 0 0 7px rgba(var(--card-glow-rgb), 0.05); animation: pulse-opening-peek 2.4s ease-in-out infinite; }
 
-    @keyframes pulse-target { 0% { box-shadow: 0 0 10px 2px var(--info); } 50% { box-shadow: 0 0 20px 6px var(--info); } 100% { box-shadow: 0 0 10px 2px var(--info); } }
-    @keyframes pulse-recent { 0%, 100% { box-shadow: 0 0 10px var(--accent); } 50% { box-shadow: 0 0 25px var(--accent); } }
+    @keyframes pulse-target { 0%, 100% { box-shadow: 0 0 0 2px rgba(var(--card-glow-rgb), 0.42), 0 0 13px rgba(var(--card-glow-rgb), 0.3); } 50% { box-shadow: 0 0 0 3px rgba(var(--card-glow-rgb), 0.58), 0 0 23px rgba(var(--card-glow-rgb), 0.5); } }
+    @keyframes pulse-recent { 0%, 100% { box-shadow: 0 0 0 2px rgba(var(--card-glow-rgb), 0.42), 0 0 13px rgba(var(--card-glow-rgb), 0.28); } 50% { box-shadow: 0 0 0 3px rgba(var(--card-glow-rgb), 0.58), 0 0 23px rgba(var(--card-glow-rgb), 0.46); } }
+    @keyframes pulse-opening-peek { 0%, 100% { box-shadow: 0 0 0 1px rgba(var(--card-glow-rgb), 0.22), 0 0 9px rgba(var(--card-glow-rgb), 0.15); } 50% { box-shadow: 0 0 0 2px rgba(var(--card-glow-rgb), 0.34), 0 0 14px rgba(var(--card-glow-rgb), 0.24); } }
 
     /* UI Overlays */
     #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; display: flex; flex-direction: column; justify-content: space-between; }
@@ -145,8 +150,22 @@
     .player-badge:hover .meta, .player-badge.expanded .meta { display: block; opacity: 1; font-size: 0.75rem; color: #94a3b8; margin-top: 2px; height: auto; }
 
     .player-badge.active-turn { border-color: var(--accent); box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
-    .player-badge.active-turn .turn-text { opacity: 1; transform: translateY(-4px); transition: transform 0.2s ease-out, opacity 0.2s; }
-    .player-badge.bazunga { background: var(--danger); border-color: #fff; animation: pulse-danger 1s infinite; }
+    .player-badge.active-turn .turn-text { opacity: 1; transform: translate(-50%, -4px); transition: transform 0.2s ease-out, opacity 0.2s; }
+    .player-badge.bazunga { background: linear-gradient(145deg, rgba(127,29,29,0.98), rgba(69,10,10,0.96)); border-color: rgba(254,202,202,0.9); box-shadow: 0 0 0 2px rgba(239,68,68,0.3), 0 0 24px rgba(239,68,68,0.48); }
+    .player-badge.bazunga::after { content: ""; position: absolute; inset: -7px; border-radius: inherit; pointer-events: none; border: 2px solid rgba(248,113,113,0.75); }
+    .player-badge.bazunga-v1::after { animation: bazunga-ring 1.35s ease-out infinite; }
+    .player-badge.bazunga-v2::after { animation: bazunga-beacon 1.05s ease-in-out infinite; }
+    .player-badge.bazunga-v3::after { animation: bazunga-double 1.6s ease-out infinite; }
+    .player-badge .caller-text { position: absolute; top: calc(100% + 5px); left: 50%; transform: translateX(-50%); padding: 2px 6px; border-radius: 999px; background: rgba(69,10,10,0.92); border: 1px solid rgba(248,113,113,0.45); color: #fecaca; font-size: 0.54rem; font-weight: 900; letter-spacing: 0.08em; pointer-events: none; }
+    @keyframes bazunga-ring { 0% { opacity: 0.9; scale: 0.88; } 75%, 100% { opacity: 0; scale: 1.55; } }
+    @keyframes bazunga-beacon { 0%, 100% { opacity: 0.35; box-shadow: 0 0 7px rgba(248,113,113,0.25); } 50% { opacity: 1; box-shadow: 0 0 25px rgba(248,113,113,0.8); } }
+    @keyframes bazunga-double { 0% { opacity: 1; scale: 0.9; } 40% { opacity: 0.2; scale: 1.32; } 41% { opacity: 0.75; scale: 0.95; } 100% { opacity: 0; scale: 1.62; } }
+    #game-view.bazunga-alert-v1 #table { animation: bazunga-table-pulse 1.15s ease-out; }
+    #game-view.bazunga-alert-v2 #table { animation: bazunga-table-flash 1.25s ease-in-out; }
+    #game-view.bazunga-alert-v3 #table { animation: bazunga-table-wave 1.4s ease-out; }
+    @keyframes bazunga-table-pulse { 35% { box-shadow: inset 0 0 0 3px rgba(248,113,113,0.35), inset 0 0 90px rgba(127,29,29,0.4), 0 24px 80px rgba(239,68,68,0.28); } }
+    @keyframes bazunga-table-flash { 0%, 100% { filter: none; } 25% { filter: saturate(1.35) brightness(1.1); } 55% { filter: saturate(0.9) brightness(0.92); } }
+    @keyframes bazunga-table-wave { 20% { box-shadow: inset 0 0 70px rgba(248,113,113,0.34), 0 0 0 4px rgba(248,113,113,0.22); } 55% { box-shadow: inset 0 0 110px rgba(127,29,29,0.28), 0 0 0 9px rgba(248,113,113,0); } }
 
 #action-bar { position: fixed; right: 20px; bottom: 50%; transform: translateY(50%); background: var(--surface); padding: 10px; border-radius: 16px; display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 600; pointer-events: auto; backdrop-filter: blur(10px); transition: opacity 0.3s, transform 0.3s; width: 120px; }
     #action-bar.hidden { opacity: 0; pointer-events: none; transform: translateY(50%) translateX(20px); display: flex !important; }
@@ -159,7 +178,7 @@
     }
 
     #toast-container { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 550; pointer-events: none; }
-    .toast { background: var(--surface); color: white; padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--info); box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; animation: slideInRight 0.3s forwards, fadeOut 0.3s 4.7s forwards; backdrop-filter: blur(4px); max-width: 280px; line-height: 1.3; }
+    .toast { background: var(--surface); color: white; padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--info); box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; animation: slideInRight 0.3s forwards, fadeOut 0.3s var(--message-fade-delay, 5.2s) forwards; backdrop-filter: blur(4px); max-width: 280px; line-height: 1.3; }
     .toast.success { border-color: var(--success); }
     .toast.danger { border-color: var(--danger); }
 .toast.warning { border-color: var(--accent); }
@@ -171,7 +190,7 @@
     .chat-open #bot-typing-indicator,
     .chat-open #chat-bubble-container { display: none !important; }
     @keyframes typingPulse { 0%, 100% { opacity: 0.68; } 50% { opacity: 1; } }
-    .chat-bubble { background: rgba(255,255,255,0.95); color: #000; padding: 10px 15px; border-radius: 16px; border-bottom-left-radius: 4px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s 3.7s forwards; max-width: 250px; word-wrap: break-word; pointer-events: auto; }
+    .chat-bubble { background: rgba(255,255,255,0.95); color: #000; padding: 10px 15px; border-radius: 16px; border-bottom-left-radius: 4px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s var(--message-fade-delay, 5.2s) forwards; max-width: 250px; word-wrap: break-word; pointer-events: auto; }
     .chat-bubble.pirate { background: #fee2e2; border: 1px solid #ef4444; }
     .chat-bubble strong { color: var(--accent-hover); }
     .chat-bubble.pirate strong { color: var(--danger); }
@@ -260,8 +279,8 @@
     }
     .card:active { translate: 0 2px; }
     .card.targetable::before {
-        background: rgba(56, 189, 248, 0.12);
-        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35);
+        background: rgba(var(--card-glow-rgb), 0.07);
+        box-shadow: 0 0 0 2px rgba(var(--card-glow-rgb), 0.26), 0 0 14px rgba(var(--card-glow-rgb), 0.18);
     }
     #status-banner {
         background: linear-gradient(180deg, rgba(7,17,31,0.97), rgba(7,17,31,0.88));
@@ -284,7 +303,7 @@
             width: calc(100% - 12px);
             height: calc(100% - 146px);
             margin: 60px 6px 86px;
-            border-width: 7px;
+            border-width: 5px;
             border-radius: 34px;
         }
         #table-rim-svg { display: none; }
@@ -295,7 +314,7 @@
             filter: drop-shadow(0 7px 8px rgba(0,0,0,0.4));
         }
         .card::before { inset: -7px; border-radius: 14px; }
-        .card-face { border-radius: 8px; border-width: 1.5px; }
+        .card-face { border-radius: 8px; border-width: 1.5px; padding: 3px; }
         .card.targetable {
             scale: calc(var(--local-scale, 1) * 1.09);
         }
@@ -303,8 +322,8 @@
             animation: pulse-mobile-target 1s ease-in-out infinite;
         }
         @keyframes pulse-mobile-target {
-            0%, 100% { box-shadow: 0 0 0 3px #38bdf8, 0 0 14px rgba(56,189,248,0.55); }
-            50% { box-shadow: 0 0 0 5px #fbbf24, 0 0 24px rgba(251,191,36,0.7); }
+            0%, 100% { box-shadow: 0 0 0 2px rgba(var(--card-glow-rgb), 0.42), 0 0 13px rgba(var(--card-glow-rgb), 0.3); }
+            50% { box-shadow: 0 0 0 3px rgba(var(--card-glow-rgb), 0.62), 0 0 22px rgba(var(--card-glow-rgb), 0.52); }
         }
         #status-banner {
             min-height: calc(56px + env(safe-area-inset-top));
@@ -384,15 +403,27 @@
             background: rgba(9,20,36,0.92);
         }
         .player-badge .icon { font-size: 0.54rem; line-height: 38px; }
-        .player-badge .turn-text { display: none; }
+        .player-badge .turn-text {
+            display: block;
+            top: auto;
+            bottom: -17px;
+            padding: 2px 5px;
+            border-radius: 999px;
+            background: rgba(9,20,36,0.94);
+            border: 1px solid rgba(var(--card-glow-rgb), 0.35);
+            font-size: 0.46rem;
+            letter-spacing: 0.05em;
+        }
         .player-badge.expanded {
             max-width: 132px;
             padding: 5px 9px;
             font-size: 0.7rem;
         }
         .player-badge.active-turn {
+            z-index: 180;
             box-shadow: 0 0 0 2px rgba(251,191,36,0.8), 0 0 18px rgba(251,191,36,0.55);
         }
+        .player-badge .caller-text { top: auto; bottom: -18px; font-size: 0.45rem; padding: 2px 5px; }
         #zoom-controls {
             display: flex !important;
             flex-direction: row !important;
@@ -446,13 +477,7 @@
             bottom: calc(90px + env(safe-area-inset-bottom));
         }
         #bot-typing-indicator {
-            top: calc(66px + env(safe-area-inset-top));
-            max-width: calc(100vw - 118px);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-size: 0.7rem;
-            padding: 6px 10px;
+            display: none !important;
         }
         .chat-bubble { max-width: min(80vw, 290px); font-size: 0.78rem; padding: 8px 11px; }
         #chat-drawer {
@@ -681,14 +706,15 @@ const MAX_PLAYERS = 8;
 // --- GLOBAL APP STATE ---
 const App = {
     isHost: false, localId: null, localName: '', sessionToken: null, peer: null, connections: {}, hostConn: null, gameState: null, animEnabled: true,
-    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null, cardPress: null, bazungaConfirmOpen: false },
+    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null, cardPress: null, bazungaConfirmOpen: false, lastBazungaEffectNonce: null },
     botInterval: null
 };
 
 // --- GAME ENGINE (HOST ONLY) ---
 const Engine = {
-    state: { phase: 'lobby', gameMode: 'rhino', players: [], deck: [], discardPile: [], logs: [], nextLogId: 0, turnIndex: 0, activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, turnStartTime: 0, peekPhaseCompleted: false, publicPeekedCards: [], orbitPendingPlayerIds: [], thinkingBots: [], typingBots: [] },
-    botMemory: {}
+    state: { phase: 'lobby', gameMode: 'rhino', players: [], deck: [], discardPile: [], logs: [], nextLogId: 0, turnIndex: 0, activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, turnStartTime: 0, peekPhaseCompleted: false, openingPeekedCards: [], publicPeekedCards: [], orbitPendingPlayerIds: [], bazungaEffect: null, thinkingBots: [], typingBots: [] },
+    botMemory: {},
+    lastBazungaVariant: 0
 };
 
 Engine.rememberCardForBot = (botId, card, source = 'unauthorized') => {
@@ -826,12 +852,15 @@ Engine.startGame = () => {
     Engine.state.lastSlap = null;
     Engine.state.lastActionTargetId = null;
     Engine.state.turnStartTime = Utils.timestamp();
+    Engine.state.openingPeekedCards = [];
     Engine.state.publicPeekedCards = [];
+    Engine.state.bazungaEffect = null;
     Engine.state.thinkingBots = [];
     Engine.state.typingBots = [];
     Engine.botMemory = {};
 
     App.uiState.hasPeeked.clear();
+    App.uiState.lastBazungaEffectNonce = null;
 
     Engine.state.players.forEach(p => {
         p.hand = []; p.penaltyCards = []; p.ready = false; p.roundScore = 0; p.connected = true;
@@ -1029,8 +1058,26 @@ Engine.processAction = (action, peerId) => {
             Engine.startGame();
             break;
 
-        case 'READY_PEEK':
+        case 'PEEK_CARD': {
             if (Engine.state.phase !== 'peek') return;
+            const peekCard = Engine.getCardById(action.targetId);
+            if (!Engine.isLayoutCard(peekCard) || peekCard.ownerId !== player.id) return;
+            if (!Array.isArray(Engine.state.openingPeekedCards)) Engine.state.openingPeekedCards = [];
+            const ownPeekCount = Engine.state.openingPeekedCards
+                .filter(cardId => Engine.getCardById(cardId)?.ownerId === player.id).length;
+            if (!Engine.state.openingPeekedCards.includes(peekCard.id) && ownPeekCount < 2) {
+                Engine.state.openingPeekedCards.push(peekCard.id);
+                if (player.isBot) Engine.rememberCardForBot(player.id, peekCard, 'initial_peek');
+                Engine.broadcast();
+            }
+            break;
+        }
+
+        case 'READY_PEEK': {
+            if (Engine.state.phase !== 'peek') return;
+            const ownPeekCount = (Engine.state.openingPeekedCards || [])
+                .filter(cardId => Engine.getCardById(cardId)?.ownerId === player.id).length;
+            if (ownPeekCount < 2) return;
             player.ready = true;
             if (Engine.state.players.every(p => p.ready || (!p.connected && !p.isBot))) {
                 Engine.state.phase = 'play';
@@ -1040,6 +1087,7 @@ Engine.processAction = (action, peerId) => {
             }
             Engine.broadcast();
             break;
+        }
 
         case 'SLAP':
             if (Engine.state.phase !== 'play' && Engine.state.phase !== 'orbit') return;
@@ -1256,6 +1304,13 @@ Engine.processAction = (action, peerId) => {
         case 'CALL_BAZUNGA':
             if (!isTurn || Engine.state.phase !== 'play' || Engine.state.activeAbility) return;
             Engine.state.phase = 'orbit'; Engine.state.bazungaCallerId = player.id;
+            Engine.lastBazungaVariant = ((Engine.lastBazungaVariant + 1 + Math.floor(Math.random() * 2)) % 3) || 3;
+            Engine.state.bazungaEffect = {
+                callerId: player.id,
+                variant: Engine.lastBazungaVariant,
+                nonce: Utils.uuid(),
+                time: now
+            };
             Engine.state.orbitPendingPlayerIds = Engine.state.players
                 .filter(candidate => candidate.id !== player.id && (candidate.isBot || candidate.connected))
                 .map(candidate => candidate.id);
@@ -1594,6 +1649,8 @@ const UI = {
             UI.submitAction({ type: 'CALL_BAZUNGA' });
         };
         document.getElementById('btn-bazunga-cancel').onclick = UI.hideBazungaConfirm;
+        document.getElementById('btn-hide-gameover').onclick = UI.hideGameOver;
+        document.getElementById('btn-return-lobby').onclick = UI.leaveGame;
         document.getElementById('modal-overlay').addEventListener('click', () => {
             if (App.uiState.bazungaConfirmOpen) UI.hideBazungaConfirm();
         });
@@ -1642,12 +1699,44 @@ const UI = {
         if (message) { Net.sendAction({ type: 'CHAT', msg: message }); input.value = ''; }
     },
 
+    getMessageDuration: (message, kind = 'chat') => {
+        const length = Utils.cleanText(message, 240).length;
+        const base = kind === 'toast' ? 4800 : 5100;
+        const perCharacter = kind === 'toast' ? 24 : 42;
+        const maximum = kind === 'toast' ? 8500 : 10500;
+        return Math.round(Math.max(base, Math.min(maximum, base + length * perCharacter)));
+    },
+
+    hideGameOver: () => {
+        document.getElementById('modal-gameover').classList.add('hidden');
+        if (!App.uiState.bazungaConfirmOpen) document.getElementById('modal-overlay').classList.add('hidden');
+    },
+
+    leaveGame: () => {
+        if (App.botInterval) { clearInterval(App.botInterval); App.botInterval = null; }
+        Object.values(window.Bot?.pendingChats || {}).forEach(pending => {
+            clearTimeout(pending.typingTimer);
+            clearTimeout(pending.sendTimer);
+        });
+        Object.values(App.connections || {}).forEach(connection => {
+            try { connection.close(); } catch (error) {}
+        });
+        try { App.hostConn?.close(); } catch (error) {}
+        try { App.peer?.destroy(); } catch (error) {}
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.search = '';
+        cleanUrl.hash = '';
+        window.location.replace(cleanUrl.href);
+    },
+
     showToast: (msg, type = 'info') => {
         let container = document.getElementById('toast-container');
         let toast = document.createElement('div');
         toast.className = `toast ${type}`; toast.innerText = msg;
+        const duration = UI.getMessageDuration(msg, 'toast');
+        toast.style.setProperty('--message-fade-delay', `${Math.max(0, duration - 300)}ms`);
         container.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
+        setTimeout(() => toast.remove(), duration);
     },
 
     showChatBubble: (name, msg, isPirate) => {
@@ -1660,8 +1749,10 @@ const UI = {
         let bubble = document.createElement('div');
         bubble.className = `chat-bubble ${isPirate ? 'pirate' : ''}`;
         bubble.innerHTML = `<strong>${Utils.escapeHTML(name)}:</strong> ${Utils.escapeHTML(msg)}`;
+        const duration = UI.getMessageDuration(msg, 'chat');
+        bubble.style.setProperty('--message-fade-delay', `${Math.max(0, duration - 300)}ms`);
         container.appendChild(bubble);
-        setTimeout(() => bubble.remove(), 4000);
+        setTimeout(() => bubble.remove(), duration);
     },
 
     showBazungaConfirm: () => {
@@ -1710,12 +1801,39 @@ const UI = {
     setCardFace: (el, card, isFaceUp) => {
         const front = el.querySelector('.card-front');
         if (!front) return;
-        const faceKey = isFaceUp ? `${card.value}:${card.suit}` : 'hidden';
-        if (front.dataset.faceKey === faceKey) return;
+        if (!isFaceUp) {
+            front.setAttribute('aria-hidden', 'true');
+            if (!front.children.length || front.dataset.faceKey === 'hiding') return;
+
+            // Keep the complete face painted until the physical 3D flip has
+            // finished. Clearing it immediately caused the lower value/suit to
+            // visibly vanish halfway through the animation.
+            front.dataset.faceKey = 'hiding';
+            clearTimeout(el._faceClearTimer);
+            const clearHiddenFace = () => {
+                if (front.dataset.faceKey !== 'hiding') return;
+                front.replaceChildren();
+                front.dataset.faceKey = 'hidden';
+                el._faceClearTimer = null;
+            };
+            if (App.animEnabled && !el.classList.contains('no-anim')) {
+                el._faceClearTimer = setTimeout(clearHiddenFace, 540);
+            } else {
+                clearHiddenFace();
+            }
+            return;
+        }
+
+        clearTimeout(el._faceClearTimer);
+        el._faceClearTimer = null;
+        const faceKey = `${card.value}:${card.suit}`;
+        if (front.dataset.faceKey === faceKey) {
+            front.setAttribute('aria-hidden', 'false');
+            return;
+        }
         front.dataset.faceKey = faceKey;
         front.replaceChildren();
-        front.setAttribute('aria-hidden', String(!isFaceUp));
-        if (!isFaceUp) return;
+        front.setAttribute('aria-hidden', 'false');
         const topValue = document.createElement('div'); topValue.className = 'val'; topValue.textContent = card.value;
         const suit = document.createElement('div'); suit.className = 'suit'; suit.textContent = card.suit;
         const bottomValue = document.createElement('div'); bottomValue.className = 'val bottom'; bottomValue.textContent = card.value;
@@ -1800,6 +1918,28 @@ const UI = {
             App.uiState.pendingToken = null;
         }
 
+        const bazungaEffect = state.bazungaEffect;
+        if (bazungaEffect?.nonce && bazungaEffect.nonce !== App.uiState.lastBazungaEffectNonce) {
+            App.uiState.lastBazungaEffectNonce = bazungaEffect.nonce;
+            const gameView = document.getElementById('game-view');
+            const variant = Math.max(1, Math.min(3, Number(bazungaEffect.variant) || 1));
+            const effectClass = `bazunga-alert-v${variant}`;
+            clearTimeout(gameView._bazungaEffectTimer);
+            gameView.classList.remove('bazunga-alert-v1', 'bazunga-alert-v2', 'bazunga-alert-v3');
+            void gameView.offsetWidth;
+            gameView.classList.add(effectClass);
+            gameView._bazungaEffectTimer = setTimeout(() => {
+                gameView.classList.remove(effectClass);
+                gameView._bazungaEffectTimer = null;
+            }, 1500);
+            const vibrationPatterns = {
+                1: [70, 45, 110],
+                2: [45, 35, 45, 35, 120],
+                3: [120, 40, 60, 40, 120]
+            };
+            if (navigator.vibrate) navigator.vibrate(vibrationPatterns[variant]);
+        }
+
         const typingIndicator = document.getElementById('bot-typing-indicator');
         const typingIds = new Set(state.typingBots || []);
         const typingNames = [...typingIds]
@@ -1851,7 +1991,18 @@ const UI = {
             return;
         }
 
-        if (state.phase !== 'peek') App.uiState.hasPeeked.clear();
+        if (state.phase !== 'peek') {
+            App.uiState.hasPeeked.clear();
+        } else {
+            const localLayoutIds = new Set(
+                (state.players.find(player => player.id === App.localId)?.hand || [])
+                    .concat(state.players.find(player => player.id === App.localId)?.penaltyCards || [])
+                    .map(card => card.id)
+            );
+            (state.openingPeekedCards || [])
+                .filter(cardId => localLayoutIds.has(cardId))
+                .forEach(cardId => App.uiState.hasPeeked.add(cardId));
+        }
 
         // Ensure targeting mode is cleared if it's not our turn to prevent lingering bugs
         let isMyTurn = state.players[state.turnIndex]?.id === App.localId;
@@ -2006,13 +2157,22 @@ const UI = {
             }
 
             let isExpanded = state.phase === 'peek' && !isMobile ? 'expanded' : '';
-            let isActiveTurn = i === state.turnIndex && state.phase !== 'peek' ? 'active-turn' : '';
-            badge.className = `player-badge ${isExpanded} ${isActiveTurn} ${state.bazungaCallerId === p.id ? 'bazunga' : ''} ${!p.connected && !p.isBot ? 'disconnected' : ''}`;
+            const hasActiveTurn = state.phase === 'play' || state.phase === 'orbit';
+            let isActiveTurn = i === state.turnIndex && hasActiveTurn ? 'active-turn' : '';
+            const isBazungaCaller = state.bazungaCallerId === p.id;
+            const bazungaVariant = Math.max(1, Math.min(3, Number(state.bazungaEffect?.variant) || 1));
+            const bazungaClasses = isBazungaCaller ? `bazunga bazunga-v${bazungaVariant}` : '';
+            badge.className = `player-badge ${isExpanded} ${isActiveTurn} ${bazungaClasses} ${!p.connected && !p.isBot ? 'disconnected' : ''}`;
             badge.style.left = `${badgePx}px`; badge.style.top = `${badgePy}px`;
+            badge.setAttribute(
+                'aria-label',
+                `${p.name}${isActiveTurn ? ', current turn' : ''}${isBazungaCaller ? ', BAZUNGA caller' : ''}`
+            );
 
             let icon = p.isBot ? 'BOT' : (p.id === App.localId ? 'YOU' : 'P');
             let cardCount = p.hand.length + p.penaltyCards.length;
-            let turnIndicator = i === state.turnIndex && state.phase !== 'peek' ? `<div class="turn-text">CURRENT TURN</div>` : '';
+            let turnIndicator = i === state.turnIndex && hasActiveTurn ? `<div class="turn-text">CURRENT TURN</div>` : '';
+            let callerIndicator = isBazungaCaller ? `<div class="caller-text">BAZUNGA CALLER</div>` : '';
             let statusText = !p.connected && !p.isBot ? `<div style="color:var(--danger); font-size:0.6rem; font-weight:bold; margin-top:2px;">DISCONNECTED</div>` : '';
 
             badge.innerHTML = `
@@ -2022,6 +2182,7 @@ const UI = {
                 </div>
                 <span class="meta">${cardCount} Cards</span>
                 ${turnIndicator}
+                ${callerIndicator}
                 ${statusText}
             `;
 
@@ -2148,9 +2309,11 @@ const UI = {
 
                 if (!p.connected && !p.isBot) el.classList.add('disconnected'); else el.classList.remove('disconnected');
 
-                el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent', 'public-peeked');
+                el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked');
                 if (state.lastActionTargetId === c.id) el.classList.add('highlight-recent');
                 if (state.publicPeekedCards && state.publicPeekedCards.includes(c.id)) el.classList.add('public-peeked');
+                if (App.uiState.peekedCards.has(c.id)) el.classList.add('peek-preview');
+                if (state.phase === 'peek' && state.openingPeekedCards?.includes(c.id)) el.classList.add('opening-peeked');
 
                 let mode = App.uiState.targetingMode;
                 if (mode) {
@@ -2192,7 +2355,7 @@ const UI = {
 
             el.querySelector('.card-inner').classList.add('is-flipped');
             UI.setCardFace(el, c, false);
-            el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent');
+            el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked');
             if (i === state.deck.length - 1) {
                 el.setAttribute('role', 'button');
                 el.setAttribute('aria-label', 'Draw from deck');
@@ -2207,7 +2370,7 @@ const UI = {
                 el.style.pointerEvents = 'none';
             }
 
-            if (isMyTurn && !state.activeAbility && !App.uiState.targetingMode) el.classList.add('deck-glow');
+            if ((state.phase === 'play' || state.phase === 'orbit') && isMyTurn && !state.activeAbility && !App.uiState.targetingMode) el.classList.add('deck-glow');
             else el.classList.remove('deck-glow');
         });
 
@@ -2222,7 +2385,7 @@ const UI = {
 
             el.querySelector('.card-inner').classList.remove('is-flipped');
             UI.setCardFace(el, c, true);
-            el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent');
+            el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked');
             if (i === state.discardPile.length - 1) {
                 el.setAttribute('role', 'button');
                 el.setAttribute('aria-label', `${c.value} of ${c.suit} on discard pile`);
@@ -2239,7 +2402,8 @@ const UI = {
 
             if (state.lastActionTargetId === c.id) el.classList.add('highlight-recent');
 
-            if (isMyTurn && !state.activeAbility && !App.uiState.targetingMode) el.classList.add('deck-glow');
+            if ((state.phase === 'play' || state.phase === 'orbit') && isMyTurn && !state.activeAbility && !App.uiState.targetingMode) el.classList.add('deck-glow');
+            else el.classList.remove('deck-glow');
         });
 
         if (state.activeAbility && state.activeAbility.card) {
@@ -2267,7 +2431,8 @@ const UI = {
                 if (!isFaceUp) inner.classList.add('is-flipped'); else inner.classList.remove('is-flipped');
                 UI.setCardFace(el, c, isFaceUp);
 
-                el.classList.add('holding-card'); el.classList.remove('highlight-recent');
+                el.classList.add('holding-card');
+                el.classList.remove('highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked');
                 el.setAttribute('aria-label', isFaceUp ? `Drawn ${c.value} of ${c.suit}. Tap to play.` : 'Opponent drawn card');
                 el.setAttribute('tabindex', state.activeAbility.player === App.localId ? '0' : '-1');
                 if (state.activeAbility.player === App.localId) {
@@ -2377,14 +2542,18 @@ const UI = {
                 else if (state.activeAbility) statusText.innerText = "Play or Swap your drawn card.";
                 else statusText.innerText = "Your Turn: Draw a card or Slap!";
             } else {
+                const isTyping = activePlayer && (state.typingBots || []).includes(activePlayer.id);
                 const isThinking = activePlayer && (state.thinkingBots || []).includes(activePlayer.id);
-                statusText.innerText = isThinking
+                statusText.innerText = isTyping
+                    ? `${activePlayer.name} is typing…`
+                    : isThinking
                     ? `${activePlayer.name} is thinking…`
                     : `Waiting for ${activePlayer ? activePlayer.name : '...'} to play.`;
             }
         }
 
         if (state.phase === 'game_over') {
+            statusText.innerText = "Round complete — review the results.";
             actionBar.classList.remove('hidden');
             let btn = document.createElement('button'); btn.innerText = "Show Results"; btn.className = "primary";
             btn.onclick = () => { document.getElementById('modal-gameover').classList.remove('hidden'); document.getElementById('modal-overlay').classList.remove('hidden'); };
@@ -2393,7 +2562,11 @@ const UI = {
 
         if (state.phase === 'peek' && me && !me.ready) {
             actionBar.classList.remove('hidden');
-            let btn = document.createElement('button'); btn.innerText = "Ready (Finished Peeking)"; btn.className = "primary";
+            const peekCount = Math.min(2, App.uiState.hasPeeked.size);
+            let btn = document.createElement('button');
+            btn.innerText = peekCount < 2 ? `Peek ${2 - peekCount} More Card${peekCount === 0 ? 's' : ''}` : "Ready (Finished Peeking)";
+            btn.className = "primary";
+            btn.disabled = peekCount < 2;
             btn.onclick = () => UI.submitAction({ type: 'READY_PEEK' });
             actionBar.appendChild(btn); return;
         }
@@ -2609,6 +2782,7 @@ const UI = {
             if (!App.uiState.hasPeeked.has(cardId)) {
                 if (App.uiState.hasPeeked.size < 2) {
                     App.uiState.hasPeeked.add(cardId); App.uiState.peekedCards.add(cardId); UI.render(state);
+                    Net.sendAction({ type: 'PEEK_CARD', targetId: cardId });
                     setTimeout(() => { App.uiState.peekedCards.delete(cardId); UI.render(App.gameState); }, 2000);
                 } else { UI.showToast("You can only peek at two cards!", "warning"); }
             } else { UI.showToast("You already peeked at this card!", "warning"); }

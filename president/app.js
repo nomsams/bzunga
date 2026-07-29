@@ -264,6 +264,13 @@
         initialize() {
             const query = new URLSearchParams(window.location.search);
             const joinId = query.get('join');
+            if (query.get('game') === 'bazunga') {
+                const bazungaUrl = new URL('../index.html', window.location.href);
+                bazungaUrl.searchParams.set('game', 'bazunga');
+                if (joinId) bazungaUrl.searchParams.set('join', joinId.replace(/[^a-zA-Z0-9-]/g, ''));
+                window.location.replace(bazungaUrl.href);
+                return;
+            }
             if (joinId) document.getElementById('join-id').value = joinId.replace(/[^a-zA-Z0-9-]/g, '');
 
             document.getElementById('btn-host').onclick = event => {
@@ -337,8 +344,12 @@
             const container = document.getElementById('qr-container');
             container.replaceChildren();
             if (typeof QRCode !== 'function') return;
-            const url = `${window.location.origin}${window.location.pathname}?join=${encodeURIComponent(peerId)}`;
-            new QRCode(container, { text: url, width: 56, height: 56 });
+            const url = new URL(window.location.origin + window.location.pathname);
+            url.searchParams.set('game', 'president');
+            url.searchParams.set('join', peerId);
+            container.dataset.inviteUrl = url.href;
+            container.setAttribute('aria-label', 'Scan to join this President and Slave room');
+            new QRCode(container, { text: url.href, width: 56, height: 56 });
         },
 
         addBot() {

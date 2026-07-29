@@ -21,7 +21,16 @@ assert(app.includes("PresidentRules.sortHand(me.hand, App.ui.sortMode)"), 'Visib
 assert(app.includes("action.cards.forEach"), 'Every card in a combination must animate independently');
 assert(app.includes("state.trick.rank ? PresidentRules.getPrompt"), 'Turn prompts must explain the rank/count target');
 assert(app.includes("connection.send({\n                        type: 'STATE_UPDATE',\n                        state: Game.engine.getViewState(peerId)"), 'Network broadcasts must use per-player privacy views');
-assert(bazunga.includes('href="./president/index.html"'), 'BAZUNGA needs an explicit launcher for the separate game');
+assert(bazunga.includes('aria-label="Choose a card game"'), 'The BAZUNGA lobby needs a shared game chooser');
+assert(bazunga.includes('href="./president/index.html?game=president"'), 'The chooser must preserve the President game selection');
+assert(html.includes('aria-label="Choose a card game"'), 'The President lobby needs the same game chooser');
+assert(html.includes('href="../index.html?game=bazunga"'), 'The President chooser must preserve the BAZUNGA selection');
+assert(bazunga.includes("hostUrl.searchParams.set('game', 'bazunga')"), 'BAZUNGA QR links must identify their game');
+assert(bazunga.includes("hostUrl.searchParams.set('join', id)"), 'BAZUNGA QR links must include their room');
+assert(app.includes("url.searchParams.set('game', 'president')"), 'President QR links must identify their game');
+assert(app.includes("url.searchParams.set('join', peerId)"), 'President QR links must include their room');
+assert(bazunga.includes("urlParams.get('game') === 'president'"), 'Shared links must route straight to President');
+assert(app.includes("query.get('game') === 'bazunga'"), 'Shared links must route straight to BAZUNGA');
 assert(!bazunga.includes('president/app.js'), 'President scripts must not overlap the BAZUNGA runtime');
 
-console.log('President UI contract: isolated launcher, sortable large hand, multi-play motion, prompts, chat, privacy, and responsive layout passed.');
+console.log('President UI contract: shared chooser, game-aware QR routing, isolation, sortable hand, multi-play motion, chat, privacy, and responsive layout passed.');

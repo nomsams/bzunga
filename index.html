@@ -45,7 +45,14 @@
     /* Lobby */
     #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; text-align: center; background: radial-gradient(circle at top, #1e293b 0%, var(--bg-color) 100%); z-index: 100; position: absolute; top:0; left:0; width: 100%; }
     .lobby-box { background: var(--surface); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); max-width: 420px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
-    .alternate-game-link { display: block; margin: 12px 0 18px; padding: 10px 12px; border: 1px solid rgba(251,191,36,0.24); border-radius: 10px; background: rgba(251,191,36,0.07); color: #fde68a; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.045em; text-decoration: none; }
+    .game-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 4px 0 18px; }
+    .game-choice { display: flex; min-height: 64px; padding: 10px; flex-direction: column; align-items: flex-start; justify-content: center; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; background: rgba(0,0,0,0.22); color: #cbd5e1; text-align: left; text-decoration: none; transition: transform 0.2s, border-color 0.2s, background 0.2s; }
+    .game-choice:hover, .game-choice:focus-visible { transform: translateY(-2px); border-color: rgba(251,191,36,0.55); outline: none; }
+    .game-choice strong { color: white; font-size: 0.72rem; letter-spacing: 0.06em; }
+    .game-choice span { margin-top: 3px; color: #94a3b8; font-size: 0.58rem; line-height: 1.3; }
+    .game-choice.selected { border-color: rgba(251,191,36,0.58); background: linear-gradient(145deg, rgba(251,191,36,0.16), rgba(251,191,36,0.05)); box-shadow: inset 0 0 0 1px rgba(251,191,36,0.08); }
+    .game-choice.selected strong { color: #fde68a; }
+    .game-choice .selected-label { margin-top: 5px; color: #fbbf24; font-size: 0.52rem; font-weight: 800; letter-spacing: 0.08em; }
     h1 { color: var(--accent); margin-bottom: 20px; font-size: 2.5rem; font-weight: 800; text-shadow: 0 4px 10px rgba(0,0,0,0.5); letter-spacing: 2px; }
     input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; border: none; font-size: 1rem; font-weight: 600; transition: all 0.2s; touch-action: manipulation; }
     input, select { background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); outline: none; }
@@ -545,7 +552,17 @@
     <div id="lobby">
         <div class="lobby-box" id="lobby-init">
             <h1>BAZUNGA</h1>
-            <a class="alternate-game-link" href="./president/index.html">PLAY THE PRESIDENT &amp; THE SLAVE →</a>
+            <div class="game-picker" role="group" aria-label="Choose a card game">
+                <a class="game-choice selected" href="./index.html?game=bazunga" aria-current="page">
+                    <strong>BAZUNGA</strong>
+                    <span>Memory, powers and glorious chaos</span>
+                    <span class="selected-label">SELECTED</span>
+                </a>
+                <a class="game-choice" href="./president/index.html?game=president">
+                    <strong>PRESIDENT &amp; SLAVE</strong>
+                    <span>Climb combinations and rule the table</span>
+                </a>
+            </div>
             <input type="text" id="player-name" placeholder="Enter your name" maxlength="12">
             <button id="btn-host">Create Game</button>
             <div style="margin: 15px 0; color: #64748b; font-weight: 600; font-size: 0.85rem;">OR JOIN EXISTING</div>
@@ -1375,9 +1392,13 @@ const Net = {
                 document.getElementById('host-controls').classList.remove('hidden');
                 document.getElementById('room-id-display').innerText = id;
 
-                let hostUrl = window.location.origin + window.location.pathname;
-                let joinUrl = hostUrl + '?join=' + id;
-                new QRCode(document.getElementById("qr-container"), { text: joinUrl, width: 160, height: 160, colorDark: "#000", colorLight: "#fff" });
+                let hostUrl = new URL(window.location.origin + window.location.pathname);
+                hostUrl.searchParams.set('game', 'bazunga');
+                hostUrl.searchParams.set('join', id);
+                const qrContainer = document.getElementById("qr-container");
+                qrContainer.dataset.inviteUrl = hostUrl.href;
+                qrContainer.setAttribute('aria-label', 'Scan to join this BAZUNGA room');
+                new QRCode(qrContainer, { text: hostUrl.href, width: 160, height: 160, colorDark: "#000", colorLight: "#fff" });
 
                 Engine.state.players.push({ id: id, name: App.localName, sessionToken: App.sessionToken, isHost: true, isBot: false, connected: true });
                 Engine.broadcast();
@@ -1517,6 +1538,13 @@ const UI = {
     init: () => {
         const urlParams = new URLSearchParams(window.location.search);
         const joinId = urlParams.get('join');
+        if (urlParams.get('game') === 'president') {
+            const presidentUrl = new URL('./president/index.html', window.location.href);
+            presidentUrl.searchParams.set('game', 'president');
+            if (joinId) presidentUrl.searchParams.set('join', joinId.replace(/[^a-zA-Z0-9-]/g, ''));
+            window.location.replace(presidentUrl.href);
+            return;
+        }
         if (joinId) {
             // Clean the join ID with same regex used in manual join
             const cleanJoinId = joinId.replace(/[^a-zA-Z0-9-]/g, '');

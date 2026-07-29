@@ -114,6 +114,67 @@ button:disabled {
     margin: 0;
 }
 
+.game-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 22px;
+}
+
+.game-choice {
+    display: flex;
+    min-height: 70px;
+    padding: 10px 11px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    background: rgba(2, 9, 18, 0.54);
+    color: #cbd5e1;
+    text-align: left;
+    text-decoration: none;
+    transition: transform 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.game-choice:hover,
+.game-choice:focus-visible {
+    transform: translateY(-2px);
+    border-color: rgba(var(--gold-rgb), 0.58);
+    outline: none;
+}
+
+.game-choice strong {
+    color: white;
+    font-size: 0.66rem;
+    letter-spacing: 0.035em;
+    line-height: 1.2;
+}
+
+.game-choice span {
+    margin-top: 4px;
+    color: #8fa0b6;
+    font-size: 0.56rem;
+    line-height: 1.35;
+}
+
+.game-choice.selected {
+    border-color: rgba(var(--gold-rgb), 0.62);
+    background: linear-gradient(145deg, rgba(var(--gold-rgb), 0.17), rgba(var(--gold-rgb), 0.045));
+    box-shadow: inset 0 0 0 1px rgba(var(--gold-rgb), 0.08);
+}
+
+.game-choice.selected strong {
+    color: var(--gold);
+}
+
+.game-choice .selected-label {
+    color: var(--gold);
+    font-size: 0.5rem;
+    font-weight: 900;
+    letter-spacing: 0.09em;
+}
+
 .eyebrow {
     margin-bottom: 7px;
     color: var(--gold);

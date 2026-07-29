@@ -16,7 +16,17 @@
 <main id="president-app">
     <section id="lobby" aria-label="President and Slave game lobby">
         <div class="lobby-card" id="lobby-start">
-            <a class="game-switch" href="../index.html">← BAZUNGA TABLE</a>
+            <div class="game-picker" role="group" aria-label="Choose a card game">
+                <a class="game-choice" href="../index.html?game=bazunga">
+                    <strong>BAZUNGA</strong>
+                    <span>Memory, powers and glorious chaos</span>
+                </a>
+                <a class="game-choice selected" href="./index.html?game=president" aria-current="page">
+                    <strong>PRESIDENT &amp; SLAVE</strong>
+                    <span>Climb combinations and rule the table</span>
+                    <span class="selected-label">SELECTED</span>
+                </a>
+            </div>
             <div class="eyebrow">A SEPARATE CARD GAME</div>
             <h1>THE PRESIDENT<br><span>&amp; THE SLAVE</span></h1>
             <p class="lobby-copy">Climb the pile, build larger combinations, and empty your hand before the table reorganizes itself around you.</p>
@@ -38,7 +48,7 @@
                     <div class="eyebrow">PRIVATE P2P TABLE</div>
                     <h2>Cabinet Room</h2>
                 </div>
-                <a class="game-switch compact" href="../index.html">BAZUNGA</a>
+                <a class="game-switch compact" href="../index.html?game=bazunga">BAZUNGA</a>
             </div>
             <div class="room-code-wrap">
                 <div>

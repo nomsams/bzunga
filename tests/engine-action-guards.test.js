@@ -12,6 +12,7 @@ const sliceBetween = (start, end) => {
 };
 
 const guardHelpers = sliceBetween('Engine.isLayoutCard =', 'Engine.drawPenalty =');
+const scheduleEndGame = sliceBetween('Engine.scheduleEndGame =', 'Engine.nextTurn =');
 const nextTurn = sliceBetween('Engine.nextTurn =', 'Engine.endGame =');
 const processAction = sliceBetween('Engine.processAction =', 'Engine.executeSwap =');
 const context = { result: {} };
@@ -120,6 +121,58 @@ Engine.processAction({ type: 'CALL_BAZUNGA' }, host.id);
 assert.notStrictEqual(Engine.state.bazungaEffect.variant, firstBazungaVariant, 'Consecutive BAZUNGA calls must use different alert variants');
 assert.strictEqual(Engine.state.bazungaEffect.nonce, 'bazunga-nonce-2', 'Every BAZUNGA alert must carry a fresh nonce');
 
+guest.isBot = true;
+Engine.state.phase = 'play';
+Engine.state.turnIndex = 1;
+Engine.state.activeAbility = { player: guest.id, type: 'magic_10', step: 1 };
+Engine.processAction({ type: 'RESOLVE_MAGIC', targetPlayerId: host.id, targetId: ownCard.id }, guest.id);
+assert.strictEqual(Engine.state.peekEffect.botId, guest.id, 'A bot 10 must publish who is peeking');
+assert.deepStrictEqual(Array.from(Engine.state.peekEffect.targetIds), [ownCard.id], 'A bot 10 must animate its selected card without revealing it');
+assert.strictEqual(Engine.state.peekEffect.magicValue, '10');
+guest.isBot = false;
+
+const finalDiscard = { id: 'final-discard', ownerId: null, loc: 'discard', value: '4', isSlapped: false };
+Engine.cards.push(finalDiscard);
+Engine.state.phase = 'orbit';
+Engine.state.pendingGameOver = { nonce: 'pending-final' };
+Engine.state.discardPile = [finalDiscard];
+host.hand = [ownCard];
+Engine.processAction({ type: 'DRAW_DECK' }, guest.id);
+assert.strictEqual(Engine.state.discardPile.length, 1, 'Turn actions must freeze while final scoring is pending');
+Engine.processAction({ type: 'SLAP', targetId: ownCard.id }, host.id);
+assert.strictEqual(Engine.state.lastSlap.success, true, 'A matching final slap must remain legal before scoring');
+assert.strictEqual(Engine.state.discardPile.at(-1).id, ownCard.id, 'The legal final slap must change the scored table state');
+Engine.state.pendingGameOver = null;
+
+const finalTimers = [];
+const finalWindowContext = { result: {} };
+vm.runInNewContext(`
+    const FINAL_SLAP_WINDOW_MS = 4200;
+    const Utils = { timestamp: () => 30000, uuid: () => 'final-window-1' };
+    const setTimeout = (callback, delay) => { finalTimers.push({ callback, delay }); return 1; };
+    const clearTimeout = () => {};
+    const Engine = {
+        state: { phase: 'orbit', activeAbility: { type: 'holding' }, discardPile: [{ id: 'last-discard' }], pendingGameOver: null },
+        endGameTimer: null,
+        logs: 0,
+        sysLog() { this.logs++; },
+        broadcasts: 0,
+        broadcast() { this.broadcasts++; },
+        ends: 0,
+        endGame() { this.ends++; }
+    };
+    ${scheduleEndGame}
+    result.Engine = Engine;
+`, { ...finalWindowContext, finalTimers });
+const FinalWindowEngine = finalWindowContext.result.Engine;
+FinalWindowEngine.scheduleEndGame();
+assert.strictEqual(FinalWindowEngine.state.phase, 'orbit', 'The round must remain slappable during the final reaction window');
+assert.strictEqual(FinalWindowEngine.state.pendingGameOver.deadline, 34200, 'The final window must include the full human reaction allowance');
+assert.strictEqual(FinalWindowEngine.state.pendingGameOver.triggerCardId, 'last-discard');
+assert.strictEqual(finalTimers[0].delay, 4200, 'Final scoring must be deferred for the advertised slap window');
+finalTimers[0].callback();
+assert.strictEqual(FinalWindowEngine.ends, 1, 'The game should finalize after the last-slap timer expires');
+
 const orbitContext = { result: {} };
 vm.runInNewContext(`
     const Utils = { timestamp: () => 20000 };
@@ -134,7 +187,7 @@ vm.runInNewContext(`
             ]
         },
         broadcasts: 0, broadcast() { this.broadcasts++; },
-        ends: 0, endGame() { this.ends++; }
+        schedules: 0, scheduleEndGame() { this.schedules++; }
     };
     ${nextTurn}
     result.Engine = Engine;
@@ -143,7 +196,7 @@ const OrbitEngine = orbitContext.result.Engine;
 OrbitEngine.nextTurn();
 assert.strictEqual(OrbitEngine.state.players[OrbitEngine.state.turnIndex].id, 'guest', 'Orbit must skip a disconnected seat');
 OrbitEngine.nextTurn();
-assert.strictEqual(OrbitEngine.ends, 1, 'Orbit should end after the last eligible opponent');
+assert.strictEqual(OrbitEngine.schedules, 1, 'Orbit should open a final slap window after the last eligible opponent');
 assert.strictEqual(OrbitEngine.state.players[OrbitEngine.state.turnIndex].id, 'guest', 'Caller must not receive an accidental extra orbit turn');
 
-console.log('Engine action guards: opening peeks, host authority, magic targets, swaps, and BAZUNGA orbit passed.');
+console.log('Engine action guards: opening peeks, bot peek effects, magic targets, final slap window, and BAZUNGA orbit passed.');

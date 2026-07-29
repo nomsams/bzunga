@@ -81,10 +81,14 @@ assert(html.includes('window.location.replace(cleanUrl.href)'), 'Leave Game must
 assert(html.includes("Net.sendAction({ type: 'PEEK_CARD', targetId: cardId })"), 'Opening peeks must be reported to the host');
 assert(html.includes("badge.setAttribute(") && html.includes("', current turn'"), 'The active seat must expose its turn state for every player');
 assert(html.includes('bazunga-alert-v1') && html.includes('bazunga-alert-v2') && html.includes('bazunga-alert-v3'), 'BAZUNGA must have rotating alert variants');
+assert(html.includes('bot-peek-target') && html.includes('playBotPeekEffect'), 'Bot Q/10 peeks need a visible synchronized animation');
+assert(html.includes('FINAL_SLAP_WINDOW_MS = 4200'), 'The final BAZUNGA action needs a human reaction window');
+assert(html.includes("action.type !== 'SLAP'"), 'Slaps must remain legal while final scoring is pending');
+assert(html.includes('final-slap-window'), 'The final slap opportunity needs unmistakable table feedback');
 assert(html.includes("el.setAttribute('aria-hidden', 'true')"), 'Buried deck/discard cards must leave the accessibility tree');
 assert(html.includes("el.removeAttribute('role')"), 'Buried cards must not remain accessibility buttons');
 assert(html.includes('Utils.escapeHTML(l.msg)'), 'Chat messages must be escaped before HTML rendering');
 assert(html.includes('Engine.state.logs.splice(0, Engine.state.logs.length - 120)'), 'The shared game log must be bounded');
 assert(!html.includes('adjustedSlapTime'), 'Unused client slap timestamp logic should not return');
 
-console.log('UI privacy/mobile: flip timing, message duration, leave flow, peeks, turn state, and BAZUNGA alerts passed.');
+console.log('UI privacy/mobile: flip timing, bot peek VFX, reaction windows, final slaps, mobile controls, and BAZUNGA alerts passed.');

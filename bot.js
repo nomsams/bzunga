@@ -5,6 +5,9 @@
  */
 
 const BotConfig = {
+    // People need time to notice a newly exposed discard, locate a matching
+    // layout card, and tap it before a bot can slap or replace the discard.
+    humanSlapHeadStartMs: 1800,
     profiles: {
         // Timings are sampled once per decision. This keeps bots human-paced without
         // letting the 250 ms engine tick repeatedly reroll their reaction time.
@@ -1401,7 +1404,7 @@ const Bot = {
                     Bot.slapSchedules[bot.id] = {
                         cardId: topDiscard.id,
                         targetId: plan.card.id,
-                        readyAt: now + Math.max(260, Math.round(reactionMs)),
+                        readyAt: now + BotConfig.humanSlapHeadStartMs + Math.max(260, Math.round(reactionMs)),
                         willAttempt: Math.random() < accuracy[bot.botDifficulty]
                     };
                 });
@@ -1423,7 +1426,14 @@ const Bot = {
             }
         }
 
+        if (Engine.state.pendingGameOver) return;
         if (!activePlayer?.isBot) return;
+        const topDiscard = Engine.state.discardPile[Engine.state.discardPile.length - 1];
+        if (topDiscard
+            && !topDiscard.isSlapped
+            && now - Number(Bot.eventCache.topDiscardSeenAt || now) < BotConfig.humanSlapHeadStartMs) {
+            return;
+        }
 
         const ability = Engine.state.activeAbility;
         const decisionKey = ability?.player === activePlayer.id

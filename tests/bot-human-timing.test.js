@@ -24,6 +24,8 @@ vm.runInNewContext(source, sandbox);
 
 const Bot = sandbox.window.Bot;
 const BotConfig = sandbox.window.BotConfig;
+assert(BotConfig.humanSlapHeadStartMs >= 1700, 'Humans need reaction and card-finding time before bots can slap');
+assert(source.includes('readyAt: now + BotConfig.humanSlapHeadStartMs'), 'Every bot slap schedule must include the human head start');
 const noob = { id: 'noob', botDifficulty: 1 };
 const baba = { id: 'baba', botDifficulty: 6 };
 

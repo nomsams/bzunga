@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#121827">
+    <title>The Fool / Durak — P2P Card Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<main id="durak-app">
+    <section id="lobby" aria-label="The Fool Durak game lobby">
+        <div class="lobby-card" id="lobby-start">
+            <div class="game-picker" role="group" aria-label="Choose a card game">
+                <a class="game-choice" href="../index.html?game=bazunga">
+                    <strong>BAZUNGA</strong>
+                    <span>Memory and glorious chaos</span>
+                </a>
+                <a class="game-choice" href="../president/index.html?game=president">
+                    <strong>PRESIDENT</strong>
+                    <span>Climb and empty your hand</span>
+                </a>
+                <a class="game-choice selected" href="./index.html?game=durak" aria-current="page">
+                    <strong>THE FOOL / DURAK</strong>
+                    <span>Attack, defend and escape</span>
+                    <span class="selected-label">SELECTED</span>
+                </a>
+            </div>
+            <div class="eyebrow">A CLASSIC 36-CARD BATTLE</div>
+            <h1>THE FOOL<br><span>/ DURAK</span></h1>
+            <p class="lobby-copy">Beat every attack, preserve your trumps, and do not be the last player left holding cards.</p>
+            <label for="player-name">Your table name</label>
+            <input id="player-name" type="text" maxlength="24" placeholder="Enter your name" autocomplete="name">
+            <button id="btn-host" class="primary large">CREATE A DURAK TABLE</button>
+            <div class="divider"><span>OR JOIN A TABLE</span></div>
+            <label for="join-id">Game ID</label>
+            <div class="join-row">
+                <input id="join-id" type="text" maxlength="80" placeholder="Paste Game ID" autocomplete="off">
+                <button id="btn-join" class="secondary">JOIN</button>
+            </div>
+            <button id="btn-open-rules" class="text-button">Read the rules</button>
+        </div>
+
+        <div class="lobby-card hidden" id="lobby-room">
+            <div class="room-heading">
+                <div>
+                    <div class="eyebrow">PRIVATE P2P TABLE</div>
+                    <h2>Durak Room</h2>
+                </div>
+                <a class="game-switch compact" href="../index.html">ALL GAMES</a>
+            </div>
+            <div class="room-code-wrap">
+                <div>
+                    <span>GAME ID</span>
+                    <strong id="room-id-display">CONNECTING…</strong>
+                </div>
+                <div id="qr-container"></div>
+            </div>
+            <div id="lobby-players" class="player-list"></div>
+            <div id="host-controls" class="host-controls hidden">
+                <div class="setting-grid">
+                    <label>
+                        Add an opponent
+                        <select id="bot-difficulty">
+                            <option value="1">Village Rookie</option>
+                            <option value="2">Street Player</option>
+                            <option value="3">Tactician</option>
+                            <option value="4">Grandmaster</option>
+                            <option value="5">Baba Gupta — The Unfoolable</option>
+                        </select>
+                    </label>
+                    <button id="btn-add-bot" class="secondary">+ ADD BOT</button>
+                </div>
+                <p class="setting-note">Durak supports 2–6 players. Six is legal, but the first defender starts under serious pressure.</p>
+                <button id="btn-start-game" class="primary large">DEAL SIX CARDS EACH</button>
+            </div>
+            <div id="client-waiting" class="waiting hidden">Waiting for the host to deal…</div>
+            <button id="btn-room-rules" class="text-button">Rules &amp; table guide</button>
+        </div>
+    </section>
+
+    <section id="game-view" class="hidden" aria-label="The Fool Durak game table">
+        <header id="status-banner">
+            <div class="phase-chip" id="phase-display">ATTACK</div>
+            <div class="status-copy">
+                <strong id="status-text">Waiting for the attack…</strong>
+                <span id="activity-text"></span>
+            </div>
+            <button id="btn-table-rules" class="header-button">RULES</button>
+        </header>
+
+        <div id="table-stage">
+            <div id="game-table">
+                <div class="felt-mark">ДУРАК</div>
+                <div id="opponent-layer"></div>
+                <section id="battle-zone" aria-label="Attack and defence cards">
+                    <div class="battle-heading">
+                        <span>BATTLE</span>
+                        <strong id="battle-count">0 / 6</strong>
+                    </div>
+                    <div id="battle-pairs"></div>
+                    <div id="battle-empty">
+                        <strong>OPEN THE ATTACK</strong>
+                        <span>The defender sits clockwise to the left.</span>
+                    </div>
+                </section>
+                <section id="talon-zone" aria-label="Talon and trump">
+                    <div id="trump-card-slot"></div>
+                    <div id="talon-stack" aria-label="Draw pile"></div>
+                    <div class="talon-meta">
+                        <strong id="talon-count">36</strong>
+                        <span>TALON</span>
+                    </div>
+                    <div class="trump-meta">
+                        <strong id="trump-suit">—</strong>
+                        <span>TRUMP</span>
+                    </div>
+                </section>
+                <div id="round-callout" class="hidden" aria-live="polite"></div>
+            </div>
+        </div>
+
+        <section id="action-panel" class="hidden" aria-label="Available actions">
+            <div class="turn-instruction">
+                <span id="role-label">ATTACKER</span>
+                <strong id="action-prompt">Select a card.</strong>
+            </div>
+            <div class="action-buttons">
+                <button id="btn-primary-action" class="primary" disabled>ATTACK</button>
+                <button id="btn-finish-attack" class="secondary hidden">FINISH ATTACK</button>
+                <button id="btn-take-cards" class="danger hidden">TAKE ALL CARDS</button>
+            </div>
+        </section>
+
+        <section id="hand-dock" aria-label="Your hand">
+            <div class="hand-toolbar">
+                <div>
+                    <strong>YOUR HAND</strong>
+                    <span id="hand-count">0 cards</span>
+                </div>
+                <div class="hand-tools">
+                    <span id="trump-reminder">TRUMP —</span>
+                    <button id="btn-sort-hand" class="mini-button">AUTO-SORT: RANK</button>
+                </div>
+            </div>
+            <div id="local-hand" class="hand-scroll"></div>
+        </section>
+
+        <button id="chat-fab" aria-label="Open table chat" aria-expanded="false">CHAT <span id="chat-unread"></span></button>
+        <div id="chat-bubbles" aria-live="polite"></div>
+        <aside id="chat-drawer" aria-label="Table chat">
+            <header>
+                <div>
+                    <strong>TABLE TALK</strong>
+                    <span>Bots react to the deal</span>
+                </div>
+                <button id="chat-close" aria-label="Close chat">×</button>
+            </header>
+            <div id="chat-messages"></div>
+            <div id="typing-indicator"></div>
+            <div class="chat-compose">
+                <input id="chat-input" maxlength="240" placeholder="Say something…" autocomplete="off">
+                <button id="chat-send">SEND</button>
+            </div>
+        </aside>
+    </section>
+
+    <div id="modal-overlay" class="hidden"></div>
+    <section id="rules-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="rules-title">
+        <button id="btn-close-rules" class="modal-close" aria-label="Close rules">×</button>
+        <div class="eyebrow">HOW TO PLAY</div>
+        <h2 id="rules-title">THE FOOL / DURAK</h2>
+        <div class="rules-grid">
+            <article>
+                <strong>THE TALON</strong>
+                <p>Durak uses 36 cards, ranked 6 through Ace. Everyone receives six. The face-up bottom card sets trumps and is drawn last.</p>
+            </article>
+            <article>
+                <strong>ATTACK</strong>
+                <p>The lowest-trump holder begins. Later attacks must match any rank already visible in the battle. A round has at most six attacks and never more than the defender began with.</p>
+            </article>
+            <article>
+                <strong>DEFEND</strong>
+                <p>Cover an attack with a higher card of the same suit or any trump against a plain suit. Select your card, then tap the uncovered attack it should beat.</p>
+            </article>
+            <article>
+                <strong>TAKE OR BEAT</strong>
+                <p>If you cannot or do not want to defend, take the entire battle. Other players may throw in matching ranks before finishing the attack.</p>
+            </article>
+            <article>
+                <strong>REFILL ORDER</strong>
+                <p>The main attacker refills first, other attackers follow clockwise, and the defender draws last. Drawing stops permanently when the talon is empty.</p>
+            </article>
+            <article>
+                <strong>THE FOOL</strong>
+                <p>Once the talon is exhausted, players leave as their hands reach zero. The last player holding cards is the Durak.</p>
+            </article>
+        </div>
+        <button id="btn-rules-done" class="primary">BACK TO THE TABLE</button>
+    </section>
+
+    <section id="results-modal" class="modal results-modal hidden" role="dialog" aria-modal="true" aria-labelledby="results-title">
+        <div class="eyebrow">DEAL COMPLETE</div>
+        <h2 id="results-title">THE FOOL IS…</h2>
+        <div id="durak-result"></div>
+        <div id="finish-order"></div>
+        <div class="results-actions">
+            <button id="btn-play-again" class="primary hidden">PLAY ANOTHER DEAL</button>
+            <button id="btn-view-table" class="secondary">VIEW TABLE</button>
+            <button id="btn-leave-game" class="danger">LEAVE GAME</button>
+        </div>
+    </section>
+
+    <div id="animation-layer" aria-hidden="true"></div>
+</main>
+
+<script src="rules.js"></script>
+<script src="engine.js"></script>
+<script src="bots.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

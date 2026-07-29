@@ -271,6 +271,13 @@
                 window.location.replace(bazungaUrl.href);
                 return;
             }
+            if (query.get('game') === 'durak') {
+                const durakUrl = new URL('../durak/index.html', window.location.href);
+                durakUrl.searchParams.set('game', 'durak');
+                if (joinId) durakUrl.searchParams.set('join', joinId.replace(/[^a-zA-Z0-9-]/g, ''));
+                window.location.replace(durakUrl.href);
+                return;
+            }
             if (joinId) document.getElementById('join-id').value = joinId.replace(/[^a-zA-Z0-9-]/g, '');
 
             document.getElementById('btn-host').onclick = event => {

@@ -1,0 +1,34 @@
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+
+const root = path.join(__dirname, '..');
+const html = fs.readFileSync(path.join(root, 'durak', 'index.html'), 'utf8');
+const css = fs.readFileSync(path.join(root, 'durak', 'styles.css'), 'utf8');
+const app = fs.readFileSync(path.join(root, 'durak', 'app.js'), 'utf8');
+const engine = fs.readFileSync(path.join(root, 'durak', 'engine.js'), 'utf8');
+const bazunga = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const president = fs.readFileSync(path.join(root, 'president', 'index.html'), 'utf8');
+
+assert(html.includes('id="talon-stack"') && html.includes('id="trump-card-slot"'), 'Durak needs a visible talon and turn-up trump');
+assert(css.includes('#trump-card-slot') && css.includes('rotate: 90deg'), 'The trump must lie at 90 degrees beneath the talon');
+assert(html.includes('id="battle-pairs"'), 'Attack and defence pairs need a dedicated battle area');
+assert(css.includes('.battle-pair .defense-card') && css.includes('left: 22px'), 'Defence cards must visibly overlap their attacks');
+assert(html.includes('id="btn-finish-attack"'), 'Attackers need a Finish Attack control');
+assert(html.includes('id="btn-take-cards"'), 'Defenders need a Take All Cards control');
+assert(html.includes('id="local-hand"') && html.includes('id="btn-sort-hand"'), 'The player hand needs touch selection and auto-sort');
+assert(html.includes('viewport-fit=cover') && !html.includes('user-scalable=no'), 'Mobile players must retain native pinch zoom');
+assert(html.includes('id="chat-drawer"') && html.includes('id="chat-bubbles"'), 'Durak needs chat and floating commentary');
+assert(html.includes('src="rules.js"') && html.includes('src="engine.js"') && html.includes('src="bots.js"'), 'Durak code must stay modular');
+assert(css.includes('@keyframes fly-to-battle'), 'Played cards need a clear flight animation');
+assert(css.includes('@media (max-height: 680px) and (orientation: landscape)'), 'Durak must adapt to short landscape phones');
+assert(app.includes("state: Game.engine.getViewState(peerId)"), 'P2P state updates must use per-player privacy views');
+assert(engine.includes('delete state.talon'), 'Clients must never receive the talon order');
+assert(engine.includes('lastRoundResult') && app.includes('lastRoundResultToken'), 'Round draw and pickup feedback must survive the next-round transition');
+assert(app.includes("url.searchParams.set('game', 'durak')") && app.includes("url.searchParams.set('join', peerId)"), 'Durak QR invites need game and room routing');
+assert(app.includes("requestedGame === 'bazunga'") && app.includes("requestedGame === 'president'"), 'Misrouted links must reach the requested game');
+assert(bazunga.includes('href="./durak/index.html?game=durak"'), 'The BAZUNGA lobby must offer Durak');
+assert(president.includes('href="../durak/index.html?game=durak"'), 'The President lobby must offer Durak');
+assert(!bazunga.includes('durak/app.js') && !president.includes('durak/app.js'), 'Durak scripts must not overlap either existing runtime');
+
+console.log('Durak UI contract: isolated chooser, talon/trump, battle targeting, controls, chat, privacy, QR routing, animation, and responsive layout passed.');

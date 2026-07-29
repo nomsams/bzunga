@@ -7,5 +7,6 @@ https://nomsams.github.io/bzunga
 
 - **BAZUNGA:** `/index.html`
 - **The President & The Slave:** `/president/index.html`
+- **The Fool / Durak:** `/durak/index.html`
 
-The President game is isolated in `president/` with its own rules engine, bots, networking, styles, and UI so either game can be developed independently.
+The President and Durak games are isolated in their own folders with dedicated rules engines, bots, networking, styles, and UIs so every game can be developed independently.

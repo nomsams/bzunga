@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#07111f">
+    <title>The President &amp; The Slave — P2P Card Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<main id="president-app">
+    <section id="lobby" aria-label="President and Slave game lobby">
+        <div class="lobby-card" id="lobby-start">
+            <a class="game-switch" href="../index.html">← BAZUNGA TABLE</a>
+            <div class="eyebrow">A SEPARATE CARD GAME</div>
+            <h1>THE PRESIDENT<br><span>&amp; THE SLAVE</span></h1>
+            <p class="lobby-copy">Climb the pile, build larger combinations, and empty your hand before the table reorganizes itself around you.</p>
+            <label for="player-name">Your table name</label>
+            <input id="player-name" type="text" maxlength="24" placeholder="Enter your name" autocomplete="name">
+            <button id="btn-host" class="primary large">CREATE A TABLE</button>
+            <div class="divider"><span>OR JOIN A TABLE</span></div>
+            <label for="join-id">Game ID</label>
+            <div class="join-row">
+                <input id="join-id" type="text" maxlength="80" placeholder="Paste Game ID" autocomplete="off">
+                <button id="btn-join" class="secondary">JOIN</button>
+            </div>
+            <button id="btn-open-rules" class="text-button">Read the rules</button>
+        </div>
+
+        <div class="lobby-card hidden" id="lobby-room">
+            <div class="room-heading">
+                <div>
+                    <div class="eyebrow">PRIVATE P2P TABLE</div>
+                    <h2>Cabinet Room</h2>
+                </div>
+                <a class="game-switch compact" href="../index.html">BAZUNGA</a>
+            </div>
+            <div class="room-code-wrap">
+                <div>
+                    <span>GAME ID</span>
+                    <strong id="room-id-display">CONNECTING…</strong>
+                </div>
+                <div id="qr-container" aria-hidden="true"></div>
+            </div>
+            <div id="lobby-players" class="player-list"></div>
+            <div id="host-controls" class="host-controls hidden">
+                <div class="setting-grid">
+                    <label>
+                        Add an opponent
+                        <select id="bot-difficulty">
+                            <option value="1">Casual Bot</option>
+                            <option value="2">Clever Bot</option>
+                            <option value="3">Hard Bot</option>
+                            <option value="4">Expert Bot</option>
+                            <option value="5">Baba Gupta — Minister of Cards</option>
+                        </select>
+                    </label>
+                    <button id="btn-add-bot" class="secondary">+ ADD BOT</button>
+                </div>
+                <label>
+                    President ↔ Slave exchange
+                    <select id="exchange-count">
+                        <option value="2" selected>2 cards</option>
+                        <option value="3">3 cards</option>
+                    </select>
+                </label>
+                <p class="setting-note">At five or more players, Vice-President and Vice-Slave also exchange one card.</p>
+                <button id="btn-start-game" class="primary large">DEAL THE CARDS</button>
+            </div>
+            <div id="client-waiting" class="waiting hidden">Waiting for the host to deal…</div>
+            <button id="btn-room-rules" class="text-button">Rules &amp; house settings</button>
+        </div>
+    </section>
+
+    <section id="game-view" class="hidden" aria-label="President and Slave game table">
+        <header id="status-banner">
+            <div class="phase-chip" id="phase-display">PLAY</div>
+            <div class="status-copy">
+                <strong id="status-text">Waiting for the table…</strong>
+                <span id="activity-text"></span>
+            </div>
+            <button id="btn-table-rules" class="header-button">RULES</button>
+        </header>
+
+        <div id="table-stage">
+            <div id="table">
+                <div class="felt-mark">PRESIDENT</div>
+                <div id="opponent-ring"></div>
+                <div id="center-pile" aria-live="polite">
+                    <div id="pile-cards"></div>
+                    <div id="pile-label">NEW PILE</div>
+                    <div id="pile-meta"></div>
+                </div>
+            </div>
+        </div>
+
+        <aside id="action-panel" class="hidden">
+            <div id="turn-prompt">Start a new pile.</div>
+            <div id="selection-feedback"></div>
+            <div class="action-buttons">
+                <button id="btn-pass" class="pass-button">PASS</button>
+                <button id="btn-play-selected" class="play-button" disabled>PLAY SELECTED <span id="selected-count">0</span></button>
+            </div>
+        </aside>
+
+        <section id="hand-dock" aria-label="Your hand">
+            <div class="hand-toolbar">
+                <div>
+                    <strong>YOUR HAND</strong>
+                    <span id="hand-count">0 cards</span>
+                </div>
+                <div class="hand-tools">
+                    <span class="control-legend">HIGH: A · WILD: 2</span>
+                    <button id="btn-sort-hand" class="sort-button">AUTO-SORT: RANK + SUIT</button>
+                </div>
+            </div>
+            <div id="local-hand" class="hand-scroll"></div>
+        </section>
+
+        <button id="chat-fab" aria-label="Open table chat" aria-expanded="false">CHAT</button>
+        <div id="chat-bubbles" aria-live="polite"></div>
+        <div id="toast-container" aria-live="assertive"></div>
+
+        <aside id="chat-drawer" role="dialog" aria-label="Table commentary and chat">
+            <div class="chat-header">
+                <div>
+                    <span>LIVE TABLE</span>
+                    <h3>Commentary</h3>
+                </div>
+                <button id="chat-close" aria-label="Close chat">×</button>
+            </div>
+            <div id="chat-messages"></div>
+            <div class="chat-compose">
+                <input id="chat-input" type="text" maxlength="240" placeholder="Talk to the table…" autocomplete="off">
+                <button id="chat-send">SEND</button>
+            </div>
+        </aside>
+    </section>
+
+    <div id="modal-overlay" class="hidden"></div>
+    <section id="rules-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="rules-title">
+        <button class="modal-close" id="btn-close-rules" aria-label="Close rules">×</button>
+        <div class="eyebrow">TABLE CONSTITUTION</div>
+        <h2 id="rules-title">How power changes hands</h2>
+        <div class="rules-grid">
+            <article>
+                <strong>1. Build upward</strong>
+                <p>Play a strictly higher rank than the pile and at least as many cards. A triple can beat a pair; an equal rank never can.</p>
+            </article>
+            <article>
+                <strong>2. Twos are wild</strong>
+                <p>A 2 has no value alone. Attach one or more 2s to a natural rank: K + 2 counts as two Kings. You cannot finish with a 2 in your final play.</p>
+            </article>
+            <article>
+                <strong>3. Passing is final</strong>
+                <p>Pass and you leave that pile. When only one active player remains, the pile clears and that player opens again.</p>
+            </article>
+            <article>
+                <strong>4. Aces clear</strong>
+                <p>Any valid Ace combination immediately discards the pile. The last player to play opens the next pile, unless they have finished.</p>
+            </article>
+            <article>
+                <strong>5. First and later rounds</strong>
+                <p>The holder of 3♥ starts before roles exist. In later rounds the Slave starts after the role exchange.</p>
+            </article>
+            <article>
+                <strong>6. The new order</strong>
+                <p>First out becomes President; last becomes Slave. With five or more players, second and second-last become the two Vice roles.</p>
+            </article>
+        </div>
+        <button id="btn-rules-done" class="primary">UNDERSTOOD</button>
+    </section>
+
+    <section id="results-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="results-title">
+        <div class="eyebrow">THE NEW ORDER</div>
+        <h2 id="results-title">Round complete</h2>
+        <div id="results-list"></div>
+        <div class="modal-actions" id="results-actions">
+            <button id="btn-view-table" class="secondary">VIEW TABLE</button>
+            <button id="btn-leave-game" class="danger">LEAVE GAME</button>
+        </div>
+    </section>
+
+    <div id="animation-layer" aria-hidden="true"></div>
+</main>
+
+<script src="rules.js"></script>
+<script src="engine.js"></script>
+<script src="bots.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

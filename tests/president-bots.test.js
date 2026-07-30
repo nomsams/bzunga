@@ -17,6 +17,7 @@ for (const collection of [PHRASES, BABA_PHRASES]) {
     const fullDialogue = Object.values(collection).flat();
     assert(fullDialogue.some(line => /knock knock/i.test(line)), 'President bots need knock-knock trash talk');
     assert(fullDialogue.some(line => /roses|violets/i.test(line)), 'President bots need rhyme roasts');
+    assert(fullDialogue.filter(line => /\*{2,}/.test(line)).length >= 5, 'President bots need censored outbursts');
     assert(fullDialogue.some(line => /bullshit|clown|bastard|bozo/i.test(line)), 'President bots need sharper table disses');
     assert(
         fullDialogue.filter(line => /fuck|shit|bullshit|clown|bastard|bozo|donkey|arse|idiot|toilet|glue|bollocks/i.test(line)).length >= 17,

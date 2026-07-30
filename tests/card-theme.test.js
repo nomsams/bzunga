@@ -26,7 +26,18 @@ assert(CardTheme.getBackUrl('../', 'svg-red').endsWith('assets/deck-svg/Deck_Bac
 assert.strictEqual(CardTheme.getBackUrl('../', 'classic'), null);
 
 CardTheme.set('svg-blue', '../');
-assert(CardTheme.faceMarkup({ rank: 'A', suit: '♠' }, '../').includes('../assets/deck-svg/Ace_of_Spades.svg'));
+const deferredMarkup = CardTheme.faceMarkup({ rank: 'A', suit: '♠' }, '../', { priority: 'hand' });
+assert(deferredMarkup.includes('../assets/deck-svg/Ace_of_Spades.svg'));
+assert(deferredMarkup.includes('data-card-src='), 'Illustrated faces should defer network loading to the priority queue');
+assert(!deferredMarkup.includes(' src='), 'Deferred illustrated faces must not start an uncontrolled eager request');
+assert.strictEqual(new Set(CardTheme.allFaceUrls('../')).size, 54, 'Idle warmup should cover every face and both Jokers in a fixed order');
+
+const beforeHiddenPreload = CardTheme.getLoadStats();
+CardTheme.preloadVisibleCards([{ rank: 'K', suit: '♥', hidden: true }], { assetBase: '../' });
+assert.deepStrictEqual(CardTheme.getLoadStats(), beforeHiddenPreload, 'Hidden card identities must never enter the asset queue');
+CardTheme.preloadVisibleCards([{ rank: 'K', suit: '♥' }], { assetBase: '../', priority: 'hand' });
+assert.strictEqual(CardTheme.getLoadStats().pending, beforeHiddenPreload.pending + 1, 'A visible card should enter the progressive queue');
+
 CardTheme.set('unknown-theme', '../');
 assert.strictEqual(CardTheme.get(), 'classic', 'Unknown themes must safely fall back to the classic deck');
 
@@ -45,6 +56,15 @@ for (const app of ['index.html', 'president/app.js', 'durak/app.js']) {
         `${app} must render illustrated card faces`
     );
 }
+for (const app of ['president/app.js', 'durak/app.js']) {
+    const source = fs.readFileSync(path.join(root, app), 'utf8');
+    assert(source.includes('CardTheme.preloadVisibleCards'), `${app} must prioritize the local visible hand`);
+    assert(source.includes('CardTheme.hydrate'), `${app} must hydrate deferred faces through the shared queue`);
+}
+assert(
+    fs.readFileSync(path.join(root, 'index.html'), 'utf8').includes("art.fetchPriority = 'high'"),
+    'Bazunga should prioritize a face only when it is actually revealed'
+);
 
 for (const stylesheet of ['index.html', 'president/styles.css', 'durak/styles.css']) {
     const source = fs.readFileSync(path.join(root, stylesheet), 'utf8');
@@ -58,4 +78,4 @@ for (const stylesheet of ['index.html', 'president/styles.css', 'durak/styles.cs
     );
 }
 
-console.log('Card themes: all 56 SVG assets, shared persistence controls, exact-fit backs, thin dark edges, face mapping, and back variants passed.');
+console.log('Card themes: 56 SVG assets, privacy-safe progressive loading, idle cache warmup, exact-fit backs, and shared controls passed.');

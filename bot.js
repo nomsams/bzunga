@@ -1237,6 +1237,54 @@ for (const persona of ['pro', 'expert', 'baba']) {
     });
 }
 
+const BotCensoredOutbursts = {
+    noob: [
+        "What the f*** was that? Even I expected better.",
+        "This hand is s***, but at least it matches the atmosphere.",
+        "{target}, your plan is held together with b******t and optimism.",
+        "I pressed one button and your whole idea went to h***.",
+        "My cards are f***ed. Your dignity is doing worse."
+    ],
+    casual: [
+        "That move was premium s*** in a gift box.",
+        "{target}, stop chatting b******t and guard your cards.",
+        "The deck is taking the p*** and you are helping it.",
+        "One more slap like that and the table needs a f***ing medic.",
+        "Your comeback is a** with punctuation."
+    ],
+    pro: [
+        "Clean table, dirty mouth, f***ing terrible move.",
+        "{target}, that was s*** with excellent timing.",
+        "No deep analysis: your plan is b******t.",
+        "Your slap was late as h*** and twice as lost.",
+        "Keep talking. The f***-up montage needs audio."
+    ],
+    expert: [
+        "Expert opinion: that was f***ing dreadful.",
+        "{target}, your plan is s*** wearing a clever hat.",
+        "No calculator can rescue that b******t.",
+        "You had one job and f***ed it with confidence.",
+        "The cards are hidden. The a**-clownery is fully public."
+    ],
+    pirate: [
+        "Arrr, that move be s*** with sails!",
+        "{target}, quit the b******t before I feed it to the sharks.",
+        "What in the f***ing seven seas was that?",
+        "Yer plan be a** and the tide refuses delivery.",
+        "Hoist the colours: we be completely f***ed."
+    ],
+    baba: [
+        "Baba's official statement: what the f***?",
+        "{target}, that plan is s*** in ceremonial clothing.",
+        "Baba has reviewed the b******t and rejected the smell.",
+        "You f***ed the move before Baba could improve the insult.",
+        "Your whole layout is a** with rounded corners."
+    ]
+};
+Object.entries(BotCensoredOutbursts).forEach(([persona, lines]) => {
+    BotConfig.chatBank[persona].banter.push(...lines);
+});
+
 const Bot = {
     chatHistory: [], lastChatTime: {}, usedLines: {},
     recentLines: {}, globalRecentLines: [],

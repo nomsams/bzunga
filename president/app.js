@@ -517,7 +517,7 @@
             const controlClass = card.rank === 'A' || card.rank === '2' ? 'control-card' : '';
             return `
                 <span class="${className} ${redClass} ${controlClass}">
-                    ${CardTheme.faceMarkup(card, '../')}
+                    ${CardTheme.faceMarkup(card, '../', { priority: 'public' })}
                     <span class="card-corner"><b>${card.rank}</b><span>${card.suit}</span></span>
                     <span class="card-suit">${card.suit}</span>
                     ${card.rank === '2' ? '<span class="wild-mark">WILD</span>' : ''}
@@ -538,6 +538,7 @@
                 return;
             }
             pileCards.innerHTML = lastPlay.cards.map(card => UI.cardFace(card, 'pile-card')).join('');
+            CardTheme.hydrate(pileCards);
             label.textContent = `${lastPlay.combo.count} × ${lastPlay.combo.rank}`;
             meta.textContent = `${lastPlay.playerName}${lastPlay.combo.wildCount ? ` · ${lastPlay.combo.wildCount} wild` : ''}`;
         },
@@ -554,6 +555,7 @@
                 if (!availableIds.has(selectedId)) App.ui.selectedIds.delete(selectedId);
             }
             const sortedCards = PresidentRules.sortHand(me.hand, App.ui.sortMode);
+            CardTheme.preloadVisibleCards(sortedCards, { assetBase: '../', priority: 'hand' });
             const twoRows = sortedCards.length > 14;
             hand.classList.toggle('two-rows', twoRows);
             document.getElementById('hand-count').textContent = `${me.hand.length} card${me.hand.length === 1 ? '' : 's'}`;
@@ -570,7 +572,7 @@
                         aria-label="${card.rank} of ${UI.suitName(card.suit)}${selected ? ', selected' : ''}"
                         aria-pressed="${selected}"
                         ${disabled ? 'disabled' : ''}>
-                        ${CardTheme.faceMarkup(card, '../')}
+                        ${CardTheme.faceMarkup(card, '../', { priority: 'hand' })}
                         <span class="card-corner"><b>${card.rank}</b><span>${card.suit}</span></span>
                         <span class="card-suit">${card.suit}</span>
                         ${card.rank === '2' ? '<span class="wild-mark">WILD</span>' : ''}
@@ -581,6 +583,7 @@
             hand.querySelectorAll('.playing-card').forEach(button => {
                 button.onclick = () => UI.toggleCard(button.dataset.cardId);
             });
+            CardTheme.hydrate(hand);
         },
 
         canSelectCards(state, me) {
@@ -737,6 +740,7 @@
                 flight.style.setProperty('--flight-delay', `${index * 45}ms`);
                 flight.style.setProperty('--start-rotation', `${(index - middle) * 4}deg`);
                 layer.appendChild(flight);
+                CardTheme.hydrate(flight);
                 setTimeout(() => flight.remove(), 1050);
             });
             UI.showActionCallout(target.left + target.width / 2, target.top + 18, `${action.combo.count} × ${action.combo.rank}`);

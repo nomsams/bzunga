@@ -93,6 +93,7 @@ for (let difficulty = 1; difficulty <= 5; difficulty++) {
     assert(dialogue.length >= 58, `Difficulty ${difficulty} needs a deep Durak dialogue rotation`);
     assert(dialogue.some(line => /knock knock/i.test(line)), `Difficulty ${difficulty} needs a knock-knock roast`);
     assert(dialogue.some(line => /roses|violets/i.test(line)), `Difficulty ${difficulty} needs a rhyme roast`);
+    assert(dialogue.filter(line => /\*{2,}/.test(line)).length >= 2, `Difficulty ${difficulty} needs censored outbursts`);
     assert(dialogue.some(line => /bullshit|clown|bastard|bozo|ass/i.test(line)), `Difficulty ${difficulty} needs sharper disses`);
     assert(
         dialogue.filter(line => /fuck|shit|bullshit|clown|bastard|bozo|donkey|arse|idiot|toilet|glue|bollocks|goblin|rat/i.test(line)).length >= 7,

@@ -42,6 +42,7 @@ for (const persona of personaTypes) {
     countAndCheckPool(directBank.fallback, `${persona}.fallback`, 4);
     assert(eventBank.banter.some(line => /knock knock/i.test(line)), `${persona} needs a knock-knock roast`);
     assert(eventBank.banter.some(line => /roses|violets/i.test(line)), `${persona} needs a rhyme roast`);
+    assert(eventBank.banter.filter(line => /\*{2,}/.test(line)).length >= 5, `${persona} needs censored outbursts`);
     assert(directBank.insult.length >= 19, `${persona} needs a deep direct-diss rotation`);
     const roughTableTalk = [...eventBank.banter, ...BotConfig.generalReplies[persona], ...directBank.insult];
     assert(

@@ -2139,6 +2139,8 @@ const UI = {
                 art.src = artUrl;
                 art.alt = '';
                 art.draggable = false;
+                art.decoding = 'async';
+                art.fetchPriority = 'high';
                 art.setAttribute('aria-hidden', 'true');
                 front.appendChild(art);
                 return;

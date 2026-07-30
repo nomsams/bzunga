@@ -467,11 +467,11 @@
             }).join('');
         },
 
-        cardMarkup(card, classes = '') {
+        cardMarkup(card, classes = '', priority = 'public') {
             if (!card || card.hidden) return '<div class="playing-card card-back"></div>';
             return `
                 <div class="playing-card ${card.isRed ? 'red' : ''} ${classes}" data-card-id="${Utils.escape(card.id)}">
-                    ${CardTheme.faceMarkup(card, '../')}
+                    ${CardTheme.faceMarkup(card, '../', { priority })}
                     <span class="card-corner">${Utils.escape(card.rank)}<small>${Utils.escape(card.suit)}</small></span>
                     <span class="card-suit">${Utils.escape(card.suit)}</span>
                     <span class="card-corner bottom">${Utils.escape(card.rank)}<small>${Utils.escape(card.suit)}</small></span>
@@ -496,6 +496,7 @@
                     </div>
                 `;
             }).join('');
+            CardTheme.hydrate(container);
             container.querySelectorAll('[data-pair-id]').forEach(pairElement => {
                 pairElement.onclick = () => {
                     const current = App.gameState;
@@ -524,6 +525,7 @@
             slot.innerHTML = state.trumpCard
                 ? UI.cardMarkup(state.trumpCard, 'trump-turnup')
                 : `<div class="phase-chip">${Utils.escape(state.trumpSuit || '—')} TRUMP</div>`;
+            CardTheme.hydrate(slot);
             const stack = document.getElementById('talon-stack');
             stack.classList.toggle('empty', state.talonCount === 0);
             stack.setAttribute('aria-label', state.talonCount ? `${state.talonCount} cards remain in the talon` : 'The talon is empty');
@@ -537,8 +539,12 @@
             if (!me) return;
             if (!me.hand.some(card => card.id === App.ui.selectedCardId)) App.ui.selectedCardId = null;
             const sorted = DurakRules.sortHand(me.hand, state.trumpSuit, App.ui.sortMode);
+            CardTheme.preloadVisibleCards(sorted, { assetBase: '../', priority: 'hand' });
             const container = document.getElementById('local-hand');
-            container.innerHTML = sorted.map(card => UI.cardMarkup(card, `hand-card ${card.id === App.ui.selectedCardId ? 'selected' : ''}`)).join('');
+            container.innerHTML = sorted.map(card =>
+                UI.cardMarkup(card, `hand-card ${card.id === App.ui.selectedCardId ? 'selected' : ''}`, 'hand')
+            ).join('');
+            CardTheme.hydrate(container);
             container.querySelectorAll('.hand-card').forEach(cardElement => {
                 cardElement.setAttribute('role', 'button');
                 cardElement.setAttribute('tabindex', '0');
@@ -677,6 +683,7 @@
             flight.style.setProperty('--fly-x', `${targetRect.left}px`);
             flight.style.setProperty('--fly-y', `${targetRect.top}px`);
             document.getElementById('animation-layer').appendChild(flight);
+            CardTheme.hydrate(flight);
             setTimeout(() => flight.remove(), 700);
         },
 

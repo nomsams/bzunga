@@ -32,9 +32,22 @@
         '♥': 'Hearts',
         '♠': 'Spades'
     };
+    const LOAD_PRIORITIES = {
+        public: 0,
+        hand: 10,
+        normal: 20,
+        idle: 100
+    };
+    const MAX_CONCURRENT_LOADS = 3;
 
     let currentTheme = 'classic';
     let currentAssetBase = '';
+    let activeLoads = 0;
+    let loadOrder = 0;
+    let idleWarmupScheduled = false;
+    const loadQueue = [];
+    const pendingLoads = new Map();
+    const loadedUrls = new Set();
 
     function normalize(theme) {
         return Object.prototype.hasOwnProperty.call(THEMES, theme) ? theme : 'classic';
@@ -76,11 +89,120 @@
         return normalize(theme) !== 'classic';
     }
 
-    function faceMarkup(card, assetBase = currentAssetBase) {
+    function priorityValue(priority) {
+        if (Number.isFinite(priority)) return priority;
+        return LOAD_PRIORITIES[priority] ?? LOAD_PRIORITIES.normal;
+    }
+
+    function assignLoadedSource(target, url) {
+        if (!target) return;
+        target.src = url;
+        target.removeAttribute?.('data-card-src');
+        target.removeAttribute?.('data-card-priority');
+    }
+
+    function pumpLoadQueue() {
+        if (typeof root.Image !== 'function') return;
+        loadQueue.sort((first, second) => first.priority - second.priority || first.order - second.order);
+        while (activeLoads < MAX_CONCURRENT_LOADS && loadQueue.length) {
+            const entry = loadQueue.shift();
+            if (entry.loading) continue;
+            entry.loading = true;
+            activeLoads++;
+            const loader = new root.Image();
+            loader.decoding = 'async';
+            loader.fetchPriority = entry.priority <= LOAD_PRIORITIES.hand ? 'high' : 'low';
+            const finish = loaded => {
+                if (loaded) loadedUrls.add(entry.url);
+                pendingLoads.delete(entry.url);
+                activeLoads--;
+                if (loaded) entry.targets.forEach(target => assignLoadedSource(target, entry.url));
+                pumpLoadQueue();
+            };
+            loader.onload = () => finish(true);
+            loader.onerror = () => finish(false);
+            loader.src = entry.url;
+        }
+    }
+
+    function queueUrl(url, priority = 'normal', target = null) {
+        if (!url) return;
+        if (loadedUrls.has(url)) {
+            assignLoadedSource(target, url);
+            return;
+        }
+        const numericPriority = priorityValue(priority);
+        const existing = pendingLoads.get(url);
+        if (existing) {
+            if (target) existing.targets.push(target);
+            existing.priority = Math.min(existing.priority, numericPriority);
+            pumpLoadQueue();
+            return;
+        }
+        const entry = {
+            url,
+            priority: numericPriority,
+            order: loadOrder++,
+            targets: target ? [target] : [],
+            loading: false
+        };
+        pendingLoads.set(url, entry);
+        loadQueue.push(entry);
+        pumpLoadQueue();
+    }
+
+    function hydrate(container = root.document) {
+        if (!isIllustrated() || !container) return;
+        const images = [];
+        if (container.matches?.('img.svg-card-art[data-card-src]')) images.push(container);
+        container.querySelectorAll?.('img.svg-card-art[data-card-src]').forEach(image => images.push(image));
+        images.forEach((image, index) => {
+            const priority = image.dataset.cardPriority || 'normal';
+            const url = image.dataset.cardSrc;
+            const staggeredPriority = priorityValue(priority) + Math.min(index, 30) / 100;
+            queueUrl(url, staggeredPriority, image);
+        });
+    }
+
+    function preloadVisibleCards(cards, options = {}) {
+        if (!isIllustrated()) return;
+        const assetBase = options.assetBase ?? currentAssetBase;
+        const priority = options.priority || 'hand';
+        (cards || [])
+            .filter(card => card && !card.hidden)
+            .forEach(card => queueUrl(getFaceUrl(card, assetBase), priority));
+    }
+
+    function allFaceUrls(assetBase = currentAssetBase) {
+        const urls = [];
+        for (const rank of Object.keys(RANK_FILES)) {
+            for (const suit of Object.keys(SUIT_FILES)) {
+                urls.push(getFaceUrl({ rank, suit }, assetBase));
+            }
+        }
+        urls.push(assetUrl('Black_Joker.svg', assetBase), assetUrl('Red_Joker.svg', assetBase));
+        return urls;
+    }
+
+    function scheduleIdleWarmup(assetBase = currentAssetBase) {
+        if (!isIllustrated() || idleWarmupScheduled) return;
+        const connection = root.navigator?.connection;
+        if (connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || '')) return;
+        idleWarmupScheduled = true;
+        const warm = () => allFaceUrls(assetBase).forEach(url => queueUrl(url, 'idle'));
+        if (typeof root.requestIdleCallback === 'function') {
+            root.requestIdleCallback(warm, { timeout: 5000 });
+        } else {
+            root.setTimeout?.(warm, 3000);
+        }
+    }
+
+    function faceMarkup(card, assetBase = currentAssetBase, options = {}) {
         if (!isIllustrated()) return '';
         const url = getFaceUrl(card, assetBase);
+        const priority = options.priority || 'normal';
         return url
-            ? `<img class="svg-card-art" src="${url}" alt="" aria-hidden="true" draggable="false">`
+            ? `<img class="svg-card-art" data-card-src="${url}" data-card-priority="${priority}" alt="" aria-hidden="true" draggable="false" decoding="async">`
             : '';
     }
 
@@ -93,6 +215,8 @@
         const backUrl = getBackUrl(currentAssetBase, currentTheme);
         if (backUrl) {
             document.documentElement.style.setProperty('--card-theme-back-image', `url("${backUrl}")`);
+            queueUrl(backUrl, 'public');
+            scheduleIdleWarmup(currentAssetBase);
         } else {
             document.documentElement.style.removeProperty('--card-theme-back-image');
         }
@@ -156,6 +280,7 @@
             };
         });
         updateControls(selects, buttons);
+        hydrate(document);
     }
 
     currentTheme = readStoredTheme();
@@ -173,6 +298,17 @@
         getFaceFile,
         getFaceUrl,
         getBackUrl,
-        faceMarkup
+        faceMarkup,
+        hydrate,
+        preloadVisibleCards,
+        scheduleIdleWarmup,
+        allFaceUrls,
+        getLoadStats: () => ({
+            active: activeLoads,
+            queued: loadQueue.length,
+            pending: pendingLoads.size,
+            loaded: loadedUrls.size
+        }),
+        LOAD_PRIORITIES
     };
 });

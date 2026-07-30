@@ -493,6 +493,14 @@
         });
     }
     LINES[5].attack.unshift('Baba opens the attack. Your hand may begin swearing.');
+    const DURAK_CENSORED_CHAT = {
+        1: ['That message was s***, and I am the rookie.', 'What the f*** do I know? Still more than that point.'],
+        2: ['Cut the b******t and beat the card.', 'Your hand is a** and the talon has witnesses.'],
+        3: ['Keep talking; the f***-up reel needs subtitles.', 'That was s*** with surprisingly good punctuation.'],
+        4: ['No grand theory: your defence is f***ed.', 'Premium b******t, bargain-bin hand.'],
+        5: ['Baba asks one question: what the f***?', 'Your defence is a** wearing expensive perfume.']
+    };
+    Object.entries(DURAK_CENSORED_CHAT).forEach(([difficulty, lines]) => LINES[difficulty].chat.push(...lines));
 
     LINES.global.intro.push(
         'Knock knock. Who is there? Durak. One of you answers to it later.',

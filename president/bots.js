@@ -456,6 +456,20 @@
     Object.keys(BABA_PHRASES).forEach(category => {
         BABA_PHRASES[category] = BABA_PHRASES[category].filter(line => !NERDY_PRESIDENT_TALK.test(line));
     });
+    PHRASES.chat.push(
+        '{target}, that message was s*** with a campaign badge.',
+        'Quit the b******t and play a card.',
+        'What the f*** was that speech meant to achieve?',
+        'Your hand is a** and your press secretary knows it.',
+        'Keep talking. The f***-up inquiry needs a transcript.'
+    );
+    BABA_PHRASES.chat.push(
+        '{target}, Baba has reviewed the s*** and rejected the smell.',
+        'Cut the b******t. Baba has a throne to repossess.',
+        'What in the f***ing palace was that point?',
+        'Your hand is a** wearing a royal glove.',
+        'Baba permits more talking; the f***-up reel needs narration.'
+    );
 
     const interpolate = (line, context = {}) => line.replace(/\{(\w+)\}/g, (match, key) => {
         const value = context[key];

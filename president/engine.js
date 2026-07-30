@@ -45,6 +45,7 @@
                 trick: this.createEmptyTrick(),
                 history: [],
                 discardedTricks: 0,
+                setAsideCount: 0,
                 finishOrder: [],
                 result: null,
                 exchange: null,
@@ -140,6 +141,17 @@
             }
 
             const deck = Rules.createDeck(this.random);
+            const remainder = deck.length % this.state.players.length;
+            const setAside = [];
+            while (setAside.length < remainder) {
+                let removeIndex = deck.length - 1;
+                while (removeIndex >= 0 && deck[removeIndex].rank === '3' && deck[removeIndex].suit === '♥') {
+                    removeIndex -= 1;
+                }
+                if (removeIndex < 0) removeIndex = deck.length - 1;
+                setAside.push(...deck.splice(removeIndex, 1));
+            }
+            this.state.setAsideCount = setAside.length;
             deck.forEach((card, index) => {
                 const player = this.state.players[index % this.state.players.length];
                 card.ownerId = player.id;
@@ -158,7 +170,11 @@
                 this._log(`${heartThreeOwner?.name || this.state.players[0].name} holds the 3♥ and opens the first pile.`, 'success');
             }
 
-            this._log(`Round ${this.state.roundNumber} begins. All 52 cards have been dealt.`, 'info');
+            this._log(
+                `Round ${this.state.roundNumber} begins. ${deck.length} cards were dealt evenly`
+                    + (setAside.length ? `; ${setAside.length} ${setAside.length === 1 ? 'card was' : 'cards were'} set aside.` : '.'),
+                'info'
+            );
             this._emit({ type: 'round_started', roundNumber: this.state.roundNumber });
         }
 

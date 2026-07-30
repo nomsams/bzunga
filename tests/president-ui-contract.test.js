@@ -17,6 +17,11 @@ assert(html.includes('src="rules.js"') && html.includes('src="engine.js"') && ht
 assert(css.includes('.hand-scroll.two-rows'), 'Large hands need a two-row mobile layout');
 assert(css.includes('@keyframes flyCard'), 'Multi-card table plays need a clear flight animation');
 assert(css.includes('@media (max-height: 680px) and (orientation: landscape)'), 'The table must adapt to short landscape phones');
+assert(css.includes('height: 100svh'), 'Mobile table height must stay stable when browser chrome changes');
+assert.strictEqual((css.match(/#game-view\.action-visible #table-stage/g) || []).length, 1, 'The portrait table must not resize as action controls appear');
+assert(!app.includes("window.addEventListener('resize'"), 'Height-only mobile resize events must not rebuild and jump the table');
+assert(app.includes("window.addEventListener('orientationchange'"), 'Real orientation changes still need a responsive rerender');
+assert(html.includes('viewport-fit=cover') && !html.includes('user-scalable=no'), 'President must retain stable accessible mobile viewport behavior');
 assert(app.includes("PresidentRules.sortHand(me.hand, App.ui.sortMode)"), 'Visible hands must use rank/suit auto-sorting');
 assert(app.includes("action.cards.forEach"), 'Every card in a combination must animate independently');
 assert(app.includes("state.trick.rank ? PresidentRules.getPrompt"), 'Turn prompts must explain the rank/count target');

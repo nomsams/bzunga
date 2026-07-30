@@ -155,6 +155,7 @@
     }
 
     .player-badge .icon { font-size: 0.64rem; line-height: 44px; font-weight: 800; letter-spacing: 0.04em; margin: 0; transition: all 0.3s; }
+    .player-badge .icon.bot-icon { font-size: 1.12rem; line-height: 44px; }
     .player-badge .name-text, .player-badge .meta { display: none; opacity: 0; transition: opacity 0.2s; height: 0; }
     .player-badge .turn-text { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); opacity: 0; color: var(--accent); font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; transition: opacity 0.3s, top 0.3s; pointer-events: none; }
 
@@ -254,6 +255,44 @@
     .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); z-index: 1210; text-align: center; pointer-events: auto; min-width: 300px; max-width: 90vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
     .modal h2 { color: var(--accent); margin-bottom: 10px; font-size: 1.8rem; }
     .modal-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 25px; flex-wrap: wrap; }
+    #modal-rules {
+        width: min(760px, calc(100vw - 24px));
+        text-align: left;
+    }
+    #modal-rules h2,
+    #modal-rules > p {
+        text-align: center;
+    }
+    #modal-rules > p {
+        margin: 0 auto 18px;
+        max-width: 620px;
+        color: #cbd5e1;
+        font-size: 0.84rem;
+        line-height: 1.5;
+    }
+    .bazunga-rules-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .bazunga-rules-grid article {
+        padding: 12px;
+        border: 1px solid rgba(255,255,255,0.09);
+        border-radius: 12px;
+        background: rgba(0,0,0,0.2);
+    }
+    .bazunga-rules-grid strong {
+        display: block;
+        margin-bottom: 4px;
+        color: #fde68a;
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+    }
+    .bazunga-rules-grid p {
+        color: #cbd5e1;
+        font-size: 0.72rem;
+        line-height: 1.45;
+    }
 
     .endgame-player { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
     .endgame-player.winner { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
@@ -418,10 +457,12 @@
             width: 38px;
             height: 38px;
             z-index: 9;
-            pointer-events: none;
+            pointer-events: auto;
+            touch-action: manipulation;
             background: rgba(9,20,36,0.92);
         }
         .player-badge .icon { font-size: 0.54rem; line-height: 38px; }
+        .player-badge .icon.bot-icon { font-size: 1rem; line-height: 38px; }
         .player-badge .turn-text {
             display: block;
             top: auto;
@@ -513,6 +554,7 @@
             padding: 20px 16px;
             border-radius: 22px;
         }
+        .bazunga-rules-grid { grid-template-columns: 1fr; }
         #lobby {
             min-height: 100dvh;
             overflow-y: auto;
@@ -583,6 +625,7 @@
             <div style="margin: 15px 0; color: #64748b; font-weight: 600; font-size: 0.85rem;">OR JOIN EXISTING</div>
             <input type="text" id="join-id" placeholder="Paste Game ID">
             <button id="btn-join" class="secondary">Join Game</button>
+            <button id="btn-rules-lobby" class="secondary">How to Play</button>
         </div>
         <div class="lobby-box hidden" id="lobby-room" style="max-height: 90vh; overflow-y: auto; padding-bottom: 30px;">
             <h2 style="color: white; margin-bottom: 10px;">Game Lobby</h2>
@@ -613,6 +656,7 @@
                 <button id="btn-start-game" style="margin-top: 15px; font-size: 1.1rem; padding: 12px;">START GAME</button>
             </div>
             <div id="client-waiting" class="hidden" style="margin-top: 15px; color: var(--info); font-weight: 600;">Waiting for Host to start...</div>
+            <button id="btn-rules-room" class="secondary">Rules &amp; Powers</button>
         </div>
     </div>
 
@@ -640,6 +684,7 @@
                 <div style="display: flex; gap: 5px;">
                     <button id="btn-toggle-layout" class="secondary" data-short-label="GRID" aria-label="Switch card layout" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Layout: GRID</button>
                     <button id="btn-toggle-anim" class="secondary" data-short-label="FX ON" aria-label="Toggle animations" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Anim: ON</button>
+                    <button id="btn-rules-table" class="secondary" data-short-label="RULES" aria-label="Open Bazunga rules" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Rules</button>
                 </div>
             </div>
             <div id="action-bar" class="hidden">
@@ -696,6 +741,39 @@
             <button id="btn-bazunga-cancel" class="secondary">Cancel — Keep Playing</button>
         </div>
     </div>
+    <section id="modal-rules" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="bazunga-rules-title">
+        <h2 id="bazunga-rules-title">HOW TO PLAY BAZUNGA</h2>
+        <p>Remember your layout, improve it without revealing too much, and finish with the lowest score.</p>
+        <div class="bazunga-rules-grid">
+            <article>
+                <strong>START &amp; OBJECTIVE</strong>
+                <p>Every player begins with four face-down layout cards and privately peeks at exactly two. Reduce your score; a black King scores −1.</p>
+            </article>
+            <article>
+                <strong>YOUR TURN</strong>
+                <p>Draw from the deck—or the discard pile in Rhino mode—then swap it into your layout, add it when required, or discard it face up.</p>
+            </article>
+            <article>
+                <strong>SLAPPING</strong>
+                <p>When the top discard matches a layout card, slap that layout card onto it. Only one successful slap is allowed per discard opportunity; wrong or duplicate slaps earn a penalty.</p>
+            </article>
+            <article>
+                <strong>MAGIC CARDS</strong>
+                <p>9 peeks at your own card, 10 secretly peeks at an opponent, Jack swaps blindly, Queen peeks then may swap, and a red King gives an opponent a penalty.</p>
+            </article>
+            <article>
+                <strong>CALLING BAZUNGA</strong>
+                <p>Call when you trust your score. Everyone else receives one final orbit turn, followed by a last reaction window for a legal slap.</p>
+            </article>
+            <article>
+                <strong>MODES &amp; WINNING</strong>
+                <p>Rhino is the standard game and permits discard draws. Joker mode disables discard draws and uses its harder scoring rules. Lowest final score wins.</p>
+            </article>
+        </div>
+        <div class="modal-buttons">
+            <button id="btn-rules-close" class="secondary">BACK TO THE TABLE</button>
+        </div>
+    </section>
 </div>
 </div>
 
@@ -741,7 +819,7 @@ const FINAL_SLAP_WINDOW_MS = 4200;
 // --- GLOBAL APP STATE ---
 const App = {
     isHost: false, localId: null, localName: '', sessionToken: null, peer: null, connections: {}, hostConn: null, gameState: null, animEnabled: true,
-    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null, cardPress: null, bazungaConfirmOpen: false, lastBazungaEffectNonce: null, lastBotPeekNonce: null },
+    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null, cardPress: null, bazungaConfirmOpen: false, rulesOpen: false, expandedBadgeId: null, lastBazungaEffectNonce: null, lastBotPeekNonce: null },
     botInterval: null
 };
 
@@ -1185,10 +1263,13 @@ Engine.processAction = (action, peerId) => {
             let owner = Engine.state.players.find(p => p.id === targetCard.ownerId);
             if (!owner) return;
 
-            // Race condition fix: If the top discard was slapped within the last 1.5s, reject new slaps
+            // A discard rank creates exactly one slap opportunity. The successfully
+            // slapped layout card becomes the new top card with that opportunity
+            // already consumed, so another equal card can never chain onto it.
+            const matchAlreadyConsumed = Boolean(topDiscard.isSlapped);
             let isLateSlap = topDiscard.slappedAt && (now - topDiscard.slappedAt < 1500);
 
-            if (targetCard.value === topDiscard.value && !isLateSlap && !topDiscard.isSlapped) {
+            if (targetCard.value === topDiscard.value && !isLateSlap && !matchAlreadyConsumed) {
                 Engine.state.lastSlapTime = now;
                 Engine.state.lastSlapTargetId = action.targetId;
 
@@ -1212,7 +1293,7 @@ Engine.processAction = (action, peerId) => {
                 }
                 Engine.state.lastSlap = { id: targetCard.id, success: true, time: now, playerId: player.id, targetOwnerId: owner.id };
             } else {
-                if ((isLateSlap || topDiscard.isSlapped) && targetCard.value === topDiscard.value) {
+                if ((isLateSlap || matchAlreadyConsumed) && targetCard.value === topDiscard.value) {
                     Engine.sysLog(`${player.name} slapped a card that was already slapped! Penalty!`, "warning");
                 } else {
                     Engine.sysLog(`${player.name} incorrectly slapped ${owner.name}'s ${targetCard.value} onto a ${topDiscard.value}! Penalty!`, "danger");
@@ -1710,6 +1791,10 @@ const UI = {
             e.target.classList.toggle('toggled-off');
             e.target.setAttribute('aria-pressed', String(nowHidden));
         };
+        ['btn-rules-lobby', 'btn-rules-room', 'btn-rules-table'].forEach(id => {
+            document.getElementById(id).onclick = UI.showRules;
+        });
+        document.getElementById('btn-rules-close').onclick = UI.hideRules;
 
         // Zoom Controls
         const mobileViewport = Math.min(window.innerWidth, window.innerHeight) <= 768
@@ -1758,10 +1843,14 @@ const UI = {
         document.getElementById('btn-hide-gameover').onclick = UI.hideGameOver;
         document.getElementById('btn-return-lobby').onclick = UI.leaveGame;
         document.getElementById('modal-overlay').addEventListener('click', () => {
-            if (App.uiState.bazungaConfirmOpen) UI.hideBazungaConfirm();
+            if (App.uiState.rulesOpen) UI.hideRules();
+            else if (App.uiState.bazungaConfirmOpen) UI.hideBazungaConfirm();
         });
         document.addEventListener('keydown', event => {
-            if (event.key === 'Escape' && App.uiState.bazungaConfirmOpen) {
+            if (event.key === 'Escape' && App.uiState.rulesOpen) {
+                event.preventDefault();
+                UI.hideRules();
+            } else if (event.key === 'Escape' && App.uiState.bazungaConfirmOpen) {
                 event.preventDefault();
                 UI.hideBazungaConfirm();
             }
@@ -1796,6 +1885,24 @@ const UI = {
             const chatBox = document.getElementById('chat-messages');
             chatBox.scrollTop = chatBox.scrollHeight;
             setTimeout(() => document.getElementById('chat-input').focus(), 180);
+        }
+    },
+
+    showRules: () => {
+        App.uiState.rulesOpen = true;
+        document.getElementById('modal-rules').classList.remove('hidden');
+        document.getElementById('modal-overlay').classList.remove('hidden');
+        setTimeout(() => document.getElementById('btn-rules-close').focus(), 0);
+    },
+
+    hideRules: () => {
+        App.uiState.rulesOpen = false;
+        document.getElementById('modal-rules').classList.add('hidden');
+        if (
+            !App.uiState.bazungaConfirmOpen
+            && document.getElementById('modal-gameover').classList.contains('hidden')
+        ) {
+            document.getElementById('modal-overlay').classList.add('hidden');
         }
     },
 
@@ -1851,7 +1958,9 @@ const UI = {
 
     hideGameOver: () => {
         document.getElementById('modal-gameover').classList.add('hidden');
-        if (!App.uiState.bazungaConfirmOpen) document.getElementById('modal-overlay').classList.add('hidden');
+        if (!App.uiState.bazungaConfirmOpen && !App.uiState.rulesOpen) {
+            document.getElementById('modal-overlay').classList.add('hidden');
+        }
     },
 
     leaveGame: () => {
@@ -1921,7 +2030,10 @@ const UI = {
         modal.classList.add('hidden');
         modal.style.removeProperty('display');
         document.getElementById('btn-bazunga-confirm').disabled = false;
-        if (document.getElementById('modal-gameover').classList.contains('hidden')) {
+        if (
+            !App.uiState.rulesOpen
+            && document.getElementById('modal-gameover').classList.contains('hidden')
+        ) {
             document.getElementById('modal-overlay').classList.add('hidden');
         }
     },
@@ -2304,7 +2416,9 @@ const UI = {
                 document.getElementById('ui-layer').appendChild(badge);
             }
 
-            let isExpanded = state.phase === 'peek' && !isMobile ? 'expanded' : '';
+            let isExpanded = (state.phase === 'peek' && !isMobile) || App.uiState.expandedBadgeId === p.id
+                ? 'expanded'
+                : '';
             const hasActiveTurn = state.phase === 'play' || state.phase === 'orbit';
             let isActiveTurn = i === state.turnIndex && hasActiveTurn ? 'active-turn' : '';
             const isBazungaCaller = state.bazungaCallerId === p.id;
@@ -2318,8 +2432,12 @@ const UI = {
                 'aria-label',
                 `${p.name}${isActiveTurn ? ', current turn' : ''}${isBazungaCaller ? ', BAZUNGA caller' : ''}${isBotPeeking ? ', peeking at a card' : ''}`
             );
+            badge.setAttribute('role', 'button');
+            badge.setAttribute('tabindex', '0');
+            badge.setAttribute('aria-expanded', String(App.uiState.expandedBadgeId === p.id));
+            badge.title = p.name;
 
-            let icon = p.isBot ? 'BOT' : (p.id === App.localId ? 'YOU' : 'P');
+            let icon = p.isBot ? '🤖' : (p.id === App.localId ? 'YOU' : 'P');
             let cardCount = p.hand.length + p.penaltyCards.length;
             let turnIndicator = i === state.turnIndex && hasActiveTurn ? `<div class="turn-text">CURRENT TURN</div>` : '';
             let callerIndicator = isBazungaCaller ? `<div class="caller-text">BAZUNGA CALLER</div>` : '';
@@ -2327,7 +2445,7 @@ const UI = {
 
             badge.innerHTML = `
                 <div style="display:flex; align-items:center; justify-content:center; width:100%;">
-                    <span class="icon">${icon}</span>
+                    <span class="icon ${p.isBot ? 'bot-icon' : ''}">${icon}</span>
                     <span class="name-text">${Utils.escapeHTML(p.name)}</span>
                 </div>
                 <span class="meta">${cardCount} Cards</span>
@@ -2335,6 +2453,20 @@ const UI = {
                 ${callerIndicator}
                 ${statusText}
             `;
+            const toggleBadge = event => {
+                event.preventDefault();
+                event.stopPropagation();
+                App.uiState.expandedBadgeId = App.uiState.expandedBadgeId === p.id ? null : p.id;
+                document.querySelectorAll('.player-badge').forEach(candidate => {
+                    const expanded = candidate.id === `badge-${App.uiState.expandedBadgeId}`;
+                    candidate.classList.toggle('expanded', expanded);
+                    candidate.setAttribute('aria-expanded', String(expanded));
+                });
+            };
+            badge.onclick = toggleBadge;
+            badge.onkeydown = event => {
+                if (event.key === 'Enter' || event.key === ' ') toggleBadge(event);
+            };
 
             let allCards = [...p.hand, ...p.penaltyCards];
             let baseHandW = isMobile ? (window.innerWidth <= 390 ? 43 : 46) : 56;

@@ -11,7 +11,8 @@ const bazunga = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const president = fs.readFileSync(path.join(root, 'president', 'index.html'), 'utf8');
 
 assert(html.includes('id="talon-stack"') && html.includes('id="trump-card-slot"'), 'Durak needs a visible talon and turn-up trump');
-assert(css.includes('#trump-card-slot') && css.includes('rotate: 90deg'), 'The trump must lie at 90 degrees beneath the talon');
+assert(css.includes('#trump-card-slot') && css.includes('left: 30%') && css.includes('rotate: -90deg'), 'The trump must lie at 90 degrees with its indexed half exposed beneath the talon');
+assert(css.includes('bottom: 16%'), 'The mobile trump must sit above the action panel so its rank and suit remain readable');
 assert(html.includes('id="battle-pairs"'), 'Attack and defence pairs need a dedicated battle area');
 assert(css.includes('.battle-pair .defense-card') && css.includes('left: 22px'), 'Defence cards must visibly overlap their attacks');
 assert(html.includes('id="btn-finish-attack"'), 'Attackers need a Finish Attack control');
@@ -22,6 +23,10 @@ assert(html.includes('id="chat-drawer"') && html.includes('id="chat-bubbles"'), 
 assert(html.includes('src="rules.js"') && html.includes('src="engine.js"') && html.includes('src="bots.js"'), 'Durak code must stay modular');
 assert(css.includes('@keyframes fly-to-battle'), 'Played cards need a clear flight animation');
 assert(css.includes('@media (max-height: 680px) and (orientation: landscape)'), 'Durak must adapt to short landscape phones');
+assert(css.includes('height: 100svh'), 'Mobile table height must stay stable when browser chrome changes');
+assert.strictEqual((css.match(/#game-view\.action-visible #table-stage/g) || []).length, 1, 'The portrait table must not resize as action controls appear');
+assert(!app.includes("window.addEventListener('resize'"), 'Height-only mobile resize events must not rebuild and jump the table');
+assert(app.includes("window.addEventListener('orientationchange'"), 'Real orientation changes still need a responsive rerender');
 assert(app.includes("state: Game.engine.getViewState(peerId)"), 'P2P state updates must use per-player privacy views');
 assert(engine.includes('delete state.talon'), 'Clients must never receive the talon order');
 assert(engine.includes('lastRoundResult') && app.includes('lastRoundResultToken'), 'Round draw and pickup feedback must survive the next-round transition');

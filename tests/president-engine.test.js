@@ -16,16 +16,40 @@ const players = [
 ];
 players.forEach(player => engine.addPlayer({ ...player, connected: true }));
 assert.strictEqual(engine.startGame({ exchangeCount: 3 }).ok, true);
-assert.strictEqual(engine.state.players.reduce((sum, player) => sum + player.hand.length, 0), 52);
+assert.strictEqual(engine.state.players.reduce((sum, player) => sum + player.hand.length, 0), 51);
 assert.deepStrictEqual(
     engine.state.players.map(player => player.hand.length).sort((a, b) => a - b),
-    [17, 17, 18],
-    'All cards must be dealt as evenly as possible'
+    [17, 17, 17],
+    'Every player must receive exactly the same number of cards'
 );
+assert.strictEqual(engine.state.setAsideCount, 1, 'Uneven remainder cards must be removed before dealing');
 const heartThreeOwner = engine.state.players.find(player =>
     player.hand.some(card => card.rank === '3' && card.suit === '♥')
 );
 assert.strictEqual(engine.activePlayer().id, heartThreeOwner.id, 'The 3♥ holder must open the first round');
+
+for (let playerCount = 2; playerCount <= 8; playerCount++) {
+    const equalDeal = new PresidentGameEngine({ random: () => 0.31, makeId: () => `equal-${++idCounter}` });
+    for (let index = 0; index < playerCount; index++) {
+        equalDeal.addPlayer({
+            id: `equal-player-${playerCount}-${index}`,
+            name: `Player ${index + 1}`,
+            isHost: index === 0,
+            connected: true
+        });
+    }
+    assert.strictEqual(equalDeal.startGame().ok, true);
+    const handSizes = equalDeal.state.players.map(player => player.hand.length);
+    assert.strictEqual(new Set(handSizes).size, 1, `${playerCount} players must all receive equal hands`);
+    assert.strictEqual(
+        handSizes[0],
+        Math.floor(52 / playerCount),
+        `${playerCount} players received the wrong equal hand size`
+    );
+    assert(equalDeal.state.players.some(player =>
+        player.hand.some(card => card.rank === '3' && card.suit === '♥')
+    ), 'The opening 3♥ must never be set aside');
+}
 
 const makeCard = (id, rank, ownerId, suit = '♣') => ({
     id,

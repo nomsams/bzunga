@@ -80,6 +80,8 @@ assert(html.includes("document.getElementById('btn-return-lobby').onclick = UI.l
 assert(html.includes('window.location.replace(cleanUrl.href)'), 'Leave Game must return to a clean lobby URL');
 assert(html.includes("Net.sendAction({ type: 'PEEK_CARD', targetId: cardId })"), 'Opening peeks must be reported to the host');
 assert(html.includes("badge.setAttribute(") && html.includes("', current turn'"), 'The active seat must expose its turn state for every player');
+assert(html.includes("let icon = p.isBot ? '🤖'"), 'Bot seats must use an unmistakable robot emoji');
+assert(html.includes('expandedBadgeId') && html.includes('badge.onclick = toggleBadge'), 'Player names must expand on tap as well as desktop hover');
 assert(html.includes('bazunga-alert-v1') && html.includes('bazunga-alert-v2') && html.includes('bazunga-alert-v3'), 'BAZUNGA must have rotating alert variants');
 assert(html.includes('bot-peek-target') && html.includes('playBotPeekEffect'), 'Bot Q/10 peeks need a visible synchronized animation');
 assert(html.includes('FINAL_SLAP_WINDOW_MS = 4200'), 'The final BAZUNGA action needs a human reaction window');
@@ -89,6 +91,8 @@ assert(html.includes("el.setAttribute('aria-hidden', 'true')"), 'Buried deck/dis
 assert(html.includes("el.removeAttribute('role')"), 'Buried cards must not remain accessibility buttons');
 assert(html.includes('Utils.escapeHTML(l.msg)'), 'Chat messages must be escaped before HTML rendering');
 assert(html.includes('Engine.state.logs.splice(0, Engine.state.logs.length - 120)'), 'The shared game log must be bounded');
+assert(html.includes('id="modal-rules"') && html.includes('Only one successful slap is allowed per discard opportunity'), 'Bazunga needs complete in-game rules including the one-slap limit');
+assert(html.includes("document.getElementById(id).onclick = UI.showRules"), 'Rules must open from the lobby, room, and live table');
 assert(!html.includes('adjustedSlapTime'), 'Unused client slap timestamp logic should not return');
 
 console.log('UI privacy/mobile: flip timing, bot peek VFX, reaction windows, final slaps, mobile controls, and BAZUNGA alerts passed.');

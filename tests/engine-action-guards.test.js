@@ -142,6 +142,15 @@ assert.strictEqual(Engine.state.discardPile.length, 1, 'Turn actions must freeze
 Engine.processAction({ type: 'SLAP', targetId: ownCard.id }, host.id);
 assert.strictEqual(Engine.state.lastSlap.success, true, 'A matching final slap must remain legal before scoring');
 assert.strictEqual(Engine.state.discardPile.at(-1).id, ownCard.id, 'The legal final slap must change the scored table state');
+const duplicateMatch = { id: 'duplicate-match', ownerId: 'guest', loc: 'hand', value: '4', isSlapped: false };
+guest.hand = [duplicateMatch];
+Engine.cards.push(duplicateMatch);
+const penaltiesBeforeDuplicate = Engine.penaltyCalls.length;
+Engine.processAction({ type: 'SLAP', targetId: duplicateMatch.id }, host.id);
+assert.strictEqual(Engine.state.lastSlap.success, false, 'A slapped card must consume the discard match');
+assert.strictEqual(Engine.state.discardPile.at(-1).id, ownCard.id, 'A second matching card cannot stack onto the same slapped discard');
+assert(guest.hand.some(card => card.id === duplicateMatch.id), 'A rejected duplicate slap must leave its target in the layout');
+assert.strictEqual(Engine.penaltyCalls.length, penaltiesBeforeDuplicate + 1, 'A duplicate slap must penalize the slapper');
 Engine.state.pendingGameOver = null;
 
 const finalTimers = [];

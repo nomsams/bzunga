@@ -329,10 +329,8 @@
                 }
             });
 
-            let resizeTimer;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => App.gameState && UI.render(App.gameState), 160);
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => App.gameState && UI.render(App.gameState), 180);
             });
 
             if (joinId) document.getElementById('btn-join').click();

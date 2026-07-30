@@ -268,7 +268,9 @@
             document.getElementById('modal-overlay').onclick = () => {
                 if (!document.getElementById('rules-modal').classList.contains('hidden')) UI.closeRules();
             };
-            window.addEventListener('resize', () => App.gameState && UI.render(App.gameState));
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => App.gameState && UI.render(App.gameState), 180);
+            });
             if (joinId) document.getElementById('btn-join').click();
         },
 

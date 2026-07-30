@@ -47,6 +47,8 @@ const average = values => values.reduce((sum, value) => sum + value, 0) / values
 assert(new Set(noobSamples).size > 50, 'Noob cadence is too repetitive');
 assert(new Set(babaSamples).size > 50, 'Baba cadence is too repetitive');
 assert(average(noobSamples) > average(babaSamples), 'Baba should generally think faster than a noob');
+assert(average(noobSamples.filter((_, index) => index % 4 !== 0)) < 4200, 'Routine bot draws should not stall the table');
+assert(average(babaSamples.filter((_, index) => index % 4 !== 0)) < 2400, 'Baba should react quickly to a routine draw');
 assert(noobSamples.every(delay => delay >= 850 && delay <= 9000), 'Decision delay escaped its safe bounds');
 assert.strictEqual(Bot.humanState.noob.decisions, 80, 'Decision history should be stateful');
 
@@ -72,5 +74,11 @@ const scheduledReadyAt = Bot.decisionSchedules.baba.readyAt;
 assert.strictEqual(Bot.waitForDecision(baba, 'turn-1', 'turn', scheduledReadyAt - 1), false);
 assert.strictEqual(Bot.waitForDecision(baba, 'turn-1', 'turn', scheduledReadyAt), true);
 assert.strictEqual(Bot.decisionSchedules.baba, undefined, 'Completed schedules must be discarded');
+
+Bot.humanState = {};
+clock = 9000;
+Bot.getDecisionDelay(noob, 'holding');
+const followUpMagic = Array.from({ length: 40 }, () => Bot.getDecisionDelay(noob, 'magic'));
+assert(average(followUpMagic) < 3600, 'Magic target selection should feel like a continuation, not a second full turn');
 
 console.log(`Human bot timing: ${noobSamples.length + babaSamples.length} decisions plus typing/activity checks passed.`);

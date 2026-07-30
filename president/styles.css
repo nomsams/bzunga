@@ -64,8 +64,8 @@ button:disabled {
 #president-app {
     position: relative;
     width: 100vw;
-    height: 100dvh;
-    min-height: 100vh;
+    height: 100vh;
+    height: 100svh;
     overflow: hidden;
     background:
         radial-gradient(circle at 50% -10%, rgba(30, 64, 175, 0.2), transparent 42%),
@@ -488,11 +488,6 @@ select:focus {
     inset: 56px 0 calc(var(--hand-height) - 12px);
     display: grid;
     place-items: center;
-    transition: bottom 0.2s ease;
-}
-
-#game-view.action-visible #table-stage {
-    bottom: calc(var(--hand-height) + var(--action-height) - 12px);
 }
 
 #table {
@@ -1379,10 +1374,6 @@ select:focus {
         inset: 56px 4px calc(var(--hand-height) - 6px);
     }
 
-    #game-view.action-visible #table-stage {
-        bottom: calc(var(--hand-height) + var(--action-height) - 6px);
-    }
-
     #table {
         width: calc(100% - 8px);
         height: calc(100% - 12px);
@@ -1633,7 +1624,7 @@ select:focus {
         bottom: 5px;
         left: auto;
         width: 126px;
-        min-height: calc(100dvh - 58px);
+        min-height: calc(100svh - 58px);
         transform: none;
         display: flex;
         flex-direction: column;

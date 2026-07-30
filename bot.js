@@ -927,30 +927,41 @@ const Bot = {
             delay = sampleNaturalRange(profile.peekMin, profile.peekMax);
         } else {
             const multiplier = {
-                turn: 1,
-                holding: 1.12,
-                magic: 1.45,
-                endgame: 1.28
+                turn: 0.62,
+                holding: 0.74,
+                magic: 0.68,
+                endgame: 0.82
             }[complexity] || 1;
             delay = sampleNaturalRange(profile.decisionMin, profile.decisionMax) * multiplier;
         }
 
-        // A player needs longer to orient on their first decision, after a long pause,
-        // or when the kind of decision changes.
-        if (human.decisions === 0) delay += Bot.randomBetween(650, 1450);
-        if (human.lastDecisionAt && now - human.lastDecisionAt > 12000) delay += Bot.randomBetween(280, 850);
-        if (human.lastComplexity && human.lastComplexity !== complexity) delay += Bot.randomBetween(180, 620);
+        // Drawing is an easy, highly visible action; keep that first reaction natural
+        // without making the whole table stare at a thinking badge for several seconds.
+        if (human.decisions === 0) {
+            delay += complexity === 'turn'
+                ? Bot.randomBetween(180, 420)
+                : Bot.randomBetween(380, 900);
+        }
+        if (human.lastDecisionAt && now - human.lastDecisionAt > 12000) {
+            delay += Bot.randomBetween(120, 420);
+        }
+        if (human.lastComplexity && human.lastComplexity !== complexity) {
+            delay += Bot.randomBetween(70, 240);
+        }
+        // Once a bot has committed a magic card, choosing its peek/swap target is
+        // one continuous thought—not a second full turn-sized deliberation.
+        if (complexity === 'magic' && human.lastComplexity === 'holding') delay *= 0.72;
 
         // Humans often double-check a magic/endgame choice even when they already
         // know the best move. Less experienced personalities hesitate more often.
-        const hesitationChance = profile.hesitation + (complexity === 'magic' ? 0.12 : 0);
-        if (Math.random() < hesitationChance) delay += Bot.randomBetween(450, complexity === 'magic' ? 2200 : 1550);
-        if (Math.random() < 0.32) delay += Bot.randomBetween(120, 480);
-        if (Math.random() < profile.distraction) delay += Bot.randomBetween(700, 2300);
+        const hesitationChance = profile.hesitation + (complexity === 'magic' ? 0.08 : 0);
+        if (Math.random() < hesitationChance) delay += Bot.randomBetween(240, complexity === 'magic' ? 900 : 1100);
+        if (Math.random() < 0.28) delay += Bot.randomBetween(80, 260);
+        if (Math.random() < profile.distraction) delay += Bot.randomBetween(350, 1400);
         if ((Bot.frustration[bot.id] || 0) >= 4) delay *= Bot.randomBetween(0.88, 1.08);
 
         human.decisions++;
-        human.fatigue = Math.min(0.14, human.decisions * 0.008);
+        human.fatigue = Math.min(0.08, human.decisions * 0.004);
         human.lastDecisionAt = now;
         human.lastComplexity = complexity;
         delay *= 1 + human.fatigue;

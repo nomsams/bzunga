@@ -539,14 +539,30 @@
         const rankCounts = {};
         for (const card of me.hand) rankCounts[card.rank] = (rankCounts[card.rank] || 0) + 1;
         const pickup = view.phase === 'throw_in';
-        const scored = legal.map(card => {
-            let score = cardCost(card, view.trumpSuit);
+        const talonOpen = Number(view.talonCount || 0) > 0;
+        const nonTrumpCards = legal.filter(card => card.suit !== view.trumpSuit);
+        let candidates = legal;
+
+        // While cards still refill from the talon, never donate a trump to a
+        // defender who has already decided to pick up if a plain card can go.
+        if (pickup && talonOpen && nonTrumpCards.length) candidates = nonTrumpCards;
+        if (pickup && talonOpen && !nonTrumpCards.length && difficulty >= 3) return null;
+
+        const scored = candidates.map(card => {
+            const trump = card.suit === view.trumpSuit;
+            let score = Rules.rankValue(card);
             if (!pickup) {
                 score -= (rankCounts[card.rank] - 1) * (difficulty >= 3 ? 3.2 : 1.2);
-                if (card.suit === view.trumpSuit) score += difficulty >= 3 ? 15 : 6;
+                if (trump) {
+                    score += talonOpen
+                        ? (difficulty >= 4 ? 38 : difficulty >= 3 ? 28 : 12)
+                        : (difficulty >= 3 ? 1.5 : 4);
+                }
             } else {
-                score = -score;
-                if (card.suit === view.trumpSuit) score += difficulty >= 3 ? 24 : 9;
+                score = -Rules.rankValue(card);
+                // With no talon left, a pickup is a legitimate chance to shed
+                // an otherwise sticky trump. Before then, trumps stay home.
+                if (trump) score += talonOpen ? 30 : -8;
             }
             return { card, score };
         }).sort((first, second) => first.score - second.score);
@@ -564,8 +580,50 @@
         if (!cheapest || !attack) return true;
         const tableCards = view.battle.reduce((count, pair) => count + 1 + Number(Boolean(pair.defenseCard)), 0);
         const trumpSacrifice = cheapest.suit === view.trumpSuit && attack.suit !== view.trumpSuit;
-        if (difficulty >= 4 && view.talonCount > 0 && trumpSacrifice && tableCards <= 2 && me.hand.length <= 4) return true;
+        if (Number(view.talonCount || 0) <= 0 || !trumpSacrifice) return false;
+
+        const trumpCount = me.hand.filter(card => card.suit === view.trumpSuit).length;
+        const expensiveTrump = Rules.rankValue(cheapest) >= Rules.rankValue('J');
+        if (difficulty >= 5 && tableCards <= 2 && (trumpCount <= 2 || expensiveTrump) && me.hand.length <= 7) return true;
+        if (difficulty >= 4 && tableCards <= 2 && trumpCount <= 1 && me.hand.length <= 6) return true;
+        if (difficulty >= 3 && tableCards === 1 && trumpCount === 1 && Rules.rankValue(cheapest) >= Rules.rankValue('K')) return true;
         return false;
+    }
+
+    function shouldBankDefenderSpend(view, me, legal, difficulty) {
+        if (view.phase !== 'attack' || view.battle.length === 0 || difficulty < 3) return false;
+        const defender = view.players.find(player => player.id === view.defenderId);
+        if (Number(view.talonCount || 0) === 0 && Number(defender?.handCount || 0) === 0) return false;
+
+        const defendedPairs = view.battle.filter(pair => pair.defenseCard);
+        const trumpDefense = defendedPairs.some(pair => pair.defenseCard.suit === view.trumpSuit);
+        const trumpBurn = defendedPairs.some(pair =>
+            pair.defenseCard.suit === view.trumpSuit
+            && pair.attackCard.suit !== view.trumpSuit
+        );
+        const premiumCardBurn = defendedPairs.some(pair =>
+            Rules.rankValue(pair.defenseCard) >= Rules.rankValue('K')
+        );
+        if (!trumpDefense && !premiumCardBurn) return false;
+
+        const cheapPlainContinuation = legal.some(card =>
+            card.suit !== view.trumpSuit
+            && Rules.rankValue(card) <= Rules.rankValue('10')
+        );
+        const talonOpen = Number(view.talonCount || 0) > 0;
+
+        // Lock valuable defending cards into the discard instead of risking a
+        // pickup that returns them to the defender. Baba does this reliably;
+        // lower expert levels require a clearly expensive continuation.
+        if (difficulty >= 5 && trumpDefense && talonOpen) return true;
+        if (difficulty >= 5 && (trumpDefense || premiumCardBurn) && !cheapPlainContinuation) return true;
+        if (difficulty >= 4 && trumpBurn && talonOpen && !cheapPlainContinuation) return true;
+        return difficulty >= 3
+            && defendedPairs.filter(pair =>
+                pair.defenseCard.suit === view.trumpSuit
+                || Rules.rankValue(pair.defenseCard) >= Rules.rankValue('K')
+            ).length >= 2
+            && !cheapPlainContinuation;
     }
 
     function chooseAction(view, botId, random = Math.random) {
@@ -581,7 +639,11 @@
             if (shouldTake(view, me, legal, difficulty)) return { type: 'TAKE_CARDS' };
             let card = chooseLowestDefense(legal, view.trumpSuit);
             if (profile.error > 0 && legal.length > 1 && random() < profile.error) {
-                card = legal[Math.floor(random() * legal.length)];
+                const safeErrors = Number(view.talonCount || 0) > 0 && difficulty >= 3
+                    ? legal.filter(candidate => candidate.suit !== view.trumpSuit)
+                    : legal;
+                const errorPool = safeErrors.length ? safeErrors : legal;
+                card = errorPool[Math.floor(random() * errorPool.length)];
             }
             return card ? { type: 'DEFEND', cardId: card.id, pairId: pair.id } : { type: 'TAKE_CARDS' };
         }
@@ -595,8 +657,16 @@
                 && view.battle.length > 0
                 && difficulty >= 3
                 && (remainingCapacity <= 0 || (defender?.handCount || 0) > me.hand.length + 3);
+            const earlyTrumpOnlyContinuation = view.phase === 'attack'
+                && view.battle.length > 0
+                && Number(view.talonCount || 0) > 0
+                && difficulty >= 3
+                && legal.every(card => card.suit === view.trumpSuit);
             const casualPass = view.battle.length > 0 && random() < profile.error * 0.42;
-            if (pressureIsPoor || casualPass) return { type: 'PASS_ATTACK' };
+            const bankDefenderSpend = shouldBankDefenderSpend(view, me, legal, difficulty);
+            if (pressureIsPoor || earlyTrumpOnlyContinuation || bankDefenderSpend || casualPass) {
+                return { type: 'PASS_ATTACK' };
+            }
             const card = chooseAttackCard(view, me, legal, difficulty, random);
             return card ? { type: 'ATTACK', cardId: card.id } : { type: 'PASS_ATTACK' };
         }

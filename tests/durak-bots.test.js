@@ -76,6 +76,151 @@ const throwAction = Bots.chooseAction(throwIn, 'bot', () => 0.5);
 assert.strictEqual(throwAction.type, 'ATTACK');
 assert(['low', 'pair'].includes(throwAction.cardId), 'Throw-ins must match a public table rank');
 
+const trumpSuit = Rules.SUITS[2];
+const plainSuit = Rules.SUITS[3];
+const otherPlainSuit = Rules.SUITS[1];
+const hiddenOpponent = {
+    id: 'human',
+    name: 'Human',
+    isBot: false,
+    handCount: 5,
+    hand: Array.from({ length: 5 }, (_, index) => ({ id: `private-${index}`, hidden: true }))
+};
+const pickupStrategyBot = {
+    id: 'bot',
+    name: 'Baba',
+    isBot: true,
+    botDifficulty: 5,
+    handCount: 2,
+    hand: [
+        { id: 'plain-nine', rank: '9', suit: plainSuit },
+        { id: 'trump-nine', rank: '9', suit: trumpSuit }
+    ]
+};
+const earlyPickup = {
+    ...opening,
+    phase: 'throw_in',
+    players: [pickupStrategyBot, hiddenOpponent],
+    battle: [{
+        id: 'pickup-pair',
+        attackCard: { id: 'table-nine', rank: '9', suit: otherPlainSuit },
+        defenseCard: null
+    }],
+    attackLimit: 5,
+    trumpSuit,
+    talonCount: 12
+};
+assert.strictEqual(
+    Bots.chooseAction(earlyPickup, 'bot', () => 0.5).cardId,
+    'plain-nine',
+    'Expert bots must dump a matching plain card before donating a trump while the talon is open'
+);
+assert.strictEqual(
+    Bots.chooseAction({
+        ...earlyPickup,
+        players: [{ ...pickupStrategyBot, handCount: 1, hand: [pickupStrategyBot.hand[1]] }, hiddenOpponent]
+    }, 'bot', () => 0.5).type,
+    'PASS_ATTACK',
+    'Expert bots must keep their last matching trump instead of gifting it into an early pickup'
+);
+assert.strictEqual(
+    Bots.chooseAction({ ...earlyPickup, talonCount: 0 }, 'bot', () => 0.5).cardId,
+    'trump-nine',
+    'Once the talon is empty, an expert may shed a matching trump into a pickup'
+);
+
+const trumpOnlyContinuation = {
+    ...earlyPickup,
+    phase: 'attack',
+    players: [{
+        ...pickupStrategyBot,
+        handCount: 1,
+        hand: [{ id: 'trump-eight', rank: '8', suit: trumpSuit }]
+    }, hiddenOpponent],
+    battle: [{
+        id: 'plain-covered-pair',
+        attackCard: { id: 'plain-six', rank: '6', suit: plainSuit },
+        defenseCard: { id: 'plain-eight', rank: '8', suit: plainSuit }
+    }]
+};
+assert.strictEqual(
+    Bots.chooseAction(trumpOnlyContinuation, 'bot', () => 0.5).type,
+    'PASS_ATTACK',
+    'Experts must not continue an early attack when the only matching card is a trump'
+);
+assert.strictEqual(
+    Bots.chooseAction({ ...trumpOnlyContinuation, battle: [] }, 'bot', () => 0.5).type,
+    'ATTACK',
+    'A bot with only trumps must still make a legal opening attack'
+);
+
+const forcedTrumpDefense = {
+    ...opening,
+    phase: 'defend',
+    players: [{
+        id: 'bot',
+        name: 'Baba',
+        isBot: true,
+        botDifficulty: 5,
+        handCount: 1,
+        hand: [{ id: 'jack-trump', rank: 'J', suit: trumpSuit }]
+    }, hiddenOpponent],
+    attackTurnId: null,
+    defenderId: 'bot',
+    battle: [{
+        id: 'plain-attack-pair',
+        attackCard: { id: 'plain-six', rank: '6', suit: plainSuit },
+        defenseCard: null
+    }],
+    trumpSuit,
+    talonCount: 12
+};
+assert.strictEqual(
+    Bots.chooseAction(forcedTrumpDefense, 'bot', () => 0.5).type,
+    'TAKE_CARDS',
+    'Expert bots should take a cheap early attack rather than burn a scarce trump'
+);
+assert.strictEqual(
+    Bots.chooseAction({ ...forcedTrumpDefense, talonCount: 0 }, 'bot', () => 0.5).type,
+    'DEFEND',
+    'Trump conservation must relax once the talon is exhausted'
+);
+
+const bankBurnedTrump = {
+    ...opening,
+    phase: 'attack',
+    players: [{
+        id: 'bot',
+        name: 'Baba',
+        isBot: true,
+        botDifficulty: 5,
+        handCount: 1,
+        hand: [{ id: 'follow-up-six', rank: '6', suit: otherPlainSuit }]
+    }, { ...hiddenOpponent, handCount: 4 }],
+    battle: [{
+        id: 'covered-pair',
+        attackCard: { id: 'opening-six', rank: '6', suit: plainSuit },
+        defenseCard: { id: 'spent-trump', rank: '9', suit: trumpSuit }
+    }],
+    attackLimit: 5,
+    trumpSuit,
+    talonCount: 12
+};
+assert.strictEqual(
+    Bots.chooseAction(bankBurnedTrump, 'bot', () => 0.5).type,
+    'PASS_ATTACK',
+    'Baba should end the attack and lock a defender-spent trump into the discard'
+);
+assert.strictEqual(
+    Bots.chooseAction({
+        ...bankBurnedTrump,
+        talonCount: 0,
+        players: [bankBurnedTrump.players[0], { ...hiddenOpponent, handCount: 0 }]
+    }, 'bot', () => 0.5).type,
+    'ATTACK',
+    'Baba should keep attacking an empty-handed defender after the talon is gone'
+);
+
 const privacySource = Bots.chooseAction.toString();
 assert(!privacySource.includes('Engine.state'), 'Bot strategy must operate on a private player view, not authoritative hidden hands');
 assert(!privacySource.includes('getCard('), 'Bot strategy must not look up hidden opponent cards');
@@ -108,4 +253,4 @@ for (let difficulty = 1; difficulty <= 5; difficulty++) {
 }
 assert.strictEqual(typeof Bots.DurakBotController.prototype.respondToHumanChat, 'function', 'Durak bots should answer human table chat');
 
-console.log('Durak bots: legal private-view strategy, trump conservation, pickup logic, timing, and Baba dialogue passed.');
+console.log('Durak bots: talon-aware trump conservation, discard banking, legal private-view strategy, timing, and Baba dialogue passed.');

@@ -46,4 +46,16 @@ for (const app of ['index.html', 'president/app.js', 'durak/app.js']) {
     );
 }
 
-console.log('Card themes: all 56 SVG assets, shared persistence controls, face mapping, and back variants passed.');
+for (const stylesheet of ['index.html', 'president/styles.css', 'durak/styles.css']) {
+    const source = fs.readFileSync(path.join(root, stylesheet), 'utf8');
+    assert(
+        source.includes('border: 0.75px solid rgba(2, 6, 23, 0.96)'),
+        `${stylesheet} must use the thin dark illustrated-card edge`
+    );
+    assert(
+        source.includes('100% 100% no-repeat'),
+        `${stylesheet} must fit illustrated backs to the exact card slot`
+    );
+}
+
+console.log('Card themes: all 56 SVG assets, shared persistence controls, exact-fit backs, thin dark edges, face mapping, and back variants passed.');

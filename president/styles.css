@@ -639,8 +639,8 @@ select:focus {
 }
 
 [data-card-theme^="svg-"] .opponent-card {
-    border-color: rgba(255, 255, 255, 0.9);
-    background: #fff var(--card-theme-back-image) center / cover no-repeat;
+    border: 0.75px solid rgba(2, 6, 23, 0.96);
+    background: #020617 var(--card-theme-back-image) center / 100% 100% no-repeat;
 }
 
 [data-card-theme^="svg-"] .opponent-card::after {
@@ -748,6 +748,7 @@ select:focus {
     position: absolute;
     inset: 0;
     z-index: 2;
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: fill;
@@ -759,8 +760,8 @@ select:focus {
 [data-card-theme^="svg-"] .pile-card,
 [data-card-theme^="svg-"] .flight-card {
     padding: 0;
-    border-color: rgba(255, 255, 255, 0.9);
-    background: #fff;
+    border: 0.75px solid rgba(2, 6, 23, 0.96);
+    background: #020617;
 }
 
 [data-card-theme^="svg-"] .playing-card .card-corner,

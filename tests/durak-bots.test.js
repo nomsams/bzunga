@@ -90,11 +90,20 @@ assert(Object.values(babaLines).flat().length >= 15, 'Baba needs a distinct Dura
 assert(Bots.lineFor(5, 'attack', () => 0).includes('Baba'), 'Baba attack dialogue must feel unique');
 for (let difficulty = 1; difficulty <= 5; difficulty++) {
     const dialogue = Object.values(Bots.LINES[difficulty]).flat();
+    assert(dialogue.length >= 58, `Difficulty ${difficulty} needs a deep Durak dialogue rotation`);
     assert(dialogue.some(line => /knock knock/i.test(line)), `Difficulty ${difficulty} needs a knock-knock roast`);
     assert(dialogue.some(line => /roses|violets/i.test(line)), `Difficulty ${difficulty} needs a rhyme roast`);
     assert(dialogue.some(line => /bullshit|clown|bastard|bozo|ass/i.test(line)), `Difficulty ${difficulty} needs sharper disses`);
-    assert(Bots.PROFILES[difficulty].chat >= 0.5, `Difficulty ${difficulty} should comment regularly`);
-    assert(Bots.LINES[difficulty].chat.length >= 6, `Difficulty ${difficulty} needs direct chat replies`);
+    assert(
+        dialogue.filter(line => /fuck|shit|bullshit|clown|bastard|bozo|donkey|arse|idiot|toilet|glue|bollocks|goblin|rat/i.test(line)).length >= 7,
+        `Difficulty ${difficulty} needs a substantial rough table-talk rotation`
+    );
+    assert(
+        !dialogue.some(line => /distribution|expected value|minimum sufficient|profitable continuation|preserve control|public information|strategic pickup/i.test(line)),
+        `Difficulty ${difficulty} should avoid lecture-heavy bot jargon`
+    );
+    assert(Bots.PROFILES[difficulty].chat >= 0.68, `Difficulty ${difficulty} should comment regularly`);
+    assert(Bots.LINES[difficulty].chat.length >= 11, `Difficulty ${difficulty} needs direct chat replies`);
 }
 assert.strictEqual(typeof Bots.DurakBotController.prototype.respondToHumanChat, 'function', 'Durak bots should answer human table chat');
 

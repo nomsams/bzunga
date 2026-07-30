@@ -10,11 +10,11 @@
     if (!Rules) throw new Error('PresidentRules must be loaded before President bots.');
 
     const PROFILES = {
-        1: { name: 'Casual', thinkMin: 900, thinkMax: 2200, passChance: 0.13, chatChance: 0.34 },
-        2: { name: 'Clever', thinkMin: 1200, thinkMax: 3000, passChance: 0.08, chatChance: 0.39 },
-        3: { name: 'Hard', thinkMin: 1600, thinkMax: 3800, passChance: 0.04, chatChance: 0.44 },
-        4: { name: 'Expert', thinkMin: 2100, thinkMax: 5100, passChance: 0.02, chatChance: 0.5 },
-        5: { name: 'Baba Gupta', thinkMin: 2600, thinkMax: 6200, passChance: 0.01, chatChance: 0.68 }
+        1: { name: 'Casual', thinkMin: 900, thinkMax: 2200, passChance: 0.13, chatChance: 0.56 },
+        2: { name: 'Clever', thinkMin: 1200, thinkMax: 3000, passChance: 0.08, chatChance: 0.62 },
+        3: { name: 'Hard', thinkMin: 1600, thinkMax: 3800, passChance: 0.04, chatChance: 0.68 },
+        4: { name: 'Expert', thinkMin: 2100, thinkMax: 5100, passChance: 0.02, chatChance: 0.74 },
+        5: { name: 'Baba Gupta', thinkMin: 2600, thinkMax: 6200, passChance: 0.01, chatChance: 0.88 }
     };
 
     const PHRASES = {
@@ -288,6 +288,174 @@
 
     Object.entries(PRESIDENT_ROASTS.standard).forEach(([category, lines]) => PHRASES[category].push(...lines));
     Object.entries(PRESIDENT_ROASTS.baba).forEach(([category, lines]) => BABA_PHRASES[category].push(...lines));
+
+    const PRESIDENT_RUDER_TABLE = {
+        standard: {
+            intro: [
+                'Welcome, you power-hungry deck goblins. Somebody is leaving with a title and somebody with trauma.',
+                'New election, same bunch of idiots pretending the hand is good.',
+                'Shuffle complete. Dignity may now leave the building.',
+                'May the best player win and the loudest bastard finish last.',
+                'The throne is empty and every clown has brought a folding campaign sign.'
+            ],
+            play: [
+                'Cards down. Mouths shut. Try to keep up.',
+                'There is your new problem, freshly delivered.',
+                'I played {count}. You played yourself before the turn even started.',
+                'Higher rank. Lower morale. Lovely stuff.',
+                'Put that on the pile and the excuses in the bin.',
+                'This move is sponsored by your complete lack of preparation.'
+            ],
+            bigPlay: [
+                'That combo just kicked the fucking door off the cabinet.',
+                'A whole stack of trouble. Count it with your shoes off if needed.',
+                'I brought the army; you brought a strongly worded email.',
+                'That pile has more members than your comeback plan.',
+                'Big play, tiny opposition, perfect balance.',
+                'Look at that beautiful bastard of a combination.'
+            ],
+            pass: [
+                'Pass. Somebody else may polish this turd.',
+                'I am out. Continue making this pile look stupid.',
+                'Nothing from me; your circus has the floor.',
+                'Pass. I have done enough damage without invoicing you.',
+                'I sit this one out and still look more useful.',
+                'Carry on, clowns. I need both hands free to judge you.'
+            ],
+            ace: [
+                'Ace. Get that sad little pile off my table.',
+                'Meeting over. Take your bullshit with you.',
+                'Fresh pile, fresh chance to embarrass yourselves.',
+                'Ace down. Somebody play the tiny funeral trumpet.',
+                'That pile is dead. Do not make me identify the body.',
+                'Clean slate. Unfortunately, the same players remain.'
+            ],
+            lowHand: [
+                'Somebody is nearly out. Wake the hell up.',
+                'Tiny hand spotted. Panic with purpose, you idiots.',
+                'The finish line is open and half the cabinet is licking windows.',
+                'Two cards left somewhere. Stop campaigning and start sabotaging.',
+                'One player is escaping while the rest of you hold a committee meeting.',
+                'Low hand, high danger, zero adult supervision.'
+            ],
+            victory: [
+                'President, baby. You may address the throne from a respectful distance.',
+                'I won. Put your excuses in alphabetical order.',
+                'The chair is mine and the opposition can kiss the upholstery.',
+                'Roses are red, this crown fits my head, you had a whole hand and played like the dead.',
+                'Victory. Somebody give the Slave a mop and a motivational podcast.',
+                'That is how you take office without kissing a single ugly baby.'
+            ],
+            defeat: [
+                'Well, shit. Enjoy the chair before somebody checks the warranty.',
+                'You lucky bastard. Good win, terrible personality.',
+                'I lost the election and gained several new reasons to hate this table.',
+                'Fine, crown the clown. I want a rematch before the speech.',
+                'The cards betrayed me and apparently developed voting rights.',
+                'Enjoy it. Lightning occasionally hits bins too.'
+            ],
+            chat: [
+                '{target}, your mouth won the election and your hand lost the deposit.',
+                'Knock knock. Who is there? Your point. Never mind, it left.',
+                'Roses are red, the palace is grand, you talk a big game with a shit little hand.',
+                'Keep yapping, minister of absolutely fuck-all.',
+                'Your speech needs cards, courage, and a merciful editor.',
+                'The opposition has spoken. The furniture remains unmoved.',
+                'You sound presidential until somebody asks you to play.',
+                'That comeback arrived with no shoes and one tooth.',
+                'Your chat is carrying this campaign on a broken spine.',
+                'Save the manifesto, clown. We can all see the pile.'
+            ]
+        },
+        baba: {
+            intro: [
+                'Baba Gupta has entered. Put the good cards away and the bullshit somewhere visible.',
+                'The title is President. The problem is Baba.',
+                'Baba does not chase power. Power drags over a chair and shuts up.',
+                'Your cards are private. Your panic has its own loudspeaker.',
+                'Welcome, future staff. Baba hopes somebody brought competence.',
+                'Baba is here. The palace has checked its insurance.'
+            ],
+            play: [
+                'Baba put cards down. Put the excuses beside them.',
+                'Higher cards, lower morale. Simple enough for this cabinet.',
+                'This move has three purposes. The first is shutting you up.',
+                'Baba is not reading your hand. Your face keeps leaking spoilers.',
+                'Clean play, dirty consequence. Gupta policy.',
+                'Baba plays once. Your whole government starts coughing.'
+            ],
+            bigPlay: [
+                'That is not a combination. That is a fucking eviction notice.',
+                'Count the cards slowly; Baba wants every stage of grief visible.',
+                'Baba brought a whole government. You brought a folding stool.',
+                'A fat pile for Baba and a thin future for you.',
+                'This combo has diplomatic immunity and terrible manners.',
+                'Baba dropped the cabinet. Your campaign is now a floor stain.'
+            ],
+            pass: [
+                'Baba passes. The clown committee may continue.',
+                'Not wasting a card on that sad little pile.',
+                'You see surrender because nuance left your house years ago.',
+                'Baba sits out one vote and still owns the room.',
+                'Pass. Baba has already taken enough of your dignity.',
+                'Continue without Baba. Even disasters need independent practice.'
+            ],
+            ace: [
+                'Ace. Pack up that shitty little plan.',
+                'Meeting over. Baba has deleted the evidence.',
+                'Your sequence ends here, face-first and without applause.',
+                'Fresh pile. Same nightmare. Baba starts.',
+                'Ace down. The opposition may now return to whining.',
+                'Baba cleared the table and several delusions.'
+            ],
+            lowHand: [
+                'Somebody is nearly out. Wake up, you upholstered donkeys.',
+                'Tiny hand at the table. Baba is about to become aggressively unhelpful.',
+                'Your cards are disappearing. Sadly, the confidence remains.',
+                'The finish line is open and half this table is eating glue.',
+                'One player is escaping. The rest of you look professionally useless.',
+                'Low-hand alarm. Baba recommends panic and better parents.'
+            ],
+            victory: [
+                'President Gupta. The title finally stopped wasting time.',
+                'Baba won. Opposition folded, stacked, and put back in the box.',
+                'Baba did not inherit the throne. Baba repossessed it.',
+                'Power transferred directly into Babaâ€™s comfortable chair.',
+                'Kiss the ring, shake the hand, or simply stop touching the cards.',
+                'Roses are red, your cabinet is through, Baba owns the palace and the punchlines too.'
+            ],
+            defeat: [
+                'You won. Do not make that face; luck is not a personality.',
+                'Enjoy the chair, you lucky bastard. Baba knows where you live: this table.',
+                'The throne is temporarily leased. Try not to leave a smell.',
+                'Fine. Baba lost one. Your victory speech still needs editing.',
+                'Baba congratulates you under protest and with both middle fingers metaphorically raised.',
+                'Take the crown. Baba is taking notes and the good snacks.'
+            ],
+            chat: [
+                '{target}, your mouth is President and your hand is unpaid palace staff.',
+                'Baba processed your message. The useful part died in customs.',
+                'The chat is public. Unfortunately, so is your desperation.',
+                'Continue speaking. Baba likes easy work with live commentary.',
+                'You are arguing with the pile. The pile has blocked your number.',
+                'Knock knock. Baba Gupta. Your comeback has been condemned.',
+                'Roses are red, the royal carpet is blue, your message was bullshit and your last move was too.',
+                'Keep talking shit, {target}. Baba needs background music.',
+                'Your insult has a crown. Your gameplay cleans the toilets.',
+                'Baba would debate you, but beating you wastes fewer syllables.',
+                'That speech had balls. Your hand is still looking for its pair.',
+                'You sound dangerous until Baba opens both eyes.'
+            ]
+        }
+    };
+
+    Object.entries(PRESIDENT_RUDER_TABLE.standard).forEach(([category, lines]) => PHRASES[category].push(...lines));
+    Object.entries(PRESIDENT_RUDER_TABLE.baba).forEach(([category, lines]) => BABA_PHRASES[category].push(...lines));
+
+    const NERDY_PRESIDENT_TALK = /\b(probability distribution|public information|optimal|mathematically compulsory|outlier|forecast|strategic value|hand structure|expected value)\b/i;
+    Object.keys(BABA_PHRASES).forEach(category => {
+        BABA_PHRASES[category] = BABA_PHRASES[category].filter(line => !NERDY_PRESIDENT_TALK.test(line));
+    });
 
     const interpolate = (line, context = {}) => line.replace(/\{(\w+)\}/g, (match, key) => {
         const value = context[key];

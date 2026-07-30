@@ -42,7 +42,12 @@ for (const persona of personaTypes) {
     countAndCheckPool(directBank.fallback, `${persona}.fallback`, 4);
     assert(eventBank.banter.some(line => /knock knock/i.test(line)), `${persona} needs a knock-knock roast`);
     assert(eventBank.banter.some(line => /roses|violets/i.test(line)), `${persona} needs a rhyme roast`);
-    assert(directBank.insult.length >= 13, `${persona} needs a deep direct-diss rotation`);
+    assert(directBank.insult.length >= 19, `${persona} needs a deep direct-diss rotation`);
+    const roughTableTalk = [...eventBank.banter, ...BotConfig.generalReplies[persona], ...directBank.insult];
+    assert(
+        roughTableTalk.filter(line => /fuck|shit|ass|arse|bastard|bozo|clown|muppet|idiot|donkey|garbage|toilet|fart|dumb|stupid|bollocks|rat|goblin|villain|wet sock|trash|rubbish|disaster|criminal/i.test(line)).length >= 15,
+        `${persona} needs a substantial rough table-talk rotation`
+    );
 
     for (const intent of ['thanks', 'smalltalk', 'pause']) {
         countAndCheckPool(directBank[intent], `${persona}.${intent}`, 3);
@@ -62,7 +67,11 @@ for (const [index, pattern] of BotConfig.elizaPatterns.entries()) {
     countAndCheckPool(pattern.replies, `elizaPatterns[${index}]`, 1);
 }
 
-assert(totalDialogueLines >= 1000, `Expected at least 1000 dialogue lines, found ${totalDialogueLines}`);
+assert(totalDialogueLines >= 1350, `Expected at least 1350 dialogue lines, found ${totalDialogueLines}`);
+assert(
+    Object.values(BotConfig.profiles).every(profile => profile.extroversion >= 0.8),
+    'Every Bazunga bot should speak up regularly'
+);
 
 Bot.usedLines = {};
 Bot.recentLines = {};

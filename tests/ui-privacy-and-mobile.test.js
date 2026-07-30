@@ -32,6 +32,7 @@ const scheduledTimers = [];
 const context = {
     result: {},
     App: { animEnabled: true },
+    CardTheme: { get: () => 'classic', isIllustrated: () => false },
     document: { createElement: () => new FakeElement() },
     clearTimeout: () => {},
     setTimeout: callback => {

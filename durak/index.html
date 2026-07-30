@@ -34,6 +34,10 @@
             <div class="eyebrow">A CLASSIC 36-CARD BATTLE</div>
             <h1>THE FOOL<br><span>/ DURAK</span></h1>
             <p class="lobby-copy">Beat every attack, preserve your trumps, and do not be the last player left holding cards.</p>
+            <label for="card-theme-select">
+                Card design
+                <select id="card-theme-select" aria-label="Card design"></select>
+            </label>
             <label for="player-name">Your table name</label>
             <input id="player-name" type="text" maxlength="24" placeholder="Enter your name" autocomplete="name">
             <button id="btn-host" class="primary large">CREATE A DURAK TABLE</button>
@@ -91,7 +95,10 @@
                 <strong id="status-text">Waiting for the attack…</strong>
                 <span id="activity-text"></span>
             </div>
-            <button id="btn-table-rules" class="header-button">RULES</button>
+            <div class="header-actions">
+                <button id="btn-card-theme" class="header-button" data-short-label="OLD">CARDS: CLASSIC</button>
+                <button id="btn-table-rules" class="header-button">RULES</button>
+            </div>
         </header>
 
         <div id="table-stage">
@@ -219,6 +226,7 @@
     <div id="animation-layer" aria-hidden="true"></div>
 </main>
 
+<script src="../card-theme.js"></script>
 <script src="rules.js"></script>
 <script src="engine.js"></script>
 <script src="bots.js"></script>

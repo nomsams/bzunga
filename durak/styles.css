@@ -426,6 +426,11 @@ select:focus {
     color: var(--gold);
 }
 
+.header-actions {
+    display: flex;
+    gap: 5px;
+}
+
 .status-copy {
     min-width: 0;
     text-align: center;
@@ -576,6 +581,12 @@ select:focus {
     margin-left: 0;
 }
 
+[data-card-theme^="svg-"] .card-back-mini,
+[data-card-theme^="svg-"] .playing-card.card-back {
+    border-color: rgba(255, 255, 255, 0.9);
+    background: #fff var(--card-theme-back-image) center / cover no-repeat;
+}
+
 /* Cards and battle */
 .playing-card {
     position: relative;
@@ -596,6 +607,28 @@ select:focus {
 
 .playing-card.red {
     color: #c52742;
+}
+
+.svg-card-art {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+[data-card-theme^="svg-"] .playing-card:not(.card-back) {
+    padding: 0;
+    border-color: rgba(255, 255, 255, 0.9);
+    background: #fff;
+}
+
+[data-card-theme^="svg-"] .playing-card:not(.card-back) .card-corner,
+[data-card-theme^="svg-"] .playing-card:not(.card-back) .card-suit {
+    display: none;
 }
 
 .playing-card .card-corner {
@@ -783,6 +816,11 @@ select:focus {
     border-color: rgba(255,255,255,0.2);
     background: rgba(0,0,0,0.16);
     box-shadow: none;
+}
+
+[data-card-theme^="svg-"] #talon-stack:not(.empty) {
+    border-color: rgba(255, 255, 255, 0.9);
+    background: #fff var(--card-theme-back-image) center / cover no-repeat;
 }
 
 .talon-meta,
@@ -1249,6 +1287,17 @@ select:focus {
         min-height: 54px;
         padding: 6px 8px;
         gap: 7px;
+    }
+
+    .header-actions { gap: 3px; }
+    #btn-card-theme {
+        width: 42px;
+        padding-inline: 5px;
+        font-size: 0;
+    }
+    #btn-card-theme::after {
+        content: attr(data-short-label);
+        font-size: 0.48rem;
     }
 
     .phase-chip,

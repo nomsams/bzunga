@@ -278,6 +278,12 @@
                 window.location.replace(durakUrl.href);
                 return;
             }
+            CardTheme.bind({
+                selectIds: ['card-theme-select'],
+                buttonIds: ['btn-card-theme'],
+                assetBase: '../',
+                onChange: () => App.gameState && UI.render(App.gameState)
+            });
             if (joinId) document.getElementById('join-id').value = joinId.replace(/[^a-zA-Z0-9-]/g, '');
 
             document.getElementById('btn-host').onclick = event => {
@@ -511,6 +517,7 @@
             const controlClass = card.rank === 'A' || card.rank === '2' ? 'control-card' : '';
             return `
                 <span class="${className} ${redClass} ${controlClass}">
+                    ${CardTheme.faceMarkup(card, '../')}
                     <span class="card-corner"><b>${card.rank}</b><span>${card.suit}</span></span>
                     <span class="card-suit">${card.suit}</span>
                     ${card.rank === '2' ? '<span class="wild-mark">WILD</span>' : ''}
@@ -563,6 +570,7 @@
                         aria-label="${card.rank} of ${UI.suitName(card.suit)}${selected ? ', selected' : ''}"
                         aria-pressed="${selected}"
                         ${disabled ? 'disabled' : ''}>
+                        ${CardTheme.faceMarkup(card, '../')}
                         <span class="card-corner"><b>${card.rank}</b><span>${card.suit}</span></span>
                         <span class="card-suit">${card.suit}</span>
                         ${card.rank === '2' ? '<span class="wild-mark">WILD</span>' : ''}

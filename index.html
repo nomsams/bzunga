@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="card-theme.js"></script>
 <script src="bot.js"></script>
 <style>
     :root {
@@ -114,6 +115,35 @@
     .card .val.bottom { transform: rotate(180deg); margin-top: auto; }
     .card.red .card-front { color: #ef4444; }
     .card.black .card-front { color: #1e293b; }
+    .svg-card-art {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+        border-radius: inherit;
+        pointer-events: none;
+    }
+    [data-card-theme^="svg-"] .card-front {
+        padding: 0;
+        border-color: rgba(255,255,255,0.9);
+        background: #fff;
+    }
+    [data-card-theme^="svg-"] .card-back {
+        border: 1px solid rgba(255,255,255,0.9);
+        background: #fff var(--card-theme-back-image) center / cover no-repeat;
+    }
+    [data-card-theme^="svg-"] .card-back::after { display: none; }
+    .card-theme-setting {
+        display: block;
+        margin: 0 0 12px;
+        color: #cbd5e1;
+        text-align: left;
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+    }
+    .card-theme-setting select { margin-bottom: 0; }
 
     .card.disconnected { filter: grayscale(100%) opacity(0.5); pointer-events: none; }
     .player-badge.disconnected { filter: grayscale(100%) opacity(0.5); }
@@ -408,7 +438,7 @@
             overflow: hidden;
             font-size: 0 !important;
         }
-        #btn-toggle-layout::after, #btn-toggle-anim::after {
+        #btn-toggle-layout::after, #btn-toggle-anim::after, #btn-card-theme::after, #btn-rules-table::after {
             content: attr(data-short-label);
             font-size: 0.55rem;
             font-weight: 800;
@@ -620,6 +650,10 @@
                     <span>Attack, defend and escape the fool</span>
                 </a>
             </div>
+            <label class="card-theme-setting" for="card-theme-select">
+                CARD DESIGN
+                <select id="card-theme-select" aria-label="Card design"></select>
+            </label>
             <input type="text" id="player-name" placeholder="Enter your name" maxlength="12">
             <button id="btn-host">Create Game</button>
             <div style="margin: 15px 0; color: #64748b; font-weight: 600; font-size: 0.85rem;">OR JOIN EXISTING</div>
@@ -684,6 +718,7 @@
                 <div style="display: flex; gap: 5px;">
                     <button id="btn-toggle-layout" class="secondary" data-short-label="GRID" aria-label="Switch card layout" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Layout: GRID</button>
                     <button id="btn-toggle-anim" class="secondary" data-short-label="FX ON" aria-label="Toggle animations" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Anim: ON</button>
+                    <button id="btn-card-theme" class="secondary" data-short-label="OLD" aria-label="Change card design" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">CARDS: CLASSIC</button>
                     <button id="btn-rules-table" class="secondary" data-short-label="RULES" aria-label="Open Bazunga rules" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Rules</button>
                 </div>
             </div>
@@ -1702,6 +1737,12 @@ const UI = {
             window.location.replace(durakUrl.href);
             return;
         }
+        CardTheme.bind({
+            selectIds: ['card-theme-select'],
+            buttonIds: ['btn-card-theme'],
+            assetBase: '',
+            onChange: () => App.gameState && UI.render(App.gameState)
+        });
         if (joinId) {
             // Clean the join ID with same regex used in manual join
             const cleanJoinId = joinId.replace(/[^a-zA-Z0-9-]/g, '');
@@ -2081,7 +2122,7 @@ const UI = {
 
         clearTimeout(el._faceClearTimer);
         el._faceClearTimer = null;
-        const faceKey = `${card.value}:${card.suit}`;
+        const faceKey = `${CardTheme.get()}:${card.value}:${card.suit}`;
         if (front.dataset.faceKey === faceKey) {
             front.setAttribute('aria-hidden', 'false');
             return;
@@ -2089,6 +2130,19 @@ const UI = {
         front.dataset.faceKey = faceKey;
         front.replaceChildren();
         front.setAttribute('aria-hidden', 'false');
+        if (CardTheme.isIllustrated()) {
+            const artUrl = CardTheme.getFaceUrl(card, '');
+            if (artUrl) {
+                const art = document.createElement('img');
+                art.className = 'svg-card-art';
+                art.src = artUrl;
+                art.alt = '';
+                art.draggable = false;
+                art.setAttribute('aria-hidden', 'true');
+                front.appendChild(art);
+                return;
+            }
+        }
         const topValue = document.createElement('div'); topValue.className = 'val'; topValue.textContent = card.value;
         const suit = document.createElement('div'); suit.className = 'suit'; suit.textContent = card.suit;
         const bottomValue = document.createElement('div'); bottomValue.className = 'val bottom'; bottomValue.textContent = card.value;

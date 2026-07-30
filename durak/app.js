@@ -226,6 +226,12 @@
                 window.location.replace(url.href);
                 return;
             }
+            CardTheme.bind({
+                selectIds: ['card-theme-select'],
+                buttonIds: ['btn-card-theme'],
+                assetBase: '../',
+                onChange: () => App.gameState && UI.render(App.gameState)
+            });
             if (joinId) document.getElementById('join-id').value = joinId.replace(/[^a-zA-Z0-9-]/g, '');
 
             document.getElementById('btn-host').onclick = event => {
@@ -465,6 +471,7 @@
             if (!card || card.hidden) return '<div class="playing-card card-back"></div>';
             return `
                 <div class="playing-card ${card.isRed ? 'red' : ''} ${classes}" data-card-id="${Utils.escape(card.id)}">
+                    ${CardTheme.faceMarkup(card, '../')}
                     <span class="card-corner">${Utils.escape(card.rank)}<small>${Utils.escape(card.suit)}</small></span>
                     <span class="card-suit">${Utils.escape(card.suit)}</span>
                     <span class="card-corner bottom">${Utils.escape(card.rank)}<small>${Utils.escape(card.suit)}</small></span>

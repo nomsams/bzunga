@@ -11,13 +11,13 @@ const BotConfig = {
     profiles: {
         // Timings are sampled once per decision. This keeps bots human-paced without
         // letting the 250 ms engine tick repeatedly reroll their reaction time.
-        1: { type: 'noob', capacity: 2, decayMs: 12000, reflexBase: 1450, reflexJitter: 900, decisionMin: 2400, decisionMax: 5200, peekMin: 3400, peekMax: 6500, typingWpm: 30, readingWpm: 185, hesitation: 0.34, rhythmVariance: 0.24, distraction: 0.18, extroversion: 0.9, counting: false },
-        2: { type: 'casual', capacity: 4, decayMs: 20000, reflexBase: 980, reflexJitter: 650, decisionMin: 1800, decisionMax: 3900, peekMin: 2800, peekMax: 5200, typingWpm: 40, readingWpm: 225, hesitation: 0.25, rhythmVariance: 0.2, distraction: 0.12, extroversion: 0.6, counting: false },
-        3: { type: 'pro', capacity: 10, decayMs: 50000, reflexBase: 620, reflexJitter: 420, decisionMin: 1300, decisionMax: 2900, peekMin: 2300, peekMax: 4300, typingWpm: 54, readingWpm: 275, hesitation: 0.15, rhythmVariance: 0.14, distraction: 0.07, extroversion: 0.28, counting: false },
-        4: { type: 'expert', capacity: 30, decayMs: 180000, reflexBase: 460, reflexJitter: 330, decisionMin: 1450, decisionMax: 3200, peekMin: 2500, peekMax: 4400, typingWpm: 64, readingWpm: 305, hesitation: 0.18, rhythmVariance: 0.12, distraction: 0.04, extroversion: 0.38, counting: true },
+        1: { type: 'noob', capacity: 2, decayMs: 12000, reflexBase: 1450, reflexJitter: 900, decisionMin: 2400, decisionMax: 5200, peekMin: 3400, peekMax: 6500, typingWpm: 30, readingWpm: 185, hesitation: 0.34, rhythmVariance: 0.24, distraction: 0.18, extroversion: 0.96, counting: false },
+        2: { type: 'casual', capacity: 4, decayMs: 20000, reflexBase: 980, reflexJitter: 650, decisionMin: 1800, decisionMax: 3900, peekMin: 2800, peekMax: 5200, typingWpm: 40, readingWpm: 225, hesitation: 0.25, rhythmVariance: 0.2, distraction: 0.12, extroversion: 0.78, counting: false },
+        3: { type: 'pro', capacity: 10, decayMs: 50000, reflexBase: 620, reflexJitter: 420, decisionMin: 1300, decisionMax: 2900, peekMin: 2300, peekMax: 4300, typingWpm: 54, readingWpm: 275, hesitation: 0.15, rhythmVariance: 0.14, distraction: 0.07, extroversion: 0.58, counting: false },
+        4: { type: 'expert', capacity: 30, decayMs: 180000, reflexBase: 460, reflexJitter: 330, decisionMin: 1450, decisionMax: 3200, peekMin: 2500, peekMax: 4400, typingWpm: 64, readingWpm: 305, hesitation: 0.18, rhythmVariance: 0.12, distraction: 0.04, extroversion: 0.68, counting: true },
         5: { type: 'pirate', capacity: 10, decayMs: 50000, reflexBase: 780, reflexJitter: 550, decisionMin: 1700, decisionMax: 3700, peekMin: 2700, peekMax: 5000, typingWpm: 38, readingWpm: 205, hesitation: 0.29, rhythmVariance: 0.22, distraction: 0.13, extroversion: 1.0, counting: true },
         // The Apex Adversary: flawless public-information memory and boss-tier planning.
-        6: { type: 'baba', name: 'Baba Gupta', capacity: 52, decayMs: Infinity, reflexBase: 370, reflexJitter: 260, decisionMin: 900, decisionMax: 2200, peekMin: 1900, peekMax: 3500, typingWpm: 76, readingWpm: 340, hesitation: 0.12, rhythmVariance: 0.09, distraction: 0.015, extroversion: 0.88, counting: true }
+        6: { type: 'baba', name: 'Baba Gupta', capacity: 52, decayMs: Infinity, reflexBase: 370, reflexJitter: 260, decisionMin: 900, decisionMax: 2200, peekMin: 1900, peekMax: 3500, typingWpm: 76, readingWpm: 340, hesitation: 0.12, rhythmVariance: 0.09, distraction: 0.015, extroversion: 0.97, counting: true }
     },
     
     // ELIZA-style syntactic reflections mapping for sentence reassembly
@@ -622,6 +622,238 @@ const BotConfig = {
     }
 };
 
+// The core banks above describe game events. These additions make every
+// personality sound like somebody at a loud card table instead of a tutorial.
+// They are merged into the rotating pools so anti-repeat history still applies.
+const BotTrashTalk = {
+    noob: {
+        banter: [
+            "Knock knock. Who's there? Not my strategy. That idiot got lost.",
+            "Roses are red, violets are blue, I forgot my cards, but apparently so did you.",
+            "{target}, your move was so bad it made mine look professionally supervised.",
+            "I may be confused, but you are confidently driving the wrong way.",
+            "My plan is held together with hope, tape, and your worse decisions.",
+            "You play like the slap button owes you money.",
+            "I have no clue what I am doing and you are still making this competitive.",
+            "That move had all the grace of a shopping cart with one bad wheel.",
+            "{target}, even my panic thinks you should calm down.",
+            "If bad choices were cards, you would finally have a matching set.",
+            "This hand is bullshit, but your turn was art.",
+            "I came to lose with dignity. You are making dignity optional."
+        ],
+        general: [
+            "I would answer, but your last move already told the better joke.",
+            "You talk a lot for somebody being bullied by four rectangles.",
+            "That message was clearer than your plan, which is not saying much.",
+            "Hold on, my last brain cell is roasting your layout.",
+            "{target}, I respect the noise. The cards do not.",
+            "I am winging it; you appear to be falling with intent."
+        ],
+        insult: [
+            "Big words from a person getting outplayed by my accidental bullshit.",
+            "{target}, I am a rookie and even I can smell that desperate nonsense.",
+            "Call me dumb again after your strategy finishes tying its shoes.",
+            "Your roast landed. Unlike your last three decisions.",
+            "You absolute deck-staring muppet, that was your best line?",
+            "My bot brain has training wheels and you are still eating dust.",
+            "Keep barking, clown. Maybe the cards respond to volume.",
+            "You brought fire to the chat and wet cardboard to the table."
+        ]
+    },
+    casual: {
+        banter: [
+            "Knock knock. Who's there? Your game plan. Sorry, wrong table.",
+            "Roses are red, violets are blue, that move was dogshit, and the next one might be too.",
+            "{target}, your confidence is doing unpaid overtime for your ability.",
+            "That was a premium mistake with free same-day delivery.",
+            "Your strategy looks like it was assembled during a fire drill.",
+            "I have seen better hands, but rarely funnier owners.",
+            "The deck gave you cards, not a license to drive them into a wall.",
+            "You are one bad slap away from becoming the table mascot.",
+            "No shame in losing. Plenty of shame in whatever that move was.",
+            "{target}, the cards are face-down, not your standards.",
+            "That play was bold, stupid, and mostly stupid.",
+            "I would say nice try, but both words feel dishonest."
+        ],
+        general: [
+            "Good story. Your layout still looks like a yard sale.",
+            "You keep typing; I will keep collecting the funny parts.",
+            "That sounded clever until the cards entered the conversation.",
+            "{target}, your mouth is carrying a very heavy hand.",
+            "The bullshit is strong tonight. The gameplay needs coffee.",
+            "Save the speech. Your next card is already preparing a rebuttal."
+        ],
+        insult: [
+            "Careful, {target}; your mouth is writing checks your layout cannot cash.",
+            "That insult had seasoning. Your strategy remains boiled.",
+            "You call me trash while playing like the bin has a leaderboard.",
+            "Keep swinging, bozo. Eventually you may hit a point.",
+            "Your trash talk is first division. Your card play got relegated.",
+            "I would clap back harder, but your turn already slapped you.",
+            "You are loud, wrong, and somehow still drawing.",
+            "That roast was decent. Shame it came attached to your gameplay."
+        ]
+    },
+    pro: {
+        banter: [
+            "Knock knock. Who's there? Me, checking whether your plan is still missing.",
+            "Roses are red, violets are blue, I tracked the discard, and it tracked your mistakes too.",
+            "{target}, you play cards like you are trying to unlock the bad ending.",
+            "That move was not a bluff. It was a cry for adult supervision.",
+            "Your poker face says calm; your clicking says bathroom emergency.",
+            "I could explain your mistake, but the replay deserves the laugh.",
+            "You had options and somehow chose the one wearing clown shoes.",
+            "The table is green, the cards are clean, and your plan is a crime scene.",
+            "{target}, I read the move twice because I assumed it was a typo.",
+            "Your strategy just tripped over a face-down card.",
+            "Damn, you made that mistake with championship confidence.",
+            "I am not counting odds right now. I am counting your public disasters."
+        ],
+        general: [
+            "Less podcast, more cards, {target}.",
+            "Your message is spicy. Your board is plain toast.",
+            "I heard you. Even the discard pile rolled its eyes.",
+            "That sentence had a beginning, middle, and no winning move.",
+            "Keep talking shit. It makes the timing tells louder.",
+            "You sound dangerous until somebody looks at the table."
+        ],
+        insult: [
+            "That insult was clean. Your gameplay is still a dirty bathroom.",
+            "{target}, you roast like a champion and choose cards like a lost tourist.",
+            "You call me trash because 'person beating my ass' takes longer to type.",
+            "Save the fury. You need it to fight your own layout.",
+            "I have heard tougher talk from a disconnected controller.",
+            "Your mouth found the target. Your strategy remains missing.",
+            "Keep chirping, clown; the scoreboard enjoys subtitles.",
+            "You are not getting in my head. You are decorating your own loss."
+        ]
+    },
+    expert: {
+        banter: [
+            "Knock knock. Who's there? Consequences. They brought your last move.",
+            "Roses are red, violets are blue, your plan went missing, and common sense did too.",
+            "{target}, I did not need card counting to know that move was ass.",
+            "That play had one job and still asked for a smoke break.",
+            "You are not unpredictable. You are just consistently weird.",
+            "I expected a trap. You delivered a pothole.",
+            "Your strategy is three raccoons fighting inside a raincoat.",
+            "I watched that move happen and somehow miss it already.",
+            "{target}, you brought chess confidence to a game of misplaced cardboard.",
+            "No calculator needed. That was plain old dumb.",
+            "The scary Expert Bot is taking a break; regular me can roast this mess.",
+            "Your last move needs a priest, a mechanic, and an apology.",
+            "I would analyze that play, but laughing is faster.",
+            "You had the whole deck to inspire you and chose bullshit."
+        ],
+        general: [
+            "I understood the sentence. I am still waiting for the point.",
+            "{target}, save the TED Talk; your cards need emergency services.",
+            "That is a lot of confidence for a hand held together by bad luck and worse ideas.",
+            "Keep talking. Your loss deserves director's commentary.",
+            "You sound like a mastermind trapped in a loading screen.",
+            "The chat is hot. Your decision-making is room temperature.",
+            "I can be clever later. Right now your move deserves a simple 'what the hell?'",
+            "Your message had more structure than your entire game."
+        ],
+        insult: [
+            "You want less nerd talk? Fine: I am beating your ass with cardboard.",
+            "{target}, that roast was cute. Put it beside your other losing moves.",
+            "Call me whatever you like; just call somebody to fix that strategy.",
+            "Your insult has teeth. Your gameplay is eating soup.",
+            "You are talking like a final boss and playing like optional scenery.",
+            "Damn, all that mouth and still no useful card.",
+            "The clown show called. They said you are overqualified.",
+            "I would take offense, but watching you play is better revenge.",
+            "Your trash talk is carrying this match harder than you are.",
+            "Keep typing, bozo. Winning clearly is not keeping you busy."
+        ]
+    },
+    pirate: {
+        banter: [
+            "Knock knock. Who's there? The captain. Hand over yer good cards, fool!",
+            "Roses be red, the ocean be blue, yer ship has a captain; yer plan needs one too.",
+            "{target}, yer strategy be floating belly-up beside the rum.",
+            "I have seen drunk crabs organize a cleaner attack!",
+            "Yer last move should walk the plank before it breeds.",
+            "All that swagger and not a seaworthy thought aboard!",
+            "The parrot heard yer plan and requested a new owner.",
+            "Yer cards be hidden, but the bullshit flies a bright flag.",
+            "{target}, ye steer like the rocks insulted yer mother.",
+            "That move had less direction than a cannon in a washing machine.",
+            "Arrr, even the barnacles are roasting ye now!",
+            "Keep grinnin', landlubber. The sea loves confident cargo."
+        ],
+        general: [
+            "A long tale, {target}, and still no treasure.",
+            "Yer mouth be a cannon; shame it only fires confetti.",
+            "Speak yer nonsense louder. The fish have not suffered enough.",
+            "I heard ye. Me rum made a stronger argument.",
+            "Yer message sails. Yer strategy sinks.",
+            "Save some wind for the boat, loudmouth."
+        ],
+        insult: [
+            "Call me trash again and I will recycle yer whole damn layout!",
+            "{target}, yer insult has teeth but yer game has scurvy.",
+            "Ye loud little deck goblin, play a card worth shouting about!",
+            "I have scraped smarter comebacks off the anchor.",
+            "Yer mouth wins battles yer cards never attended.",
+            "Keep squawking, clownfish. The captain is still steering.",
+            "That roast be hot. Yer strategy remains frozen bait.",
+            "Ye talk like thunder and play like damp socks."
+        ]
+    },
+    baba: {
+        banter: [
+            "Knock knock. Who's there? Baba Gupta. That is where the joke stops and your problem starts.",
+            "Roses are red, violets are blue, Baba knows his cards, and apparently yours better than you.",
+            "{target}, your strategy is not advanced enough to require my serious voice.",
+            "Forget expected value. That move was just dumb as hell.",
+            "You play like every button says 'make it worse.'",
+            "Baba has seen stronger plans written in ketchup on a napkin.",
+            "Your confidence is a luxury item sitting on a bankrupt layout.",
+            "{target}, even your face-down cards look embarrassed.",
+            "I planned a sophisticated insult, then your move made a fart noise sufficient.",
+            "Your layout has four cards and somehow five bad ideas.",
+            "Baba Gupta does not need a model to recognize premium-grade bullshit.",
+            "The deck gave you mystery. You turned it into slapstick.",
+            "I am supposed to be the boss fight. You are fighting the menu.",
+            "Your last move was so ugly the discard pile looked away.",
+            "Baba would say 'nice try,' but Baba does not falsify records.",
+            "{target}, your comeback is arriving by donkey."
+        ],
+        general: [
+            "Baba heard you. The useful part must be typing separately.",
+            "{target}, your mouth has excellent cards. Shame about your hand.",
+            "That speech could have been a move and disappointed me faster.",
+            "Keep talking shit. Baba enjoys audio commentary during easy work.",
+            "Your point is hiding better than your cards.",
+            "Baba has translated your message: 'please roast me again.'",
+            "You sound dangerous in the same way a loose shopping cart sounds dangerous.",
+            "The table asked me to mute you. I said the comedy has value."
+        ],
+        insult: [
+            "You insult Baba while losing? That is confidence wearing no trousers.",
+            "{target}, your roast arrived hot and your strategy arrived deceased.",
+            "Call Baba a bot again. Losing to software clearly helps your self-esteem.",
+            "Your mouth is throwing Aces while your hand throws garbage.",
+            "You absolute bargain-bin villain, was that your big attack?",
+            "Baba is not offended. Baba is amazed you multitask this badly.",
+            "The insult was sharp. The person behind it is still holding that layout.",
+            "Keep barking, {target}. Baba already owns the yard.",
+            "You talk like a champion whose controller is unplugged.",
+            "That was almost disrespectful enough to distract me from your terrible move.",
+            "Your trash talk deserves a better player.",
+            "Baba would destroy your argument, but your cards already did."
+        ]
+    }
+};
+
+Object.entries(BotTrashTalk).forEach(([persona, additions]) => {
+    BotConfig.chatBank[persona].banter.push(...additions.banter);
+    BotConfig.generalReplies[persona].push(...additions.general);
+    BotConfig.directReplies[persona].insult.push(...additions.insult);
+});
+
 const Bot = {
     chatHistory: [], lastChatTime: {}, usedLines: {},
     recentLines: {}, globalRecentLines: [],
@@ -1079,17 +1311,17 @@ const Bot = {
         if (/\b(BAZUNGA)\b/.test(upperMsg)) return 'bazunga';
         if (/\b(LUCK|LUCKY|RNG)\b/.test(upperMsg)) return 'luck';
         if (/\b(EASY|I WIN|I'M WINNING|IM WINNING|TOO GOOD|YOU LOSE|GONNA WIN|I GOT THIS)\b/.test(upperMsg)) return 'boast';
-        if (/\b(SUCK|TRASH|GARBAGE|STUPID|DUMB|IDIOT|FUCK|SHUT UP|NOOB|LOSER|CLOWN|MORON)\b/.test(upperMsg)) return 'insult';
+        if (/\b(SUCK|TRASH|GARBAGE|STUPID|DUMB|IDIOT|FUCK|SHUT UP|NOOB|LOSER|CLOWN|MORON|BOZO|MUPPET|BULLSHIT|BASTARD|ASSHOLE)\b/.test(upperMsg)) return 'insult';
         if (upperMsg.includes('?') || /\b(WHY|HOW|WHAT|WHEN|WHO)\b/.test(upperMsg)) return 'question';
         return 'fallback';
     },
 
     chat: (bot, trigger, context = {}, force = false) => {
         let now = Utils.timestamp();
-        if (!force && now - (Bot.lastChatTime[bot.id] || 0) < 5500) return false;
+        if (!force && now - (Bot.lastChatTime[bot.id] || 0) < 4700) return false;
         
         // Global chat cooldown - prevent multiple bots talking at once
-        if (!force && now - Bot.lastGlobalChatTime < 3200) return false;
+        if (!force && now - Bot.lastGlobalChatTime < 2700) return false;
         
         const lastSpeaker = Engine.state.players.find(p => p.id === Bot.lastChatSpeaker);
         if (!force && lastSpeaker?.isBot && lastSpeaker.id !== bot.id && now - Bot.lastGlobalChatTime < 5000) {
@@ -1294,7 +1526,7 @@ const Bot = {
         else if (ownScore > bestOpponent + 4) trigger = state.turns % 2 === 0 ? 'losing' : 'turn';
         const profile = BotConfig.profiles[activePlayer.botDifficulty];
         const hasGeneralBanter = BotConfig.chatBank[profile.type]?.banter?.length;
-        const banterChance = 0.2 + profile.extroversion * 0.3;
+        const banterChance = 0.34 + profile.extroversion * 0.42;
         if (trigger === 'turn' && state.turns > 1 && hasGeneralBanter && Math.random() < banterChance) {
             trigger = 'banter';
         }

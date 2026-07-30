@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { PresidentBotBrain, PHRASES, BABA_PHRASES } = require('../president/bots.js');
+const { PresidentBotBrain, PHRASES, BABA_PHRASES, PROFILES } = require('../president/bots.js');
 const Rules = require('../president/rules.js');
 
 const card = (id, rank, ownerId = 'bot', suit = '♣') => ({
@@ -14,7 +14,12 @@ for (const collection of [PHRASES, BABA_PHRASES]) {
     for (const category of ['intro', 'play', 'bigPlay', 'pass', 'ace', 'lowHand', 'victory', 'defeat', 'chat']) {
         assert(collection[category].length >= 4, `${category} needs conversational variety`);
     }
+    const fullDialogue = Object.values(collection).flat();
+    assert(fullDialogue.some(line => /knock knock/i.test(line)), 'President bots need knock-knock trash talk');
+    assert(fullDialogue.some(line => /roses|violets/i.test(line)), 'President bots need rhyme roasts');
+    assert(fullDialogue.some(line => /bullshit|clown|bastard|bozo/i.test(line)), 'President bots need sharper table disses');
 }
+assert(Object.values(PROFILES).every(profile => profile.chatChance >= 0.34), 'Every President bot should speak up regularly');
 
 const bot = {
     id: 'bot',

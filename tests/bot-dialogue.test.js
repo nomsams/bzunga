@@ -40,6 +40,9 @@ for (const persona of personaTypes) {
     countAndCheckPool(directBank.insult, `${persona}.insult`, 5);
     countAndCheckPool(directBank.laugh, `${persona}.laugh`, 4);
     countAndCheckPool(directBank.fallback, `${persona}.fallback`, 4);
+    assert(eventBank.banter.some(line => /knock knock/i.test(line)), `${persona} needs a knock-knock roast`);
+    assert(eventBank.banter.some(line => /roses|violets/i.test(line)), `${persona} needs a rhyme roast`);
+    assert(directBank.insult.length >= 13, `${persona} needs a deep direct-diss rotation`);
 
     for (const intent of ['thanks', 'smalltalk', 'pause']) {
         countAndCheckPool(directBank[intent], `${persona}.${intent}`, 3);
@@ -59,7 +62,7 @@ for (const [index, pattern] of BotConfig.elizaPatterns.entries()) {
     countAndCheckPool(pattern.replies, `elizaPatterns[${index}]`, 1);
 }
 
-assert(totalDialogueLines >= 500, `Expected at least 500 dialogue lines, found ${totalDialogueLines}`);
+assert(totalDialogueLines >= 1000, `Expected at least 1000 dialogue lines, found ${totalDialogueLines}`);
 
 Bot.usedLines = {};
 Bot.recentLines = {};
@@ -80,6 +83,8 @@ const intentCases = new Map([
     ['how are you today', 'smalltalk'],
     ['hold on one sec', 'pause'],
     ['you absolute clown', 'insult'],
+    ['you complete bozo', 'insult'],
+    ['that move was bullshit', 'insult'],
     ['that was hilarious', 'laugh'],
     ['you saw my card', 'accusation']
 ]);

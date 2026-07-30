@@ -9,11 +9,11 @@
     'use strict';
 
     const PROFILES = {
-        1: { name: 'Village Rookie', min: 2600, max: 5600, error: 0.28, chat: 0.38 },
-        2: { name: 'Street Player', min: 2100, max: 4500, error: 0.16, chat: 0.28 },
-        3: { name: 'Tactician', min: 1700, max: 3700, error: 0.08, chat: 0.22 },
-        4: { name: 'Grandmaster', min: 1550, max: 3300, error: 0.025, chat: 0.26 },
-        5: { name: 'Baba Gupta — The Unfoolable', min: 1350, max: 2900, error: 0.008, chat: 0.52 }
+        1: { name: 'Village Rookie', min: 2600, max: 5600, error: 0.28, chat: 0.68 },
+        2: { name: 'Street Player', min: 2100, max: 4500, error: 0.16, chat: 0.59 },
+        3: { name: 'Tactician', min: 1700, max: 3700, error: 0.08, chat: 0.54 },
+        4: { name: 'Grandmaster', min: 1550, max: 3300, error: 0.025, chat: 0.58 },
+        5: { name: 'Baba Gupta — The Unfoolable', min: 1350, max: 2900, error: 0.008, chat: 0.76 }
     };
 
     const LINES = {
@@ -89,6 +89,229 @@
             ]
         }
     };
+
+    const DURAK_ROASTS = {
+        1: {
+            attack: [
+                "Knock knock. Who is there? This card. Please pretend I planned it.",
+                "Roses are red, violets are blue, I found an attack and I am aiming it at you.",
+                "Here, deal with this bullshit. I certainly could not.",
+                "My card has a number and your face has concern. Good enough."
+            ],
+            defend: [
+                "Covered! Your scary card can sit down now.",
+                "I defended that by accident, which makes this extra embarrassing for you.",
+                "Not today, you discount supervillain.",
+                "My defence has training wheels and still stopped your ass."
+            ],
+            take: [
+                "Fine, dump the whole damn table in my hand.",
+                "I am not losing; I am collecting evidence badly.",
+                "Congratulations, clown. You made my hand need a suitcase.",
+                "These cards are mine now. I hate every one of you."
+            ],
+            throw: [
+                "One more card for your emotional-support pile.",
+                "Special delivery: extra cardboard and mild disrespect.",
+                "You were already taking them, so eat this one too.",
+                "My strategy finally works: make your problem thicker."
+            ],
+            pass: [
+                "I am done. The bad decisions may continue clockwise.",
+                "Pass. My last brain cell needs a smoke.",
+                "That is enough genius for today, you animals.",
+                "I stop attacking before I accidentally help you."
+            ]
+        },
+        2: {
+            attack: [
+                "Knock knock. Who is there? Trouble wearing a cheap suit.",
+                "Roses are red, violets are blue, beat this card or it is moving in with you.",
+                "A small attack for a very large ego.",
+                "Here comes a card with more direction than your whole game."
+            ],
+            defend: [
+                "Covered. Take that little attack back to the shop.",
+                "You swung; I answered. Try using both hands next time.",
+                "That attack was cute. It can nap under this card.",
+                "Clean defence. Dirty look included for free."
+            ],
+            take: [
+                "Fine. I take the pile and your name for later.",
+                "Enjoy this moment, you lucky cardboard goblin.",
+                "I picked up cards, not respect for that move.",
+                "This pile is bullshit, but revenge travels well."
+            ],
+            throw: [
+                "Another one. Your hand looked lonely.",
+                "Eat the matching rank, bozo.",
+                "The bundle gets bigger; your smile gets smaller.",
+                "Free delivery, no returns, plenty of regret."
+            ],
+            pass: [
+                "I am finished. Somebody else bully the defender.",
+                "Pass. The point was made and it was rude.",
+                "That is enough damage without becoming tacky.",
+                "I stop here. Your dignity already left."
+            ]
+        },
+        3: {
+            attack: [
+                "Knock knock. Who is there? A card your hand does not want.",
+                "Roses are red, trumps are mean, your defence is about to become a crime scene.",
+                "Low card, high disrespect. Deal with it.",
+                "I picked this card because your face said 'please ruin my day.'"
+            ],
+            defend: [
+                "Covered. No spreadsheet, just better cards.",
+                "Your attack had confidence and absolutely no follow-through.",
+                "That card came in loud and left under mine.",
+                "Defended. Please collect your tiny dramatic speech."
+            ],
+            take: [
+                "I will take the cards. You can keep the premature celebration.",
+                "This pickup hurts less than listening to your victory speech.",
+                "Fine, pile acquired. Grudge also acquired.",
+                "Take the round, clown. The game is longer than your attention span."
+            ],
+            throw: [
+                "Matching rank. Your hand is becoming a group project.",
+                "One more card because suffering loves company.",
+                "The pile asked for seconds. I am a generous bastard.",
+                "Here is another problem in convenient pocket size."
+            ],
+            pass: [
+                "Pass. I have done enough damage for one taxpayer.",
+                "The defence stands. Unfortunately, so does the defender.",
+                "I am done; continuing would make your hand less funny.",
+                "That is all. Try not to turn survival into a personality."
+            ]
+        },
+        4: {
+            attack: [
+                "Knock knock. Who is there? Your expensive defence arriving early.",
+                "Roses are red, violets are blue, I know what hurts and I picked it for you.",
+                "Forget the theory. This card is here to kick your door in.",
+                "Your hand has a weak spot and this card brought a crowbar."
+            ],
+            defend: [
+                "Covered. Your master plan lasted four seconds.",
+                "No grand analysis needed; your attack was simply ass.",
+                "The lowest winning card is still higher than your standards.",
+                "Defended cleanly. Please wipe your attack off the table."
+            ],
+            take: [
+                "I take the pile because wasting trumps on that nonsense would be insulting.",
+                "Enjoy the pickup, clown. It is the last gift you get.",
+                "Cards acquired. Revenge already out for delivery.",
+                "I can carry the pile. Can you carry that smug face to the ending?"
+            ],
+            throw: [
+                "Another matching card. Your hand now has its own postal code.",
+                "Take this too; the humiliation looked underfed.",
+                "The attack limit is the only adult protecting you.",
+                "One more card, because your problem was not stupid enough yet."
+            ],
+            pass: [
+                "Pass. You survived the attack, not the roasting.",
+                "I am done. Your hand remains ugly enough without help.",
+                "Keep the table. I kept the better punchline.",
+                "The defence stands. Barely. Like a drunk garden chair."
+            ]
+        },
+        5: {
+            attack: [
+                "Knock knock. Baba Gupta. Your defence is about to stop answering.",
+                "Roses are red, the trump card is bright, Baba starts trouble and sleeps well tonight.",
+                "Baba does not need a lecture. This card says 'deal with it.'",
+                "Your hand looked comfortable. Baba fixed that."
+            ],
+            defend: [
+                "Covered. Baba expected danger and received amateur theatre.",
+                "Your attack was loud. Baba's answer was louder and better dressed.",
+                "Baba put your card exactly where bad ideas belong: underneath.",
+                "No calculation speech today. Your attack was just weak as hell."
+            ],
+            take: [
+                "Baba takes the pile. You take one temporary victory and overvalue it.",
+                "Enjoy this, you lucky bastard. Baba saves receipts.",
+                "These cards join Baba. Your confidence joins the endangered list.",
+                "A pickup is not defeat. Your celebration, however, is comedy."
+            ],
+            throw: [
+                "One more for your hand, because Baba supports struggling collectors.",
+                "Baba adds a card. Your wrist files a complaint.",
+                "Eat the matching rank, cardboard peasant.",
+                "The attack limit saves you from Baba's full generosity."
+            ],
+            pass: [
+                "Baba passes. Continue the clown parade without supervision.",
+                "The defence lives. Its dignity did not.",
+                "Baba stops here because bullying must retain some elegance.",
+                "Keep the table. Baba already kept the room."
+            ]
+        }
+    };
+
+    const DURAK_CHAT_ROASTS = {
+        1: [
+            "{target}, I barely know the rules and even I know that message was weak.",
+            "Knock knock. Who is there? Not your point. It missed the table.",
+            "Roses are red, violets are blue, my hand is a mess and yours probably is too.",
+            "Keep talking, {target}. It makes my panic look organized.",
+            "That was a lot of mouth for somebody one trump away from disaster.",
+            "I would roast you properly, but I might accidentally burn my cards."
+        ],
+        2: [
+            "{target}, your mouth attacks harder than your hand.",
+            "Knock knock. Who is there? The point you forgot to include.",
+            "Roses are red, trumps ruin the day, your message was loud but had nothing to say.",
+            "Keep chirping, clown. The talon is not impressed.",
+            "Good trash talk. Shame it came bundled with that gameplay.",
+            "Your message sailed. Your strategy missed the bus."
+        ],
+        3: [
+            "{target}, save the speech. Your hand needs the oxygen.",
+            "Knock knock. Who is there? Consequences with six cards.",
+            "Roses are red, the discard is gone, you keep talking shit and I keep playing on.",
+            "That sounded dangerous until I remembered who typed it.",
+            "Your roast had timing. Your defence usually does not.",
+            "Less commentary, more surviving, bozo."
+        ],
+        4: [
+            "{target}, that message had more structure than your whole defence.",
+            "Knock knock. Who is there? A better argument than yours.",
+            "Roses are red, violets are blue, I saved my trumps and I am saving this roast for you.",
+            "You talk like a grandmaster and defend like garden furniture.",
+            "No analysis required: that was premium bullshit.",
+            "Keep typing, clown. Winning clearly left your schedule open."
+        ],
+        5: [
+            "{target}, Baba heard you. The intelligent part must be arriving separately.",
+            "Knock knock. Baba Gupta. Your comeback has been evicted.",
+            "Roses are red, the talon runs dry, Baba keeps winning while you keep asking why.",
+            "Keep talking shit. Baba enjoys background noise during easy work.",
+            "Your mouth holds six trumps. Your actual hand sends apologies.",
+            "Baba would debate you, but watching your defence collapse is funnier."
+        ]
+    };
+
+    Object.entries(DURAK_ROASTS).forEach(([difficulty, categories]) => {
+        Object.entries(categories).forEach(([category, lines]) => LINES[difficulty][category].push(...lines));
+    });
+    Object.entries(DURAK_CHAT_ROASTS).forEach(([difficulty, lines]) => {
+        LINES[difficulty].chat = lines;
+    });
+    LINES.global.intro.push(
+        'Knock knock. Who is there? Durak. One of you answers to it later.',
+        'Roses are red, the trump is on show, somebody leaves first and one fool leaves slow.',
+        'Six cards each. Try not to build a personality around losing.'
+    );
+    LINES.global.gameOver.push(
+        'Roses are red, the talon is through, {durak} kept the cards and the fool title too.',
+        'Knock knock. Who is there? {durak}, carrying every remaining excuse.',
+        '{durak}, congratulations: the cards have elected you village clown.'
+    );
 
     function randomBetween(min, max, random = Math.random) {
         return min + random() * (max - min);
@@ -208,11 +431,13 @@
             this.lastToken = '';
             this.gameOverCommented = false;
             this.recentLines = new Map();
+            this.lastHumanChatId = 0;
         }
 
         start() {
             this.stop();
             this.gameOverCommented = false;
+            this.lastHumanChatId = this.engine.state.logs.reduce((latest, log) => Math.max(latest, log.id || 0), 0);
             this.interval = setInterval(() => this.tick(), 240);
         }
 
@@ -248,6 +473,7 @@
         }
 
         comment(bot, category) {
+            if (this.typingTimers.size) return;
             const profile = PROFILES[bot.botDifficulty] || PROFILES[1];
             if (this.random() > profile.chat) return;
             let line = lineFor(bot.botDifficulty, category, this.random);
@@ -258,6 +484,10 @@
             }
             if (!line) return;
             this.recentLines.set(bot.id, [...recent.slice(-3), line]);
+            this.queueLine(bot, line);
+        }
+
+        queueLine(bot, line) {
             const charactersPerSecond = bot.botDifficulty === 5 ? 7.2 : 5.2;
             const typingMs = Math.min(8500, Math.max(1000, Math.round(line.length / charactersPerSecond * 1000)));
             this.setActivity(bot.id, 'typing', true);
@@ -270,9 +500,43 @@
             this.typingTimers.add(timer);
         }
 
+        respondToHumanChat(state) {
+            if (this.typingTimers.size) return;
+            const botNames = new Set(state.players.filter(player => player.isBot).map(player => player.name));
+            const latest = [...state.logs].reverse().find(log =>
+                log.type === 'chat'
+                && log.id > this.lastHumanChatId
+                && !botNames.has(log.name)
+            );
+            if (!latest) return;
+            this.lastHumanChatId = latest.id;
+            const bots = state.players.filter(player => player.isBot && !player.out);
+            if (!bots.length) return;
+            const mentioned = bots.find(bot =>
+                latest.message.toLowerCase().includes(bot.name.toLowerCase().split(' ')[0])
+            );
+            const responder = mentioned
+                || bots.find(bot => bot.botDifficulty === 5)
+                || bots.sort((left, right) => right.botDifficulty - left.botDifficulty)[0];
+            const profile = PROFILES[responder.botDifficulty] || PROFILES[1];
+            if (!mentioned && this.random() > profile.chat) return;
+            let line = lineFor(responder.botDifficulty, 'chat', this.random)
+                .replaceAll('{target}', latest.name || 'friend');
+            const recent = this.recentLines.get(responder.id) || [];
+            if (recent.includes(line)) {
+                const alternatives = (LINES[responder.botDifficulty]?.chat || [])
+                    .map(candidate => candidate.replaceAll('{target}', latest.name || 'friend'))
+                    .filter(candidate => !recent.includes(candidate));
+                if (alternatives.length) line = alternatives[Math.floor(this.random() * alternatives.length)];
+            }
+            this.recentLines.set(responder.id, [...recent.slice(-3), line]);
+            this.queueLine(responder, line);
+        }
+
         tick() {
             const state = this.engine.state;
             if (state.phase === 'lobby') return;
+            this.respondToHumanChat(state);
             if (state.phase === 'game_over') {
                 if (this.gameOverCommented) return;
                 this.gameOverCommented = true;

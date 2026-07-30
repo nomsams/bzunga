@@ -88,5 +88,14 @@ for (const difficulty of Object.keys(Bots.PROFILES)) {
 const babaLines = Bots.LINES[5];
 assert(Object.values(babaLines).flat().length >= 15, 'Baba needs a distinct Durak voice with enough variation');
 assert(Bots.lineFor(5, 'attack', () => 0).includes('Baba'), 'Baba attack dialogue must feel unique');
+for (let difficulty = 1; difficulty <= 5; difficulty++) {
+    const dialogue = Object.values(Bots.LINES[difficulty]).flat();
+    assert(dialogue.some(line => /knock knock/i.test(line)), `Difficulty ${difficulty} needs a knock-knock roast`);
+    assert(dialogue.some(line => /roses|violets/i.test(line)), `Difficulty ${difficulty} needs a rhyme roast`);
+    assert(dialogue.some(line => /bullshit|clown|bastard|bozo|ass/i.test(line)), `Difficulty ${difficulty} needs sharper disses`);
+    assert(Bots.PROFILES[difficulty].chat >= 0.5, `Difficulty ${difficulty} should comment regularly`);
+    assert(Bots.LINES[difficulty].chat.length >= 6, `Difficulty ${difficulty} needs direct chat replies`);
+}
+assert.strictEqual(typeof Bots.DurakBotController.prototype.respondToHumanChat, 'function', 'Durak bots should answer human table chat');
 
 console.log('Durak bots: legal private-view strategy, trump conservation, pickup logic, timing, and Baba dialogue passed.');

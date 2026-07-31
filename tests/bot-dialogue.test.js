@@ -34,7 +34,7 @@ for (const persona of personaTypes) {
 
     assert(eventBank, `Missing event dialogue for ${persona}`);
     assert(directBank, `Missing direct replies for ${persona}`);
-    countAndCheckPool(eventBank.banter, `${persona}.banter`, 10);
+    countAndCheckPool(eventBank.banter, `${persona}.banter`, 35);
     countAndCheckPool(BotConfig.generalReplies[persona], `${persona}.generalReplies`, 12);
     countAndCheckPool(directBank.greeting, `${persona}.greeting`, 4);
     countAndCheckPool(directBank.insult, `${persona}.insult`, 5);
@@ -43,11 +43,15 @@ for (const persona of personaTypes) {
     assert(eventBank.banter.some(line => /knock knock/i.test(line)), `${persona} needs a knock-knock roast`);
     assert(eventBank.banter.some(line => /roses|violets/i.test(line)), `${persona} needs a rhyme roast`);
     assert(eventBank.banter.filter(line => /\*{2,}/.test(line)).length >= 5, `${persona} needs censored outbursts`);
-    assert(directBank.insult.length >= 19, `${persona} needs a deep direct-diss rotation`);
+    assert(directBank.insult.length >= 40, `${persona} needs a deep direct-diss rotation`);
     const roughTableTalk = [...eventBank.banter, ...BotConfig.generalReplies[persona], ...directBank.insult];
     assert(
-        roughTableTalk.filter(line => /fuck|shit|ass|arse|bastard|bozo|clown|muppet|idiot|donkey|garbage|toilet|fart|dumb|stupid|bollocks|rat|goblin|villain|wet sock|trash|rubbish|disaster|criminal/i.test(line)).length >= 15,
+        roughTableTalk.filter(line => /fuck|shit|ass|arse|bastard|bozo|clown|muppet|idiot|donkey|garbage|toilet|fart|dumb|stupid|bollocks|rat|goblin|villain|wet sock|trash|rubbish|disaster|criminal|bellend|wanker|dickhead|gobshite|fuckwit/i.test(line)).length >= 38,
         `${persona} needs a substantial rough table-talk rotation`
+    );
+    assert(
+        roughTableTalk.filter(line => /dad joke|why did|what do you call|twenty-five letters|knock knock/i.test(line)).length >= 5,
+        `${persona} needs a substantial joke rotation`
     );
 
     for (const intent of ['thanks', 'smalltalk', 'pause']) {
@@ -68,11 +72,22 @@ for (const [index, pattern] of BotConfig.elizaPatterns.entries()) {
     countAndCheckPool(pattern.replies, `elizaPatterns[${index}]`, 1);
 }
 
-assert(totalDialogueLines >= 1350, `Expected at least 1350 dialogue lines, found ${totalDialogueLines}`);
+assert(totalDialogueLines >= 2100, `Expected at least 2100 dialogue lines, found ${totalDialogueLines}`);
 assert(
     Object.values(BotConfig.profiles).every(profile => profile.extroversion >= 0.8),
     'Every Bazunga bot should speak up regularly'
 );
+for (const persona of ['pro', 'expert', 'baba']) {
+    const advancedDialogue = [
+        ...BotConfig.generalReplies[persona],
+        ...Object.values(BotConfig.chatBank[persona]).flat(),
+        ...Object.values(BotConfig.directReplies[persona]).flat()
+    ];
+    assert(
+        !advancedDialogue.some(line => /\b(expected value|probability|statistic\w*|confidence interval|behavioral model|decision tree|hypothesis|sample size|variance|forecast|public information|strategic relevance|optimi\w*|information cost|threat score|card economy|tempo|distribution|calculat\w*|measurable|tracking cards|spreadsheet|algorithm\w*)\b/i.test(line)),
+        `${persona} should sound like a ruthless table opponent, not a lecture`
+    );
+}
 
 Bot.usedLines = {};
 Bot.recentLines = {};

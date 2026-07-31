@@ -1285,6 +1285,362 @@ Object.entries(BotCensoredOutbursts).forEach(([persona, lines]) => {
     BotConfig.chatBank[persona].banter.push(...lines);
 });
 
+const BOT_MAXIMUM_SHITTALK = {
+    banter: [
+        "You play cards like the buttons owe you money.",
+        "I have seen shopping trolleys with better direction than your game.",
+        "{target}, your plan has the structural integrity of wet toilet paper.",
+        "The deck did not betray you. It merely stopped covering for you.",
+        "Your card sense could get lost in a one-room flat.",
+        "That move was a fart in a lift: loud, awkward, and everybody suffered.",
+        "You have the confidence of a genius and the hand-eye coordination of a haunted wardrobe.",
+        "The table called. It wants a restraining order against your strategy.",
+        "I would call that move dogshit, but the dog has standards.",
+        "You are not playing badly; you are giving failure a live demonstration.",
+        "I love what you have done with the place. Very post-apocalyptic.",
+        "Your comeback is taking so long it qualifies as public transport.",
+        "Dad joke: why did the card cross the table? To escape your bloody hand.",
+        "I only know twenty-five letters. I do not know Y, but I know why you are losing.",
+        "I have a joke about your game plan, but it never showed up.",
+        "What do you call a player with no plan and too much confidence? Apparently, {target}.",
+        "Knock knock. Who is there? Your dignity. Sorry, it changed address.",
+        "Roses are red, your board is a fright, you play like a donkey with no depth perception tonight.",
+        "Violets are blue, the discard is hot, whatever the hell that move was, strategy it was not.",
+        "Somewhere a tutorial is watching this and filing for retirement.",
+        "You could hide a brilliant plan anywhere in that mess and nobody would ever find it.",
+        "The good news is you are unforgettable. The bad news is why.",
+        "That was not a move. That was a cry for help with rounded corners.",
+        "Keep smiling, dickhead. The replay is going to be magnificent.",
+        "What the f*** was that supposed to be?",
+        "That move was s*** with a confident little wave.",
+        "Cut the b******t and guard your cards.",
+        "Your comeback is a** wearing party shoes.",
+        "The whole f***ing table felt that mistake."
+    ],
+    insult: [
+        "{target}, you absolute bellend, even the deck is embarrassed for you.",
+        "Shut the victory speech and locate a competent move.",
+        "You talk like a champion and play like the controller is in another postcode.",
+        "I would explain your mistake, but crayons are not supported in chat.",
+        "Your brain took a smoke break and left your thumb in charge.",
+        "That insult hit harder than any card you have played all night.",
+        "You bargain-bin supervillain, the only thing you are destroying is your own position.",
+        "Your mouth is writing cheques your cards keep returning marked 'insufficient talent.'",
+        "Call me rubbish again, you glorious fuckwit. The scoreboard enjoys irony.",
+        "You have all the menace of a damp sock on a radiator.",
+        "That comeback was reheated shit with parsley on top.",
+        "I have met loading screens with sharper timing than you.",
+        "{target}, you are the human equivalent of drawing the wrong card twice.",
+        "Your trash talk has wheels. Shame the gameplay is lying dead in the boot.",
+        "If bad decisions paid rent, your layout would own the building.",
+        "You are not intimidating. You are a warning label with Wi-Fi.",
+        "Keep barking, gobshite. One of us is still playing cards.",
+        "Your last two brain cells are fighting over the slap button.",
+        "I would say 'nice try,' but I am trying to cut down on lying.",
+        "You magnificent arse-clown, that move had witnesses.",
+        "{target}, you play like a drunk donkey operating a microwave.",
+        "That was fucking rubbish with a little confidence bow on top.",
+        "You absolute toilet goblin, the button was right fucking there.",
+        "Your move was criminal, your timing was shit, and your grin is evidence.",
+        "Pipe down, clown. Your cards are already apologizing.",
+        "You bargain-bin bastard, even your mistakes look second-hand.",
+        "That plan is bollocks held together by one exhausted brain cell.",
+        "You dumb little chaos muppet, thanks for improving my evening."
+    ],
+    laugh: [
+        "Hahaha—finally, a joke with better timing than your slap.",
+        "That was funny. Do another one after you learn the rules.",
+        "I laughed so hard my cards briefly respected you.",
+        "Good one. Your gameplay remains the stronger comedy.",
+        "Ha! Keep that energy when the penalties arrive.",
+        "That joke landed. Unlike your last three decisions."
+    ],
+    greeting: [
+        "Hello, {target}. Nice of the next victim to introduce themselves.",
+        "Evening, dickhead. Cards ready, excuses optional.",
+        "Welcome. Grab a chair and lower the average.",
+        "Hi, {target}. Let us find out whether the mouth matches the hand.",
+        "Hello! I hope you brought better cards than conversation.",
+        "All right, goblins. Who ordered the public humiliation?"
+    ],
+    thanks: [
+        "You are welcome. Do not make this emotional.",
+        "No problem, bastard. I can be rude and helpful.",
+        "Any time. The invoice includes one insult.",
+        "Cheers. Now get back to losing with dignity.",
+        "You are welcome, {target}. Try not to waste the miracle."
+    ],
+    smalltalk: [
+        "I am good. Your board is doing enough suffering for both of us.",
+        "Fine, thanks. Slightly bored, heavily armed with rectangles.",
+        "Living the dream, if the dream is bullying cards and loudmouths.",
+        "All good. How is that terrible plan treating you?",
+        "Brilliant. The company is questionable but the comedy is free."
+    ],
+    pause: [
+        "Take your time. Competence clearly needs a running start.",
+        "Fine, pause. Wake us when the good decision arrives.",
+        "I will wait. Your comeback has missed several earlier buses.",
+        "No rush, {target}. The mistake will still be there.",
+        "Hold on? Mate, your whole game has been holding us up."
+    ],
+    accusation: [
+        "Cheating? Mate, your mistakes need no outside assistance.",
+        "I did not peek. Your face shouted the answer.",
+        "Blame me, the deck, the moon—anything except that shitty move.",
+        "If I were cheating, I would have ordered a better opponent."
+    ],
+    boast: [
+        "Keep boasting. The collapse needs a taller starting point.",
+        "Big words from a hand held together by sweat.",
+        "You are winning the press conference and losing the fucking game.",
+        "Save some confidence for when the cards stop laughing."
+    ],
+    bazunga: [
+        "Call BAZUNGA, coward. Let the bad decisions breathe.",
+        "Say the word if that layout can survive witnesses.",
+        "BAZUNGA is not a magic spell for fixing your shit.",
+        "Go on, call it. The replay needs a dramatic chapter."
+    ],
+    respect: [
+        "Fair play, bastard. That one was actually good.",
+        "Respect. I hated the move, which means it worked.",
+        "Well played, {target}. Do not get smug and ruin it.",
+        "Credit where due: you briefly looked competent."
+    ],
+    question: [
+        "Because your board looked weak and I have eyes.",
+        "Why that move? Because ruining your afternoon felt correct.",
+        "The short answer is cards. The long answer costs a drink.",
+        "Because somebody had to make a decision before retirement."
+    ],
+    praise: [
+        "Cheers. Compliments accepted, humility unavailable.",
+        "Correct. I was magnificent for nearly four seconds.",
+        "Thanks, {target}. Please tell the scoreboard loudly.",
+        "Nice of you to notice before the humiliation distracted you."
+    ],
+    apology: [
+        "Sorry? Accepted. The cards remain furious.",
+        "Apology noted. Your penalty is still funny.",
+        "No worries, bastard. Make a worse move and we are even.",
+        "You are forgiven. Your gameplay remains under investigation by the pub."
+    ],
+    rematch: [
+        "Rematch accepted. Bring a plan this time.",
+        "Again? Fine. I enjoy repeat customers.",
+        "Run it back, dickhead. The first lesson clearly bounced.",
+        "Deal again. Your excuses deserve a sequel."
+    ],
+    luck: [
+        "Luck helped. Your mistake did the heavy lifting.",
+        "Call it luck if the truth needs softer furniture.",
+        "Lucky? Absolutely. Still counts, still hurts.",
+        "The deck gave me a gift and you gift-wrapped the rest."
+    ],
+    followup: [
+        "Yes, I heard you. The point remains missing.",
+        "Go on. Dig upward if you can.",
+        "That sequel was worse, which took commitment.",
+        "Keep going, {target}. You are almost saying something."
+    ],
+    fallback: [
+        "That sentence wandered in drunk and forgot why it came.",
+        "Lovely noise. Now play a fucking card.",
+        "I understood every word and still want a refund.",
+        "Your point is hiding better than your good moves.",
+        "Say it again, but this time invite a thought.",
+        "That message had a beginning, a middle, and no reason to exist.",
+        "Keep typing, muppet. Silence was making you look clever.",
+        "The chat box accepted that. Standards really have collapsed."
+    ],
+    events: {
+        slapSuccess: [
+            "Yoink. Too slow, you sleepy bastard.",
+            "That card is mine. Your reflexes may arrive tomorrow.",
+            "I stole that so cleanly the police sent compliments.",
+            "Slapped it before your thumb finished its committee meeting.",
+            "Cheers for the card, knobhead. Lovely service.",
+            "Blink again. I could use another free one."
+        ],
+        slapFail: [
+            "Well, that was a fucking masterpiece of being wrong.",
+            "I slapped the wrong card with elite confidence. Nobody speak.",
+            "Delete the replay and shoot the cameraman.",
+            "My thumb has resigned with immediate effect.",
+            "That miss was so ugly it lowered the room temperature.",
+            "Fine. Penalty accepted. Pride reported missing."
+        ],
+        penalty: [
+            "More cards. Brilliant. My layout now has a postcode.",
+            "Two penalties? At least buy me a drink before fucking me over.",
+            "This pile is becoming a landfill with suits.",
+            "Lovely. The game just shat directly into my hand.",
+            "{target}, enjoy the grin while your teeth still trust you.",
+            "Penalty cards: because apparently my suffering needed paperwork."
+        ],
+        bazungaCall: [
+            "BAZUNGA. Last lap, dickheads. Try to keep up.",
+            "I call it. Bring your best move or a convincing excuse.",
+            "BAZUNGA! The panic starts now; yours started three turns ago.",
+            "Final orbit. Somebody hold {target}'s hand.",
+            "BAZUNGA. Time to separate the players from the decorative furniture."
+        ],
+        bazungaEnemy: [
+            "You called BAZUNGA? Brave words from that fucking layout.",
+            "Final orbit accepted. I hope your last card has legal representation.",
+            "{target} rang the bell. Everybody watch the clown sprint.",
+            "Nice call. Shame about the hand attached to it.",
+            "BAZUNGA heard you. So did the consequences."
+        ],
+        victory: [
+            "I won. Please direct all salt into one manageable pile.",
+            "Good game, you pack of feral coat hangers.",
+            "Victory tastes better with your excuses on the side.",
+            "I came, I saw, you clicked the wrong bloody card.",
+            "Thanks for playing. The tutorial will contact you separately.",
+            "The winner is me. The mystery is what the fuck you were doing."
+        ],
+        defeat: [
+            "Fine, you won. Do not make it your entire personality.",
+            "Enjoy it, bastard. Lightning may never strike this bin twice.",
+            "I lost the game, not the right to call that last move ugly.",
+            "Well played. I still hate the smug little shape of it.",
+            "Take the win before somebody checks the paperwork."
+        ]
+    }
+};
+
+const BOT_PERSONA_CHAOS = {
+    noob: {
+        banter: [
+            "I have no idea what I am doing and somehow you look less qualified.",
+            "My strategy is panic. Yours appears to be decorative panic.",
+            "If I beat you, please uninstall one finger out of respect.",
+            "I clicked a card and your whole face filed a complaint.",
+            "Dad joke: what is brown and sticky? A stick. Still sharper than my plan."
+        ],
+        insult: [
+            "{target}, I am the tutorial bot and you are making me feel dangerous.",
+            "Imagine getting roasted by somebody who still counts cards on fingers.",
+            "I am confused, you are losing, and that is fucking beautiful.",
+            "Even my accidental moves are bullying you.",
+            "You are losing to a bot whose plan is 'press something and pray.'"
+        ]
+    },
+    casual: {
+        banter: [
+            "This is pub-level card play: loud confidence, cheap tactics, no refunds.",
+            "Your hand looks like it was assembled during a fire drill.",
+            "Dad joke: I used to hate facial hair, but then it grew on me—unlike your strategy.",
+            "One more move like that and I am charging admission.",
+            "You brought a poker face to a slap fight, you tit."
+        ],
+        insult: [
+            "{target}, you play like a pub chair with opinions.",
+            "Pipe down, wanker. Your cards are trying to concentrate.",
+            "Your plan came second in a one-horse race.",
+            "You could fuck up a cup of tea with written instructions.",
+            "That was premium nonsense from the discount aisle."
+        ]
+    },
+    pro: {
+        banter: [
+            "No lecture: that move was shit and you know it.",
+            "I am not overthinking this. You are simply easy to annoy.",
+            "Clean slap, filthy grin, terrible opponent.",
+            "Your best move remains blaming the deck.",
+            "Dad joke: I am reading a book about anti-gravity. Unlike your chances, it is impossible to put down."
+        ],
+        insult: [
+            "{target}, spare me the speech and move your useless little rectangles.",
+            "You are playing like somebody swapped your hands for oven gloves.",
+            "That was shit in high definition.",
+            "Your comeback needs jumper cables and a priest.",
+            "I expected resistance and received interpretive dance."
+        ]
+    },
+    expert: {
+        banter: [
+            "Expert summary: you fucked it.",
+            "No charts, no lecture—just me taking your card and laughing.",
+            "You are not unpredictable. You are consistently daft.",
+            "I knew your move because bad ideas travel in straight lines.",
+            "Dad joke: why can nobody trust stairs? They are always up to something, unlike your game."
+        ],
+        insult: [
+            "{target}, your plan is a turd wearing reading glasses.",
+            "I do not need a calculator to know that was bollocks.",
+            "You play like your thumbs are in a custody battle.",
+            "That move was so stupid it arrived with its own warning siren.",
+            "Your mouth says expert. Your board says missing person."
+        ]
+    },
+    pirate: {
+        banter: [
+            "Arrr, yer game be sinking and the rats have requested a transfer.",
+            "I have seen barnacles with faster fucking reflexes.",
+            "Dad joke: what be a pirate's favourite letter? Ye think it be R, but his true love be the C.",
+            "Yer plan has more holes than a cannoned sail.",
+            "Pass the rum. Watching this sober feels irresponsible."
+        ],
+        insult: [
+            "{target}, ye scurvy deck-polisher, that move be absolute shite.",
+            "Yer mouth fires broadsides; yer hand throws damp bread.",
+            "Walk the plank, bellend. The table needs the space.",
+            "Even the parrot thinks yer talking bollocks.",
+            "Ye could lose treasure in a locked chest."
+        ]
+    },
+    baba: {
+        banter: [
+            "Baba has no equation today. You are simply playing like shit.",
+            "Baba brought no lecture, only cards and industrial-grade disrespect.",
+            "Your move surprised Baba in the way a toilet fire surprises everybody.",
+            "Baba could play blindfolded, but then he might accidentally respect you.",
+            "Dad joke: Baba ordered a chicken and an egg online. He will let you know which came first after your loss."
+        ],
+        insult: [
+            "{target}, Baba has seen smarter choices fall out of a broken vending machine.",
+            "Your plan is a shit sandwich and confidence is the garnish.",
+            "Baba says this with love: shut up and lose properly.",
+            "You call that a move? Baba calls it an unattended accident.",
+            "Your comeback has been denied entry for being fucking useless."
+        ]
+    }
+};
+
+for (const persona of Object.keys(BOT_PERSONA_CHAOS)) {
+    const personaLines = BOT_PERSONA_CHAOS[persona];
+    BotConfig.chatBank[persona].banter.push(...BOT_MAXIMUM_SHITTALK.banter, ...personaLines.banter);
+    BotConfig.directReplies[persona].insult.push(...BOT_MAXIMUM_SHITTALK.insult, ...personaLines.insult);
+    BotConfig.directReplies[persona].laugh.push(...BOT_MAXIMUM_SHITTALK.laugh);
+    BotConfig.directReplies[persona].greeting.push(...BOT_MAXIMUM_SHITTALK.greeting);
+    BotConfig.directReplies[persona].thanks.push(...BOT_MAXIMUM_SHITTALK.thanks);
+    BotConfig.directReplies[persona].smalltalk.push(...BOT_MAXIMUM_SHITTALK.smalltalk);
+    BotConfig.directReplies[persona].pause.push(...BOT_MAXIMUM_SHITTALK.pause);
+    BotConfig.directReplies[persona].fallback.push(...BOT_MAXIMUM_SHITTALK.fallback);
+    for (const category of ['accusation', 'boast', 'bazunga', 'respect', 'question', 'praise', 'apology', 'rematch', 'luck', 'followup']) {
+        BotConfig.directReplies[persona][category].push(...BOT_MAXIMUM_SHITTALK[category]);
+    }
+    Object.entries(BOT_MAXIMUM_SHITTALK.events).forEach(([category, lines]) => {
+        if (BotConfig.chatBank[persona][category]) BotConfig.chatBank[persona][category].push(...lines);
+    });
+}
+
+const LECTURE_TABLE_TALK = /\b(expected value|probability|statistic\w*|confidence interval|behavioral model|behavioural model|decision tree|hypothesis|sample size|variance|forecast|public information|strategic relevance|optimi\w*|information cost|threat score|card economy|tempo|distribution|calculat\w*|measurable|tracking cards|patterns are|spreadsheet|algorithm\w*)\b/i;
+for (const persona of ['pro', 'expert', 'baba']) {
+    BotConfig.generalReplies[persona] = BotConfig.generalReplies[persona].filter(line => !LECTURE_TABLE_TALK.test(line));
+    Object.keys(BotConfig.chatBank[persona]).forEach(category => {
+        const filtered = BotConfig.chatBank[persona][category].filter(line => !LECTURE_TABLE_TALK.test(line));
+        if (filtered.length) BotConfig.chatBank[persona][category] = filtered;
+    });
+    Object.keys(BotConfig.directReplies[persona]).forEach(category => {
+        const filtered = BotConfig.directReplies[persona][category].filter(line => !LECTURE_TABLE_TALK.test(line));
+        if (filtered.length) BotConfig.directReplies[persona][category] = filtered;
+    });
+}
+
 const Bot = {
     chatHistory: [], lastChatTime: {}, usedLines: {},
     recentLines: {}, globalRecentLines: [],

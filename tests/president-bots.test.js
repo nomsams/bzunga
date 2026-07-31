@@ -12,23 +12,29 @@ const card = (id, rank, ownerId = 'bot', suit = '♣') => ({
 
 for (const collection of [PHRASES, BABA_PHRASES]) {
     for (const category of ['intro', 'play', 'bigPlay', 'pass', 'ace', 'lowHand', 'victory', 'defeat', 'chat']) {
-        assert(collection[category].length >= 4, `${category} needs conversational variety`);
+        assert(collection[category].length >= 15, `${category} needs deep conversational variety`);
+        assert.strictEqual(new Set(collection[category]).size, collection[category].length, `${category} contains duplicate lines`);
     }
     const fullDialogue = Object.values(collection).flat();
+    assert(fullDialogue.length >= 170, 'President bots need a very large dialogue rotation');
     assert(fullDialogue.some(line => /knock knock/i.test(line)), 'President bots need knock-knock trash talk');
     assert(fullDialogue.some(line => /roses|violets/i.test(line)), 'President bots need rhyme roasts');
+    assert(
+        fullDialogue.filter(line => /dad joke|why did|what do you call|knock knock/i.test(line)).length >= 5,
+        'President bots need a proper joke rotation'
+    );
     assert(fullDialogue.filter(line => /\*{2,}/.test(line)).length >= 5, 'President bots need censored outbursts');
     assert(fullDialogue.some(line => /bullshit|clown|bastard|bozo/i.test(line)), 'President bots need sharper table disses');
     assert(
-        fullDialogue.filter(line => /fuck|shit|bullshit|clown|bastard|bozo|donkey|arse|idiot|toilet|glue|bollocks/i.test(line)).length >= 17,
+        fullDialogue.filter(line => /fuck|shit|bullshit|clown|bastard|bozo|donkey|arse|idiot|toilet|glue|bollocks|dickhead|wanker|gobshite|muppet|peasant/i.test(line)).length >= 28,
         'President bots need a substantial rough table-talk rotation'
     );
     assert(
-        !fullDialogue.some(line => /probability|optimal|mathemat|outlier|forecast|expected value|public information|strategic value|hand structure/i.test(line)),
+        !fullDialogue.some(line => /\b(probability|distribution|public information|optimal|optimization|optimizing|mathemat\w*|outlier|forecast|strategic value|hand structure|expected value|card economy|tempo|calculat\w*|model|sample|protocol)\b/i.test(line)),
         'President dialogue should avoid lecture-heavy bot jargon'
     );
 }
-assert(Object.values(PROFILES).every(profile => profile.chatChance >= 0.55), 'Every President bot should speak up regularly');
+assert(Object.values(PROFILES).every(profile => profile.chatChance >= 0.7), 'Every President bot should speak up regularly');
 
 const bot = {
     id: 'bot',

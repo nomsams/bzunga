@@ -471,6 +471,169 @@
         'Baba permits more talking; the f***-up reel needs narration.'
     );
 
+    const PRESIDENT_MAXIMUM_SHITTALK = {
+        standard: {
+            intro: [
+                'Welcome to the election, you cabinet of absolute dickheads.',
+                'One President, one slave, and several people already lying about their hands.',
+                'The palace doors are open. Wipe your shitty strategy on the mat.',
+                'Dad joke: why did the king visit the dentist? To get his crown checked. Yours is missing.',
+                'I brought cards, bad manners, and a campaign funded entirely by spite.',
+                'Everybody wave to the future slave. No, not all at once.'
+            ],
+            play: [
+                'There. A card play instead of another fucking committee meeting.',
+                '{count} cards, zero mercy, one very unhappy opposition.',
+                'Eat the pile, peasants. Cutlery is optional.',
+                'That move has more authority than your entire bloodline of bad decisions.',
+                'I put the cards down. You put your expectations down.',
+                'Consider this legislation titled “sit down and cope.”'
+            ],
+            bigPlay: [
+                'That is not a combo. That is a fucking eviction notice.',
+                'Count them, clown. Use fingers if the humiliation gets technical.',
+                'A landslide victory delivered directly onto your ugly little hopes.',
+                'My coalition has cards. Yours has a group chat and no plan.',
+                'That pile is thicker than the bullshit in your victory speech.',
+                'Several cards just landed. Your future did not.'
+            ],
+            pass: [
+                'Pass. I refuse to waste good cards on this clown convention.',
+                'I am sitting this one out. Somebody else kick the bin.',
+                'Pass. Even my cards deserve standards.',
+                'Carry on, wankers. I need both hands for laughing.',
+                'I could play, but watching you fuck this up has value.',
+                'No card from me. The pile already smells desperate.'
+            ],
+            ace: [
+                'Ace. Meeting over. Take your bullshit folders home.',
+                'Pile cleared harder than your search history after a police knock.',
+                'Ace says shut up and start again.',
+                'The table has been wiped. Shame about your reputation.',
+                'Fresh pile, same collection of noisy idiots.',
+                'Ace high. Expectations low. Off we fucking go.'
+            ],
+            lowHand: [
+                'Some bastard is nearly out. Stop admiring the furniture and hit them.',
+                'One tiny hand, several enormous panic attacks.',
+                'The finish line is close enough to smell your fear.',
+                'Somebody has two cards and suddenly every clown discovered religion.',
+                'Low hand alert. Hide the champagne from the premature celebrator.',
+                'They are nearly out. This is where competent people become annoying.'
+            ],
+            victory: [
+                'Call me President, or mumble it into your pile of excuses.',
+                'I won. Democracy survives, unfortunately under my management.',
+                'The crown fits. Your cards can carry the luggage.',
+                'President at last. First order: somebody remove these fucking amateurs.',
+                'Roses are red, the palace is lit, I have the throne and you played like shit.',
+                'Thank you for voting with your terrible decisions.'
+            ],
+            defeat: [
+                'Fine, take the crown, you lucky palace goblin.',
+                'I lost. Somebody check whether hell needs a coat.',
+                'Enjoy the presidency before your next hand exposes the fraud.',
+                'The throne is yours. The dignity shortage remains national.',
+                'I concede nothing except the bit where you fucking won.',
+                'Good game, bastard. Terrible day for justice.'
+            ],
+            chat: [
+                '{target}, your speech has a suit, a tie, and no fucking point.',
+                'Shut the manifesto and play, you campaign-trail muppet.',
+                'Your mouth won the election. Your hand lost the deposit.',
+                'Dad joke: I used to be addicted to the hokey pokey, then I turned myself around—unlike your game.',
+                'What do you call a politician with a useful card? Not you.',
+                'Knock knock. Who is there? Your comeback. Sorry, it failed the background check.',
+                'Keep talking shit. The palace jester vacancy is nearly yours.',
+                'That message was a turd with a campaign slogan.'
+            ]
+        },
+        baba: {
+            intro: [
+                'Baba enters the palace. Somebody move that future slave out of his chair.',
+                'No speech tonight. Baba came to win and call your moves dogshit.',
+                'The crown has been informed that Baba is approaching.',
+                'Dad joke: Baba knows a king who was twelve inches tall. A terrible king, but a great ruler.',
+                'Welcome, peasants. Baba brought enough disrespect for both houses.'
+            ],
+            play: [
+                'Baba plays {count}. Your government may begin shitting itself.',
+                'Cards down. Mouths open. Standards nowhere.',
+                'Baba has passed a new law: you deal with this pile.',
+                'There is the move. Try not to lick it.',
+                'Baba plays cards while you play dress-up with confidence.'
+            ],
+            bigPlay: [
+                'Baba dropped a coalition heavy enough to dent your ego.',
+                'Count them slowly, dickhead. Baba enjoys the changing expression.',
+                'That is a royal flush of “go fuck yourself,” minus the poker.',
+                'The pile is now governed by Baba and several angry rectangles.',
+                'Big play. Small opposition. Beautiful contrast.'
+            ],
+            pass: [
+                'Baba passes. The clown car may continue.',
+                'No card. Baba would rather keep it than fund your comeback.',
+                'Pass. Watching you struggle is currently the better show.',
+                'Baba steps aside so somebody else can make a complete arse of it.',
+                'Continue without Baba. Try not to lower the property value.'
+            ],
+            ace: [
+                'Ace. Baba clears the pile and your short-term memory.',
+                'Meeting adjourned, dickheads. Baba has the big card.',
+                'Fresh table. Same doomed opposition.',
+                'Ace lands. Your little uprising ends before lunch.',
+                'Baba wiped the pile cleaner than your alibi.'
+            ],
+            lowHand: [
+                'Somebody is nearly free. Baba dislikes unsupervised optimism.',
+                'Low hand. High panic. Excellent.',
+                'One player smells the finish line. Baba brought roadworks.',
+                'Nearly out? Adorable. Baba has ruined better endings.',
+                'The small hand is dangerous. The large mouths remain decorative.'
+            ],
+            victory: [
+                'President Gupta. Clap, cry, or do both quietly.',
+                'Baba wins. The palace can remove the childproofing.',
+                'The crown fits because competence has a standard size.',
+                'Roses are red, your campaign was shit, Baba took the throne and refuses to quit.',
+                'Victory. Somebody escort the excuses to the servants’ entrance.'
+            ],
+            defeat: [
+                'You beat Baba. Frame the screenshot before reality corrects itself.',
+                'Take the crown, lucky bastard. Do not scratch it with your ego.',
+                'Baba lost a game. Your personality may now overreact.',
+                'Fine. President for a round, pain in the arse forever.',
+                'Baba concedes the result and rejects the smug little dance.'
+            ],
+            chat: [
+                '{target}, Baba has heard stronger speeches from a clogged toilet.',
+                'Your message has balls. Shame your gameplay arrived without any.',
+                'Baba is not offended. Baba is embarrassed on your behalf.',
+                'Dad joke: why did Baba bring a ladder? Your standards were somehow still lower.',
+                'What do you call that comeback? Evidence of oxygen waste.',
+                'Knock knock. Baba Gupta. Open up; your dignity is being repossessed.',
+                'Keep talking, gobshite. Baba wins better with background comedy.',
+                'Your mouth wears a crown. Your hand cleans the royal bogs.'
+            ]
+        }
+    };
+
+    Object.entries(PRESIDENT_MAXIMUM_SHITTALK.standard).forEach(([category, lines]) => PHRASES[category].push(...lines));
+    Object.entries(PRESIDENT_MAXIMUM_SHITTALK.baba).forEach(([category, lines]) => BABA_PHRASES[category].push(...lines));
+
+    const PRESIDENT_LECTURE_TALK = /\b(probability|distribution|public information|optimal|mathematically|outlier|forecast|strategic|hand structure|expected value|card economy|tempo|calculated|calculation|model|sample|protocol|information)\b/i;
+    for (const bank of [PHRASES, BABA_PHRASES]) {
+        Object.keys(bank).forEach(category => {
+            const filtered = bank[category].filter(line => !PRESIDENT_LECTURE_TALK.test(line));
+            if (filtered.length) bank[category] = [...new Set(filtered)];
+        });
+    }
+    Object.assign(PROFILES[1], { chatChance: 0.72 });
+    Object.assign(PROFILES[2], { chatChance: 0.76 });
+    Object.assign(PROFILES[3], { chatChance: 0.8 });
+    Object.assign(PROFILES[4], { chatChance: 0.86 });
+    Object.assign(PROFILES[5], { chatChance: 0.96 });
+
     const interpolate = (line, context = {}) => line.replace(/\{(\w+)\}/g, (match, key) => {
         const value = context[key];
         return value === undefined || value === null ? match : String(value);

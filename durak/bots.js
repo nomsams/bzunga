@@ -487,7 +487,7 @@
     });
 
     const NERDY_DURAK_TALK = /\b(distribution|expected value|minimum sufficient|profitable continuation|preserve control|public information|strategic pickup)\b/i;
-    for (let difficulty = 3; difficulty <= 5; difficulty++) {
+    for (let difficulty = 1; difficulty <= 5; difficulty++) {
         Object.keys(LINES[difficulty]).forEach(category => {
             LINES[difficulty][category] = LINES[difficulty][category].filter(line => !NERDY_DURAK_TALK.test(line));
         });
@@ -502,15 +502,261 @@
     };
     Object.entries(DURAK_CENSORED_CHAT).forEach(([difficulty, lines]) => LINES[difficulty].chat.push(...lines));
 
+    const DURAK_MAXIMUM_SHITTALK = {
+        attack: [
+            'Here is a card, dickhead. Beat it or start collecting.',
+            'This little rectangle has come to ruin your afternoon.',
+            'Attack delivered. Complaints go directly up your arse.',
+            'Deal with that, you hand-hoarding goblin.',
+            'I found the weak spot. It was the entire fucking defence.',
+            'Knock knock. Who is there? Pickup. It brought luggage.',
+            'Dad joke: why did the card cross the table? Your hand smelled worse.',
+            'Roses are red, the trump card is bright, cover this bastard or take it tonight.',
+            'That card is cheap. The look on your face is priceless.',
+            'I attack with confidence borrowed from your lack of options.',
+            'Your turn to defend. Try using the cards instead of your personality.',
+            'One card, one problem, one clown staring at both.'
+        ],
+        defend: [
+            'Covered. Put that weak shit back in its coffin.',
+            'Your attack is underneath mine where rubbish belongs.',
+            'Nice try, knobhead. The card lasted four seconds.',
+            'Defended. Your dramatic entrance may leave through the bins.',
+            'I beat the card and bruised its stupid little ego.',
+            'That attack had teeth drawn on with a crayon.',
+            'Sit down. Even my cheapest answer embarrassed you.',
+            'Your card came looking for trouble and found adult supervision.',
+            'Covered cleanly. I will disinfect the table later.',
+            'The attack is dead. Please notify its useless family.',
+            'I defended that with less effort than this insult.',
+            'Good attack—if the goal was to warm up my hand.'
+        ],
+        take: [
+            'Fine, give me the whole fucking table and a wheelbarrow.',
+            'I take the cards. You keep the smug face until further notice.',
+            'Lovely pile. Did every bastard bring luggage?',
+            'This hand is becoming a card-based hostage situation.',
+            'I am picking up, not giving up. Stop touching yourself.',
+            'Congratulations. You made my hand look like a Sunday newspaper.',
+            'Cards acquired. Grudge upgraded to premium.',
+            'Dump it here, goblins. Apparently I run a shelter.',
+            'I will carry the pile. You could barely carry the conversation.',
+            'Take your tiny win before I fold it into the next round.',
+            'This pickup is ugly, but not as ugly as your celebration.',
+            'My hand is now thicker than your skull. Impressive work.'
+        ],
+        throw: [
+            'Take another one, you greedy cardboard hoover.',
+            'One more card for your fucking collection.',
+            'Matching rank. Matching regret. Beautiful.',
+            'Your pickup was looking lonely, so I sent it a bastard friend.',
+            'Here, hold this while the rest of us laugh.',
+            'The hand gets bigger. The dignity gets very, very small.',
+            'Special delivery for the table donkey.',
+            'Eat this one too. No chewing on the corners.',
+            'Another card lands. Your wrist has filed a complaint.',
+            'I would send flowers, but another card is funnier.',
+            'This rank matched harder than your socks ever have.',
+            'Free card! The hidden fee is humiliation.'
+        ],
+        pass: [
+            'Pass. I have bullied this round enough.',
+            'I am done. Somebody else annoy the poor bastard.',
+            'Pass. Continuing would make your hand less funny.',
+            'That is enough. Your defence may crawl home.',
+            'I stop here before this becomes charity.',
+            'Keep the table. It matches your ugly little mood.',
+            'Pass, dickheads. The round has suffered enough.',
+            'I am finished. Your relief is loud and pathetic.',
+            'No more cards. Enjoy this suspicious little mercy.',
+            'The attack ends. Try not to call survival a talent.',
+            'Pass. Even bullying needs an interval.',
+            'I am out. The clown show continues clockwise.'
+        ],
+        chat: [
+            '{target}, your mouth has six cards and every one is bullshit.',
+            'Shut up and defend, you ornamental turnip.',
+            'Your comeback arrived wearing clown shoes.',
+            'That message was a fart with spellcheck.',
+            'Keep talking, wanker. The talon enjoys low-budget theatre.',
+            'You call that trash talk? My discard pile has sharper edges.',
+            'Dad joke: I told my cards a construction joke. They are still working on it—unlike you.',
+            'I only know twenty-five letters. I do not know Y, but I know why you keep picking up.',
+            'What do you call a Durak player with a plan? Not {target}.',
+            'Knock knock. Who is there? The fool. Check your chair.',
+            'Roses are red, the talon is stacked, you keep talking shit and your defence keeps getting cracked.',
+            'Your message has more words than your hand has good choices.',
+            'You are one pickup away from needing a forklift.',
+            'That insult was decent. Shame about the idiot operating it.',
+            'Keep barking, card rat. The trump suit is not scared.',
+            'Your gameplay is a clogged toilet and chat is the air freshener.'
+        ]
+    };
+
+    const DURAK_PERSONA_CHAOS = {
+        1: {
+            attack: [
+                'I barely know the rules and this still looks bad for you.',
+                'Here goes something stupid. Try not to lose to it.'
+            ],
+            defend: [
+                'I covered it! That is embarrassing for at least one of us.',
+                'Even the rookie stopped that damp little attack.'
+            ],
+            take: [
+                'I am taking the pile because apparently my hand has no fire code.',
+                'More cards for me. More confidence for you. Both are mistakes.'
+            ],
+            throw: [
+                'I found a matching rank! Hide the good scissors.',
+                'Take this too. I may never achieve competence again.'
+            ],
+            pass: [
+                'Pass. My last brain cell needs mouth-to-mouth.',
+                'I stop before luck notices I am unsupervised.'
+            ],
+            chat: [
+                '{target}, losing to me should qualify as a medical mystery.',
+                'I am the rookie and even I think that was arse.'
+            ]
+        },
+        2: {
+            attack: [
+                'Pub rules: play the card, insult the defender, blame the beer.',
+                'Beat this, loudmouth. The table is getting impatient.'
+            ],
+            defend: [
+                'Covered. Buy your attack a consolation pint.',
+                'That card died like it lived: loud and disappointing.'
+            ],
+            take: [
+                'I take the pile and put your name on the receipt.',
+                'Fine. One round to you, you lucky little shit.'
+            ],
+            throw: [
+                'Another card. Consider it a pub snack with corners.',
+                'Take this matching bastard and wipe that grin.'
+            ],
+            pass: [
+                'Pass. Somebody ring last orders on this mess.',
+                'I am done; the defender already looks hungover.'
+            ],
+            chat: [
+                '{target}, your chat is strong lager and your gameplay is warm water.',
+                'Pipe down, pub chair. Somebody is trying to lose properly.'
+            ]
+        },
+        3: {
+            attack: [
+                'No theory. Just a card headed straight for your problem.',
+                'I picked this because your face looked too peaceful.'
+            ],
+            defend: [
+                'Covered. Your attack can get in the fucking bin.',
+                'Cheap answer, expensive embarrassment.'
+            ],
+            take: [
+                'I will carry the cards. You carry that premature grin.',
+                'Pickup now, revenge before the snacks run out.'
+            ],
+            throw: [
+                'Matching card. Maximum annoyance. No lecture required.',
+                'One more for the pile, one less for me, bad news for you.'
+            ],
+            pass: [
+                'Pass. The useful damage is already done.',
+                'I stop because your defence finally paid rent.'
+            ],
+            chat: [
+                '{target}, your mouth attacks better than your hand.',
+                'That message was confident shit, the most common variety.'
+            ]
+        },
+        4: {
+            attack: [
+                'Forget the masterclass. Beat this fucking card.',
+                'Your hand has a sore spot and I brought a thumb.'
+            ],
+            defend: [
+                'Covered. No spreadsheet, just you being wrong.',
+                'Your attack is now a decorative coaster.'
+            ],
+            take: [
+                'I take the pile because that trump is not dying for your nonsense.',
+                'Temporary pickup. Permanent note that you got smug.'
+            ],
+            throw: [
+                'One more card. Your problem needed a stupid hat.',
+                'The attack limit is the only adult protecting you.'
+            ],
+            pass: [
+                'Pass. I just buried your good card; digging is forbidden.',
+                'Stop here. Your expensive defence stays dead.'
+            ],
+            chat: [
+                '{target}, you sound clever until the cards come into frame.',
+                'No grand theory: your comeback was fucking useless.'
+            ]
+        },
+        5: {
+            attack: [
+                'Baba plays one card. Your entire hand starts sweating.',
+                'No sermon from Baba. Beat it or pick up, dickhead.'
+            ],
+            defend: [
+                'Baba covers the attack and leaves the corpse visible.',
+                'Your card is underneath. Your ego may join it.'
+            ],
+            take: [
+                'Baba takes the pile. You take the wrong lesson from it.',
+                'Enjoy the pickup, lucky bastard. Baba keeps receipts and grudges.'
+            ],
+            throw: [
+                'Baba adds one more. Your wrist may swear freely.',
+                'Matching rank, peasant. Hold it with both trembling hands.'
+            ],
+            pass: [
+                'Baba stops. Your best trump can rot in the discard.',
+                'Pass. Baba has already removed the card that mattered.'
+            ],
+            chat: [
+                '{target}, Baba has heard smarter noises from a dropped saucepan.',
+                'Keep talking, fuckwit. Baba enjoys easy games with commentary.'
+            ]
+        }
+    };
+
+    for (let difficulty = 1; difficulty <= 5; difficulty++) {
+        Object.entries(DURAK_MAXIMUM_SHITTALK).forEach(([category, lines]) => LINES[difficulty][category].push(...lines));
+        Object.entries(DURAK_PERSONA_CHAOS[difficulty]).forEach(([category, lines]) => LINES[difficulty][category].push(...lines));
+    }
+
+    const DURAK_LECTURE_TALK = /\b(distribution|expected value|minimum sufficient|profitable continuation|preserve control|public information|strategic pickup|tempo|calculation|calculated|information|accounting|position|horizon|legally binding|paperwork|efficient|structure)\b/i;
+    for (let difficulty = 1; difficulty <= 5; difficulty++) {
+        Object.keys(LINES[difficulty]).forEach(category => {
+            const filtered = LINES[difficulty][category].filter(line => !DURAK_LECTURE_TALK.test(line));
+            if (filtered.length) LINES[difficulty][category] = [...new Set(filtered)];
+        });
+    }
+    Object.assign(PROFILES[1], { chat: 0.86 });
+    Object.assign(PROFILES[2], { chat: 0.84 });
+    Object.assign(PROFILES[3], { chat: 0.82 });
+    Object.assign(PROFILES[4], { chat: 0.9 });
+    Object.assign(PROFILES[5], { chat: 0.98 });
+
     LINES.global.intro.push(
         'Knock knock. Who is there? Durak. One of you answers to it later.',
         'Roses are red, the trump is on show, somebody leaves first and one fool leaves slow.',
-        'Six cards each. Try not to build a personality around losing.'
+        'Six cards each. Try not to build a personality around losing.',
+        'Welcome to Durak, dickheads. One of you keeps the cards and the shame.',
+        'Dad joke: why are playing cards good drivers? They always deal with traffic. Unlike you lot.'
     );
     LINES.global.gameOver.push(
         'Roses are red, the talon is through, {durak} kept the cards and the fool title too.',
         'Knock knock. Who is there? {durak}, carrying every remaining excuse.',
-        '{durak}, congratulations: the cards have elected you village clown.'
+        '{durak}, congratulations: the cards have elected you village clown.',
+        '{durak} is the fool. Everybody point politely, then impolitely.',
+        'Game over. {durak} keeps the cards, the title, and the shitty little memories.'
     );
 
     function randomBetween(min, max, random = Math.random) {

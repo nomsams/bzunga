@@ -12,6 +12,7 @@ assert(html.includes('id="local-hand"'), 'The player needs a dedicated visible h
 assert(html.includes('id="btn-sort-hand"'), 'The hand needs an auto-sort control');
 assert(html.includes('id="btn-play-selected"'), 'Multi-card selection needs an explicit Play button');
 assert(html.includes('id="btn-pass"'), 'Every response turn needs a prominent Pass button');
+assert(html.includes('fresh-pile leader holding only 2s is skipped'), 'The rules must explain wild-only endgame recovery');
 assert(html.includes('id="chat-drawer"'), 'The game needs table chat and commentary');
 assert(html.includes('src="rules.js"') && html.includes('src="engine.js"') && html.includes('src="bots.js"'), 'President code must stay modular');
 assert(css.includes('.hand-scroll.two-rows'), 'Large hands need a two-row mobile layout');

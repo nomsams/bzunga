@@ -387,6 +387,7 @@
             } else {
                 this._advanceAfterAction(playerId);
             }
+            event.gameOver = this.state.phase === 'game_over';
             this._emit(event);
             return { ok: true };
         }
@@ -395,7 +396,25 @@
             if (this.state.phase !== 'play') return { ok: false, reason: 'Passing is not available right now.' };
             const player = this.getPlayer(playerId);
             if (!player || this.activePlayer()?.id !== playerId) return { ok: false, reason: 'Wait for your turn.' };
-            if (!this.state.trick.rank) return { ok: false, reason: 'You must open an empty pile.' };
+            if (!this.state.trick.rank) {
+                if (Rules.getLegalPlays(player.hand, this.state.trick).length > 0) {
+                    return { ok: false, reason: 'You must open an empty pile.' };
+                }
+                this.state.lastAction = {
+                    type: 'blocked_opening',
+                    nonce: this.makeId(),
+                    playerId,
+                    playerName: player.name,
+                    time: this.now()
+                };
+                const resolution = this._resolveFreshPileLeader(playerId);
+                if (!resolution.gameOver) {
+                    const blockedNames = resolution.blocked.map(item => item.name).join(', ');
+                    this._log(`${blockedNames} cannot open with only wild 2s. ${resolution.leader?.name || 'The next player'} starts the pile.`, 'pass');
+                }
+                this._emit({ type: 'blocked_opening', playerId, gameOver: resolution.gameOver });
+                return { ok: true };
+            }
             if (player.passed) return { ok: false, reason: 'You already passed this pile.' };
 
             player.passed = true;
@@ -432,8 +451,50 @@
             this.state.trick = this.createEmptyTrick();
             const leaderIndex = this.state.players.findIndex(player => player.id === leaderId && !this.isFinished(player.id));
             this.state.turnIndex = leaderIndex >= 0 ? leaderIndex : Math.max(0, this._nextIndexAfter(leaderId, player => !this.isFinished(player.id)));
-            const leader = this.state.players[this.state.turnIndex];
-            this._log(`${reason}. ${leader?.name || 'The next player'} starts a fresh pile.`, 'clear');
+            const resolution = this._resolveFreshPileLeader(this.state.players[this.state.turnIndex]?.id || leaderId);
+            if (resolution.gameOver) return;
+            const blockedText = resolution.blocked.length
+                ? ` ${resolution.blocked.map(player => player.name).join(', ')} cannot open with only wild 2s.`
+                : '';
+            this._log(`${reason}.${blockedText} ${resolution.leader?.name || 'The next player'} starts a fresh pile.`, 'clear');
+        }
+
+        _resolveFreshPileLeader(preferredLeaderId) {
+            const unfinished = this._unfinishedPlayers();
+            const blocked = unfinished.filter(player => Rules.getLegalPlays(player.hand, this.state.trick).length === 0);
+            const blockedIds = new Set(blocked.map(player => player.id));
+            for (const player of blocked) player.passed = true;
+
+            const playable = unfinished.filter(player => !blockedIds.has(player.id));
+            if (playable.length === 0) {
+                const preferredIndex = Math.max(0, this.state.players.findIndex(player => player.id === preferredLeaderId));
+                const seatDistance = player => {
+                    const playerIndex = this.state.players.findIndex(candidate => candidate.id === player.id);
+                    const distance = (playerIndex - preferredIndex + this.state.players.length) % this.state.players.length;
+                    return distance === 0 ? this.state.players.length : distance;
+                };
+                const finalOrder = [...unfinished].sort((left, right) =>
+                    left.hand.length - right.hand.length || seatDistance(left) - seatDistance(right)
+                );
+                for (const player of finalOrder) {
+                    if (this.isFinished(player.id)) continue;
+                    this.state.finishOrder.push(player.id);
+                    player.finishPosition = this.state.finishOrder.length;
+                }
+                this._log('No unfinished player can legally open: only wild 2s remain. Final positions use fewest cards, then turn order.', 'warning');
+                this._finishGame();
+                return { gameOver: true, blocked, leader: null };
+            }
+
+            let leader = playable.find(player => player.id === preferredLeaderId) || null;
+            if (!leader) {
+                const nextIndex = this._nextIndexAfter(preferredLeaderId, player =>
+                    !this.isFinished(player.id) && !blockedIds.has(player.id)
+                );
+                leader = nextIndex >= 0 ? this.state.players[nextIndex] : playable[0];
+            }
+            this.state.turnIndex = this.state.players.findIndex(player => player.id === leader.id);
+            return { gameOver: false, blocked, leader };
         }
 
         _finishGame() {
@@ -453,6 +514,8 @@
 
             this.state.phase = 'game_over';
             this.state.turnIndex = -1;
+            this.state.thinkingBots = [];
+            this.state.typingBots = [];
             this.state.result = {
                 presidentId: president?.id || null,
                 slaveId: slave?.id || null,

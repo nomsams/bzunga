@@ -142,4 +142,56 @@ assert.strictEqual(hiddenOpponent.hidden, true);
 assert.strictEqual(hiddenOpponent.rank, undefined, 'Remote players must never receive opponent card ranks');
 assert(presidentView.players.find(player => player.id === 'pres').hand.every(card => card.rank), 'A player must receive their own card values');
 
-console.log('President engine: deal, starter, passing, Ace clears, roles, simultaneous exchange, and privacy passed.');
+const blockedEngine = new PresidentGameEngine({
+    now: () => 2000,
+    makeId: () => `blocked-${++idCounter}`
+});
+[
+    { id: 'winner', name: 'Winner', isHost: true },
+    { id: 'expert', name: 'Chancellor Zero', isBot: true, botDifficulty: 4 },
+    { id: 'baba', name: 'Baba Gupta', isBot: true, botDifficulty: 5 }
+].forEach(player => blockedEngine.addPlayer({ ...player, connected: true }));
+blockedEngine.state.phase = 'play';
+blockedEngine.state.roundNumber = 1;
+blockedEngine.state.finishOrder = ['winner'];
+blockedEngine.getPlayer('winner').hand = [];
+blockedEngine.getPlayer('winner').finishPosition = 1;
+blockedEngine.getPlayer('winner').passed = true;
+blockedEngine.getPlayer('expert').hand = [
+    makeCard('expert-8', '8', 'expert'),
+    makeCard('expert-2', '2', 'expert')
+];
+blockedEngine.getPlayer('baba').hand = [makeCard('baba-2', '2', 'baba')];
+blockedEngine.state.turnIndex = blockedEngine.state.players.findIndex(player => player.id === 'expert');
+blockedEngine.state.trick = blockedEngine.createEmptyTrick();
+blockedEngine.state.thinkingBots = ['expert', 'baba'];
+
+assert.strictEqual(blockedEngine.playCards('expert', ['expert-8']).ok, true);
+assert.strictEqual(blockedEngine.activePlayer().id, 'baba', 'The next unfinished player must answer the played 8');
+assert.strictEqual(blockedEngine.pass('baba').ok, true, 'A lone wild must be able to pass on an active pile');
+assert.strictEqual(blockedEngine.state.phase, 'game_over', 'Two lone wilds must resolve instead of deadlocking a fresh pile');
+assert.deepStrictEqual(
+    blockedEngine.state.finishOrder,
+    ['winner', 'baba', 'expert'],
+    'Equal blocked hands use clockwise order after the failed leader, leaving that leader as Slave'
+);
+assert.strictEqual(blockedEngine.state.result.slaveId, 'expert');
+assert.deepStrictEqual(blockedEngine.state.thinkingBots, [], 'Game over must clear stale thinking indicators');
+assert(blockedEngine.state.logs.some(log => /only wild 2s remain/i.test(log.message)), 'The forced endgame needs an explanatory log');
+
+const skipEngine = new PresidentGameEngine({ makeId: () => `skip-${++idCounter}` });
+['wild-leader', 'playable', 'other-wild'].forEach((id, index) => {
+    skipEngine.addPlayer({ id, name: id, isHost: index === 0, connected: true });
+});
+skipEngine.state.phase = 'play';
+skipEngine.getPlayer('wild-leader').hand = [makeCard('leader-2', '2', 'wild-leader')];
+skipEngine.getPlayer('playable').hand = [makeCard('playable-4', '4', 'playable')];
+skipEngine.getPlayer('other-wild').hand = [makeCard('other-2', '2', 'other-wild')];
+skipEngine.state.turnIndex = 0;
+skipEngine.state.trick = skipEngine.createEmptyTrick();
+assert.strictEqual(skipEngine.pass('wild-leader').ok, true, 'A blocked fresh-pile leader must be skippable');
+assert.strictEqual(skipEngine.activePlayer().id, 'playable', 'Fresh-pile leadership must rotate to a player with a legal opening');
+assert.strictEqual(skipEngine.getPlayer('wild-leader').passed, true);
+assert.strictEqual(skipEngine.getPlayer('other-wild').passed, true);
+
+console.log('President engine: deal, starter, passing, wild-only deadlock recovery, Ace clears, roles, simultaneous exchange, and privacy passed.');

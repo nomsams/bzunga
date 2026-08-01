@@ -115,4 +115,11 @@ if (finishingAction.type === 'PLAY_CARDS') {
     );
 }
 
+const loneWild = { ...bot, hand: [card('last-2', '2')] };
+assert.strictEqual(
+    PresidentBotBrain.chooseAction(loneWild, { ...leadState, players: [loneWild, state.players[1]] }, () => 0.4).type,
+    'PASS',
+    'A bot stranded with a lone wild must report that it cannot open instead of inventing an illegal play'
+);
+
 console.log('President bots: strategy legality, public-information boundary, exchanges, dialogue, and wild endgame passed.');

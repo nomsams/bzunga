@@ -738,6 +738,31 @@
             if (filtered.length) LINES[difficulty][category] = [...new Set(filtered)];
         });
     }
+
+    const DURAK_SHORT_TABLE_TALK = {
+        attack: ['Oh shit. Your turn.', "Didn't expect that?", 'Beat this, clown.', 'Card down. Deal with it.'],
+        defend: ['Not today, bastard.', 'Covered. Sit down.', 'Nice try, deck goblin.', 'That attack is dead.'],
+        take: ['Fine. Give me the damn pile.', 'Oh shit. I take.', 'Happy now, asshole?', 'Cards up. Grudge saved.'],
+        throw: ['One more, dickhead.', 'Eat this one too.', 'Your hand looked lonely.', 'Special delivery, clown.'],
+        pass: ['Pass. Keep the mess.', 'I am done here.', 'Not worth another card.', 'Carry on, you animals.'],
+        chat: ['Yo mama shuffles better.', 'Yo mama wants your trumps.', '{target}, that was dogshit.', 'Talk less. Defend better.']
+    };
+    const DURAK_SHORT_BABA = {
+        attack: ['Baba says beat this.', 'Baba found your weak spot.'],
+        defend: ['Baba says not today.', 'Covered. Baba barely noticed.'],
+        take: ['Baba takes. Do not celebrate.', 'Fine. Baba keeps the grudge.'],
+        throw: ['Baba adds one more.', 'Eat this too, peasant.'],
+        pass: ['Baba passes. Keep dancing.', 'Baba is done. Carry on.'],
+        chat: ['Baba heard enough, {target}.', 'Yo mama deals faster than you.']
+    };
+    for (let difficulty = 1; difficulty <= 5; difficulty++) {
+        for (const [category, lines] of Object.entries(DURAK_SHORT_TABLE_TALK)) {
+            for (const line of lines) {
+                if (!LINES[difficulty][category].includes(line)) LINES[difficulty][category].push(line);
+            }
+        }
+    }
+    for (const [category, lines] of Object.entries(DURAK_SHORT_BABA)) LINES[5][category].push(...lines);
     Object.assign(PROFILES[1], { chat: 0.86 });
     Object.assign(PROFILES[2], { chat: 0.84 });
     Object.assign(PROFILES[3], { chat: 0.82 });
@@ -922,7 +947,9 @@
     function lineFor(difficulty, category, random = Math.random, context = {}) {
         const bank = LINES[difficulty]?.[category] || LINES[2][category] || [];
         if (!bank.length) return '';
-        return bank[Math.floor(random() * bank.length)]
+        const concise = bank.filter(line => line.length <= 68);
+        const choices = concise.length ? concise : bank;
+        return choices[Math.floor(random() * choices.length)]
             .replaceAll('{durak}', context.durak || 'the fool');
     }
 
@@ -995,7 +1022,8 @@
             let line = lineFor(bot.botDifficulty, category, this.random);
             const recent = this.recentLines.get(bot.id) || [];
             if (recent.includes(line)) {
-                const alternatives = (LINES[bot.botDifficulty]?.[category] || []).filter(candidate => !recent.includes(candidate));
+                const alternatives = (LINES[bot.botDifficulty]?.[category] || [])
+                    .filter(candidate => candidate.length <= 68 && !recent.includes(candidate));
                 if (alternatives.length) line = alternatives[Math.floor(this.random() * alternatives.length)];
             }
             if (!line) return;
@@ -1042,7 +1070,7 @@
             if (recent.includes(line)) {
                 const alternatives = (LINES[responder.botDifficulty]?.chat || [])
                     .map(candidate => candidate.replaceAll('{target}', latest.name || 'friend'))
-                    .filter(candidate => !recent.includes(candidate));
+                    .filter(candidate => candidate.length <= 68 && !recent.includes(candidate));
                 if (alternatives.length) line = alternatives[Math.floor(this.random() * alternatives.length)];
             }
             this.recentLines.set(responder.id, [...recent.slice(-3), line]);

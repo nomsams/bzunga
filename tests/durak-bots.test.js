@@ -257,6 +257,10 @@ for (let difficulty = 1; difficulty <= 5; difficulty++) {
     );
     assert(Bots.PROFILES[difficulty].chat >= 0.8, `Difficulty ${difficulty} should comment regularly`);
     assert(Bots.LINES[difficulty].chat.length >= 30, `Difficulty ${difficulty} needs direct chat replies`);
+    for (const category of ['attack', 'defend', 'take', 'throw', 'pass', 'chat']) {
+        const line = Bots.lineFor(difficulty, category, () => 0.61);
+        assert(line.length <= 68, `Difficulty ${difficulty} ${category} commentary should stay short on mobile`);
+    }
 }
 assert.strictEqual(typeof Bots.DurakBotController.prototype.respondToHumanChat, 'function', 'Durak bots should answer human table chat');
 

@@ -1641,6 +1641,62 @@ for (const persona of ['pro', 'expert', 'baba']) {
     });
 }
 
+const BOT_SHORT_REACTIONS = [
+    'Oh, shit.',
+    "Didn't expect that.",
+    'Where did that come from?',
+    "I didn't think you had that.",
+    'Hope nobody has a red King.',
+    'That was filthy.',
+    'You lucky bastard.',
+    'The deck is taking the piss.',
+    'What the hell was that?',
+    'Nice move, asshole.',
+    'That came from nowhere.',
+    'Well, that plan is fucked.',
+    'Blink and you miss it, clown.',
+    'My card. Too slow.',
+    'Your luck is disgusting.',
+    'Sit down, deck goblin.',
+    'Yo mama shuffles better.',
+    'Yo mama wants your reflexes back.',
+    'Bold move, cardboard peasant.',
+    'That was rude. I respect it.',
+    'Absolute bullshit. Carry on.',
+    'Your thumb finally woke up.',
+    'I hate how good that was.',
+    'You got lucky, dickhead.'
+];
+
+const BOT_SHORT_INSULTS = [
+    '{target}, your move was dogshit.',
+    'Pipe down, bargain-bin Batman.',
+    'Your cards deserve a new owner.',
+    'You play like a wet sock.',
+    'Great confidence. Shit decision.',
+    'Your plan died on impact.',
+    'Yo mama deals faster than you.',
+    'Yo mama called. You still suck.',
+    'Nice try, discount villain.',
+    'That move needs an apology.',
+    'Even the deck cringed.',
+    'You absolute card goblin.',
+    'Strong mouth. Weak little layout.',
+    'Your comeback missed the table.',
+    'Clown move. Premium packaging.',
+    'That was arse with confidence.'
+];
+
+for (const persona of Object.keys(BotConfig.chatBank)) {
+    for (const line of BOT_SHORT_REACTIONS) {
+        if (!BotConfig.chatBank[persona].banter.includes(line)) BotConfig.chatBank[persona].banter.push(line);
+        if (!BotConfig.generalReplies[persona].includes(line)) BotConfig.generalReplies[persona].push(line);
+    }
+    for (const line of BOT_SHORT_INSULTS) {
+        if (!BotConfig.directReplies[persona].insult.includes(line)) BotConfig.directReplies[persona].insult.push(line);
+    }
+}
+
 const Bot = {
     chatHistory: [], lastChatTime: {}, usedLines: {},
     recentLines: {}, globalRecentLines: [],
@@ -1824,6 +1880,37 @@ const Bot = {
         return targetValue - drawnValue;
     },
 
+    shouldTakeDiscard: (bot, topDiscard, random = Math.random) => {
+        if (!topDiscard || topDiscard.isSlapped || Engine.state.gameMode === 'joker') return false;
+        const topValue = Bot.getNumericValue(topDiscard.value, topDiscard.isRed);
+        const difficulty = Number(bot.botDifficulty) || 1;
+
+        // Casual bots still notice a spectacular face-up card, but no longer scoop
+        // ordinary discards simply because they are visible.
+        if (difficulty < 3) {
+            return topValue <= 2 && random() < (difficulty === 1 ? 0.16 : 0.24);
+        }
+
+        const target = Bot.chooseOwnReplacement(bot, topValue);
+        if (!target) return false;
+        const gain = Bot.replacementGain(bot, target, topValue);
+        const targetIsKnown = Boolean(Engine.botMemory[bot.id]?.[target.id]);
+        const isBlackKing = topDiscard.value === 'K' && !topDiscard.isRed;
+        const minimumGain = {
+            3: 4.5,
+            4: 3.75,
+            5: 4.25,
+            6: 2.75
+        }[difficulty] ?? 4.5;
+        const uncertaintyTax = targetIsKnown ? 0 : 1.25;
+        if (!isBlackKing && gain < minimumGain + uncertaintyTax) return false;
+
+        const takeChance = isBlackKing
+            ? 0.92
+            : ({ 3: 0.42, 4: 0.58, 5: 0.48, 6: 0.72 }[difficulty] ?? 0.4);
+        return random() < takeChance;
+    },
+
     chooseSlapTarget: (bot, value) => {
         const mem = Engine.botMemory[bot.id] || {};
         const unknownValue = Bot.estimateUnknownValue(bot);
@@ -1854,12 +1941,14 @@ const Bot = {
     getUniqueResponse: (botId, category, linesArray) => {
         const uniqueLines = [...new Set((linesArray || []).filter(line => typeof line === 'string' && line.trim()))];
         if (!uniqueLines.length) return '';
+        const conciseLines = uniqueLines.filter(line => line.length <= 68);
+        const selectableLines = conciseLines.length ? conciseLines : uniqueLines;
         if (!Bot.usedLines[botId]) Bot.usedLines[botId] = {};
         if (!Bot.recentLines[botId]) Bot.recentLines[botId] = [];
         let state = Bot.usedLines[botId][category];
-        const signature = uniqueLines.join('\u0001');
+        const signature = selectableLines.join('\u0001');
         if (!state || !Array.isArray(state.bag) || state.signature !== signature || state.bag.length === 0) {
-            const bag = uniqueLines.map((_, index) => index);
+            const bag = selectableLines.map((_, index) => index);
             for (let i = bag.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [bag[i], bag[j]] = [bag[j], bag[i]];
@@ -1871,16 +1960,16 @@ const Bot = {
         const recentForBot = new Set(Bot.recentLines[botId]);
         const recentGlobal = new Set(Bot.globalRecentLines.slice(-12));
         let candidatePosition = state.bag.findIndex(index => {
-            const line = uniqueLines[index];
+            const line = selectableLines[index];
             return line !== state.lastLine && !recentForBot.has(line) && !recentGlobal.has(line);
         });
         if (candidatePosition < 0) {
-            candidatePosition = state.bag.findIndex(index => uniqueLines[index] !== state.lastLine);
+            candidatePosition = state.bag.findIndex(index => selectableLines[index] !== state.lastLine);
         }
         if (candidatePosition < 0) candidatePosition = 0;
 
         const [nextIndex] = state.bag.splice(candidatePosition, 1);
-        const selectedLine = uniqueLines[nextIndex];
+        const selectedLine = selectableLines[nextIndex];
         state.lastLine = selectedLine;
 
         Bot.recentLines[botId].push(selectedLine);
@@ -1888,6 +1977,17 @@ const Bot = {
         Bot.globalRecentLines.push(selectedLine);
         if (Bot.globalRecentLines.length > 30) Bot.globalRecentLines.shift();
         return selectedLine;
+    },
+
+    compactResponse: (message, maxLength = 76) => {
+        const text = String(message || '').replace(/\s+/g, ' ').trim();
+        if (text.length <= maxLength) return text;
+        const sentence = text.match(/^.{12,76}?[.!?](?=\s|$)/)?.[0];
+        if (sentence) return sentence;
+        const clause = text.split(/\s(?:—|-)\s|[;:]/)[0].trim();
+        if (clause.length >= 12 && clause.length <= maxLength) return /[.!?]$/.test(clause) ? clause : `${clause}.`;
+        const clipped = text.slice(0, maxLength - 1).replace(/\s+\S*$/, '').replace(/[,:;—-]+$/, '');
+        return `${clipped}…`;
     },
 
     formatLine: (line, context = {}) => {
@@ -2045,6 +2145,7 @@ const Bot = {
     },
 
     queueMessage: (bot, message, isPirate = false, options = {}) => {
+        message = Bot.compactResponse(message);
         const existing = Bot.pendingChats[bot.id];
         if (existing && !options.force) return false;
         if (existing) {
@@ -2480,14 +2581,7 @@ const Bot = {
             let mem = Engine.botMemory[activePlayer.id];
             const isJokerMode = Engine.state.gameMode === 'joker';
 
-            if (topDiscard) {
-                let topVal = Bot.getNumericValue(topDiscard.value, topDiscard.isRed);
-                if (activePlayer.botDifficulty >= 3) {
-                    // Only take a visible discard when it has a concrete profitable home.
-                    // Black kings are excellent (-1); magic cards are only magic from deck.
-                    wantsDiscard = !isJokerMode && !!Bot.chooseOwnReplacement(activePlayer, topVal);
-                } else { wantsDiscard = !isJokerMode && topVal < 6 && Math.random() > 0.5; }
-            }
+            if (topDiscard) wantsDiscard = !isJokerMode && Bot.shouldTakeDiscard(activePlayer, topDiscard);
 
             if (Engine.state.phase === 'play' && activePlayer.botDifficulty >= 4) {
                 let myExpectedScore = 0, knownCards = 0, totalCards = activePlayer.hand.length + activePlayer.penaltyCards.length;

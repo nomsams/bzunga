@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { PresidentBotBrain, PHRASES, BABA_PHRASES, PROFILES } = require('../president/bots.js');
+const { PresidentBotBrain, PresidentBotController, PHRASES, BABA_PHRASES, PROFILES } = require('../president/bots.js');
 const Rules = require('../president/rules.js');
 
 const card = (id, rank, ownerId = 'bot', suit = '♣') => ({
@@ -35,6 +35,18 @@ for (const collection of [PHRASES, BABA_PHRASES]) {
     );
 }
 assert(Object.values(PROFILES).every(profile => profile.chatChance >= 0.7), 'Every President bot should speak up regularly');
+
+const dialogueSelector = {
+    recentLines: new Map(),
+    globalRecent: [],
+    random: () => 0.47
+};
+for (const collection of [PHRASES, BABA_PHRASES]) {
+    for (const [category, choices] of Object.entries(collection)) {
+        const line = PresidentBotController.prototype.pickFreshLine.call(dialogueSelector, `short-${category}`, choices);
+        assert(line.length <= 68, `President ${category} commentary should be short enough for mobile`);
+    }
+}
 
 const bot = {
     id: 'bot',

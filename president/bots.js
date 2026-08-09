@@ -628,6 +628,31 @@
             if (filtered.length) bank[category] = [...new Set(filtered)];
         });
     }
+
+    const PRESIDENT_SHORT_TABLE_TALK = {
+        intro: ['Oh shit, here we go.', 'Deal them, you animals.', 'New hand. Same clowns.', 'Try not to choke.'],
+        play: ["Didn't expect that?", 'Where did that come from?', 'Eat that, cardboard peasant.', 'Nice cards. Shame about you.'],
+        bigPlay: ['That pile got fat.', 'Oh shit. Count them.', 'Whole damn family landed.', 'Try beating that, clown.'],
+        pass: ['Pass. Keep the bullshit moving.', 'Not worth it, bastard.', 'I am out. Enjoy the mess.', 'Your pile, your problem.'],
+        ace: ['Ace. Fuck off, pile.', 'Fresh pile, same idiots.', 'Ace clears your little dream.', 'Wiped clean. Try again.'],
+        lowHand: ['Somebody is nearly out.', 'Wake up, you clowns.', 'Tiny hand. Big problem.', 'Stop them, for fuck’s sake.'],
+        victory: ['I win. Stay salty.', 'Crown me, bastards.', 'President. You lot are fired.', 'Easy work. Ugly opposition.'],
+        defeat: ['Oh shit. You actually won.', 'Fine. Take the damn crown.', 'Lucky bastard.', 'I hate this government.'],
+        chat: ['Yo mama shuffles better.', 'Yo mama wants your cards back.', '{target}, that was dogshit.', 'Short version: shut up, clown.']
+    };
+    const PRESIDENT_SHORT_BABA = {
+        intro: ['Baba is here. Hide the crown.', 'Oh shit. Baba got cards.', 'Deal, peasants.', 'Baba smells fear already.'],
+        play: ['Baba says eat that.', 'Did not expect that, did you?', 'Baba found your weak spot.', 'Cards down. Ego next.'],
+        bigPlay: ['Baba brought the whole family.', 'Count them and cry.', 'Big pile. Tiny opposition.', 'Baba just broke the table.'],
+        pass: ['Baba passes. Keep dancing.', 'Not worth Baba’s card.', 'Carry on, donkeys.', 'Your mess, not Baba’s.'],
+        ace: ['Ace. Baba wipes the table.', 'Fresh pile. Baba leads.', 'Your little pile is dead.', 'Baba says start again.'],
+        lowHand: ['Baba sees the tiny hand.', 'Wake up, fools.', 'Some bastard is escaping.', 'Baba will handle it.'],
+        victory: ['President Baba. Bow or sulk.', 'Baba wins. Obviously.', 'Crown secured, clowns.', 'The throne chose correctly.'],
+        defeat: ['You beat Baba. Screenshot it.', 'Lucky bastard. Enjoy it.', 'Baba rejects this nonsense.', 'Fine. Take the chair.'],
+        chat: ['Yo mama deals faster.', '{target}, Baba heard enough.', 'That comeback was dogshit.', 'Talk less. Lose properly.']
+    };
+    for (const [category, lines] of Object.entries(PRESIDENT_SHORT_TABLE_TALK)) PHRASES[category].push(...lines);
+    for (const [category, lines] of Object.entries(PRESIDENT_SHORT_BABA)) BABA_PHRASES[category].push(...lines);
     Object.assign(PROFILES[1], { chatChance: 0.72 });
     Object.assign(PROFILES[2], { chatChance: 0.76 });
     Object.assign(PROFILES[3], { chatChance: 0.8 });
@@ -938,9 +963,11 @@
 
         pickFreshLine(botId, choices) {
             const recent = this.recentLines.get(botId) || [];
-            let available = choices.filter(line => !recent.includes(line) && !this.globalRecent.slice(-10).includes(line));
-            if (!available.length) available = choices.filter(line => line !== recent[recent.length - 1]);
-            if (!available.length) available = choices;
+            const concise = choices.filter(line => line.length <= 68);
+            const tableLines = concise.length ? concise : choices;
+            let available = tableLines.filter(line => !recent.includes(line) && !this.globalRecent.slice(-10).includes(line));
+            if (!available.length) available = tableLines.filter(line => line !== recent[recent.length - 1]);
+            if (!available.length) available = tableLines;
             const line = available[Math.floor(this.random() * available.length)];
             recent.push(line);
             if (recent.length > 8) recent.shift();

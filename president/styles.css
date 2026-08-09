@@ -697,6 +697,11 @@ select:focus {
     box-shadow: 0 7px 18px rgba(0, 0, 0, 0.35);
 }
 
+[data-card-theme^="svg-"] .pile-card {
+    width: 68px;
+    height: 98px;
+}
+
 .pile-card:first-child {
     margin-left: 0;
 }
@@ -916,10 +921,20 @@ select:focus {
     transition: transform 0.17s ease, box-shadow 0.17s ease, border-color 0.17s ease;
 }
 
+[data-card-theme^="svg-"] .playing-card {
+    width: 65px;
+    height: 94px;
+}
+
 .hand-scroll.two-rows .playing-card {
     width: 44px;
     height: 58px;
     border-radius: 6px;
+}
+
+[data-card-theme^="svg-"] .hand-scroll.two-rows .playing-card {
+    width: 50px;
+    height: 68px;
 }
 
 .playing-card.selected {
@@ -1498,6 +1513,11 @@ select:focus {
         border-radius: 6px;
     }
 
+    [data-card-theme^="svg-"] .pile-card {
+        width: 51px;
+        height: 73px;
+    }
+
     .pile-card .card-corner {
         top: 3px;
         left: 3px;
@@ -1568,10 +1588,20 @@ select:focus {
         padding-left: 4px;
     }
 
+    [data-card-theme^="svg-"] .hand-scroll {
+        grid-auto-columns: 58px;
+        grid-template-rows: 84px;
+    }
+
     .playing-card {
         width: 51px;
         height: 73px;
         border-radius: 7px;
+    }
+
+    [data-card-theme^="svg-"] .playing-card {
+        width: 58px;
+        height: 83px;
     }
 
     .playing-card .card-corner {
@@ -1587,9 +1617,19 @@ select:focus {
         grid-auto-columns: 47px;
     }
 
+    [data-card-theme^="svg-"] .hand-scroll.two-rows {
+        grid-template-rows: repeat(2, 71px);
+        grid-auto-columns: 52px;
+    }
+
     .hand-scroll.two-rows .playing-card {
         width: 47px;
         height: 63px;
+    }
+
+    [data-card-theme^="svg-"] .hand-scroll.two-rows .playing-card {
+        width: 52px;
+        height: 70px;
     }
 
     #chat-fab {
@@ -1718,6 +1758,11 @@ select:focus {
     .playing-card {
         width: 46px;
         height: 66px;
+    }
+
+    [data-card-theme^="svg-"] .playing-card {
+        width: 51px;
+        height: 73px;
     }
 
     .hand-scroll.two-rows {

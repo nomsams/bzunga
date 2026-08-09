@@ -26,6 +26,11 @@
         --surface: rgba(30, 41, 59, 0.85);
     }
 
+    html[data-card-theme^="svg-"] {
+        --card-w: 60px;
+        --card-h: 86px;
+    }
+
     @media (max-width: 768px) {
         :root {
             --card-w: 44px;
@@ -385,6 +390,10 @@
             --card-w: 46px;
             --card-h: 66px;
         }
+        html[data-card-theme^="svg-"] {
+            --card-w: 52px;
+            --card-h: 74px;
+        }
         body { overscroll-behavior: none; position: fixed; inset: 0; }
         #app { overflow: hidden; padding: 0; }
         #game-view { width: 100%; height: 100dvh; align-items: stretch; }
@@ -599,6 +608,7 @@
 
     @media (max-width: 390px) {
         :root { --card-w: 43px; --card-h: 61px; }
+        html[data-card-theme^="svg-"] { --card-w: 49px; --card-h: 70px; }
         #action-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         #status-text { font-size: 0.72rem; }
     }

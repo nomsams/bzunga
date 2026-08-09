@@ -77,5 +77,7 @@ for (const stylesheet of ['index.html', 'president/styles.css', 'durak/styles.cs
         `${stylesheet} must fit illustrated backs to the exact card slot`
     );
 }
+assert(fs.readFileSync(path.join(root, 'index.html'), 'utf8').includes('html[data-card-theme^="svg-"] { --card-w: 49px; --card-h: 70px; }'), 'Bazunga illustrated cards must remain readable on narrow phones');
+assert(/\[data-card-theme\^="svg-"\] \.playing-card\s*\{\s*width: 58px;\s*height: 83px;/.test(fs.readFileSync(path.join(root, 'president', 'styles.css'), 'utf8')), 'President illustrated hands must be larger on mobile');
 
 console.log('Card themes: 56 SVG assets, privacy-safe progressive loading, idle cache warmup, exact-fit backs, and shared controls passed.');

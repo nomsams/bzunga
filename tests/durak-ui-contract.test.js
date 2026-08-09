@@ -13,6 +13,8 @@ const president = fs.readFileSync(path.join(root, 'president', 'index.html'), 'u
 assert(html.includes('id="talon-stack"') && html.includes('id="trump-card-slot"'), 'Durak needs a visible talon and turn-up trump');
 assert(css.includes('#trump-card-slot') && css.includes('left: 30%') && css.includes('rotate: -90deg'), 'The trump must lie at 90 degrees with its indexed half exposed beneath the talon');
 assert(css.includes('bottom: 16%'), 'The mobile trump must sit above the action panel so its rank and suit remain readable');
+assert(css.includes('html[data-card-theme^="svg-"]') && css.includes('--card-w: 61px'), 'Illustrated Durak cards must be enlarged on mobile');
+assert(css.includes('left: 114px') && css.includes('top: 45px') && css.includes('background: rgba(7, 15, 27, 0.88)'), 'Talon count and trump suit need a protected foreground label above the action panel');
 assert(html.includes('id="battle-pairs"'), 'Attack and defence pairs need a dedicated battle area');
 assert(css.includes('.battle-pair .defense-card') && css.includes('left: 22px'), 'Defence cards must visibly overlap their attacks');
 assert(html.includes('id="btn-finish-attack"'), 'Attackers need a Finish Attack control');

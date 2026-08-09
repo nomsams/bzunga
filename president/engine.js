@@ -362,7 +362,8 @@
             };
             this._log(`${player.name} played ${combo.count} × ${combo.rank}${combo.wildCount ? ` with ${combo.wildCount} wild 2${combo.wildCount === 1 ? '' : 's'}` : ''}.`, 'play');
 
-            if (player.hand.length === 0) {
+            const playerFinished = player.hand.length === 0;
+            if (playerFinished) {
                 this.state.finishOrder.push(player.id);
                 player.finishPosition = this.state.finishOrder.length;
                 player.passed = true;
@@ -379,11 +380,14 @@
                 }
             }
 
-            const event = { type: 'play', playerId, combo, cards: playedCards, finished: player.hand.length === 0 };
-            if (combo.clearsTrick) {
+            const event = { type: 'play', playerId, combo, cards: playedCards, finished: playerFinished };
+            if (combo.clearsTrick || playerFinished) {
                 this.state.lastAction.cleared = true;
-                const leader = player.hand.length ? player : this._nextUnfinishedAfter(playerId);
-                this._clearTrick(leader?.id, 'Ace clears the pile');
+                const leader = playerFinished ? this._nextUnfinishedAfter(playerId) : player;
+                this._clearTrick(
+                    leader?.id,
+                    combo.clearsTrick ? 'Ace clears the pile' : `${player.name} went out and clears the pile`
+                );
             } else {
                 this._advanceAfterAction(playerId);
             }

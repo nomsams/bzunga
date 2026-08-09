@@ -94,6 +94,37 @@ assert.strictEqual(engine.playCards('p2', ['p2-a']).ok, true);
 assert.strictEqual(engine.state.trick.rank, null, 'An Ace must clear immediately');
 assert.strictEqual(engine.activePlayer().id, 'p2', 'An Ace player who still has cards must lead again');
 
+const finishClearEngine = new PresidentGameEngine({ makeId: () => `finish-clear-${++idCounter}` });
+['finisher', 'next', 'third'].forEach((id, index) => {
+    finishClearEngine.addPlayer({ id, name: id, isHost: index === 0, connected: true });
+});
+finishClearEngine.state.phase = 'play';
+finishClearEngine.state.finishOrder = [];
+finishClearEngine.getPlayer('finisher').hand = [makeCard('finisher-7', '7', 'finisher')];
+finishClearEngine.getPlayer('next').hand = [
+    makeCard('next-8', '8', 'next'),
+    makeCard('next-9', '9', 'next')
+];
+finishClearEngine.getPlayer('third').hand = [
+    makeCard('third-10', '10', 'third'),
+    makeCard('third-j', 'J', 'third')
+];
+finishClearEngine.state.turnIndex = 0;
+finishClearEngine.state.trick = {
+    id: 'finish-clear-trick',
+    rank: '6',
+    rankPower: Rules.RANK_POWER['6'],
+    count: 1,
+    lastPlayerId: 'third',
+    plays: []
+};
+assert.strictEqual(finishClearEngine.playCards('finisher', ['finisher-7']).ok, true);
+assert.strictEqual(finishClearEngine.state.phase, 'play', 'Finishing first must not end a three-player game');
+assert.strictEqual(finishClearEngine.state.trick.rank, null, 'Playing the last card must clear the active pile');
+assert.strictEqual(finishClearEngine.activePlayer().id, 'next', 'The next unfinished player must open the fresh pile');
+assert(finishClearEngine.state.players.filter(player => player.id !== 'finisher').every(player => !player.passed));
+assert.strictEqual(finishClearEngine.state.lastAction.cleared, true, 'The finishing play must advertise the pile clear to the UI');
+
 const roleEngine = new PresidentGameEngine({ makeId: () => `role-${++idCounter}` });
 ['pres', 'vice', 'citizen', 'vslave', 'slave'].forEach((id, index) => {
     roleEngine.addPlayer({ id, name: id, isHost: index === 0, connected: true });
@@ -194,4 +225,4 @@ assert.strictEqual(skipEngine.activePlayer().id, 'playable', 'Fresh-pile leaders
 assert.strictEqual(skipEngine.getPlayer('wild-leader').passed, true);
 assert.strictEqual(skipEngine.getPlayer('other-wild').passed, true);
 
-console.log('President engine: deal, starter, passing, wild-only deadlock recovery, Ace clears, roles, simultaneous exchange, and privacy passed.');
+console.log('President engine: deal, starter, passing, finish/Ace clears, wild-only recovery, roles, exchange, and privacy passed.');

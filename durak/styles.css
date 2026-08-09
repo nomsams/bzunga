@@ -17,6 +17,11 @@
     --action-height: 112px;
 }
 
+html[data-card-theme^="svg-"] {
+    --card-w: 78px;
+    --card-h: 112px;
+}
+
 * {
     box-sizing: border-box;
 }
@@ -827,19 +832,28 @@ select:focus {
 .talon-meta,
 .trump-meta {
     position: absolute;
+    z-index: 6;
     display: grid;
     justify-items: center;
+    min-width: 48px;
+    padding: 3px 6px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    background: rgba(7, 15, 27, 0.88);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32);
     color: #cad4e0;
+    line-height: 1.05;
+    pointer-events: none;
 }
 
 .talon-meta {
-    left: 96px;
+    left: 114px;
     top: 5px;
 }
 
 .trump-meta {
-    left: 96px;
-    bottom: 3px;
+    left: 114px;
+    top: 45px;
 }
 
 .talon-meta strong,
@@ -1284,6 +1298,11 @@ select:focus {
         --action-height: 102px;
     }
 
+    html[data-card-theme^="svg-"] {
+        --card-w: 61px;
+        --card-h: 88px;
+    }
+
     #status-banner {
         min-height: 54px;
         padding: 6px 8px;
@@ -1370,6 +1389,11 @@ select:focus {
         height: 90px;
         scale: 0.78;
         transform-origin: left bottom;
+    }
+
+    .talon-meta,
+    .trump-meta {
+        left: 103px;
     }
 
     .opponent-seat {
@@ -1518,6 +1542,12 @@ select:focus {
         --card-w: 48px;
         --card-h: 68px;
         --hand-height: 105px;
+    }
+
+    html[data-card-theme^="svg-"] {
+        --card-w: 52px;
+        --card-h: 74px;
+        --hand-height: 111px;
     }
 
     #status-banner {

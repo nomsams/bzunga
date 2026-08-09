@@ -10,7 +10,12 @@ const sandbox = {
     setTimeout,
     clearTimeout,
     setInterval,
-    clearInterval
+    clearInterval,
+    Engine: {
+        state: { gameMode: 'classic' },
+        botMemory: {},
+        getCardById: () => null
+    }
 };
 vm.runInNewContext(source, sandbox);
 
@@ -102,6 +107,42 @@ for (let i = 0; i < 50; i++) {
     assert.notStrictEqual(next, previous, 'A line repeated immediately across a shuffle boundary');
     previous = next;
 }
+
+const shortSamples = Array.from({ length: 80 }, () =>
+    Bot.getUniqueResponse('short-bot', 'banter', BotConfig.chatBank.expert.banter)
+);
+assert(shortSamples.every(line => line.length <= 68), 'Bazunga table talk should favor short, punchy messages');
+assert(Bot.compactResponse('This is a deliberately oversized table message that keeps wandering long after everybody stopped caring about it.').length <= 76);
+
+const discardBot = {
+    id: 'discard-expert',
+    botDifficulty: 4,
+    hand: [{ id: 'known-ten', ownerId: 'discard-expert', loc: 'hand' }],
+    penaltyCards: []
+};
+sandbox.Engine.botMemory[discardBot.id] = {
+    'known-ten': { id: 'known-ten', numVal: 10, time: 1 }
+};
+assert.strictEqual(
+    Bot.shouldTakeDiscard(discardBot, { id: 'discard-five', value: '5', isRed: false }, () => 0.5),
+    true,
+    'An expert may take a clearly profitable discard'
+);
+assert.strictEqual(
+    Bot.shouldTakeDiscard(discardBot, { id: 'discard-eight', value: '8', isRed: false }, () => 0),
+    false,
+    'Experts must ignore marginal face-up improvements'
+);
+assert.strictEqual(
+    Bot.shouldTakeDiscard(discardBot, { id: 'discard-five', value: '5', isRed: false }, () => 0.9),
+    false,
+    'Even good ordinary discards must not be taken automatically every time'
+);
+assert.strictEqual(
+    Bot.shouldTakeDiscard(discardBot, { id: 'black-king', value: 'K', isRed: false }, () => 0.9),
+    true,
+    'The exceptional minus-one black King should remain an obvious tactical take'
+);
 
 const intentCases = new Map([
     ['thanks mate', 'thanks'],

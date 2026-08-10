@@ -8,6 +8,7 @@
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="card-theme.js"></script>
+<script src="offline.js"></script>
 <script src="bot.js"></script>
 <style>
     :root {
@@ -70,6 +71,9 @@
     button.secondary { background: #475569; color: white; }
     button.danger { background: var(--danger); color: white; }
     button.success { background: var(--success); color: white; }
+    .offline-download-button { border: 1px solid rgba(56,189,248,0.35); background: linear-gradient(135deg, #164e63, #1e3a5f) !important; color: #e0f2fe !important; }
+    .offline-download-button.offline-ready { border-color: rgba(52,211,153,0.45); background: linear-gradient(135deg, #064e3b, #14532d) !important; color: #d1fae5 !important; }
+    .offline-download-status { min-height: 1.7em; margin: -2px 4px 6px; color: #94a3b8; font-size: 0.64rem; line-height: 1.35; }
 
     #qr-container { background: white; padding: 15px; display: inline-block; margin: 15px 0; border-radius: 12px; }
     .player-list { text-align: left; margin-top: 15px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 5px; }
@@ -671,6 +675,8 @@
             <input type="text" id="join-id" placeholder="Paste Game ID">
             <button id="btn-join" class="secondary">Join Game</button>
             <button id="btn-rules-lobby" class="secondary">How to Play</button>
+            <button id="btn-download-offline" class="offline-download-button">&#11015; DOWNLOAD ALL MODES</button>
+            <p id="offline-download-status" class="offline-download-status" aria-live="polite">Save every game and card design for offline bot play.</p>
         </div>
         <div class="lobby-box hidden" id="lobby-room" style="max-height: 90vh; overflow-y: auto; padding-bottom: 30px;">
             <h2 style="color: white; margin-bottom: 10px;">Game Lobby</h2>
@@ -864,7 +870,7 @@ const FINAL_SLAP_WINDOW_MS = 4200;
 
 // --- GLOBAL APP STATE ---
 const App = {
-    isHost: false, localId: null, localName: '', sessionToken: null, peer: null, connections: {}, hostConn: null, gameState: null, animEnabled: true,
+    isHost: false, offlineHost: false, localId: null, localName: '', sessionToken: null, peer: null, peerOpenTimer: null, connections: {}, hostConn: null, gameState: null, animEnabled: true,
     uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null, cardPress: null, bazungaConfirmOpen: false, rulesOpen: false, expandedBadgeId: null, lastBazungaEffectNonce: null, lastBotPeekNonce: null },
     botInterval: null
 };
@@ -1573,39 +1579,88 @@ Engine.executeSwap = (id1, id2) => {
 
 // --- NETWORKING ---
 const Net = {
+    openHost: (id, offline = false) => {
+        if (App.localId) return;
+        clearTimeout(App.peerOpenTimer);
+        App.localId = id;
+        App.offlineHost = offline;
+        document.getElementById('lobby-init').classList.add('hidden');
+        document.getElementById('lobby-room').classList.remove('hidden');
+        document.getElementById('host-controls').classList.remove('hidden');
+        document.getElementById('room-id-display').innerText = offline ? 'OFFLINE • BOTS ONLY' : id;
+
+        const qrContainer = document.getElementById('qr-container');
+        qrContainer.innerHTML = '';
+        qrContainer.style.display = offline ? 'none' : 'inline-block';
+        if (!offline && typeof QRCode === 'function') {
+            const hostUrl = new URL(window.location.origin + window.location.pathname);
+            hostUrl.searchParams.set('game', 'bazunga');
+            hostUrl.searchParams.set('join', id);
+            qrContainer.dataset.inviteUrl = hostUrl.href;
+            qrContainer.setAttribute('aria-label', 'Scan to join this BAZUNGA room');
+            new QRCode(qrContainer, { text: hostUrl.href, width: 160, height: 160, colorDark: '#000', colorLight: '#fff' });
+        }
+
+        Engine.state.players.push({ id, name: App.localName, sessionToken: App.sessionToken, isHost: true, isBot: false, connected: true });
+        Engine.broadcast();
+        if (window.Bot?.start) window.Bot.start();
+        if (offline) UI.showToast('Offline bot table ready. Add bots and play normally.', 'success');
+    },
+
+    openOfflineHost: () => {
+        if (App.localId) return;
+        clearTimeout(App.peerOpenTimer);
+        try { App.peer?.destroy?.(); } catch (error) {}
+        App.peer = null;
+        Net.openHost(`offline-${Utils.uuid()}`, true);
+    },
+
     init: (name, providedId) => {
         App.localName = Utils.cleanText(name, 24, "Player_" + Math.floor(Math.random()*1000));
         App.sessionToken = String(localStorage.getItem('bazunga_token') || Utils.uuid()).slice(0, 80);
         localStorage.setItem('bazunga_token', App.sessionToken);
 
-        App.peer = new Peer(Utils.uuid(), { secure: true, config: { 'iceServers': [ { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' } ] } });
+        if (App.isHost && (!navigator.onLine || typeof Peer !== 'function')) {
+            Net.openOfflineHost();
+            return;
+        }
+        if (typeof Peer !== 'function') {
+            UI.showToast('Online multiplayer is unavailable. Download the games for offline bot play.', 'danger');
+            const joinButton = document.getElementById('btn-join');
+            if (joinButton) { joinButton.innerText = 'Join Game'; joinButton.disabled = false; }
+            return;
+        }
+        try {
+            App.peer = new Peer(Utils.uuid(), { secure: true, config: { 'iceServers': [ { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' } ] } });
+        } catch (error) {
+            if (App.isHost) return Net.openOfflineHost();
+            throw error;
+        }
+
+        if (App.isHost) {
+            App.peerOpenTimer = setTimeout(() => {
+                if (!App.localId) Net.openOfflineHost();
+            }, 4500);
+        }
 
         App.peer.on('open', (id) => {
-            App.localId = id;
+            clearTimeout(App.peerOpenTimer);
+            if (App.localId) return;
             if (App.isHost) {
-                document.getElementById('lobby-init').classList.add('hidden');
-                document.getElementById('lobby-room').classList.remove('hidden');
-                document.getElementById('host-controls').classList.remove('hidden');
-                document.getElementById('room-id-display').innerText = id;
-
-                let hostUrl = new URL(window.location.origin + window.location.pathname);
-                hostUrl.searchParams.set('game', 'bazunga');
-                hostUrl.searchParams.set('join', id);
-                const qrContainer = document.getElementById("qr-container");
-                qrContainer.dataset.inviteUrl = hostUrl.href;
-                qrContainer.setAttribute('aria-label', 'Scan to join this BAZUNGA room');
-                new QRCode(qrContainer, { text: hostUrl.href, width: 160, height: 160, colorDark: "#000", colorLight: "#fff" });
-
-                Engine.state.players.push({ id: id, name: App.localName, sessionToken: App.sessionToken, isHost: true, isBot: false, connected: true });
-                Engine.broadcast();
-                if(window.Bot && window.Bot.start) window.Bot.start();
+                Net.openHost(id, false);
             } else {
+                App.localId = id;
                 Net.connectToHost(providedId || document.getElementById('join-id').value.trim().replace(/[^a-zA-Z0-9-]/g, ''));
             }
         });
 
         App.peer.on('error', (err) => {
-            console.error(err); UI.showToast("Connection Error: " + err.message, "danger");
+            console.error(err);
+            if (App.isHost && !App.localId) {
+                Net.openOfflineHost();
+                return;
+            }
+            UI.showToast("Connection Error: " + err.message, "danger");
             let btn = document.getElementById('btn-host'); if(btn) { btn.innerText = "Create Game"; btn.disabled = false; }
             let btnJoin = document.getElementById('btn-join'); if(btnJoin) { btnJoin.innerText = "Join Game"; btnJoin.disabled = false; }
         });
@@ -2536,8 +2591,9 @@ const UI = {
             };
 
             let allCards = [...p.hand, ...p.penaltyCards];
-            let baseHandW = isMobile ? (window.innerWidth <= 390 ? 43 : 46) : 56;
-            let baseHandH = isMobile ? (window.innerWidth <= 390 ? 61 : 66) : 78;
+            const cardMetrics = getComputedStyle(document.documentElement);
+            const baseHandW = parseFloat(cardMetrics.getPropertyValue('--card-w')) || 52;
+            const baseHandH = parseFloat(cardMetrics.getPropertyValue('--card-h')) || 74;
 
             let scale = 1;
             if (allCards.length > 12) scale = 0.65;
@@ -2549,7 +2605,9 @@ const UI = {
             }
             scale = Math.max(0.58, scale);
 
-            const cardGap = isMobile ? Math.max(3, 4 * scale) : 0;
+            // Always leave a real edge-to-edge gutter. Illustrated cards are wider
+            // than classic cards, so using the live CSS dimensions prevents overlap.
+            const cardGap = Math.max(3, 4 * scale);
             const scaledCardW = baseHandW * scale;
             const scaledCardH = baseHandH * scale;
             let handW = scaledCardW + cardGap;

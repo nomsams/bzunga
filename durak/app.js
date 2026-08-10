@@ -36,8 +36,10 @@
         localId: null,
         localName: '',
         isHost: false,
+        offlineHost: false,
         gameState: null,
         sessionToken: '',
+        peerOpenTimer: null,
         ui: {
             selectedCardId: null,
             sortMode: 'rank',
@@ -69,29 +71,68 @@
             App.localName = Utils.clean(name, 24, `Player ${Math.floor(Math.random() * 900 + 100)}`);
             App.sessionToken = localStorage.getItem('durak-session-token') || Utils.uuid();
             localStorage.setItem('durak-session-token', App.sessionToken);
-            App.peer = new Peer(Utils.uuid(), {
-                secure: true,
-                config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:global.stun.twilio.com:3478' }
-                    ]
-                }
-            });
+            if (App.isHost && (!navigator.onLine || typeof Peer !== 'function')) {
+                Net.openOfflineHost();
+                return;
+            }
+            if (typeof Peer !== 'function') {
+                UI.resetLobbyButtons();
+                UI.showToast('Online multiplayer is unavailable. Download the games for offline bot play.', 'danger');
+                return;
+            }
+            try {
+                App.peer = new Peer(Utils.uuid(), {
+                    secure: true,
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:global.stun.twilio.com:3478' }
+                        ]
+                    }
+                });
+            } catch (error) {
+                if (App.isHost) return Net.openOfflineHost();
+                throw error;
+            }
+
+            if (App.isHost) {
+                App.peerOpenTimer = setTimeout(() => {
+                    if (!App.localId) Net.openOfflineHost();
+                }, 4500);
+            }
 
             App.peer.on('open', peerId => {
-                App.localId = peerId;
-                if (App.isHost) Net.hostOpened(peerId);
-                else Net.connectToHost(hostId);
+                clearTimeout(App.peerOpenTimer);
+                if (App.localId) return;
+                if (App.isHost) Net.hostOpened(peerId, false);
+                else {
+                    App.localId = peerId;
+                    Net.connectToHost(hostId);
+                }
             });
             App.peer.on('connection', connection => Net.acceptConnection(connection));
             App.peer.on('error', error => {
+                if (App.isHost && !App.localId) {
+                    Net.openOfflineHost();
+                    return;
+                }
                 UI.resetLobbyButtons();
                 UI.showToast(error?.message || 'Unable to open the P2P table.', 'danger');
             });
         },
 
-        hostOpened(peerId) {
+        openOfflineHost() {
+            if (App.localId) return;
+            clearTimeout(App.peerOpenTimer);
+            try { App.peer?.destroy?.(); } catch (error) {}
+            App.peer = null;
+            Net.hostOpened(`offline-${Utils.uuid()}`, true);
+        },
+
+        hostOpened(peerId, offline = false) {
+            if (Game.engine) return;
+            App.localId = peerId;
+            App.offlineHost = offline;
             const engine = Game.createEngine();
             engine.addPlayer({
                 id: peerId,
@@ -99,9 +140,11 @@
                 connected: true,
                 isBot: false
             });
-            UI.showRoom(peerId, true);
-            UI.renderQr(peerId);
+            UI.showRoom(offline ? 'OFFLINE • BOTS ONLY' : peerId, true);
+            document.getElementById('qr-container').classList.toggle('hidden', offline);
+            if (!offline) UI.renderQr(peerId);
             Net.broadcast();
+            if (offline) UI.showToast('Offline bot table ready. Add bots and deal normally.', 'success');
         },
 
         connectToHost(hostId) {

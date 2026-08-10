@@ -301,6 +301,34 @@ select:focus {
     text-underline-offset: 3px;
 }
 
+.offline-download-button {
+    width: 100%;
+    min-height: 44px;
+    margin-top: 12px;
+    border: 1px solid rgba(56, 189, 248, 0.34);
+    border-radius: 12px;
+    background: linear-gradient(135deg, #164e63, #1e3a5f);
+    color: #e0f2fe;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.045em;
+}
+
+.offline-download-button.offline-ready {
+    border-color: rgba(52, 211, 153, 0.45);
+    background: linear-gradient(135deg, #064e3b, #14532d);
+    color: #d1fae5;
+}
+
+.offline-download-status {
+    min-height: 1.7em;
+    margin: 5px 4px 0;
+    color: #94a3b8;
+    font-size: 0.62rem;
+    line-height: 1.4;
+    text-align: center;
+}
+
 .room-heading {
     display: flex;
     align-items: flex-start;

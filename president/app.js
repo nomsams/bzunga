@@ -39,10 +39,12 @@
 
     const App = {
         isHost: false,
+        offlineHost: false,
         localId: null,
         localName: '',
         sessionToken: null,
         peer: null,
+        peerOpenTimer: null,
         hostConnection: null,
         connections: {},
         gameState: null,
@@ -63,37 +65,72 @@
 
     const Net = {
         initialize(name, hostId = null) {
-            if (typeof Peer !== 'function') {
-                UI.showToast('The P2P network library did not load. Check your connection.', 'danger');
-                return;
-            }
             App.localName = Utils.cleanText(name, 24, `Player ${Math.floor(Math.random() * 1000)}`);
             App.sessionToken = String(localStorage.getItem('president_slave_token') || Utils.id()).slice(0, 80);
             localStorage.setItem('president_slave_token', App.sessionToken);
-            App.peer = new Peer(Utils.id(), {
-                secure: true,
-                config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:global.stun.twilio.com:3478' }
-                    ]
-                }
-            });
+            if (App.isHost && (!navigator.onLine || typeof Peer !== 'function')) {
+                Net.openOfflineHost();
+                return;
+            }
+            if (typeof Peer !== 'function') {
+                UI.showToast('Online multiplayer is unavailable. Download the games for offline bot play.', 'danger');
+                UI.resetLobbyButtons();
+                return;
+            }
+            try {
+                App.peer = new Peer(Utils.id(), {
+                    secure: true,
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:global.stun.twilio.com:3478' }
+                        ]
+                    }
+                });
+            } catch (error) {
+                if (App.isHost) return Net.openOfflineHost();
+                throw error;
+            }
+
+            if (App.isHost) {
+                App.peerOpenTimer = setTimeout(() => {
+                    if (!App.localId) Net.openOfflineHost();
+                }, 4500);
+            }
 
             App.peer.on('open', peerId => {
-                App.localId = peerId;
-                if (App.isHost) Net.createHost(peerId);
-                else Net.connectToHost(hostId);
+                clearTimeout(App.peerOpenTimer);
+                if (App.localId) return;
+                if (App.isHost) Net.createHost(peerId, false);
+                else {
+                    App.localId = peerId;
+                    Net.connectToHost(hostId);
+                }
             });
             App.peer.on('connection', connection => Net.acceptConnection(connection));
             App.peer.on('error', error => {
                 console.error(error);
+                if (App.isHost && !App.localId) {
+                    Net.openOfflineHost();
+                    return;
+                }
                 UI.showToast(`Connection error: ${error.message || error}`, 'danger');
                 UI.resetLobbyButtons();
             });
         },
 
-        createHost(peerId) {
+        openOfflineHost() {
+            if (App.localId) return;
+            clearTimeout(App.peerOpenTimer);
+            try { App.peer?.destroy?.(); } catch (error) {}
+            App.peer = null;
+            Net.createHost(`offline-${Utils.id()}`, true);
+        },
+
+        createHost(peerId, offline = false) {
+            if (Game.engine) return;
+            App.localId = peerId;
+            App.offlineHost = offline;
             Game.engine = new PresidentGameEngine({
                 makeId: Utils.id,
                 onEvent: (event, state) => Game.bots?.handleEvent(event, state),
@@ -112,9 +149,11 @@
             document.getElementById('lobby-start').classList.add('hidden');
             document.getElementById('lobby-room').classList.remove('hidden');
             document.getElementById('host-controls').classList.remove('hidden');
-            document.getElementById('room-id-display').textContent = peerId;
-            UI.renderQr(peerId);
+            document.getElementById('room-id-display').textContent = offline ? 'OFFLINE • BOTS ONLY' : peerId;
+            document.getElementById('qr-container').classList.toggle('hidden', offline);
+            if (!offline) UI.renderQr(peerId);
             Net.broadcast();
+            if (offline) UI.showToast('Offline bot table ready. Add bots and deal normally.', 'success');
         },
 
         connectToHost(hostId) {

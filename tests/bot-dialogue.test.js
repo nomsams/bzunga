@@ -58,6 +58,19 @@ for (const persona of personaTypes) {
         roughTableTalk.filter(line => /dad joke|why did|what do you call|twenty-five letters|knock knock/i.test(line)).length >= 5,
         `${persona} needs a substantial joke rotation`
     );
+    const fullPersonaDialogue = [
+        ...BotConfig.generalReplies[persona],
+        ...Object.values(eventBank).flat(),
+        ...Object.values(directBank).flat()
+    ];
+    assert(
+        fullPersonaDialogue.filter(line => /fair play|respect|well played|nice one|bloody good|that was class|earned|clean win|good game/i.test(line)).length >= 18,
+        `${persona} needs occasional earned compliments among the insults`
+    );
+    assert(
+        fullPersonaDialogue.filter(line => /\bmate\b|old friend|buy.*pint|drinks on|pub bill|friendship/i.test(line)).length >= 18,
+        `${persona} needs rough old-friends table banter`
+    );
 
     for (const intent of ['thanks', 'smalltalk', 'pause']) {
         countAndCheckPool(directBank[intent], `${persona}.${intent}`, 3);
@@ -77,7 +90,7 @@ for (const [index, pattern] of BotConfig.elizaPatterns.entries()) {
     countAndCheckPool(pattern.replies, `elizaPatterns[${index}]`, 1);
 }
 
-assert(totalDialogueLines >= 2100, `Expected at least 2100 dialogue lines, found ${totalDialogueLines}`);
+assert(totalDialogueLines >= 3400, `Expected at least 3400 dialogue lines, found ${totalDialogueLines}`);
 assert(
     Object.values(BotConfig.profiles).every(profile => profile.extroversion >= 0.8),
     'Every Bazunga bot should speak up regularly'

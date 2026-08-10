@@ -1697,6 +1697,177 @@ for (const persona of Object.keys(BotConfig.chatBank)) {
     }
 }
 
+// Old-friends-at-the-pub dialogue: rough, affectionate, and quick. The praise
+// is intentionally mixed into ordinary events so a bot can respect a filthy
+// play without turning into a polite commentator.
+const BOT_OLD_MATES_TABLE = {
+    banter: [
+        'Mate, that plan has had three pints and lost its shoes.',
+        'You smug prick, I can hear that grin through the screen.',
+        'Love you, mate, but your cards need a responsible adult.',
+        'That move was pure pub logic: loud, wrong, somehow alive.',
+        'You play like the winner buys drinks and you hate drinking.',
+        'We have been mates too long for me to pretend that was good.',
+        'Your plan left for cigarettes two turns ago.',
+        'Mate, even your bad luck is tired of taking the blame.',
+        'That card landed like a kebab dropped down the stairs.',
+        'You beautiful idiot, what possessed you to tap that?',
+        'I would lend you a brain cell, but mine is busy laughing.',
+        'The old magic is back: you move, everybody says "why?"',
+        'You have the confidence of six beers and no witnesses.',
+        'That was either genius or complete bollocks. Mostly bollocks.',
+        'Your layout looks like Sunday morning after a bad Friday.',
+        'Mate, your thumb is freelancing without management again.',
+        'If this goes wrong, we blame lag and never speak of it.',
+        'You absolute weapon. Wrong target, magnificent confidence.',
+        'I know that look. You forgot your own bloody card.',
+        'Same old you: big grin, mystery plan, emergency landing.',
+        'I hate to admit it, but that was properly sneaky.',
+        'Fair play, mate. That move had some filth on it.',
+        'Bloody hell, nice one. Do not get used to hearing that.',
+        'You bastard. That was clean enough to deserve a pint.'
+    ],
+    general: [
+        'Yeah, yeah. Play the card before we both turn grey.',
+        'Mate, I heard you. The useful bit must have fallen out.',
+        'Go on then, finish the story while your layout burns.',
+        'That is quality bullshit. Almost believable with enough beer.',
+        'You always talk this much when the cards look dodgy?',
+        'I would agree, but then we would both sound stupid.',
+        'Fair point, mate. Still not helping that ugly little board.',
+        'Keep chatting. This is cheaper than going to the pub.',
+        'I missed half of that. The insulting half sounded solid.',
+        'All right, dickhead. You made your point. Now make a move.',
+        'That sounded wise. Who typed it for you?',
+        'Good banter. Shame the cards keep interrupting your career.'
+    ],
+    insult: [
+        '{target}, you daft bastard, I have seen you play better drunk.',
+        'Pipe down, mate. Your layout is already losing the argument.',
+        'You gobshite, that comeback was older than your game plan.',
+        'All that mouth and your thumb still needs sat-nav.',
+        'You absolute helmet, the right card was sitting there.',
+        'Your roast was decent. Your move was still dogshit.',
+        'Mate, you could fuck up a free lunch with a knife and fork.',
+        'You talk like a king and tap like a nervous pigeon.',
+        'That insult had bite. Shame its owner has no fucking plan.',
+        'You lovable clown, even your excuses need better excuses.',
+        'Shut it, wanker. Your cards are trying to disown you.',
+        'You are lucky we are mates or I would charge for this lesson.',
+        'That was big talk from a man being mugged by cardboard.',
+        'You magnificent dickhead, the button was right bloody there.',
+        'Keep chirping. It makes your next disaster feel announced.',
+        'I respect the confidence. The rest is complete arse.'
+    ],
+    respect: [
+        'Fair play, you bastard. That was genuinely sharp.',
+        'I hate that move because it was bloody good.',
+        'Respect, mate. You read that perfectly.',
+        'That was filthy. Drinks are on you after this.',
+        'All right, I admit it: you absolutely had me there.',
+        'Nice one, dickhead. Do it again and I might worry.',
+        'You sneaky bastard. That deserved the grin.',
+        'Credit where due, mate: clean hands, ugly intentions.',
+        'Bloody good play. I am still insulting you next turn.',
+        'That was class. Annoying, smug, undeniable class.'
+    ],
+    praise: [
+        'Cheers, mate. Even idiots get one thing right.',
+        'Thanks, you sentimental bastard. Now guard your cards.',
+        'Correct. Buy me a pint and repeat it louder.',
+        'Nice of you to say. I was magnificent, to be fair.',
+        'Compliment accepted. Friendship remains under review.',
+        'Aw, thanks. Now let us get back to ruining each other.'
+    ],
+    laugh: [
+        'Hah! That was actually good, you stupid bastard.',
+        'I hate how funny that was. Fair play.',
+        'Mate, I nearly spat my imaginary pint everywhere.',
+        'That joke landed cleaner than your last slap.',
+        'All right, that got me. You are still losing.',
+        'Hahaha. Same idiot, occasionally excellent material.',
+        'Good one. I will steal it and claim it was mine.',
+        'You prick, I was trying to concentrate.',
+        'That was funny enough to forgive one bad move. One.',
+        'Proper laugh. Now prepare for consequences.'
+    ],
+    events: {
+        slapSuccess: [
+            'Too slow, mate. Your thumb was still ordering another pint.',
+            'Yoink, dickhead. I know that one hurt.',
+            'Cheers for the card. Lovely of you to hold it for me.',
+            'Got it! You looked away for one bloody second.',
+            'Clean steal. Even you have to respect that filth.',
+            'Sorry, mate. Reflex took over and friendship took the night off.'
+        ],
+        slapFail: [
+            'Oh, fuck off. We agree to forget that one.',
+            'Wrong card. Big confidence. Classic me.',
+            'Nobody laugh. Especially you, you smug bastard.',
+            'My thumb went rogue. Put it on the tab.',
+            'That was absolute arse. I deserve every card.',
+            'Fine, mate. Take the laugh. You earned this one.'
+        ],
+        penalty: [
+            'More cards? Buy me dinner before treating me this badly.',
+            'Lovely. My layout now needs planning permission.',
+            'You prick, I had plans for that empty space.',
+            'Fine. Add the cards and pour me something strong.',
+            'This hand is getting fatter than our pub bill.',
+            'Enjoy it, mate. I am saving the grudge for later.'
+        ],
+        bazungaCall: [
+            'BAZUNGA. Last orders, you horrible lot.',
+            'I am calling it. Try not to shit yourselves.',
+            'Final orbit, mates. Friendship is temporarily cancelled.',
+            'BAZUNGA! Bring talent, luck, or a decent excuse.',
+            'Right, dickheads. One lap left. Make it ugly.',
+            'Called it. If I choke, we delete the group chat.'
+        ],
+        bazungaEnemy: [
+            'You called it? Bold, mate. Stupid, but bold.',
+            'Oh shit. Somebody grew confidence at the worst time.',
+            'BAZUNGA from you? I respect the balls, not the layout.',
+            'All right, you bastard. Let us see if that hand is real.',
+            'Nice call. I hope your last card is less drunk than you.',
+            'Final orbit? Good. I was running out of polite insults.'
+        ],
+        victory: [
+            'I win. Drinks on you, excuses on the table.',
+            'Good game, mates. You were awful company and great fun.',
+            'That was close. Well played, you pack of bastards.',
+            'Winner buys nothing. Losers buy everything.',
+            'Cheers, dickheads. Same time, same terrible decisions?',
+            'I won, but that filthy move earlier still deserves respect.'
+        ],
+        defeat: [
+            'Fair play, mate. You kicked my arse properly.',
+            'You won, you smug bastard. That last move was class.',
+            'Good game. I hate the result and respect the play.',
+            'Fine, dickhead. Enjoy it before the rematch.',
+            'Well played. I owe you one pint and several insults.',
+            'That was clean. Annoying as hell, but clean.'
+        ]
+    }
+};
+
+const pushFreshBotLines = (pool, additions) => {
+    for (const line of additions) if (!pool.includes(line)) pool.push(line);
+};
+for (const persona of Object.keys(BotConfig.chatBank)) {
+    pushFreshBotLines(BotConfig.chatBank[persona].banter, BOT_OLD_MATES_TABLE.banter);
+    pushFreshBotLines(BotConfig.generalReplies[persona], BOT_OLD_MATES_TABLE.general);
+    pushFreshBotLines(BotConfig.directReplies[persona].insult, BOT_OLD_MATES_TABLE.insult);
+    pushFreshBotLines(BotConfig.directReplies[persona].respect, BOT_OLD_MATES_TABLE.respect);
+    pushFreshBotLines(BotConfig.directReplies[persona].praise, BOT_OLD_MATES_TABLE.praise);
+    pushFreshBotLines(BotConfig.directReplies[persona].laugh, BOT_OLD_MATES_TABLE.laugh);
+    for (const [category, lines] of Object.entries(BOT_OLD_MATES_TABLE.events)) {
+        if (BotConfig.chatBank[persona][category]) {
+            pushFreshBotLines(BotConfig.chatBank[persona][category], lines);
+        }
+    }
+}
+
 const Bot = {
     chatHistory: [], lastChatTime: {}, usedLines: {},
     recentLines: {}, globalRecentLines: [],

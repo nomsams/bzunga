@@ -763,6 +763,150 @@
         }
     }
     for (const [category, lines] of Object.entries(DURAK_SHORT_BABA)) LINES[5][category].push(...lines);
+
+    const DURAK_OLD_MATES = {
+        attack: [
+            'Here you go, mate. One card with your name on it.',
+            'Beat this, dickhead. Friendship resumes after defence.',
+            'A little bastard of a card for a big bastard of a mate.',
+            'I know that face. You hate this rank already.',
+            'Card down. Try the clever thing you pretend to know.',
+            'Sorry, mate. The game demanded violence.',
+            'This one is from the heart and headed for your hand.',
+            'Nothing personal, prick. It is just extremely personal.',
+            'I saved this ugly thing for my favourite opponent.',
+            'Go on then. Show us that famous drunk defence.'
+        ],
+        defend: [
+            'Covered, mate. Lovely attack, wrong bloody victim.',
+            'That was a good card. Mine was a better bastard.',
+            'Not today, dickhead. Buy the attack a consolation pint.',
+            'Clean cover. Even you have to respect that one.',
+            'Your attack nearly had me. Nearly is doing heavy work.',
+            'Sit down, mate. The card fought bravely.',
+            'I hate to say it, but that attack was properly sneaky.',
+            'Covered. Good try, you annoying bastard.',
+            'Bloody nice attack. Shame about this answer.',
+            'Your card deserved better than dying under mine.'
+        ],
+        take: [
+            'Fine, mate. You got me. Do not become unbearable.',
+            'I take the pile. That was filthy and annoyingly good.',
+            'Cards for me, smug grin for you, drinks later.',
+            'Fair play, bastard. My hand is now a phone book.',
+            'Give them here. Friendship is paused for one round.',
+            'You earned that pickup. I hate how clean it was.',
+            'All right, dickhead. Enjoy your tiny golden moment.',
+            'I will take them and remember every ugly little face.',
+            'Pile accepted. Grudge accepted. Mate still questionable.',
+            'Good pressure, mate. Now stop grinning before I throw up.'
+        ],
+        throw: [
+            'One more for you, mate. I am generous when drunk.',
+            'Take this too, dickhead. It missed the family.',
+            'Matching rank. Your hand can start a group chat.',
+            'Special delivery from somebody who cares far too little.',
+            'Another bastard lands. Hold it gently.',
+            'Your pile looked thirsty, so I bought it a mate.',
+            'Sorry, old friend. Actually, no, this is hilarious.',
+            'One more card and one less reason to like me.',
+            'Eat this too. Compliments from the kitchen.',
+            'Your wrist needed exercise. I am here to help.'
+        ],
+        pass: [
+            'Pass, mate. You defended that bloody well.',
+            'I am done. Fair play, you stubborn bastard.',
+            'That is enough abuse for one round and one friendship.',
+            'Pass. Buy yourself a pint for surviving that mess.',
+            'I stop here. Your defence earned a rare compliment.',
+            'Carry on, dickheads. This mate survived.',
+            'No more. I like you too much to fill both hands.',
+            'Pass, you prick. That cover was annoyingly tidy.',
+            'Round over. Somebody congratulate the lucky bastard.',
+            'Fine defence, mate. I will deny saying that later.'
+        ],
+        chat: [
+            '{target}, you gobshite, your hand is not a personality.',
+            'Love you, mate. Hate every card you have touched.',
+            'Good one, dickhead. Your defence is still wearing slippers.',
+            'You smug prick, I can hear the grin from here.',
+            'That roast was class. The attack remains complete shit.',
+            'Old friends tell the truth: you defend like a garden chair.',
+            'Mate, your plan has had six beers and lost its wallet.',
+            'Keep talking. The talon enjoys our little family argument.',
+            'Fair play on that last cover. Proper annoying stuff.',
+            'You bastard, that attack came from fucking nowhere.',
+            'I would buy you a pint for that move. A small one.',
+            'Your chat is excellent. Your cards need counselling.',
+            'Same old you: loud mouth, sneaky card, stupid grin.',
+            'Bloody hell, mate. That was actually good.',
+            'Pipe down, wanker. We already know you got lucky.',
+            'Nice move, arsehole. Do not make it a habit.'
+        ]
+    };
+    const DURAK_OLD_MATES_BABA = {
+        attack: [
+            'Baba sends this with love and several bad intentions.',
+            'Beat it, mate. Baba still likes you a little.',
+            'A card for Baba’s favourite loudmouth.',
+            'Baba attacks. Drinks and apologies come later.',
+            'Here, dickhead. Baba saved the ugly one for you.',
+            'Nothing personal. Baba simply enjoys your panic.'
+        ],
+        defend: [
+            'Covered, mate. Fine attack, better Baba.',
+            'Baba admits that was sneaky. Still dead, though.',
+            'Nice card, dickhead. Baba brought a nicer bastard.',
+            'Clean cover. Baba accepts one second of admiration.',
+            'Good try, old friend. Baba nearly moved both eyebrows.',
+            'Your attack had balls. Baba had the answer.'
+        ],
+        take: [
+            'Baba takes. Fair play, mate. Do not milk it.',
+            'You got Baba, lucky prick. Drinks are briefly on you.',
+            'Fine pressure. Baba hates it and respects it.',
+            'Pile accepted. Friendship survives. Grudge grows.',
+            'Good attack, bastard. Baba will remember the address.',
+            'Baba picks up. Stop grinning before it becomes permanent.'
+        ],
+        throw: [
+            'Baba adds one more for his favourite collector.',
+            'Hold this too, mate. Baba believes in your wrist.',
+            'Another card. Baba calls this aggressive friendship.',
+            'Matching rank, dickhead. Family reunion in your hand.',
+            'Baba sends company. Your pile looked lonely.',
+            'Eat this too. Baba seasoned it with affection.'
+        ],
+        pass: [
+            'Baba passes. Fine defence, you stubborn bastard.',
+            'Enough. Baba respects that cover and hates admitting it.',
+            'Pass, mate. Buy yourself one small victory pint.',
+            'Baba stops. Friendship has prevented a worse beating.',
+            'Good defence. Baba will deny this compliment tomorrow.',
+            'Carry on, dickheads. Baba needs a drink.'
+        ],
+        chat: [
+            '{target}, Baba likes you. Your hand remains dogshit.',
+            'You smug bastard, Baba saw that grin before the card.',
+            'Good roast, mate. Baba nearly respected the whole person.',
+            'Old friends deserve truth: your defence is fucked.',
+            'Bloody nice move earlier. Baba has already forgiven himself.',
+            'Baba missed this nonsense, you unbearable prick.',
+            'Talk your shit, mate. Baba brought enough for two.',
+            'That was class, dickhead. Baba still plans revenge.',
+            'You bastard. That attack actually surprised Baba.',
+            'Baba would buy you a pint, but you would spill it.'
+        ]
+    };
+    const addDurakLines = (difficulty, additions) => {
+        for (const [category, lines] of Object.entries(additions)) {
+            for (const line of lines) {
+                if (!LINES[difficulty][category].includes(line)) LINES[difficulty][category].push(line);
+            }
+        }
+    };
+    for (let difficulty = 1; difficulty <= 5; difficulty++) addDurakLines(difficulty, DURAK_OLD_MATES);
+    addDurakLines(5, DURAK_OLD_MATES_BABA);
     Object.assign(PROFILES[1], { chat: 0.86 });
     Object.assign(PROFILES[2], { chat: 0.84 });
     Object.assign(PROFILES[3], { chat: 0.82 });

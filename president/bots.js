@@ -653,6 +653,184 @@
     };
     for (const [category, lines] of Object.entries(PRESIDENT_SHORT_TABLE_TALK)) PHRASES[category].push(...lines);
     for (const [category, lines] of Object.entries(PRESIDENT_SHORT_BABA)) BABA_PHRASES[category].push(...lines);
+
+    const PRESIDENT_OLD_MATES = {
+        intro: [
+            'Deal them, mates. Dignity was never invited.',
+            'New hand. Same old dickheads around the table.',
+            'Right, bastards. Winner gets the chair and the last beer.',
+            'Let us ruin a perfectly good friendship with rectangles.',
+            'I know your tells, mate. Mostly the loud swearing.',
+            'Cards out. Political careers and trousers optional.',
+            'May the best player win. Bad news for this table.',
+            'Here we go again, you beautiful pack of idiots.'
+        ],
+        play: [
+            'Eat those, mate. I saved the ugly ones for you.',
+            'There you go, dickhead. Higher cards, lower standards.',
+            'I know that face. You did not expect that shit.',
+            'Cards down. Your smug little grin can follow.',
+            'Not my finest play, but plenty good enough for you lot.',
+            'That should keep you bastards busy for a minute.',
+            'Sorry, mate. Friendship does not beat the pile.',
+            'Clean play, filthy intentions. Just how we like it.'
+        ],
+        bigPlay: [
+            'Whole bloody family. Make room, peasants.',
+            'Count them, mate. Use your fingers if you need to.',
+            'That pile has more mates than you do.',
+            'Big stack. Try not to pull a muscle panicking.',
+            'I brought the cabinet and nicked the drinks trolley.',
+            'That landed hard enough to shake your excuses loose.',
+            'Bloody hell, even I enjoyed dropping that lot.',
+            'A proper filthy play. You would be proud if it were yours.'
+        ],
+        pass: [
+            'Pass, mate. I am saving the good shit for later.',
+            'I am out. Try not to elect a complete arsehole.',
+            'Not wasting a card on that drunken little pile.',
+            'Carry on, dickheads. I need a sip and a better opening.',
+            'Pass. You can have this tiny moment of importance.',
+            'I sit this one out. Somebody else ruin it.',
+            'Not today, mate. My cards have standards.',
+            'Keep going. I want to see which idiot overcommits.'
+        ],
+        ace: [
+            'Ace, you bastards. Clear the table and refill my pint.',
+            'That pile is dead. Lovely knowing it.',
+            'Fresh pile, mates. Same grudges, cleaner felt.',
+            'Ace clears everything except your awful chat.',
+            'Meeting over. Somebody carry the bodies out.',
+            'Wipe it clean. I have fresh nonsense to start.',
+            'Ace. Even you have to admit that timing was tasty.',
+            'There goes your pile, mate. Beautiful while it lasted.'
+        ],
+        lowHand: [
+            'Oi, that bastard is nearly out. Wake up.',
+            'Tiny hand, massive smug face. Somebody stop them.',
+            'Mate, I can smell a victory speech. Kill it quickly.',
+            'One of you is escaping while we chat bollocks.',
+            'Last cards coming. Time to become unpleasant.',
+            'Do not let that prick leave with the good chair.',
+            'Nearly out? Fair play. Still trying to ruin it.',
+            'That hand is dangerously small and annoyingly well played.'
+        ],
+        victory: [
+            'President, mates. I expect beer and terrible obedience.',
+            'I win, you bastards. Honestly, cracking game.',
+            'Crown secured. Friendship may resume after the gloating.',
+            'Good fight, dickheads. The right idiot got the chair.',
+            'I won. Somebody tell my family I peaked at cards.',
+            'Cheers, mates. You made that much harder than expected.',
+            'Great game. Awful government. Perfect evening.',
+            'President at last. Drinks on the opposition.'
+        ],
+        defeat: [
+            'Fair play, mate. You kicked my government to bits.',
+            'You won, smug bastard. That last play was bloody class.',
+            'Take the crown. You earned it, annoyingly.',
+            'Good game, dickhead. I owe you a pint and a rematch.',
+            'That was filthy. I respect it and hate you briefly.',
+            'Well played, mate. Now stop grinning like that.',
+            'Fine. You were better. Do not make me say it twice.',
+            'Clean win, ugly friend. Exactly as expected.'
+        ],
+        chat: [
+            '{target}, mate, your mouth is President of Fuck-All.',
+            'Good one, dickhead. Shame the pile still hates you.',
+            'You gobshite, save some breath for the victory choke.',
+            'Love the confidence. Hate the absolute state of your hand.',
+            'That roast was class. Your cards remain unemployed.',
+            'Fair point, mate. Still passing the idiot bill unanimously.',
+            'Keep talking. We have missed this particular flavour of shit.',
+            'You are lucky we like you, you unbearable little prick.',
+            'Bloody good move earlier, mate. Still not forgiven.',
+            'Old friends tell the truth: that play was complete arse.',
+            'Buy me a pint and I may pretend that comeback landed.',
+            'You sound confident. Is somebody helping you type?'
+        ]
+    };
+    const PRESIDENT_OLD_MATES_BABA = {
+        intro: [
+            'Baba is back, mates. Hide the crown and decent whisky.',
+            'Deal, dickheads. Baba missed your terrible little faces.',
+            'Old friends, new cards, same incoming humiliation.',
+            'Baba loves you all. Baba will still take the chair.',
+            'Welcome back, bastards. The palace bar is now open.'
+        ],
+        play: [
+            'Baba plays these. You may swear among yourselves.',
+            'Eat that, mate. Baba saved it with affection.',
+            'Cards from Baba, panic from the usual idiots.',
+            'Baba knew that face would appear. Beautiful.',
+            'Clean play. Dirty Baba. Happy table.'
+        ],
+        bigPlay: [
+            'Baba brought the whole bloody neighbourhood.',
+            'Count them, dickhead. Baba can wait.',
+            'A fat pile for old friends with thin excuses.',
+            'Baba drops the cabinet and checks the drinks.',
+            'Even Baba admits that looked fucking glorious.'
+        ],
+        pass: [
+            'Baba passes. Keep the family argument moving.',
+            'Not worth it, mate. Baba has nicer cards to hoard.',
+            'Carry on, bastards. Baba needs one quiet sip.',
+            'Baba sits out. Try governing without adult help.',
+            'Pass. Baba grants you one suspicious little victory.'
+        ],
+        ace: [
+            'Ace. Baba clears the table and somebody pours drinks.',
+            'Pile dead, friendship alive, Baba still leading.',
+            'Fresh pile, same bastards. Baba begins again.',
+            'Baba wipes it clean. That timing was delicious.',
+            'Meeting over, mates. Baba brought the big stamp.'
+        ],
+        lowHand: [
+            'That bastard is nearly out. Baba has noticed.',
+            'Tiny hand, mate. Baba respects it and plans murder.',
+            'Nearly free? Lovely work. Baba will still interfere.',
+            'Wake up, family. One idiot is escaping.',
+            'Baba smells the finish line and somebody getting smug.',
+            'Well played getting that low, mate. Baba still blocks the door.'
+        ],
+        victory: [
+            'President Baba. Drinks with the opposition after insults.',
+            'Baba wins. Cracking game, you horrible bastards.',
+            'The chair is Baba’s. The next round is still among mates.',
+            'Good fight. Baba loves you, but not enough to share power.',
+            'Crown secured. Bring Baba beer and better resistance.',
+            'Good game, mates. Baba respects the fight, not the government.'
+        ],
+        defeat: [
+            'Fair play, mate. You beat Baba clean and ugly.',
+            'You won, lucky prick. Baba admits the last play was class.',
+            'Take the chair. Baba owes you one reluctant pint.',
+            'Good game, bastard. Baba respects the filth.',
+            'Baba lost. Do not ruin a fine win with dancing.',
+            'Respect, dickhead. You earned that ugly little crown.',
+            'Well played, mate. Baba is furious in a respectful way.'
+        ],
+        chat: [
+            '{target}, Baba likes you. Your cards remain complete shit.',
+            'Good roast, mate. Baba nearly postponed your beating.',
+            'You unbearable prick, Baba missed this nonsense.',
+            'Baba heard you. The pub has lowered its standards again.',
+            'That was funny, dickhead. Baba grants one tiny compliment.',
+            'Talk your shit, mate. Baba brought enough for everybody.',
+            'Bloody good play earlier. Baba has already adapted.',
+            'Old friends deserve honesty: your hand looks fucked.',
+            'Nice move, bastard. Baba nearly spilled his drink.',
+            'Baba respects that play. Your chat is still bollocks.'
+        ]
+    };
+    const addPresidentLines = (bank, additions) => {
+        for (const [category, lines] of Object.entries(additions)) {
+            for (const line of lines) if (!bank[category].includes(line)) bank[category].push(line);
+        }
+    };
+    addPresidentLines(PHRASES, PRESIDENT_OLD_MATES);
+    addPresidentLines(BABA_PHRASES, PRESIDENT_OLD_MATES_BABA);
     Object.assign(PROFILES[1], { chatChance: 0.72 });
     Object.assign(PROFILES[2], { chatChance: 0.76 });
     Object.assign(PROFILES[3], { chatChance: 0.8 });

@@ -16,7 +16,7 @@ for (const collection of [PHRASES, BABA_PHRASES]) {
         assert.strictEqual(new Set(collection[category]).size, collection[category].length, `${category} contains duplicate lines`);
     }
     const fullDialogue = Object.values(collection).flat();
-    assert(fullDialogue.length >= 170, 'President bots need a very large dialogue rotation');
+    assert(fullDialogue.length >= 250, 'President bots need a very large dialogue rotation');
     assert(fullDialogue.some(line => /knock knock/i.test(line)), 'President bots need knock-knock trash talk');
     assert(fullDialogue.some(line => /roses|violets/i.test(line)), 'President bots need rhyme roasts');
     assert(
@@ -28,6 +28,14 @@ for (const collection of [PHRASES, BABA_PHRASES]) {
     assert(
         fullDialogue.filter(line => /fuck|shit|bullshit|clown|bastard|bozo|donkey|arse|idiot|toilet|glue|bollocks|dickhead|wanker|gobshite|muppet|peasant/i.test(line)).length >= 28,
         'President bots need a substantial rough table-talk rotation'
+    );
+    assert(
+        fullDialogue.filter(line => /fair play|well played|respect|bloody class|earned it|good game|clean win|nice move/i.test(line)).length >= 10,
+        'President bots need occasional grudging compliments'
+    );
+    assert(
+        fullDialogue.filter(line => /\bmate\b|old friends|friendship|pint|drinks/i.test(line)).length >= 16,
+        'President bots need old-friends pub-table banter'
     );
     assert(
         !fullDialogue.some(line => /\b(probability|distribution|public information|optimal|optimization|optimizing|mathemat\w*|outlier|forecast|strategic value|hand structure|expected value|card economy|tempo|calculat\w*|model|sample|protocol)\b/i.test(line)),

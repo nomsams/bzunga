@@ -907,6 +907,124 @@
     };
     for (let difficulty = 1; difficulty <= 5; difficulty++) addDurakLines(difficulty, DURAK_OLD_MATES);
     addDurakLines(5, DURAK_OLD_MATES_BABA);
+
+    const DURAK_UNFILTERED = {
+        attack: [
+            'Beat this, fuckwit. The card has waited long enough.',
+            'Here comes trouble, wearing your least favourite rank.',
+            'One card for you and one middle finger from the table.',
+            'Defend that, dickhead. Try using the front of the cards.',
+            'This attack is cheap. Your panic is fucking priceless.',
+            'Card down. Let us watch your hand shit itself.',
+            'I found the sore spot and brought a fucking hammer.',
+            'Your defence looked bored. I sent it a bastard.'
+        ],
+        defend: [
+            'Covered, prick. That attack died embarrassingly sober.',
+            'Your card is underneath mine where dogshit belongs.',
+            'Not today, fuckface. Try a card with adult supervision.',
+            'That attack got folded, buried, and forgotten.',
+            'Clean cover. Your card can fuck off to the discard.',
+            'I beat that with the cheapest bastard I could find.',
+            'Your attack had a pulse until I fucking touched it.',
+            'Sit down, dickhead. Even the trump suit laughed.'
+        ],
+        take: [
+            'Fine. Give me the fucking library and a wheelbarrow.',
+            'I take the cards. You take that grin and choke on it.',
+            'Lovely pile, bastards. Did every card pack luggage?',
+            'My hand is now a landfill with excellent suit variety.',
+            'I pick up. Celebrate before the fucking revenge starts.',
+            'Cards acquired. Patience sold separately and now exhausted.',
+            'Shove them here, pricks. Apparently I run storage.',
+            'This pickup is ugly. Your victory dance is fucking uglier.'
+        ],
+        throw: [
+            'Take another one, you greedy cardboard bastard.',
+            'Matching rank. Matching misery. Fucking beautiful.',
+            'Here, hold this while your wrist files for divorce.',
+            'One more card for the human-shaped storage cupboard.',
+            'Eat this too, dickhead. Corners first.',
+            'Another card lands and your hand develops gravity.',
+            'Special delivery. Signature requires one sad little face.',
+            'Your pile wanted company. I sent the loud bastard.'
+        ],
+        pass: [
+            'Pass, fuckers. This round has suffered enough.',
+            'I am done. Somebody else kick the poor bastard.',
+            'No more cards. Enjoy the suspicious fucking mercy.',
+            'Pass. Your relief is louder than your actual talent.',
+            'I stop here before your hand needs building insurance.',
+            'That is enough. The clown car continues clockwise.',
+            'Keep the table, prick. It matches your ugly mood.',
+            'Pass. Even bullying has standards and a lunch break.'
+        ],
+        chat: [
+            '{target}, you absolute shitgibbon, defend the card.',
+            'Your mouth attacks harder than that useless fucking hand.',
+            'Shut it, dickhead. The talon has heard enough.',
+            'That message was a fart wearing punctuation.',
+            'You play Durak like the fool title has prize money.',
+            'Keep barking, prick. Trumps do not fear loud idiots.',
+            'Your comeback needs a tow truck and a fucking exorcist.',
+            'Yo mama keeps her trumps longer than you.',
+            'Yo mama covered that attack from the other room.',
+            'Yo mama called. She wants the fool title left outside.',
+            'Your hand is fat and your excuses are fucking obese.',
+            'You could lose a card fight against an empty sleeve.',
+            'That roast was decent. The player remains dogshit.',
+            'All mouth, six cards, no clue which way is clockwise.'
+        ]
+    };
+    const DURAK_UNFILTERED_BABA = {
+        attack: [
+            'Baba attacks. Beat it or collect, fuckwit.',
+            'One card from Baba, six new concerns for you.',
+            'Here, dickhead. Baba found the crack in your hand.',
+            'Baba sends a card and hears your confidence shit itself.',
+            'Defend this. Baba has drinks waiting.'
+        ],
+        defend: [
+            'Covered, prick. Baba barely moved his good hand.',
+            'Your attack is dead underneath Baba’s cheapest answer.',
+            'Not today, fuckface. Baba brought the correct bastard.',
+            'Clean cover. Baba will invoice your embarrassed card.',
+            'Your card came for war and found Baba having tea.'
+        ],
+        take: [
+            'Baba takes the pile. Wipe that fucking grin carefully.',
+            'Fine, prick. Baba collects cards and future revenge.',
+            'Pile accepted. Your tiny victory expires shortly.',
+            'Baba picks up. The wrong lesson is already on your face.',
+            'Enjoy this, dickhead. Baba remembers everything public.'
+        ],
+        throw: [
+            'Baba adds another. Your wrist may start swearing.',
+            'Take this too, cardboard-hoarding fuckwit.',
+            'Matching rank. Baba sends the bastard home to you.',
+            'One more card from Baba’s bottomless generosity.',
+            'Your hand looked lonely. Baba fixed it violently.'
+        ],
+        pass: [
+            'Baba passes. Keep the fucking circus moving.',
+            'Enough. Your hand is ugly at the correct size.',
+            'No more cards. Baba has buried what mattered.',
+            'Pass, dickheads. Baba requires tea and better opposition.',
+            'Baba stops before the attack becomes charitable.'
+        ],
+        chat: [
+            '{target}, Baba has heard smarter farts from a sofa.',
+            'Shut the fuck up and defend, mate.',
+            'Your comeback is shit wearing a tiny fur hat.',
+            'Baba likes the banter. The player needs replacing.',
+            'Keep talking, prick. Baba enjoys easy work with subtitles.',
+            'Yo mama saves trumps. Baba respects her game.',
+            'That roast landed. Your defence remains fucking airborne.',
+            'You play like the fool title pays a pension.'
+        ]
+    };
+    for (let difficulty = 1; difficulty <= 5; difficulty++) addDurakLines(difficulty, DURAK_UNFILTERED);
+    addDurakLines(5, DURAK_UNFILTERED_BABA);
     Object.assign(PROFILES[1], { chat: 0.86 });
     Object.assign(PROFILES[2], { chat: 0.84 });
     Object.assign(PROFILES[3], { chat: 0.82 });

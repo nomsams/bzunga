@@ -235,7 +235,7 @@ assert(Object.values(babaLines).flat().length >= 15, 'Baba needs a distinct Dura
 assert(Bots.lineFor(5, 'attack', () => 0).includes('Baba'), 'Baba attack dialogue must feel unique');
 for (let difficulty = 1; difficulty <= 5; difficulty++) {
     const dialogue = Object.values(Bots.LINES[difficulty]).flat();
-    assert(dialogue.length >= 220, `Difficulty ${difficulty} needs a deep Durak dialogue rotation`);
+    assert(dialogue.length >= 280, `Difficulty ${difficulty} needs a deep Durak dialogue rotation`);
     for (const [category, lines] of Object.entries(Bots.LINES[difficulty])) {
         assert.strictEqual(new Set(lines).size, lines.length, `Difficulty ${difficulty} ${category} contains duplicate lines`);
     }
@@ -250,6 +250,10 @@ for (let difficulty = 1; difficulty <= 5; difficulty++) {
     assert(
         dialogue.filter(line => /fuck|shit|bullshit|clown|bastard|bozo|donkey|arse|idiot|toilet|glue|bollocks|goblin|rat|dickhead|wanker|gobshite|muppet|peasant/i.test(line)).length >= 34,
         `Difficulty ${difficulty} needs a substantial rough table-talk rotation`
+    );
+    assert(
+        dialogue.filter(line => /fuck|shit|dickhead|prick|arse|bastard|motherfuck|fuckwit|shitgibbon|bellend|wanker/i.test(line)).length >= 70,
+        `Difficulty ${difficulty} needs a deep uncensored table-talk rotation`
     );
     assert(
         dialogue.filter(line => /fair play|respect|bloody nice|annoyingly good|good pressure|fine defence|earned|clean cover/i.test(line)).length >= 10,

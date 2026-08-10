@@ -51,7 +51,7 @@ for (const persona of personaTypes) {
     assert(directBank.insult.length >= 40, `${persona} needs a deep direct-diss rotation`);
     const roughTableTalk = [...eventBank.banter, ...BotConfig.generalReplies[persona], ...directBank.insult];
     assert(
-        roughTableTalk.filter(line => /fuck|shit|ass|arse|bastard|bozo|clown|muppet|idiot|donkey|garbage|toilet|fart|dumb|stupid|bollocks|rat|goblin|villain|wet sock|trash|rubbish|disaster|criminal|bellend|wanker|dickhead|gobshite|fuckwit/i.test(line)).length >= 38,
+        roughTableTalk.filter(line => /fuck|shit|ass|arse|bastard|bozo|clown|muppet|idiot|donkey|garbage|toilet|fart|dumb|stupid|bollocks|rat|goblin|villain|wet sock|trash|rubbish|disaster|criminal|bellend|wanker|dickhead|gobshite|fuckwit/i.test(line)).length >= 80,
         `${persona} needs a substantial rough table-talk rotation`
     );
     assert(
@@ -90,7 +90,7 @@ for (const [index, pattern] of BotConfig.elizaPatterns.entries()) {
     countAndCheckPool(pattern.replies, `elizaPatterns[${index}]`, 1);
 }
 
-assert(totalDialogueLines >= 3400, `Expected at least 3400 dialogue lines, found ${totalDialogueLines}`);
+assert(totalDialogueLines >= 4500, `Expected at least 4500 dialogue lines, found ${totalDialogueLines}`);
 assert(
     Object.values(BotConfig.profiles).every(profile => profile.extroversion >= 0.8),
     'Every Bazunga bot should speak up regularly'

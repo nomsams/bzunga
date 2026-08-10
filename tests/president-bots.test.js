@@ -16,7 +16,7 @@ for (const collection of [PHRASES, BABA_PHRASES]) {
         assert.strictEqual(new Set(collection[category]).size, collection[category].length, `${category} contains duplicate lines`);
     }
     const fullDialogue = Object.values(collection).flat();
-    assert(fullDialogue.length >= 250, 'President bots need a very large dialogue rotation');
+    assert(fullDialogue.length >= 310, 'President bots need a very large dialogue rotation');
     assert(fullDialogue.some(line => /knock knock/i.test(line)), 'President bots need knock-knock trash talk');
     assert(fullDialogue.some(line => /roses|violets/i.test(line)), 'President bots need rhyme roasts');
     assert(
@@ -28,6 +28,10 @@ for (const collection of [PHRASES, BABA_PHRASES]) {
     assert(
         fullDialogue.filter(line => /fuck|shit|bullshit|clown|bastard|bozo|donkey|arse|idiot|toilet|glue|bollocks|dickhead|wanker|gobshite|muppet|peasant/i.test(line)).length >= 28,
         'President bots need a substantial rough table-talk rotation'
+    );
+    assert(
+        fullDialogue.filter(line => /fuck|shit|dickhead|prick|arse|bastard|motherfuck|fuckwit|shitgibbon|bellend|wanker/i.test(line)).length >= 55,
+        'President bots need a deep uncensored table-talk rotation'
     );
     assert(
         fullDialogue.filter(line => /fair play|well played|respect|bloody class|earned it|good game|clean win|nice move/i.test(line)).length >= 10,

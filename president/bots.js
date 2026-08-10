@@ -831,6 +831,165 @@
     };
     addPresidentLines(PHRASES, PRESIDENT_OLD_MATES);
     addPresidentLines(BABA_PHRASES, PRESIDENT_OLD_MATES_BABA);
+
+    const PRESIDENT_UNFILTERED = {
+        intro: [
+            'Deal the fucking cards. Democracy can wait outside.',
+            'New election, same collection of hopeless dickheads.',
+            'Welcome, pricks. Somebody leaves with power and a hangover.',
+            'Let the cards decide which idiot gets the expensive chair.',
+            'Cabinet meeting starts now. Competence remains absent.',
+            'Shuffle hard. Some of you need a whole new personality.',
+            'Right, bastards. Empty hands, full mouths, zero dignity.'
+        ],
+        play: [
+            'There. Deal with that, you parliamentary fuckwit.',
+            'Cards down. Your government may begin shitting itself.',
+            'Higher than yours, like the fucking bar after you entered.',
+            'I played cards. You can continue playing the victim.',
+            'Eat that coalition, dickhead. It has no refund policy.',
+            'That should fuck up at least three confident speeches.',
+            'Simple play, clean landing, ugly faces all round.'
+        ],
+        bigPlay: [
+            'Big fucking pile. Tiny little opposition.',
+            'Count the bastards twice. Your denial is not arithmetic.',
+            'I dropped enough cards to qualify as urban planning.',
+            'Whole cabinet landed. Your folding chair just resigned.',
+            'That stack is thicker than your complete political career.',
+            'A proper landslide, dickheads. Mind the falling dignity.',
+            'Several cards, one message: get absolutely fucked.'
+        ],
+        pass: [
+            'Pass. This pile is beneath me and slightly smells of you.',
+            'I am out, dickhead. Ruin the government without me.',
+            'Keep it moving. My good cards refuse this shitshow.',
+            'Not wasting a fucking card on that damp little effort.',
+            'Pass. Enjoy your temporary promotion to relevant.',
+            'I abstain because this whole pile looks contagious.',
+            'Carry on, pricks. Somebody else can step in the mess.'
+        ],
+        ace: [
+            'Ace, dickheads. Your entire little bill is fucking dead.',
+            'Pile cleared. Shove the evidence under somebody else.',
+            'Fresh start, same arseholes, cleaner table.',
+            'Ace wipes the pile and half your smug expression.',
+            'Meeting fucking adjourned. Take the rubbish with you.',
+            'That Ace just evicted every card you were proud of.',
+            'Reset the pile. Your comeback died in committee.'
+        ],
+        lowHand: [
+            'Some prick is nearly out. Stop chatting and do something.',
+            'Tiny fucking hand over there. Anybody awake?',
+            'One bastard smells freedom. Block the door.',
+            'Nearly President? Not if this cabinet grows a spine.',
+            'Wake up, dickheads. The smug one is escaping.',
+            'That hand is nearly empty and far too fucking cheerful.',
+            'Stop them now or endure a victory speech forever.'
+        ],
+        victory: [
+            'President, motherfuckers. Complaints go in the bin.',
+            'I won. Your government was shit and your snacks were worse.',
+            'Crown me, dickheads. Try not to scratch the cheap gold.',
+            'Power fits beautifully. Losing looks natural on you lot.',
+            'The palace is mine. You can keep the fucking group chat.',
+            'I came for office and left with everybody’s dignity.',
+            'Victory secured. Opposition reduced to salty furniture.'
+        ],
+        defeat: [
+            'You won, you smug prick. That finish was fucking clean.',
+            'Take the chair, bastard. You earned the ugly thing.',
+            'Good game. I hate your face and respect that last play.',
+            'Fine. Your government was less shit than mine.',
+            'Well played, dickhead. Enjoy one term before the coup.',
+            'That win was filthy enough to deserve the crown.',
+            'You kicked my arse fairly. I object to the fairness.'
+        ],
+        chat: [
+            '{target}, your manifesto is three beers and a spelling error.',
+            'Shut it, dickhead. Your hand has filed for bankruptcy.',
+            'You talk like a king and pass like a frightened intern.',
+            'That comeback was absolute shit with a campaign badge.',
+            'Your mouth won the vote. Your cards missed registration.',
+            'Keep chatting, prick. The throne enjoys desperate comedy.',
+            'You could fuck up a two-party system by arriving third.',
+            'Yo mama runs a cleaner cabinet than this.',
+            'Yo mama passed better cards and better judgement.',
+            'That roast had teeth. Your play still eats through a straw.',
+            'All that confidence and not one card willing to testify.',
+            'Mate, your whole campaign smells like borrowed bullshit.'
+        ]
+    };
+    const PRESIDENT_UNFILTERED_BABA = {
+        intro: [
+            'Baba enters. Hide the crown, whisky, and stupid opinions.',
+            'Deal, motherfuckers. Baba has a government to repossess.',
+            'New cards, same pricks, one unavoidable Baba.',
+            'Baba smells power and somebody else’s cheap panic.',
+            'Welcome to the cabinet, dickheads. Baba chairs the chaos.'
+        ],
+        play: [
+            'Baba plays. Your little government starts leaking.',
+            'Eat these, prick. Baba signed every one.',
+            'Cards down. Excuses may form a disorderly queue.',
+            'Baba passes legislation directly through your forehead.',
+            'One move from Baba, several new fucking problems for you.'
+        ],
+        bigPlay: [
+            'Baba dropped the whole fucking cabinet.',
+            'Count them, dickhead. Baba enjoys slow horror.',
+            'That pile has its own government and Baba owns it.',
+            'Big stack. Baba heard your confidence snap.',
+            'Several cards, one Baba, no surviving opposition.'
+        ],
+        pass: [
+            'Baba passes. This pile is not worth good cardboard.',
+            'Carry on, fuckwits. Baba has seen enough amateur office.',
+            'Not today. Baba saves the card and insults the pile.',
+            'Pass. Your tiny victory may sit in the cheap chair.',
+            'Baba abstains from this particular fucking circus.'
+        ],
+        ace: [
+            'Ace, dickheads. Baba dissolves your little government.',
+            'Pile dead. Baba did not even finish his drink.',
+            'Fresh pile. Same fools. Baba leads.',
+            'Baba wipes the table cleaner than your browser history.',
+            'Meeting over. Baba has the big fucking stamp.'
+        ],
+        lowHand: [
+            'One prick is nearly free. Baba closes the border.',
+            'Tiny hand detected. Baba prepares industrial annoyance.',
+            'Nearly out, mate? Baba loves optimistic little stories.',
+            'Wake up, bastards. Somebody thinks they are President.',
+            'Baba sees the finish line and parks a truck across it.'
+        ],
+        victory: [
+            'President Baba, motherfuckers. The chair remembers its owner.',
+            'Baba wins. Stack the opposition beside the recycling.',
+            'Crown secured. Your excuses remain constitutionally useless.',
+            'The palace belongs to Baba. You may keep the cheap snacks.',
+            'Baba took power and left you the fucking minutes.'
+        ],
+        defeat: [
+            'You beat Baba, you filthy prick. Fair fucking play.',
+            'Take the crown. Baba admits that ending had teeth.',
+            'Good game, dickhead. Baba respects the damage.',
+            'Baba lost one election. Do not tattoo the date.',
+            'Clean win, mate. Baba hates clean things today.'
+        ],
+        chat: [
+            '{target}, Baba heard smarter policy from a toilet flush.',
+            'Shut the fuck up, mate. Your cards are trying to think.',
+            'Your comeback was rejected for smelling like old shit.',
+            'Baba likes the mouth. The player attached needs repairs.',
+            'Keep talking, prick. Baba works beautifully with noise.',
+            'Yo mama gave Baba better opposition and stronger tea.',
+            'That roast was good. Baba still owns your fucking chair.',
+            'Your campaign is one fart away from full transparency.'
+        ]
+    };
+    addPresidentLines(PHRASES, PRESIDENT_UNFILTERED);
+    addPresidentLines(BABA_PHRASES, PRESIDENT_UNFILTERED_BABA);
     Object.assign(PROFILES[1], { chatChance: 0.72 });
     Object.assign(PROFILES[2], { chatChance: 0.76 });
     Object.assign(PROFILES[3], { chatChance: 0.8 });

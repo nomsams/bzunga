@@ -2643,7 +2643,10 @@ const Bot = {
             context.count = Bot.estimateUnknownValue(bot);
         }
  
-        let lines = BotConfig.chatBank[profile.type][actualTrigger];
+        const historicalLines = globalThis.HistoricalBots?.linesFor(bot.historicalPersona, actualTrigger) || [];
+        let lines = historicalLines.length
+            ? historicalLines
+            : BotConfig.chatBank[profile.type][actualTrigger];
         if (lines) {
             let msg = Bot.formatLine(Bot.getUniqueResponse(bot.id, actualTrigger, lines), context);
             return Bot.queueMessage(bot, msg, profile.type === 'pirate', { force });
@@ -2665,7 +2668,10 @@ const Bot = {
 
         const intent = Bot.inferChatIntent(upperMsg);
         const candidates = Engine.state.players.filter(p => p.isBot && p.name !== senderName);
-        const addressedCandidates = candidates.filter(bot => upperMsg.includes(bot.name.toUpperCase()));
+        const addressedCandidates = candidates.filter(bot => {
+            const name = bot.name.toUpperCase();
+            return upperMsg.includes(name) || upperMsg.includes(name.split(' ')[0]);
+        });
         let eligible = addressedCandidates.length
             ? addressedCandidates
             : candidates.filter(bot => {
@@ -2705,7 +2711,8 @@ const Bot = {
         }
 
         const profile = BotConfig.profiles[responder.botDifficulty];
-        const personaReplies = BotConfig.directReplies[profile.type];
+        const historicalReplies = globalThis.HistoricalBots?.linesFor(responder.historicalPersona, `direct_${intent}`) || [];
+        const personaReplies = historicalReplies.length ? null : BotConfig.directReplies[profile.type];
         const threadKey = `${responder.id}::${senderName.toLowerCase()}`;
         const previous = Bot.conversationState[threadKey] || { exchanges: 0, lastIntent: null, lastAt: 0 };
         const isFollowup = previous.lastIntent === intent && now - previous.lastAt < 45000 && previous.exchanges > 0;
@@ -2717,7 +2724,10 @@ const Bot = {
         };
         let replyTemplate;
         let category;
-        if (personaReplies) {
+        if (historicalReplies.length) {
+            category = `historical_direct_${intent}`;
+            replyTemplate = Bot.getUniqueResponse(responder.id, category, historicalReplies);
+        } else if (personaReplies) {
             const resolvedIntent = personaReplies[replyIntent] ? replyIntent : 'fallback';
             const lines = resolvedIntent === 'fallback'
                 ? [...(personaReplies.fallback || []), ...(BotConfig.generalReplies[profile.type] || [])]

@@ -9,6 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="card-theme.js"></script>
 <script src="offline.js"></script>
+<script src="historical-bots.js"></script>
 <script src="bot.js"></script>
 <style>
     :root {
@@ -694,6 +695,14 @@
                         <option value="4">Expert Bot</option>
                         <option value="5">The Pirate</option>
                         <option value="6">Baba Gupta</option>
+                        <optgroup label="Historical Personas">
+                            <option value="historical:beorge-gush">Beorge Gush [Medium]</option>
+                            <option value="historical:guammar-maddafi">Guammar Maddafi [Hard]</option>
+                            <option value="historical:zao-medong">Zao Medong [Expert]</option>
+                            <option value="historical:joris-bohnson">Joris Bohnson [Medium]</option>
+                            <option value="historical:yoris-beltsin">Yoris Beltsin [Hard]</option>
+                            <option value="historical:rheodore-toosevelt">Rheodore Toosevelt [Expert]</option>
+                        </optgroup>
                     </select>
                     <button id="btn-add-bot" class="secondary" style="flex: 1; margin: 0;">+ Bot</button>
                 </div>
@@ -1844,18 +1853,23 @@ const UI = {
 
         document.getElementById('btn-add-bot').onclick = () => {
             let select = document.getElementById('bot-difficulty');
-            let diff = parseInt(select.value); let diffText = select.options[select.selectedIndex].text;
+            const selection = HistoricalBots.parseSelection(select.value, 1);
+            let diff = selection.difficulty; let diffText = select.options[select.selectedIndex].text;
             if (Engine.state.phase !== 'lobby') return UI.showToast("Bots can only join from the lobby.", "warning");
             if (Engine.state.players.length >= MAX_PLAYERS) return UI.showToast(`Maximum ${MAX_PLAYERS} players.`, "warning");
             if (diff === 6 && Engine.state.players.some(player => player.isBot && player.botDifficulty === 6)) {
                 return UI.showToast("There is only one Baba Gupta.", "warning");
             }
-            const baseName = diff === 5 ? "Blackbeard" : diff === 6 ? "Baba Gupta" : BOT_NAMES[Math.floor(Math.random() * (BOT_NAMES.length-1))] + ` [${diffText.split(' ')[0]}]`;
+            if (selection.personaId && Engine.state.players.some(player => player.historicalPersona === selection.personaId)) {
+                return UI.showToast(`There is only one ${selection.persona.displayName}.`, "warning");
+            }
+            const baseName = selection.persona?.displayName
+                || (diff === 5 ? "Blackbeard" : diff === 6 ? "Baba Gupta" : BOT_NAMES[Math.floor(Math.random() * (BOT_NAMES.length-1))] + ` [${diffText.split(' ')[0]}]`);
             const usedNames = new Set(Engine.state.players.map(player => player.name.toLowerCase()));
             let name = baseName;
             let suffix = 2;
             while (usedNames.has(name.toLowerCase())) name = `${baseName} ${suffix++}`;
-            Engine.state.players.push({ id: Utils.uuid(), name: name, isHost: false, isBot: true, botDifficulty: diff, connected: true });
+            Engine.state.players.push({ id: Utils.uuid(), name: name, isHost: false, isBot: true, botDifficulty: diff, historicalPersona: selection.personaId, connected: true });
             Engine.broadcast();
         };
 

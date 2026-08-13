@@ -17,6 +17,7 @@ for (const page of ['index.html', 'president/index.html', 'durak/index.html']) {
 for (const gameFile of [
     './index.html',
     './bot.js',
+    './historical-bots.js',
     './service-worker.js',
     './president/index.html',
     './president/app.js',

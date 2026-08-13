@@ -405,11 +405,15 @@
         addBot() {
             if (!App.isHost || !Game.engine || Game.engine.state.phase !== 'lobby') return;
             if (Game.engine.state.players.length >= MAX_PLAYERS) return UI.showToast('This table is full.', 'danger');
-            const difficulty = Number(document.getElementById('bot-difficulty').value) || 1;
+            const selection = HistoricalBots.parseSelection(document.getElementById('bot-difficulty').value, 1);
+            const difficulty = selection.difficulty;
             if (difficulty === 5 && Game.engine.state.players.some(player => player.isBot && player.botDifficulty === 5)) {
                 return UI.showToast('There is only one Baba Gupta.', 'danger');
             }
-            const baseName = BOT_NAMES[difficulty];
+            if (selection.personaId && Game.engine.state.players.some(player => player.historicalPersona === selection.personaId)) {
+                return UI.showToast(`There is only one ${selection.persona.displayName}.`, 'danger');
+            }
+            const baseName = selection.persona?.displayName || BOT_NAMES[difficulty];
             const usedNames = new Set(Game.engine.state.players.map(player => player.name.toLowerCase()));
             let name = baseName;
             let suffix = 2;
@@ -419,6 +423,7 @@
                 name,
                 isBot: true,
                 botDifficulty: difficulty,
+                historicalPersona: selection.personaId,
                 connected: true
             });
         },

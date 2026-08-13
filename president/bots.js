@@ -1,10 +1,11 @@
 (function (root, factory) {
     const rules = root.PresidentRules || (typeof require === 'function' ? require('./rules.js') : null);
-    const api = factory(rules);
+    const historicalBots = root.HistoricalBots || (typeof require === 'function' ? require('../historical-bots.js') : null);
+    const api = factory(rules, historicalBots);
     if (typeof module === 'object' && module.exports) module.exports = api;
     root.PresidentBotBrain = api.PresidentBotBrain;
     root.PresidentBotController = api.PresidentBotController;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (Rules) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (Rules, HistoricalBots) {
     'use strict';
 
     if (!Rules) throw new Error('PresidentRules must be loaded before President bots.');
@@ -1281,8 +1282,11 @@
             if (!bot?.isBot || this.pendingChats.has(bot.id)) return;
             const profile = PROFILES[bot.botDifficulty] || PROFILES[1];
             if (!force && this.random() > profile.chatChance) return;
+            const historicalChoices = HistoricalBots?.linesFor(bot.historicalPersona, category) || [];
             const collection = bot.botDifficulty === 5 ? BABA_PHRASES : PHRASES;
-            const choices = collection[category] || PHRASES[category] || PHRASES.play;
+            const choices = historicalChoices.length
+                ? historicalChoices
+                : (collection[category] || PHRASES[category] || PHRASES.play);
             const line = interpolate(this.pickFreshLine(bot.id, choices), context);
             const startupDelay = 450 + this.random() * 900;
             const typingDuration = Math.min(7200, Math.max(900, 420 + (line.length / (3.7 + this.random() * 1.3)) * 1000));

@@ -10,6 +10,7 @@
         './',
         './index.html',
         './bot.js',
+        './historical-bots.js',
         './card-theme.js',
         './offline.js',
         './service-worker.js',

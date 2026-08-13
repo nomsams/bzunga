@@ -78,6 +78,7 @@
                 isHost: Boolean(player.isHost),
                 isBot: Boolean(player.isBot),
                 botDifficulty: Number(player.botDifficulty) || 0,
+                historicalPersona: cleanText(player.historicalPersona, 40),
                 connected: player.connected !== false,
                 hand: [],
                 role: null,

@@ -2,10 +2,11 @@
     const rules = typeof module === 'object' && module.exports
         ? require('./rules.js')
         : root.DurakRules;
-    const api = factory(rules);
+    const historicalBots = root.HistoricalBots || (typeof require === 'function' ? require('../historical-bots.js') : null);
+    const api = factory(rules, historicalBots);
     if (typeof module === 'object' && module.exports) module.exports = api;
     root.DurakBots = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (Rules) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (Rules, HistoricalBots) {
     'use strict';
 
     const PROFILES = {
@@ -1206,8 +1207,11 @@
         return null;
     }
 
-    function lineFor(difficulty, category, random = Math.random, context = {}) {
-        const bank = LINES[difficulty]?.[category] || LINES[2][category] || [];
+    function lineFor(difficulty, category, random = Math.random, context = {}, historicalPersona = null) {
+        const historicalLines = HistoricalBots?.linesFor(historicalPersona, category) || [];
+        const bank = historicalLines.length
+            ? historicalLines
+            : (LINES[difficulty]?.[category] || LINES[2][category] || []);
         if (!bank.length) return '';
         const concise = bank.filter(line => line.length <= 68);
         const choices = concise.length ? concise : bank;
@@ -1281,10 +1285,13 @@
             if (this.typingTimers.size) return;
             const profile = PROFILES[bot.botDifficulty] || PROFILES[1];
             if (this.random() > profile.chat) return;
-            let line = lineFor(bot.botDifficulty, category, this.random);
+            let line = lineFor(bot.botDifficulty, category, this.random, {}, bot.historicalPersona);
             const recent = this.recentLines.get(bot.id) || [];
             if (recent.includes(line)) {
-                const alternatives = (LINES[bot.botDifficulty]?.[category] || [])
+                const historicalAlternatives = HistoricalBots?.linesFor(bot.historicalPersona, category) || [];
+                const alternatives = (historicalAlternatives.length
+                    ? historicalAlternatives
+                    : (LINES[bot.botDifficulty]?.[category] || []))
                     .filter(candidate => candidate.length <= 68 && !recent.includes(candidate));
                 if (alternatives.length) line = alternatives[Math.floor(this.random() * alternatives.length)];
             }
@@ -1326,11 +1333,14 @@
                 || bots.sort((left, right) => right.botDifficulty - left.botDifficulty)[0];
             const profile = PROFILES[responder.botDifficulty] || PROFILES[1];
             if (!mentioned && this.random() > profile.chat) return;
-            let line = lineFor(responder.botDifficulty, 'chat', this.random)
+            let line = lineFor(responder.botDifficulty, 'chat', this.random, {}, responder.historicalPersona)
                 .replaceAll('{target}', latest.name || 'friend');
             const recent = this.recentLines.get(responder.id) || [];
             if (recent.includes(line)) {
-                const alternatives = (LINES[responder.botDifficulty]?.chat || [])
+                const historicalAlternatives = HistoricalBots?.linesFor(responder.historicalPersona, 'chat') || [];
+                const alternatives = (historicalAlternatives.length
+                    ? historicalAlternatives
+                    : (LINES[responder.botDifficulty]?.chat || []))
                     .map(candidate => candidate.replaceAll('{target}', latest.name || 'friend'))
                     .filter(candidate => candidate.length <= 68 && !recent.includes(candidate));
                 if (alternatives.length) line = alternatives[Math.floor(this.random() * alternatives.length)];
@@ -1350,7 +1360,8 @@
                     || state.players.find(player => player.isBot);
                 if (bot) {
                     const durak = state.players.find(player => player.id === state.durakId)?.name || 'nobody';
-                    const bank = LINES.global.gameOver;
+                    const historicalLines = HistoricalBots?.linesFor(bot.historicalPersona, bot.id === state.durakId ? 'defeat' : 'victory') || [];
+                    const bank = historicalLines.length ? historicalLines : LINES.global.gameOver;
                     const message = bank[Math.floor(this.random() * bank.length)].replaceAll('{durak}', durak);
                     this.engine.addChat(bot.id, message);
                     this.onStateChange();

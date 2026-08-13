@@ -18,7 +18,14 @@
                 quote('Rarely is the question asked, is our children learning.', 'strategy chat', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
                 quote('I am a boon to the English language.', 'confidence victory chat', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
                 quote('And you know what? Life goes on.', 'setback pass chat', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
-                quote('Sometimes you misunderestimated me.', 'confidence strategy chat', 'Presidential news conference, 2000', 'https://www.presidency.ucsb.edu/documents/the-presidents-news-conference-1126')
+                quote('Sometimes you misunderestimated me.', 'confidence strategy chat', 'Presidential news conference, 2000', 'https://www.presidency.ucsb.edu/documents/the-presidents-news-conference-1126'),
+                quote('I know the human being and fish can coexist peacefully.', 'chat strategy', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
+                quote('I understand small business growth; I was one.', 'confidence chat', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
+                quote('More and more of our imports come from overseas.', 'strategy chat', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
+                quote('We ought to make the pie higher.', 'confidence victory chat', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
+                quote("Today, we're not so sure who the they are.", 'setback strategy chat', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
+                quote('In my sentences I go where no man has gone before.', 'confidence victory chat', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
+                quote("I don't think it's healthy to take yourself too seriously.", 'setback pass chat', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html')
             ])
         }),
         'guammar-maddafi': Object.freeze({
@@ -31,7 +38,16 @@
                 quote('Either we act as one or we will fragment.', 'intro confidence', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
                 quote('No one is above the General Assembly.', 'confidence victory', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
                 quote('This Assembly is our democratic forum.', 'intro strategy chat', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
-                quote('It is a historic meeting.', 'confidence victory chat', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf')
+                quote('It is a historic meeting.', 'confidence victory chat', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('We should focus on the achievement of democracy.', 'strategy confidence', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('We just speak and nobody implements our decisions.', 'setback pass chat', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('We just make speeches and then disappear.', 'setback pass chat', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('Why? Think about it.', 'strategy chat', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('The future of humankind is at stake.', 'strategy confidence', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('We cannot stay silent.', 'confidence strategy', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('Can we trust the United Nations or not?', 'setback chat', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('Who gave the green light?', 'setback chat', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('We have the right to live.', 'confidence victory', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf')
             ])
         }),
         'zao-medong': Object.freeze({
@@ -44,7 +60,15 @@
                 quote('What we need is an enthusiastic but calm state of mind.', 'strategy setback', "Problems of Strategy in China's Revolutionary War, 1936", 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
                 quote('All genuine knowledge originates in direct experience.', 'strategy chat', 'On Practice, 1937', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
                 quote('The masses are the real heroes.', 'setback chat', 'Preface and Postscript to Rural Surveys, 1941', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
-                quote('We should support whatever the enemy opposes.', 'confidence strategy', 'Interview with three correspondents, 1939', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm')
+                quote('We should support whatever the enemy opposes.', 'confidence strategy', 'Interview with three correspondents, 1939', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('The sky is no bigger than the mouth of the well.', 'chat strategy', 'On Tactics Against Japanese Imperialism, 1935', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('Failure is the mother of success.', 'setback confidence chat', 'On Practice, 1937', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('A fall into the pit, a gain in your wit.', 'setback strategy chat', 'On Practice, 1937', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('Such people are bound to trip and fall.', 'confidence chat', 'On Practice, 1937', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('Knowledge begins with practice.', 'intro strategy', 'On Practice, 1937', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('Weapons are an important factor in war.', 'strategy confidence', 'On Protracted War, 1938', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('Without preparedness, superiority is not real superiority.', 'strategy setback', 'On Protracted War, 1938', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('Political power grows out of the barrel of a gun.', 'confidence victory', 'Problems of War and Strategy, 1938', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm')
             ])
         }),
         'joris-bohnson': Object.freeze({
@@ -57,7 +81,15 @@
                 quote('We must get on.', 'strategy pass', 'Statement in the House of Commons, 2019', 'https://www.gov.uk/government/speeches/pms-statement-in-the-house-19-october-2019'),
                 quote('Let us seize this moment.', 'confidence victory', 'Commons statement on Brexit negotiations, 2019', 'https://www.gov.uk/government/speeches/pms-commons-statement-on-brexit-negotiations-3-october-2019'),
                 quote('The building now begins.', 'intro confidence', 'EU Council press conference, 2019', 'https://www.gov.uk/government/speeches/pm-press-conference-at-eu-council-17-october-2019'),
-                quote('Now is the moment for our parliamentarians to come together.', 'strategy chat', 'EU Council press conference, 2019', 'https://www.gov.uk/government/speeches/pm-press-conference-at-eu-council-17-october-2019')
+                quote('Now is the moment for our parliamentarians to come together.', 'strategy chat', 'EU Council press conference, 2019', 'https://www.gov.uk/government/speeches/pm-press-conference-at-eu-council-17-october-2019'),
+                quote('They do represent a compromise.', 'setback strategy', 'Commons statement on Brexit negotiations, 2019', 'https://www.gov.uk/government/speeches/pms-commons-statement-on-brexit-negotiations-3-october-2019'),
+                quote('We have made a genuine attempt to bridge the chasm.', 'strategy chat', 'Commons statement on Brexit negotiations, 2019', 'https://www.gov.uk/government/speeches/pms-commons-statement-on-brexit-negotiations-3-october-2019'),
+                quote('This referendum must be respected.', 'confidence strategy', 'Commons statement on Brexit negotiations, 2019', 'https://www.gov.uk/government/speeches/pms-commons-statement-on-brexit-negotiations-3-october-2019'),
+                quote('That is a fundamental point for us.', 'confidence chat', 'Commons statement on Brexit negotiations, 2019', 'https://www.gov.uk/government/speeches/pms-commons-statement-on-brexit-negotiations-3-october-2019'),
+                quote('We are ready to do so.', 'confidence victory', 'Commons statement on Brexit negotiations, 2019', 'https://www.gov.uk/government/speeches/pms-commons-statement-on-brexit-negotiations-3-october-2019'),
+                quote('This government has moved.', 'confidence play', 'Commons statement on Brexit negotiations, 2019', 'https://www.gov.uk/government/speeches/pms-commons-statement-on-brexit-negotiations-3-october-2019'),
+                quote('Let us come together as democrats.', 'intro strategy chat', 'Statement in the House of Commons, 2019', 'https://www.gov.uk/government/speeches/pm-statement-in-the-house-of-commons-19-october-2019'),
+                quote('Now is the time to get this thing done.', 'confidence victory', 'Statement in the House of Commons, 2019', 'https://www.gov.uk/government/speeches/pm-statement-in-the-house-of-commons-19-october-2019')
             ])
         }),
         'yoris-beltsin': Object.freeze({
@@ -70,7 +102,15 @@
                 quote('Everything will take place peacefully.', 'strategy setback', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
                 quote('We do not in any circumstances want bloodshed.', 'setback pass', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
                 quote('The Russian people will not forget.', 'setback chat', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
-                quote('I embrace you, Bill.', 'confidence victory chat', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr')
+                quote('I embrace you, Bill.', 'confidence victory chat', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('The Supreme Soviet has totally gone out of control.', 'setback chat', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('All the democratic forces are supporting me.', 'confidence victory', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('There is no disorder for the time being.', 'strategy chat', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('I think there will be no bloodshed.', 'strategy setback', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('Absolutely this will be the case.', 'confidence victory', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('Nobody has forbidden them to talk to the press.', 'setback chat', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('Anybody who wants to take part will be able to do so.', 'intro confidence', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('The opposition will try not to recognize what has happened.', 'setback strategy', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr')
             ])
         }),
         'rheodore-toosevelt': Object.freeze({
@@ -84,7 +124,16 @@
                 quote('The credit belongs to the man who is actually in the arena.', 'intro confidence', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
                 quote('There is no effort without error and shortcoming.', 'setback strategy', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
                 quote('The role is easy.', 'confidence victory', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
-                quote('The man who does nothing cuts the same sordid figure.', 'pass chat', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/')
+                quote('The man who does nothing cuts the same sordid figure.', 'pass chat', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
+                quote('The poorest way to face life is to face it with a sneer.', 'setback chat', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
+                quote('The average citizen must be a good citizen.', 'intro strategy', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
+                quote('To you and your kind much has been given.', 'confidence chat', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
+                quote('From you much should be expected.', 'confidence strategy', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
+                quote('Spends himself in a worthy cause.', 'confidence victory', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
+                quote('At least fails while daring greatly.', 'setback confidence', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
+                quote('They have nobly ventured.', 'confidence victory', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
+                quote('There is need of a sound body, and even more of a sound mind.', 'strategy chat', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
+                quote('Above mind and above body stands character.', 'confidence victory', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/')
             ])
         })
     });

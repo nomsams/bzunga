@@ -20,7 +20,7 @@ for (const [id, displayName, realName, difficulty] of expected) {
     assert.strictEqual(persona.displayName, displayName, `${id} must use the requested swapped-initial spelling`);
     assert.strictEqual(persona.realName, realName, `${id} must record the correctly spelled historical name`);
     assert.strictEqual(persona.difficulty, difficulty, `${id} must have a stable strategy level`);
-    assert(persona.quotations.length >= 12, `${displayName} needs a deep quotation rotation`);
+    assert(persona.quotations.length >= 20, `${displayName} needs an exceptionally deep quotation rotation`);
     assert.strictEqual(new Set(persona.quotations.map(item => item.text)).size, persona.quotations.length, `${displayName} has duplicate quotations`);
     for (const item of persona.quotations) {
         assert(item.text.length <= 68, `${displayName} quotation is too long for mobile chat: ${item.text}`);

@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../multiplayer.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
@@ -40,12 +41,20 @@
             </label>
             <label for="player-name">Your table name</label>
             <input id="player-name" type="text" maxlength="24" placeholder="Enter your name" autocomplete="name">
+            <label class="room-name-field" for="room-name">Custom room name
+                <input id="room-name" type="text" maxlength="28" placeholder="e.g. Friday Cabinet" autocomplete="off">
+            </label>
+            <p class="room-name-hint">Spaces and punctuation are normalized, so confusingly similar names cannot create duplicate rooms.</p>
+            <div id="room-name-suggestions" class="room-suggestions hidden" aria-live="polite"></div>
             <button id="btn-host" class="primary large">CREATE A TABLE</button>
             <div class="divider"><span>OR JOIN A TABLE</span></div>
             <label for="join-id">Game ID</label>
             <div class="join-row">
-                <input id="join-id" type="text" maxlength="80" placeholder="Paste Game ID" autocomplete="off">
-                <button id="btn-join" class="secondary">JOIN</button>
+                <input id="join-id" type="text" maxlength="120" placeholder="Room name, Game ID or invite link" autocomplete="off">
+                <div class="join-actions">
+                    <button id="btn-join" class="secondary">JOIN</button>
+                    <button id="btn-spectate" class="secondary">SPECTATE</button>
+                </div>
             </div>
             <button id="btn-open-rules" class="text-button">Read the rules</button>
             <button id="btn-download-offline" class="offline-download-button">&#11015; DOWNLOAD ALL MODES</button>
@@ -69,6 +78,7 @@
             </div>
             <div id="lobby-players" class="player-list"></div>
             <div id="host-controls" class="host-controls hidden">
+                <label class="spectator-setting"><input id="allow-spectators" type="checkbox" checked> Allow spectators (god view)</label>
                 <div class="setting-grid">
                     <label>
                         Add an opponent
@@ -106,6 +116,11 @@
     </section>
 
     <section id="game-view" class="hidden" aria-label="President and Slave game table">
+        <div id="spectator-controls" class="spectator-controls hidden" aria-label="Spectator perspective controls">
+            <button id="spectator-prev" type="button" aria-label="Previous player">&lt;</button>
+            <span id="spectator-label">SPECTATING</span>
+            <button id="spectator-next" type="button" aria-label="Next player">&gt;</button>
+        </div>
         <header id="status-banner">
             <div class="phase-chip" id="phase-display">PLAY</div>
             <div class="status-copy">
@@ -222,6 +237,7 @@
 
 <script src="../card-theme.js"></script>
 <script src="../offline.js"></script>
+<script src="../multiplayer.js"></script>
 <script src="../historical-bots.js"></script>
 <script src="rules.js"></script>
 <script src="engine.js"></script>

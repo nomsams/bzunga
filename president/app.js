@@ -47,6 +47,17 @@
         peerOpenTimer: null,
         hostConnection: null,
         connections: {},
+        connectionRoles: {},
+        spectators: {},
+        allowSpectators: true,
+        isSpectator: false,
+        requestedSpectator: false,
+        requestedRoomName: '',
+        hostId: '',
+        reconnectTimer: null,
+        everConnected: false,
+        leaving: false,
+        joinRejected: false,
         gameState: null,
         ui: {
             selectedIds: new Set(),
@@ -64,8 +75,11 @@
     };
 
     const Net = {
-        initialize(name, hostId = null) {
+        initialize(name, hostId = null, spectator = false) {
             App.localName = Utils.cleanText(name, 24, `Player ${Math.floor(Math.random() * 1000)}`);
+            App.requestedSpectator = Boolean(spectator);
+            App.isSpectator = Boolean(spectator);
+            App.joinRejected = false;
             App.sessionToken = String(localStorage.getItem('president_slave_token') || Utils.id()).slice(0, 80);
             localStorage.setItem('president_slave_token', App.sessionToken);
             if (App.isHost && (!navigator.onLine || typeof Peer !== 'function')) {
@@ -78,15 +92,10 @@
                 return;
             }
             try {
-                App.peer = new Peer(Utils.id(), {
-                    secure: true,
-                    config: {
-                        iceServers: [
-                            { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:global.stun.twilio.com:3478' }
-                        ]
-                    }
-                });
+                const requestedId = App.isHost
+                    ? RoomTools.makeRoomId('president', App.requestedRoomName)
+                    : Utils.id();
+                App.peer = new Peer(requestedId, RoomTools.peerOptions());
             } catch (error) {
                 if (App.isHost) return Net.openOfflineHost();
                 throw error;
@@ -108,8 +117,21 @@
                 }
             });
             App.peer.on('connection', connection => Net.acceptConnection(connection));
+            App.peer.on('disconnected', () => {
+                if (!App.peer?.destroyed) {
+                    try { App.peer.reconnect(); } catch (error) {}
+                }
+            });
             App.peer.on('error', error => {
                 console.error(error);
+                if (App.isHost && !App.localId && RoomTools.isNameCollision(error)) {
+                    clearTimeout(App.peerOpenTimer);
+                    try { App.peer?.destroy?.(); } catch (destroyError) {}
+                    App.peer = null;
+                    UI.showRoomCollision(App.requestedRoomName);
+                    UI.resetLobbyButtons();
+                    return;
+                }
                 if (App.isHost && !App.localId) {
                     Net.openOfflineHost();
                     return;
@@ -131,6 +153,7 @@
             if (Game.engine) return;
             App.localId = peerId;
             App.offlineHost = offline;
+            App.allowSpectators = document.getElementById('allow-spectators')?.checked !== false;
             Game.engine = new PresidentGameEngine({
                 makeId: Utils.id,
                 onEvent: (event, state) => Game.bots?.handleEvent(event, state),
@@ -156,31 +179,76 @@
             if (offline) UI.showToast('Offline bot table ready. Add bots and deal normally.', 'success');
         },
 
-        connectToHost(hostId) {
+        connectToHost(hostId, reconnecting = false) {
             const safeHostId = Utils.cleanText(hostId, 80).replace(/[^a-zA-Z0-9-]/g, '');
             if (!safeHostId) {
                 UI.showToast('Enter a valid Game ID.', 'danger');
                 UI.resetLobbyButtons();
                 return;
             }
-            App.hostConnection = App.peer.connect(safeHostId);
-            App.hostConnection.on('open', () => {
+            App.hostId = safeHostId;
+            const connection = App.peer.connect(safeHostId, {
+                reliable: true,
+                serialization: 'json',
+                metadata: { role: App.requestedSpectator ? 'spectator' : 'player' }
+            });
+            App.hostConnection = connection;
+            connection.on('open', () => {
+                clearTimeout(App.reconnectTimer);
+                App.reconnectTimer = null;
+                App.everConnected = true;
                 document.getElementById('lobby-start').classList.add('hidden');
                 document.getElementById('lobby-room').classList.remove('hidden');
                 document.getElementById('client-waiting').classList.remove('hidden');
                 document.getElementById('room-id-display').textContent = `Connected to ${safeHostId}`;
-                App.hostConnection.send({
+                const joinPayload = {
                     type: 'JOIN',
                     name: App.localName,
-                    sessionToken: App.sessionToken
-                });
+                    sessionToken: App.sessionToken,
+                    role: App.requestedSpectator ? 'spectator' : 'player'
+                };
+                connection.send(joinPayload);
+                connection._joinRetryTimer = setTimeout(() => {
+                    if (!connection._receivedState && connection.open) connection.send(joinPayload);
+                }, 1600);
+                connection._joinTimeoutTimer = setTimeout(() => {
+                    if (!connection._receivedState) UI.showToast('Connected, but the host has not sent the table yet. Retrying...', 'danger');
+                }, 6500);
             });
-            App.hostConnection.on('data', data => Net.receiveHostData(data));
-            App.hostConnection.on('close', () => UI.showToast('The host connection closed.', 'danger'));
-            App.hostConnection.on('error', error => {
-                UI.showToast(`Could not join: ${error.message || error}`, 'danger');
-                UI.resetLobbyButtons();
+            connection.on('data', data => {
+                if (data?.type === 'STATE_UPDATE' || data?.type === 'JOIN_REJECTED') {
+                    connection._receivedState = true;
+                    clearTimeout(connection._joinRetryTimer);
+                    clearTimeout(connection._joinTimeoutTimer);
+                }
+                if (App.hostConnection !== connection) return;
+                Net.receiveHostData(data);
             });
+            connection.on('close', () => {
+                clearTimeout(connection._joinRetryTimer);
+                clearTimeout(connection._joinTimeoutTimer);
+                if (App.hostConnection !== connection) return;
+                if (!App.leaving && !App.joinRejected) {
+                    UI.showToast('Connection dropped. Rejoining your seat...', 'danger');
+                    Net.scheduleReconnect(safeHostId);
+                }
+            });
+            connection.on('error', error => {
+                if (App.hostConnection !== connection) return;
+                if (App.everConnected && !App.leaving) Net.scheduleReconnect(safeHostId);
+                else {
+                    UI.showToast(`Could not join: ${error.message || error}`, 'danger');
+                    UI.resetLobbyButtons();
+                }
+            });
+        },
+
+        scheduleReconnect(hostId) {
+            if (App.leaving || App.isHost || App.reconnectTimer) return;
+            App.reconnectTimer = setTimeout(() => {
+                App.reconnectTimer = null;
+                if (!App.leaving && App.peer && !App.peer.destroyed) Net.connectToHost(hostId, true);
+            }, 1700);
         },
 
         acceptConnection(connection) {
@@ -191,22 +259,53 @@
                     Net.handleJoin(connection, data);
                     return;
                 }
+                if (data.type === 'SPECTATOR_PERSPECTIVE') {
+                    Net.changeSpectatorPerspective(connection.peer, Number(data.direction) || 1);
+                    return;
+                }
+                if (App.connectionRoles[connection.peer]?.role === 'spectator') return;
                 const result = Game.engine?.processAction(data, connection.peer);
                 if (result && !result.ok && connection.open) {
                     connection.send({ type: 'ACTION_REJECTED', reason: result.reason });
                 }
             });
             connection.on('close', () => {
-                Game.engine?.disconnectPlayer(connection.peer);
+                if (App.connections[connection.peer] !== connection) return;
+                if (App.connectionRoles[connection.peer]?.role !== 'spectator') {
+                    Game.engine?.disconnectPlayer(connection.peer);
+                }
                 delete App.connections[connection.peer];
+                delete App.connectionRoles[connection.peer];
+                delete App.spectators[connection.peer];
             });
         },
 
         handleJoin(connection, data) {
             if (!Game.engine) return;
             const state = Game.engine.state;
-            if (state.players.some(player => player.id === connection.peer)) {
+            if (data.role === 'spectator') {
+                if (!App.allowSpectators) {
+                    connection.send({ type: 'JOIN_REJECTED', reason: 'Spectator mode is disabled for this table.' });
+                    return;
+                }
+                const perspectiveId = state.players[0]?.id || null;
                 App.connections[connection.peer] = connection;
+                App.connectionRoles[connection.peer] = { role: 'spectator', perspectiveId };
+                App.spectators[connection.peer] = {
+                    id: connection.peer,
+                    name: Utils.cleanText(data.name, 24, 'Spectator'),
+                    perspectiveId
+                };
+                Net.sendState(connection, connection.peer);
+                Net.broadcast();
+                return;
+            }
+            const sameSeat = state.players.find(player => player.id === connection.peer);
+            if (sameSeat) {
+                App.connections[connection.peer] = connection;
+                App.connectionRoles[connection.peer] = { role: 'player' };
+                if (sameSeat.connected === false) Game.engine.reconnectPlayer(sameSeat.id, connection.peer);
+                Net.sendState(connection, connection.peer);
                 Net.broadcast();
                 return;
             }
@@ -218,7 +317,9 @@
             if (reconnecting) {
                 const oldId = reconnecting.id;
                 App.connections[connection.peer] = connection;
+                App.connectionRoles[connection.peer] = { role: 'player' };
                 Game.engine.reconnectPlayer(oldId, connection.peer);
+                Net.sendState(connection, connection.peer);
                 return;
             }
             if (state.phase !== 'lobby') {
@@ -239,17 +340,21 @@
                 uniqueName = `${requestedName.slice(0, 24 - ending.length)}${ending}`;
             }
             App.connections[connection.peer] = connection;
+            App.connectionRoles[connection.peer] = { role: 'player' };
             Game.engine.addPlayer({
                 id: connection.peer,
                 name: uniqueName,
                 sessionToken,
                 connected: true
             });
+            Net.sendState(connection, connection.peer);
         },
 
         receiveHostData(data) {
             if (!data || typeof data !== 'object') return;
             if (data.type === 'STATE_UPDATE' && data.state?.players && data.state?.logs) {
+                App.isSpectator = Boolean(data.state.spectatorMode);
+                if (App.isSpectator && data.state.viewerId) App.localId = data.state.viewerId;
                 App.gameState = data.state;
                 UI.render(data.state);
                 return;
@@ -259,6 +364,7 @@
                 return;
             }
             if (data.type === 'JOIN_REJECTED') {
+                App.joinRejected = true;
                 UI.showToast(Utils.cleanText(data.reason, 160, 'Unable to join this table.'), 'danger');
                 document.getElementById('lobby-start').classList.remove('hidden');
                 document.getElementById('lobby-room').classList.add('hidden');
@@ -269,22 +375,55 @@
         broadcast() {
             if (!App.isHost || !Game.engine) return;
             for (const [peerId, connection] of Object.entries(App.connections)) {
-                if (!connection.open) continue;
-                try {
-                    connection.send({
-                        type: 'STATE_UPDATE',
-                        state: Game.engine.getViewState(peerId)
-                    });
-                } catch (error) {
-                    console.warn('Skipped an unavailable President table peer.');
-                }
+                Net.sendState(connection, peerId);
             }
             const localView = Game.engine.getViewState(App.localId);
             App.gameState = localView;
             UI.render(localView);
         },
 
+        sendState(connection, peerId) {
+            if (!connection || !Game.engine) return false;
+            const connectionRole = App.connectionRoles[peerId] || { role: 'player' };
+            const spectator = connectionRole.role === 'spectator';
+            if (spectator && !Game.engine.state.players.some(player => player.id === connectionRole.perspectiveId)) {
+                connectionRole.perspectiveId = Game.engine.state.players[0]?.id || null;
+            }
+            const perspectiveId = spectator
+                ? (connectionRole.perspectiveId || Game.engine.state.players[0]?.id)
+                : peerId;
+            const state = Game.engine.getViewState(perspectiveId, spectator);
+            if (spectator) {
+                state.spectatorMode = true;
+                state.spectatorCount = Object.keys(App.spectators).length;
+            }
+            try {
+                connection.send({ type: 'STATE_UPDATE', state });
+                return true;
+            } catch (error) {
+                return false;
+            }
+        },
+
+        changeSpectatorPerspective(peerId, direction) {
+            const role = App.connectionRoles[peerId];
+            if (role?.role !== 'spectator' || !Game.engine?.state.players.length) return;
+            const players = Game.engine.state.players;
+            const currentIndex = Math.max(0, players.findIndex(player => player.id === role.perspectiveId));
+            role.perspectiveId = players[(currentIndex + (direction < 0 ? -1 : 1) + players.length) % players.length].id;
+            if (App.spectators[peerId]) App.spectators[peerId].perspectiveId = role.perspectiveId;
+            Net.sendState(App.connections[peerId], peerId);
+        },
+
         sendAction(action) {
+            if (App.isSpectator) {
+                if (action?.type === 'SPECTATOR_PERSPECTIVE' && App.hostConnection?.open) {
+                    App.hostConnection.send(action);
+                    return { ok: true, pending: true };
+                }
+                UI.showToast('Spectators have god view, but cannot play cards.', 'danger');
+                return { ok: false };
+            }
             if (App.isHost) {
                 const result = Game.engine?.processAction(action, App.localId);
                 if (result && !result.ok) UI.showToast(result.reason, 'danger');
@@ -303,10 +442,12 @@
         initialize() {
             const query = new URLSearchParams(window.location.search);
             const joinId = query.get('join');
+            const spectateInvite = query.get('spectate') === '1';
             if (query.get('game') === 'bazunga') {
                 const bazungaUrl = new URL('../index.html', window.location.href);
                 bazungaUrl.searchParams.set('game', 'bazunga');
                 if (joinId) bazungaUrl.searchParams.set('join', joinId.replace(/[^a-zA-Z0-9-]/g, ''));
+                if (spectateInvite) bazungaUrl.searchParams.set('spectate', '1');
                 window.location.replace(bazungaUrl.href);
                 return;
             }
@@ -314,6 +455,7 @@
                 const durakUrl = new URL('../durak/index.html', window.location.href);
                 durakUrl.searchParams.set('game', 'durak');
                 if (joinId) durakUrl.searchParams.set('join', joinId.replace(/[^a-zA-Z0-9-]/g, ''));
+                if (spectateInvite) durakUrl.searchParams.set('spectate', '1');
                 window.location.replace(durakUrl.href);
                 return;
             }
@@ -323,24 +465,49 @@
                 assetBase: '../',
                 onChange: () => App.gameState && UI.render(App.gameState)
             });
-            if (joinId) document.getElementById('join-id').value = joinId.replace(/[^a-zA-Z0-9-]/g, '');
+            if (joinId) {
+                const joinInput = document.getElementById('join-id');
+                joinInput.value = joinId.replace(/[^a-zA-Z0-9_-]/g, '');
+                joinInput.dataset.direct = '1';
+            }
 
             document.getElementById('btn-host').onclick = event => {
                 const button = event.currentTarget;
                 button.disabled = true;
                 button.textContent = 'CONNECTING…';
                 App.isHost = true;
+                App.requestedRoomName = RoomTools.cleanRoomName(
+                    document.getElementById('room-name').value,
+                    `${document.getElementById('player-name').value || 'Card'} ${Utils.id().slice(0, 4)}`
+                );
                 Net.initialize(document.getElementById('player-name').value);
             };
             document.getElementById('btn-join').onclick = event => {
-                const hostId = document.getElementById('join-id').value.trim();
+                const input = document.getElementById('join-id');
+                const hostId = RoomTools.resolveJoinId('president', input.value, input.dataset.direct === '1');
                 if (!hostId) return UI.showToast('Paste a Game ID first.', 'danger');
                 const button = event.currentTarget;
                 button.disabled = true;
                 button.textContent = 'JOINING…';
                 App.isHost = false;
-                Net.initialize(document.getElementById('player-name').value, hostId);
+                Net.initialize(document.getElementById('player-name').value, hostId, false);
             };
+            document.getElementById('btn-spectate').onclick = event => {
+                const input = document.getElementById('join-id');
+                const hostId = RoomTools.resolveJoinId('president', input.value, input.dataset.direct === '1');
+                if (!hostId) return UI.showToast('Enter a room name or invite first.', 'danger');
+                event.currentTarget.disabled = true;
+                event.currentTarget.textContent = 'CONNECTING...';
+                App.isHost = false;
+                Net.initialize(document.getElementById('player-name').value, hostId, true);
+            };
+            document.getElementById('join-id').addEventListener('input', event => { delete event.currentTarget.dataset.direct; });
+            document.getElementById('allow-spectators').onchange = event => {
+                App.allowSpectators = event.currentTarget.checked;
+                Net.broadcast();
+            };
+            document.getElementById('spectator-prev').onclick = () => Net.sendAction({ type: 'SPECTATOR_PERSPECTIVE', direction: -1 });
+            document.getElementById('spectator-next').onclick = () => Net.sendAction({ type: 'SPECTATOR_PERSPECTIVE', direction: 1 });
             document.getElementById('btn-add-bot').onclick = UI.addBot;
             document.getElementById('btn-start-game').onclick = UI.startGame;
             document.getElementById('btn-sort-hand').onclick = UI.toggleSort;
@@ -378,7 +545,7 @@
                 setTimeout(() => App.gameState && UI.render(App.gameState), 180);
             });
 
-            if (joinId) document.getElementById('btn-join').click();
+            if (joinId) document.getElementById(spectateInvite ? 'btn-spectate' : 'btn-join').click();
         },
 
         resetLobbyButtons() {
@@ -388,18 +555,24 @@
             hostButton.textContent = 'CREATE A TABLE';
             joinButton.disabled = false;
             joinButton.textContent = 'JOIN';
+            const spectateButton = document.getElementById('btn-spectate');
+            spectateButton.disabled = false;
+            spectateButton.textContent = 'SPECTATE';
+        },
+
+        showRoomCollision(roomName) {
+            UI.showToast('That room name is already in use.', 'danger');
+            RoomTools.showSuggestions(document.getElementById('room-name-suggestions'), roomName, suggestion => {
+                document.getElementById('room-name').value = suggestion;
+                document.getElementById('room-name-suggestions').classList.add('hidden');
+                document.getElementById('btn-host').click();
+            });
         },
 
         renderQr(peerId) {
             const container = document.getElementById('qr-container');
-            container.replaceChildren();
-            if (typeof QRCode !== 'function') return;
-            const url = new URL(window.location.origin + window.location.pathname);
-            url.searchParams.set('game', 'president');
-            url.searchParams.set('join', peerId);
-            container.dataset.inviteUrl = url.href;
-            container.setAttribute('aria-label', 'Scan to join this President and Slave room');
-            new QRCode(container, { text: url.href, width: 56, height: 56 });
+            RoomTools.renderQr(container, RoomTools.inviteUrl('president', peerId), 220);
+            RoomTools.bindQr(container);
         },
 
         addBot() {
@@ -438,6 +611,7 @@
 
         render(state) {
             App.gameState = state;
+            UI.renderSpectatorControls(state);
             UI.renderLogs(state);
             if (state.phase === 'lobby') {
                 UI.renderLobby(state);
@@ -470,6 +644,14 @@
             });
         },
 
+        renderSpectatorControls(state) {
+            const controls = document.getElementById('spectator-controls');
+            controls.classList.toggle('hidden', !App.isSpectator || state.phase === 'lobby');
+            if (!App.isSpectator) return;
+            const viewed = state.players.find(player => player.id === state.viewerId);
+            document.getElementById('spectator-label').textContent = `GOD VIEW - ${viewed?.name || 'TABLE'}`;
+        },
+
         renderStatus(state) {
             const phaseNames = {
                 dealing: 'DEAL',
@@ -482,7 +664,10 @@
             const me = state.players.find(player => player.id === App.localId);
             let message = 'Waiting for the table…';
 
-            if (state.phase === 'exchange') {
+            if (App.isSpectator) {
+                const viewed = state.players.find(player => player.id === state.viewerId);
+                message = `God view: ${viewed?.name || 'table'} perspective. Every hand is available.`;
+            } else if (state.phase === 'exchange') {
                 const task = state.exchange?.tasks.find(item => item.id === state.exchange.activeTaskId);
                 const giver = state.players.find(player => player.id === task?.giverId);
                 const receiver = state.players.find(player => player.id === task?.receiverId);
@@ -536,6 +721,7 @@
                 const classes = [
                     'opponent',
                     activeId === player.id && ['play', 'exchange'].includes(state.phase) ? 'active-turn' : '',
+                    !player.isBot && player.connected === false ? 'disconnected' : '',
                     player.passed ? 'passed' : '',
                     state.finishOrder.includes(player.id) ? 'finished' : ''
                 ].filter(Boolean).join(' ');
@@ -631,6 +817,7 @@
         },
 
         canSelectCards(state, me) {
+            if (App.isSpectator) return false;
             if (state.phase === 'play') {
                 return state.players[state.turnIndex]?.id === App.localId && !state.finishOrder.includes(me.id);
             }
@@ -680,6 +867,8 @@
             gameView.classList.remove('action-visible');
             feedback.classList.remove('invalid');
             selectedCount.textContent = selectedCards.length;
+
+            if (App.isSpectator) return;
 
             if (state.phase === 'exchange') {
                 const task = state.exchange?.tasks.find(item => item.id === state.exchange.activeTaskId);
@@ -929,6 +1118,8 @@
         },
 
         leaveGame() {
+            App.leaving = true;
+            clearTimeout(App.reconnectTimer);
             Game.bots?.stop();
             Object.values(App.connections).forEach(connection => {
                 try { connection.close(); } catch (error) {}

@@ -12,6 +12,8 @@
         './bot.js',
         './historical-bots.js',
         './card-theme.js',
+        './multiplayer.js',
+        './multiplayer.css',
         './offline.js',
         './service-worker.js',
         './president/index.html',

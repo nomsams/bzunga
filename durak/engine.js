@@ -65,7 +65,9 @@
                 isBot: Boolean(player.isBot),
                 botDifficulty: Number(player.botDifficulty || 0),
                 historicalPersona: String(player.historicalPersona || '').slice(0, 40),
+                sessionToken: String(player.sessionToken || '').slice(0, 80),
                 connected: player.connected !== false,
+                disconnectTurns: 0,
                 hand: [],
                 out: false,
                 finishPlace: null
@@ -121,6 +123,10 @@
             return this.state.players.filter(player => !player.out);
         }
 
+        availablePlayers() {
+            return this.state.players.filter(player => !player.out && (player.isBot || player.connected !== false));
+        }
+
         clockwiseFrom(playerId, includeStart = false) {
             const players = this.state.players;
             const startIndex = players.findIndex(player => player.id === playerId);
@@ -128,13 +134,86 @@
             const result = [];
             for (let offset = includeStart ? 0 : 1; offset <= players.length; offset++) {
                 const player = players[(startIndex + offset) % players.length];
-                if (!player.out && !result.some(existing => existing.id === player.id)) result.push(player);
+                if (!player.out && (player.isBot || player.connected !== false) && !result.some(existing => existing.id === player.id)) result.push(player);
             }
             return result;
         }
 
         nextActiveAfter(playerId) {
             return this.clockwiseFrom(playerId, false)[0] || null;
+        }
+
+        recycleDisconnectedPlayer(playerId) {
+            const player = this.getPlayer(playerId);
+            if (!player || player.isBot || player.connected !== false) return false;
+            const recycled = player.hand.splice(0);
+            for (const card of recycled) {
+                card.ownerId = null;
+                card.loc = 'talon';
+            }
+            const turnUp = this.state.talon.find(card => card.id === this.state.trumpCardId) || null;
+            const pool = [...this.state.talon.filter(card => card.id !== this.state.trumpCardId), ...recycled];
+            const shuffled = Rules.shuffle(pool, this.random);
+            this.state.talon = turnUp ? [turnUp, ...shuffled] : shuffled;
+            this.state.players = this.state.players.filter(candidate => candidate.id !== playerId);
+            this.state.finishedOrder = this.state.finishedOrder.filter(id => id !== playerId);
+            this.state.passedAttackers = this.state.passedAttackers.filter(id => id !== playerId);
+            this.log(`${player.name} missed more than three turns. Their ${recycled.length} card${recycled.length === 1 ? '' : 's'} returned to the talon and their seat was closed.`, 'warning');
+            return true;
+        }
+
+        advanceDisconnectClock() {
+            const expired = [];
+            for (const player of this.state.players) {
+                if (player.isBot || player.connected !== false || player.out) continue;
+                player.disconnectTurns = (player.disconnectTurns || 0) + 1;
+                if (player.disconnectTurns > 3) expired.push(player.id);
+            }
+            expired.forEach(playerId => this.recycleDisconnectedPlayer(playerId));
+            return expired;
+        }
+
+        disconnectPlayer(playerId) {
+            const player = this.getPlayer(playerId);
+            if (!player || player.isBot || player.connected === false) return false;
+            player.connected = false;
+            player.disconnectTurns = 0;
+            this.log(`${player.name} disconnected and will be skipped until they return.`, 'warning');
+            if (this.state.phase === 'lobby' || this.state.phase === 'game_over') return true;
+            if (this.state.defenderId === playerId && this.state.battle.length) {
+                this.resolveRound(true);
+                return true;
+            }
+            if (this.state.attackTurnId === playerId) {
+                if (this.state.battle.length) this.passAttack(player);
+                else {
+                    const next = this.nextActiveAfter(playerId) || this.availablePlayers()[0];
+                    if (next) this.beginRound(next.id);
+                }
+            }
+            return true;
+        }
+
+        reconnectPlayer(oldId, newId) {
+            const player = this.getPlayer(oldId);
+            if (!player || player.isBot) return false;
+            player.id = String(newId);
+            player.connected = true;
+            player.disconnectTurns = 0;
+            player.hand.forEach(card => { card.ownerId = player.id; });
+            const replace = value => value === oldId ? player.id : value;
+            this.state.mainAttackerId = replace(this.state.mainAttackerId);
+            this.state.defenderId = replace(this.state.defenderId);
+            this.state.attackTurnId = replace(this.state.attackTurnId);
+            this.state.lastAttackerId = replace(this.state.lastAttackerId);
+            this.state.durakId = replace(this.state.durakId);
+            this.state.finishedOrder = this.state.finishedOrder.map(replace);
+            this.state.passedAttackers = this.state.passedAttackers.map(replace);
+            for (const pair of this.state.battle) {
+                pair.attackerId = replace(pair.attackerId);
+            }
+            this.log(`${player.name} reconnected to their seat.`, 'success');
+            return true;
         }
 
         startGame() {
@@ -160,6 +239,7 @@
                 player.hand = [];
                 player.out = false;
                 player.finishPlace = null;
+                player.disconnectTurns = 0;
             });
 
             for (let cardNumber = 0; cardNumber < HAND_SIZE; cardNumber++) {
@@ -190,10 +270,22 @@
         }
 
         beginRound(attackerId) {
-            const attacker = this.getPlayer(attackerId);
-            if (!attacker || attacker.out) return this.finishIfNeeded();
-            const defender = this.nextActiveAfter(attackerId);
-            if (!defender || defender.id === attacker.id) return this.finishIfNeeded();
+            this.advanceDisconnectClock();
+            let attacker = this.getPlayer(attackerId);
+            if (!attacker || attacker.out || (!attacker.isBot && attacker.connected === false)) {
+                attacker = this.nextActiveAfter(attackerId) || this.availablePlayers()[0];
+            }
+            if (!attacker) return this.finishIfNeeded();
+            const defender = this.nextActiveAfter(attacker.id);
+            if (!defender || defender.id === attacker.id) {
+                const disconnected = this.activePlayers().filter(player => !player.isBot && !player.connected);
+                if (disconnected.length) {
+                    disconnected.forEach(player => { player.disconnectTurns = Math.max(4, player.disconnectTurns || 0); });
+                    disconnected.forEach(player => this.recycleDisconnectedPlayer(player.id));
+                }
+                if (this.availablePlayers().length < 2) return this.finishIfNeeded();
+                return this.beginRound(attacker.id);
+            }
             this.state.roundNumber += 1;
             this.state.phase = 'attack';
             this.state.mainAttackerId = attacker.id;
@@ -318,6 +410,8 @@
             }
             this.state.phase = 'defend';
             this.state.attackTurnId = null;
+            const defender = this.getPlayer(this.state.defenderId);
+            if (defender && !defender.isBot && defender.connected === false) this.resolveRound(true);
             return { ok: true };
         }
 
@@ -456,6 +550,13 @@
 
         finishIfNeeded() {
             const active = this.activePlayers();
+            if (this.state.players.length <= 1) {
+                this.state.phase = 'game_over';
+                this.state.durakId = null;
+                this.state.lastAction = { type: 'game_over', durakId: null, time: this.now() };
+                this.log(active[0] ? `${active[0].name} is the last connected player and wins by default.` : 'The table closed without a fool.', 'game_over');
+                return true;
+            }
             if (this.state.talon.length === 0 && active.length <= 1) {
                 this.state.phase = 'game_over';
                 this.state.durakId = active[0]?.id || null;
@@ -471,18 +572,20 @@
             return false;
         }
 
-        getViewState(viewerId) {
+        getViewState(viewerId, spectator = false) {
             const state = clone(this.state);
             const viewer = this.getPlayer(viewerId);
             state.players = this.state.players.map(player => {
-                const own = player.id === viewerId;
+                const own = spectator || player.id === viewerId;
                 return {
                     id: player.id,
                     name: player.name,
                     isBot: player.isBot,
                     botDifficulty: player.botDifficulty,
                     historicalPersona: player.historicalPersona,
+                    sessionToken: !spectator && player.id === viewerId ? player.sessionToken : '',
                     connected: player.connected,
+                    disconnectTurns: player.disconnectTurns || 0,
                     out: player.out,
                     finishPlace: player.finishPlace,
                     handCount: player.hand.length,
@@ -500,6 +603,7 @@
             state.trumpCard = turnUp ? clone(turnUp) : null;
             delete state.talon;
             state.viewerId = viewer?.id || viewerId;
+            state.spectatorMode = Boolean(spectator);
             return state;
         }
     }

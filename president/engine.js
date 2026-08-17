@@ -101,7 +101,7 @@
 
         startGame(settings = {}) {
             if (this.state.phase !== 'lobby') return { ok: false, reason: 'The game has already started.' };
-            const activePlayers = this.state.players.filter(player => player.isBot || player.connected);
+            const activePlayers = this.state.players.filter(player => player.isBot || player.connected !== false);
             if (activePlayers.length < 2) return { ok: false, reason: 'At least two players are required.' };
             if (activePlayers.length > 8) return { ok: false, reason: 'The table supports up to eight players.' };
             this.state.players = activePlayers;
@@ -437,25 +437,33 @@
         }
 
         _advanceAfterAction(playerId) {
-            const eligible = this._unfinishedPlayers().filter(player => !player.passed);
+            const eligible = this._unfinishedPlayers().filter(player =>
+                !player.passed && (player.isBot || player.connected !== false)
+            );
             if (eligible.length <= 1) {
                 const leader = eligible[0] || this._nextUnfinishedAfter(playerId);
                 if (this.state.lastAction) this.state.lastAction.cleared = true;
                 this._clearTrick(leader?.id, 'Every other player passed');
                 return;
             }
-            const nextIndex = this._nextIndexAfter(playerId, player => !this.isFinished(player.id) && !player.passed);
+            const nextIndex = this._nextIndexAfter(playerId, player =>
+                !this.isFinished(player.id) && !player.passed && (player.isBot || player.connected !== false)
+            );
             if (nextIndex >= 0) this.state.turnIndex = nextIndex;
         }
 
         _clearTrick(leaderId, reason) {
             this.state.discardedTricks += 1;
             for (const player of this.state.players) {
-                if (!this.isFinished(player.id)) player.passed = false;
+                if (!this.isFinished(player.id)) player.passed = !player.isBot && player.connected === false;
             }
             this.state.trick = this.createEmptyTrick();
-            const leaderIndex = this.state.players.findIndex(player => player.id === leaderId && !this.isFinished(player.id));
-            this.state.turnIndex = leaderIndex >= 0 ? leaderIndex : Math.max(0, this._nextIndexAfter(leaderId, player => !this.isFinished(player.id)));
+            const leaderIndex = this.state.players.findIndex(player =>
+                player.id === leaderId && !this.isFinished(player.id) && (player.isBot || player.connected !== false)
+            );
+            this.state.turnIndex = leaderIndex >= 0 ? leaderIndex : Math.max(0, this._nextIndexAfter(leaderId, player =>
+                !this.isFinished(player.id) && (player.isBot || player.connected !== false)
+            ));
             const resolution = this._resolveFreshPileLeader(this.state.players[this.state.turnIndex]?.id || leaderId);
             if (resolution.gameOver) return;
             const blockedText = resolution.blocked.length
@@ -465,7 +473,17 @@
         }
 
         _resolveFreshPileLeader(preferredLeaderId) {
-            const unfinished = this._unfinishedPlayers();
+            const allUnfinished = this._unfinishedPlayers();
+            const unfinished = allUnfinished.filter(player => player.isBot || player.connected !== false);
+            if (!unfinished.length) {
+                for (const player of allUnfinished) {
+                    if (this.isFinished(player.id)) continue;
+                    this.state.finishOrder.push(player.id);
+                    player.finishPosition = this.state.finishOrder.length;
+                }
+                this._finishGame();
+                return { gameOver: true, blocked: [], leader: null };
+            }
             const blocked = unfinished.filter(player => Rules.getLegalPlays(player.hand, this.state.trick).length === 0);
             const blockedIds = new Set(blocked.map(player => player.id));
             for (const player of blocked) player.passed = true;
@@ -494,7 +512,7 @@
             let leader = playable.find(player => player.id === preferredLeaderId) || null;
             if (!leader) {
                 const nextIndex = this._nextIndexAfter(preferredLeaderId, player =>
-                    !this.isFinished(player.id) && !blockedIds.has(player.id)
+                    !this.isFinished(player.id) && !blockedIds.has(player.id) && (player.isBot || player.connected !== false)
                 );
                 leader = nextIndex >= 0 ? this.state.players[nextIndex] : playable[0];
             }
@@ -589,6 +607,7 @@
                     return;
                 }
             }
+            if (this.state.phase === 'play') player.passed = true;
             this._emit({ type: 'player_disconnected', playerId });
         }
 
@@ -597,6 +616,7 @@
             if (!player) return false;
             player.id = newId;
             player.connected = true;
+            if (!this.state.trick.rank) player.passed = false;
             for (const card of player.hand) card.ownerId = newId;
             this.state.finishOrder = this.state.finishOrder.map(id => id === oldId ? newId : id);
             if (this.state.result) {
@@ -635,7 +655,9 @@
         }
 
         _nextUnfinishedAfter(playerId) {
-            const index = this._nextIndexAfter(playerId, player => !this.isFinished(player.id));
+            const index = this._nextIndexAfter(playerId, player =>
+                !this.isFinished(player.id) && (player.isBot || player.connected !== false)
+            );
             return index >= 0 ? this.state.players[index] : null;
         }
 
@@ -663,10 +685,11 @@
             this.onChange(this.state);
         }
 
-        getViewState(viewerId) {
+        getViewState(viewerId, spectator = false) {
             const view = JSON.parse(JSON.stringify(this.state));
             for (const player of view.players) {
-                if (player.id !== viewerId) {
+                if (spectator || player.id !== viewerId) player.sessionToken = '';
+                if (!spectator && player.id !== viewerId) {
                     player.hand = player.hand.map(card => ({
                         id: card.id,
                         ownerId: player.id,
@@ -676,10 +699,12 @@
             }
             if (view.exchange) {
                 view.exchange.tasks = view.exchange.tasks.map(task => {
-                    if (task.giverId === viewerId) return task;
+                    if (spectator || task.giverId === viewerId) return task;
                     return { ...task, eligibleIds: [], selectedIds: [] };
                 });
             }
+            view.viewerId = viewerId;
+            view.spectatorMode = Boolean(spectator);
             return view;
         }
 

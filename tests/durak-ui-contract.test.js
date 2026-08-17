@@ -29,10 +29,10 @@ assert(css.includes('height: 100svh'), 'Mobile table height must stay stable whe
 assert.strictEqual((css.match(/#game-view\.action-visible #table-stage/g) || []).length, 1, 'The portrait table must not resize as action controls appear');
 assert(!app.includes("window.addEventListener('resize'"), 'Height-only mobile resize events must not rebuild and jump the table');
 assert(app.includes("window.addEventListener('orientationchange'"), 'Real orientation changes still need a responsive rerender');
-assert(app.includes("state: Game.engine.getViewState(peerId)"), 'P2P state updates must use per-player privacy views');
+assert(app.includes('Net.sendState(connection, peerId)') && app.includes('Game.engine.getViewState(perspectiveId, spectator)'), 'P2P state updates must use role-aware per-player privacy views');
 assert(engine.includes('delete state.talon'), 'Clients must never receive the talon order');
 assert(engine.includes('lastRoundResult') && app.includes('lastRoundResultToken'), 'Round draw and pickup feedback must survive the next-round transition');
-assert(app.includes("url.searchParams.set('game', 'durak')") && app.includes("url.searchParams.set('join', peerId)"), 'Durak QR invites need game and room routing');
+assert(app.includes("RoomTools.inviteUrl('durak', peerId)") && app.includes('RoomTools.renderQr'), 'Durak QR invites need high-resolution game and room routing');
 assert(app.includes("requestedGame === 'bazunga'") && app.includes("requestedGame === 'president'"), 'Misrouted links must reach the requested game');
 assert(bazunga.includes('href="./durak/index.html?game=durak"'), 'The BAZUNGA lobby must offer Durak');
 assert(president.includes('href="../durak/index.html?game=durak"'), 'The President lobby must offer Durak');

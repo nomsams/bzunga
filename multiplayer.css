@@ -27,6 +27,14 @@
 .opponent.disconnected, .opponent-seat.disconnected { filter: grayscale(.75); opacity: .58; }
 .opponent.disconnected::after, .opponent-seat.disconnected::after { content: 'RECONNECTING'; display: block; color: #fda4af; font-size: .52rem; font-weight: 900; letter-spacing: .08em; }
 @media (max-width: 620px) {
+    .lobby-card { width: min(100%, calc(100vw - 28px), 520px) !important; max-width: calc(100vw - 28px); min-width: 0; }
+    .lobby-box { width: min(100%, calc(100vw - 28px), 420px) !important; max-width: calc(100vw - 28px); min-width: 0; }
+    .lobby-card > *, .lobby-box > *, .room-code-wrap > *, .setting-grid > * { min-width: 0; }
+    .room-code-wrap { width: 100%; }
+    .room-code-wrap > :first-child { flex: 1 1 auto; min-width: 0; }
+    #room-id-display { max-width: 100% !important; overflow: hidden; text-overflow: ellipsis; }
+    #qr-container { width: 72px !important; height: 72px !important; min-width: 72px !important; min-height: 72px !important; }
+    #qr-container img, #qr-container canvas { width: 64px !important; height: 64px !important; }
     .join-actions { grid-template-columns: 1fr; }
     .spectator-controls { top: 57px; max-width: calc(100vw - 20px); }
     .spectator-controls span { min-width: 104px; }

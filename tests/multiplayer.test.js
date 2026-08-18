@@ -12,6 +12,17 @@ assert.strictEqual(RoomTools.resolveJoinId('bazunga', 'My Table'), 'bz-bazunga-m
 assert.strictEqual(RoomTools.resolveJoinId('bazunga', 'bz-bazunga-direct-room'), 'bz-bazunga-direct-room');
 assert.strictEqual(RoomTools.suggestions('My Table').length, 3);
 assert.strictEqual(new Set(RoomTools.suggestions('My Table')).size, 3);
+assert(RoomTools.PEER_OPEN_TIMEOUT_MS >= 8000, 'Slow mobile signalling must get a realistic connection window');
+assert(RoomTools.CONNECTION_OPEN_TIMEOUT_MS > RoomTools.PEER_OPEN_TIMEOUT_MS, 'Room channels need longer than signalling to open');
+assert(RoomTools.STATE_SYNC_TIMEOUT_MS > RoomTools.JOIN_RETRY_MS, 'A retried join must have time to receive state before recovery');
+const iceServers = RoomTools.peerOptions().config.iceServers;
+assert(iceServers.some(server => String(server.urls).startsWith('turn:')), 'Mobile multiplayer needs a TURN relay when direct P2P is blocked');
+assert(iceServers.some(server => String(server.urls).includes('transport=tcp')), 'Mobile multiplayer needs a TCP relay fallback for restrictive networks');
+assert(iceServers.filter(server => String(server.urls).startsWith('turn:')).every(server => server.username && server.credential), 'TURN relays must include credentials');
+const customIceServers = [{ urls: 'turn:relay.example.test:443', username: 'room', credential: 'secret' }];
+global.BZUNGA_ICE_SERVERS = customIceServers;
+assert.strictEqual(RoomTools.peerOptions().config.iceServers, customIceServers, 'A deployment must be able to replace the default relay credentials');
+delete global.BZUNGA_ICE_SERVERS;
 
 const president = new PresidentGameEngine({ random: () => 0.42 });
 president.addPlayer({ id: 'p1', name: 'One', connected: true });

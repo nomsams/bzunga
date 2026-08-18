@@ -1,7 +1,7 @@
 'use strict';
 
 const CACHE_PREFIX = 'bzunga-offline-';
-const CACHE_NAME = `${CACHE_PREFIX}v2`;
+const CACHE_NAME = `${CACHE_PREFIX}v4`;
 
 self.addEventListener('install', event => {
     event.waitUntil(self.skipWaiting());
@@ -53,8 +53,25 @@ self.addEventListener('message', event => {
     })());
 });
 
+function isAppShellRequest(request) {
+    const url = new URL(request.url);
+    return url.origin === self.location.origin
+        && (request.mode === 'navigate' || /\.(?:html|js|css)$/i.test(url.pathname));
+}
+
 async function cachedResponse(request) {
     const cache = await caches.open(CACHE_NAME);
+    if (isAppShellRequest(request)) {
+        try {
+            const freshRequest = new Request(request, { cache: 'no-cache' });
+            const fresh = await fetch(freshRequest);
+            if (fresh && fresh.ok) cache.put(request, fresh.clone()).catch(() => {});
+            return fresh;
+        } catch (error) {
+            // The explicitly downloaded cache remains the offline fallback below.
+        }
+    }
+
     const direct = await cache.match(request);
     if (direct) return direct;
     if (request.mode === 'navigate') {

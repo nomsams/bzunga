@@ -6,6 +6,10 @@
         president: 'bz-president-',
         durak: 'bz-durak-'
     };
+    const PEER_OPEN_TIMEOUT_MS = 10000;
+    const CONNECTION_OPEN_TIMEOUT_MS = 12000;
+    const JOIN_RETRY_MS = 1600;
+    const STATE_SYNC_TIMEOUT_MS = 7000;
 
     function cleanRoomName(value, fallback = '') {
         const normalized = String(value || '')
@@ -110,7 +114,10 @@
                 <p class="room-qr-help">Point the camera at the whole square. Keep this screen steady.</p>
             </div>`;
         root.document.body.appendChild(modal);
-        const close = () => modal.classList.add('hidden');
+        const close = () => {
+            modal.classList.add('hidden');
+            modal._returnFocus?.focus?.();
+        };
         modal.querySelector('.room-qr-close').addEventListener('click', close);
         modal.addEventListener('click', event => { if (event.target === modal) close(); });
         root.document.addEventListener('keydown', event => {
@@ -123,6 +130,7 @@
         const text = container?.dataset.inviteUrl;
         if (!text || typeof root.QRCode !== 'function') return;
         const modal = ensureQrModal();
+        modal._returnFocus = container;
         const target = modal.querySelector('#room-qr-large');
         target.replaceChildren();
         new root.QRCode(target, qrOptions(text, Math.min(420, Math.max(300, root.innerWidth - 54))));
@@ -154,14 +162,36 @@
     }
 
     function peerOptions() {
+        const defaultIceServers = [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun.relay.metered.ca:80' },
+            {
+                urls: 'turn:openrelay.metered.ca:80',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            },
+            {
+                urls: 'turn:openrelay.metered.ca:443',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            },
+            {
+                urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            }
+        ];
+        const iceServers = Array.isArray(root.BZUNGA_ICE_SERVERS) && root.BZUNGA_ICE_SERVERS.length
+            ? root.BZUNGA_ICE_SERVERS
+            : defaultIceServers;
+
         return {
             secure: true,
             pingInterval: 5000,
             config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:global.stun.twilio.com:3478' }
-                ],
+                iceServers,
+                iceCandidatePoolSize: 10,
+                iceTransportPolicy: 'all',
                 sdpSemantics: 'unified-plan'
             }
         };
@@ -178,6 +208,10 @@
         openQr,
         showSuggestions,
         peerOptions,
+        PEER_OPEN_TIMEOUT_MS,
+        CONNECTION_OPEN_TIMEOUT_MS,
+        JOIN_RETRY_MS,
+        STATE_SYNC_TIMEOUT_MS,
         isNameCollision: error => error?.type === 'unavailable-id'
     };
 })(globalThis);

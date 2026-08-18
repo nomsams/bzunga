@@ -22,13 +22,20 @@ for (const [name, html] of [['Bazunga', bazunga], ['President', presidentHtml], 
 assert(shared.includes("error?.type === 'unavailable-id'"), 'Room collisions must use the PeerJS unavailable-id signal');
 assert(shared.includes('correctLevel') && shared.includes('size = 220'), 'QR codes must be generated natively at scanning resolution');
 assert(shared.includes('room-qr-modal') && shared.includes('Math.min(420'), 'Tapping a QR must create a large scanner modal');
+assert(shared.includes('modal._returnFocus'), 'Closing the enlarged QR must return keyboard focus to its trigger');
 assert(sharedCss.includes('cursor: zoom-in') && sharedCss.includes('#room-qr-large'), 'QR affordance and modal must be visibly styled');
+assert(sharedCss.includes('calc(100vw - 28px)') && sharedCss.includes('width: 72px !important'), 'Narrow mobile lobbies and their QR preview must stay inside the viewport');
 assert(!bazunga.includes('user-scalable=no'), 'Bazunga must not disable native mobile zoom');
 
 for (const [name, app] of [['President', presidentApp], ['Durak', durakApp]]) {
     assert(app.includes("serialization: 'json'"), `${name} must use cross-browser JSON data channels`);
     assert(app.includes("App.peer.on('disconnected'"), `${name} must reconnect to PeerServer signalling`);
     assert(app.includes('scheduleReconnect('), `${name} must automatically recover a dropped game channel`);
+    assert(app.includes('RoomTools.PEER_OPEN_TIMEOUT_MS'), `${name} must recover when signalling never opens`);
+    assert(app.includes('RoomTools.CONNECTION_OPEN_TIMEOUT_MS'), `${name} must recover when a room channel never opens`);
+    assert(app.includes("connection._openTimer"), `${name} must clear and replace per-channel connection timers`);
+    assert(app.includes("connection.close()"), `${name} must restart a channel that never delivers table state`);
+    assert(app.includes('resetJoinAttempt(') && app.includes('App.localId = null'), `${name} retries must discard stale peer identities`);
     assert(app.includes('Net.sendState(connection, connection.peer)'), `${name} joins must receive an explicit first state`);
     assert(app.includes('const sameSeat ='), `${name} must accept retried JOIN handshakes for an existing seat`);
     assert(app.includes('App.connections[connection.peer] !== connection'), `${name} must ignore stale connection close events`);
@@ -36,6 +43,9 @@ for (const [name, app] of [['President', presidentApp], ['Durak', durakApp]]) {
 }
 
 assert(bazunga.includes("serialization: 'json'") && bazunga.includes('scheduleReconnect: hostId'), 'Bazunga must share cross-browser reconnect behavior');
+assert(bazunga.includes('RoomTools.PEER_OPEN_TIMEOUT_MS') && bazunga.includes('RoomTools.CONNECTION_OPEN_TIMEOUT_MS'), 'Bazunga must recover both signalling and room-channel timeouts');
+assert(bazunga.includes('resetJoinAttempt:') && bazunga.includes('App.localId = null'), 'Bazunga retries must discard stale peer identities');
+assert(bazunga.includes('UI.resetLobbyButtons();') && !bazunga.includes("const joinButton = document.getElementById('btn-join');\n            if (joinButton)"), 'Bazunga failures must restore Host, Join, and Spectate controls together');
 assert(bazunga.includes('player.sessionToken = \'\''), 'Bazunga state delivery must hide other reconnect tokens');
 assert(bazunga.includes('App.connections[conn.peer] !== conn'), 'Bazunga must ignore stale connection close events');
 assert(bazunga.includes('.map(playerId => playerId === oldId ? conn.peer : playerId)'), 'Bazunga reconnects must preserve a pending final orbit');

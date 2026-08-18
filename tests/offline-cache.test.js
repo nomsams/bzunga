@@ -38,6 +38,7 @@ assert.strictEqual(CardTheme.allFaceUrls('./').length, 54, 'The full face manife
 assert(workerSource.includes("self.addEventListener('message'"), 'Service worker must accept an explicit full-cache command');
 assert(workerSource.includes("event.data?.type !== 'CACHE_OFFLINE'"), 'Service worker must scope messages to offline caching');
 assert(workerSource.includes("self.addEventListener('fetch'"), 'Service worker must serve cached gameplay files');
+assert(workerSource.includes('isAppShellRequest') && workerSource.includes("cache: 'no-cache'"), 'Online app code must refresh before falling back to its offline cache');
 assert(workerSource.includes("request.mode !== 'navigate'"), 'Service worker must provide per-game navigation fallbacks');
 assert(workerSource.includes("navigationUrl.search = ''"), 'Offline invite URLs must resolve to their cached game page');
 assert(!workerSource.includes('cache.match(request, { ignoreSearch: true })'), 'Remote resources with different query strings must not collide');

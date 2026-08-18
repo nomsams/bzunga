@@ -78,6 +78,27 @@
     };
 
     const Net = {
+        resetJoinAttempt(resetButtons = true) {
+            clearTimeout(App.peerOpenTimer);
+            clearTimeout(App.reconnectTimer);
+            const connection = App.hostConnection;
+            App.hostConnection = null;
+            if (connection) {
+                clearTimeout(connection._openTimer);
+                clearTimeout(connection._joinRetryTimer);
+                clearTimeout(connection._joinTimeoutTimer);
+                try { connection.close(); } catch (error) {}
+            }
+            const peer = App.peer;
+            App.peer = null;
+            App.localId = null;
+            App.hostId = '';
+            App.everConnected = false;
+            App.reconnectTimer = null;
+            try { peer?.destroy?.(); } catch (error) {}
+            if (resetButtons) UI.resetLobbyButtons();
+        },
+
         initialize(name, hostId = null, spectator = false) {
             App.localName = Utils.clean(name, 24, `Player ${Math.floor(Math.random() * 900 + 100)}`);
             App.requestedSpectator = Boolean(spectator);
@@ -101,14 +122,17 @@
                 App.peer = new Peer(requestedId, RoomTools.peerOptions());
             } catch (error) {
                 if (App.isHost) return Net.openOfflineHost();
-                throw error;
+                Net.resetJoinAttempt();
+                UI.showToast(`Could not start multiplayer: ${error.message || error}`, 'danger');
+                return;
             }
 
-            if (App.isHost) {
-                App.peerOpenTimer = setTimeout(() => {
-                    if (!App.localId) Net.openOfflineHost();
-                }, 4500);
-            }
+            App.peerOpenTimer = setTimeout(() => {
+                if (App.localId) return;
+                if (App.isHost) return Net.openOfflineHost();
+                Net.resetJoinAttempt();
+                UI.showToast('The multiplayer service did not answer. Check your connection and try again.', 'danger');
+            }, RoomTools.PEER_OPEN_TIMEOUT_MS);
 
             App.peer.on('open', peerId => {
                 clearTimeout(App.peerOpenTimer);
@@ -126,8 +150,8 @@
                 }
             });
             App.peer.on('error', error => {
+                clearTimeout(App.peerOpenTimer);
                 if (App.isHost && !App.localId && RoomTools.isNameCollision(error)) {
-                    clearTimeout(App.peerOpenTimer);
                     try { App.peer?.destroy?.(); } catch (destroyError) {}
                     App.peer = null;
                     UI.showRoomCollision(App.requestedRoomName);
@@ -138,7 +162,7 @@
                     Net.openOfflineHost();
                     return;
                 }
-                UI.resetLobbyButtons();
+                if (!App.everConnected) Net.resetJoinAttempt();
                 UI.showToast(error?.message || 'Unable to open the P2P table.', 'danger');
             });
         },
@@ -184,7 +208,16 @@
                 metadata: { role: App.requestedSpectator ? 'spectator' : 'player' }
             });
             App.hostConnection = connection;
+            connection._openTimer = setTimeout(() => {
+                if (App.hostConnection !== connection || connection.open) return;
+                try { connection.close(); } catch (error) {}
+                if (!App.everConnected) {
+                    Net.resetJoinAttempt();
+                    UI.showToast('Could not reach that table. Check the room name or invite and try again.', 'danger');
+                } else Net.scheduleReconnect(cleanHostId);
+            }, RoomTools.CONNECTION_OPEN_TIMEOUT_MS);
             connection.on('open', () => {
+                clearTimeout(connection._openTimer);
                 clearTimeout(App.reconnectTimer);
                 App.reconnectTimer = null;
                 App.everConnected = true;
@@ -197,10 +230,12 @@
                 connection.send(joinPayload);
                 connection._joinRetryTimer = setTimeout(() => {
                     if (!connection._receivedState && connection.open) connection.send(joinPayload);
-                }, 1600);
+                }, RoomTools.JOIN_RETRY_MS);
                 connection._joinTimeoutTimer = setTimeout(() => {
-                    if (!connection._receivedState) UI.showToast('Connected, but the host has not sent the table yet. Retrying...', 'danger');
-                }, 6500);
+                    if (connection._receivedState || App.hostConnection !== connection) return;
+                    UI.showToast('The table stopped responding. Reconnecting...', 'danger');
+                    try { connection.close(); } catch (error) {}
+                }, RoomTools.STATE_SYNC_TIMEOUT_MS);
             });
             connection.on('data', data => {
                 if (data?.type === 'STATE_UPDATE' || data?.type === 'JOIN_REJECTED') {
@@ -212,20 +247,24 @@
                 Net.receiveFromHost(data, cleanHostId);
             });
             connection.on('close', () => {
+                clearTimeout(connection._openTimer);
                 clearTimeout(connection._joinRetryTimer);
                 clearTimeout(connection._joinTimeoutTimer);
                 if (App.hostConnection !== connection) return;
-                if (!App.leaving && !App.joinRejected) {
+                if (App.everConnected && !App.leaving && !App.joinRejected) {
                     UI.showToast('Connection dropped. Rejoining your seat...', 'danger');
                     Net.scheduleReconnect(cleanHostId);
+                } else if (!App.leaving && !App.joinRejected) {
+                    Net.resetJoinAttempt();
                 }
             });
             connection.on('error', () => {
+                clearTimeout(connection._openTimer);
                 if (App.hostConnection !== connection) return;
                 if (App.everConnected && !App.leaving) Net.scheduleReconnect(cleanHostId);
                 else {
                     UI.showToast('Could not connect to that Durak room.', 'danger');
-                    UI.resetLobbyButtons();
+                    Net.resetJoinAttempt();
                 }
             });
         },
@@ -316,8 +355,9 @@
             });
             connection.on('close', () => {
                 if (App.connections[connection.peer] !== connection) return;
+                const wasSpectator = App.connectionRoles[connection.peer]?.role === 'spectator';
                 delete App.connections[connection.peer];
-                if (App.connectionRoles[connection.peer]?.role !== 'spectator') {
+                if (!wasSpectator) {
                     Game.engine?.disconnectPlayer(connection.peer);
                 }
                 delete App.connectionRoles[connection.peer];
@@ -335,7 +375,7 @@
                 UI.render(data.state);
             } else if (data.type === 'JOIN_REJECTED') {
                 App.joinRejected = true;
-                UI.resetLobbyButtons();
+                Net.resetJoinAttempt();
                 UI.showToast(data.reason || 'The host rejected this join.', 'danger');
             } else if (data.type === 'ACTION_REJECTED') {
                 UI.showToast(data.reason || 'That move is not legal.', 'danger');

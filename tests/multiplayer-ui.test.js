@@ -28,13 +28,12 @@ assert(sharedCss.includes('calc(100vw - 28px)') && sharedCss.includes('width: 72
 assert(!bazunga.includes('user-scalable=no'), 'Bazunga must not disable native mobile zoom');
 
 for (const [name, app] of [['President', presidentApp], ['Durak', durakApp]]) {
-    assert(app.includes("serialization: 'json'"), `${name} must use cross-browser JSON data channels`);
+    assert(app.includes('RoomTools.ResilientJoin.connect'), `${name} must use the shared resilient connection path`);
+    assert(app.includes('RoomTools.RoomRelay.host'), `${name} hosts must accept cloud-relayed guests`);
     assert(app.includes("App.peer.on('disconnected'"), `${name} must reconnect to PeerServer signalling`);
     assert(app.includes('scheduleReconnect('), `${name} must automatically recover a dropped game channel`);
     assert(app.includes('RoomTools.PEER_OPEN_TIMEOUT_MS'), `${name} must recover when signalling never opens`);
-    assert(app.includes('RoomTools.CONNECTION_OPEN_TIMEOUT_MS'), `${name} must recover when a room channel never opens`);
-    assert(app.includes("connection._openTimer"), `${name} must clear and replace per-channel connection timers`);
-    assert(app.includes("connection.close()"), `${name} must restart a channel that never delivers table state`);
+    assert(app.includes('App.fallbackClientId'), `${name} must be able to join when signalling never provides an identity`);
     assert(app.includes('resetJoinAttempt(') && app.includes('App.localId = null'), `${name} retries must discard stale peer identities`);
     assert(app.includes('Net.sendState(connection, connection.peer)'), `${name} joins must receive an explicit first state`);
     assert(app.includes('const sameSeat ='), `${name} must accept retried JOIN handshakes for an existing seat`);
@@ -42,12 +41,16 @@ for (const [name, app] of [['President', presidentApp], ['Durak', durakApp]]) {
     assert(app.includes('SPECTATOR_PERSPECTIVE'), `${name} must route spectator perspective changes through the host`);
 }
 
-assert(bazunga.includes("serialization: 'json'") && bazunga.includes('scheduleReconnect: hostId'), 'Bazunga must share cross-browser reconnect behavior');
-assert(bazunga.includes('RoomTools.PEER_OPEN_TIMEOUT_MS') && bazunga.includes('RoomTools.CONNECTION_OPEN_TIMEOUT_MS'), 'Bazunga must recover both signalling and room-channel timeouts');
+assert(bazunga.includes('RoomTools.ResilientJoin.connect') && bazunga.includes('scheduleReconnect: hostId'), 'Bazunga must share resilient reconnect behavior');
+assert(bazunga.includes('RoomTools.RoomRelay.host') && bazunga.includes('RoomTools.PEER_OPEN_TIMEOUT_MS'), 'Bazunga must accept relayed guests and recover from signalling timeouts');
 assert(bazunga.includes('resetJoinAttempt:') && bazunga.includes('App.localId = null'), 'Bazunga retries must discard stale peer identities');
 assert(bazunga.includes('UI.resetLobbyButtons();') && !bazunga.includes("const joinButton = document.getElementById('btn-join');\n            if (joinButton)"), 'Bazunga failures must restore Host, Join, and Spectate controls together');
 assert(bazunga.includes('player.sessionToken = \'\''), 'Bazunga state delivery must hide other reconnect tokens');
 assert(bazunga.includes('App.connections[conn.peer] !== conn'), 'Bazunga must ignore stale connection close events');
 assert(bazunga.includes('.map(playerId => playerId === oldId ? conn.peer : playerId)'), 'Bazunga reconnects must preserve a pending final orbit');
+assert(shared.includes('ConnectionProgress') && shared.includes('data-connection-log') && shared.includes('data-connection-error'), 'Join progress must expose stages, diagnostics, and exact errors');
+assert(shared.includes("'HOST_SYNC_TIMEOUT'") && shared.includes("'RELAY_UNAVAILABLE'"), 'Join failures must identify the exact failed stage');
+assert(sharedCss.includes('.connection-progress-track') && sharedCss.includes('.connection-progress-retry'), 'The progress bar and retry action must be visibly styled');
+assert(sharedCss.includes('.join-row > .connection-progress') && sharedCss.includes('grid-column: 1 / -1'), 'President and Durak progress panels must span the full mobile join row');
 
-console.log('Multiplayer UI: custom rooms, enlarged QR, mobile zoom, reliable joins, reconnects, and spectator controls passed.');
+console.log('Multiplayer UI: custom rooms, enlarged QR, resilient joins, visible diagnostics, reconnects, and spectator controls passed.');

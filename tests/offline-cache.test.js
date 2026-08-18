@@ -33,6 +33,7 @@ for (const gameFile of [
 assert(offlineSource.includes('CardTheme.allFaceUrls'), 'Offline download must include every illustrated face');
 assert(offlineSource.includes("getBackUrl(siteRoot.href, 'svg-blue')"), 'Offline download must include the blue back');
 assert(offlineSource.includes("getBackUrl(siteRoot.href, 'svg-red')"), 'Offline download must include the red back');
+assert(offlineSource.includes('mqtt@5.14.1'), 'Offline assets must include the pinned relay client for later online joins');
 assert.strictEqual(CardTheme.allFaceUrls('./').length, 54, 'The full face manifest should contain 52 faces and two Jokers');
 
 assert(workerSource.includes("self.addEventListener('message'"), 'Service worker must accept an explicit full-cache command');

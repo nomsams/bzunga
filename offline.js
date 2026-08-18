@@ -31,6 +31,7 @@
     ];
     const sharedRemoteFiles = [
         'https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js',
+        'https://unpkg.com/mqtt@5.14.1/dist/mqtt.min.js',
         'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
         'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap',
         'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap'

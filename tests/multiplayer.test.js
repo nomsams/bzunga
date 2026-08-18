@@ -1,7 +1,10 @@
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 
 require('../multiplayer.js');
 const RoomTools = global.RoomTools;
+const multiplayerSource = fs.readFileSync(path.join(__dirname, '..', 'multiplayer.js'), 'utf8');
 const { PresidentGameEngine } = require('../president/engine.js');
 const { DurakGameEngine } = require('../durak/engine.js');
 
@@ -16,9 +19,16 @@ assert(RoomTools.PEER_OPEN_TIMEOUT_MS >= 8000, 'Slow mobile signalling must get 
 assert(RoomTools.CONNECTION_OPEN_TIMEOUT_MS > RoomTools.PEER_OPEN_TIMEOUT_MS, 'Room channels need longer than signalling to open');
 assert(RoomTools.STATE_SYNC_TIMEOUT_MS > RoomTools.JOIN_RETRY_MS, 'A retried join must have time to receive state before recovery');
 const iceServers = RoomTools.peerOptions().config.iceServers;
-assert(iceServers.some(server => String(server.urls).startsWith('turn:')), 'Mobile multiplayer needs a TURN relay when direct P2P is blocked');
-assert(iceServers.some(server => String(server.urls).includes('transport=tcp')), 'Mobile multiplayer needs a TCP relay fallback for restrictive networks');
-assert(iceServers.filter(server => String(server.urls).startsWith('turn:')).every(server => server.username && server.credential), 'TURN relays must include credentials');
+assert(iceServers.some(server => String(server.urls).startsWith('stun:')), 'Direct P2P should still use STUN when available');
+assert(!multiplayerSource.includes('openrelay.metered.ca'), 'The retired public Open Relay hostname must never be shipped again');
+assert(RoomTools.DIRECT_FALLBACK_MS <= 5000, 'A blocked direct channel must switch to relay promptly');
+assert(RoomTools.RELAY_CONNECT_TIMEOUT_MS >= 12000, 'Mobile WebSocket relay negotiation needs a realistic timeout');
+assert(RoomTools.RoomRelay && RoomTools.ResilientJoin, 'An independent room relay must back up direct P2P');
+assert(multiplayerSource.includes("name: 'AES-GCM'") && multiplayerSource.includes("digest('SHA-256'"), 'Relay packets and room topics must be encrypted and opaque');
+assert(multiplayerSource.includes("qos: 1, retain: false"), 'Relay messages must be delivered reliably without persisting game state');
+assert(multiplayerSource.includes('broker.hivemq.com') && multiplayerSource.includes('broker.emqx.io'), 'The WebSocket relay must have broker failover');
+assert(multiplayerSource.includes('brokers.forEach') && multiplayerSource.includes('connection._relayClient'), 'Hosts must listen on every independent broker and answer on the guest broker');
+assert(multiplayerSource.includes('rememberRelayMessage') && multiplayerSource.includes('messageId: relayMessageId()'), 'QoS retries must not replay game actions');
 const customIceServers = [{ urls: 'turn:relay.example.test:443', username: 'room', credential: 'secret' }];
 global.BZUNGA_ICE_SERVERS = customIceServers;
 assert.strictEqual(RoomTools.peerOptions().config.iceServers, customIceServers, 'A deployment must be able to replace the default relay credentials');
@@ -61,4 +71,4 @@ for (let turn = 0; turn < 4; turn++) durak.advanceDisconnectClock();
 assert.strictEqual(durak.getPlayer('d3'), undefined, 'A Durak player missing more than three turns must lose their seat');
 assert.strictEqual(durak.state.talon.length, talonBefore + recycledCount, 'The removed Durak hand must be shuffled back into the talon');
 
-console.log('Multiplayer: normalized rooms, collision suggestions, private/god views, reconnect skips, and Durak recycling passed.');
+console.log('Multiplayer: resilient encrypted joins, normalized rooms, private/god views, reconnect skips, and Durak recycling passed.');

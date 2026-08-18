@@ -26,6 +26,32 @@
 .spectator-badge { color: #fde68a; }
 .opponent.disconnected, .opponent-seat.disconnected { filter: grayscale(.75); opacity: .58; }
 .opponent.disconnected::after, .opponent-seat.disconnected::after { content: 'RECONNECTING'; display: block; color: #fda4af; font-size: .52rem; font-weight: 900; letter-spacing: .08em; }
+.connection-progress { width: 100%; box-sizing: border-box; margin: 12px 0 2px; padding: 14px; border: 1px solid rgba(56,189,248,.25); border-radius: 14px; background: linear-gradient(145deg, rgba(8,18,33,.96), rgba(14,28,47,.94)); box-shadow: inset 0 1px rgba(255,255,255,.05), 0 12px 30px rgba(0,0,0,.22); color: #dbeafe; text-align: left; }
+.join-row > .connection-progress { grid-column: 1 / -1; }
+.connection-progress.hidden { display: none; }
+.connection-progress-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.connection-progress-heading strong { display: block; margin-top: 2px; color: #f8fafc; font-size: .82rem; line-height: 1.25; }
+.connection-progress-kicker { display: block; color: #38bdf8; font-size: .52rem; font-weight: 900; letter-spacing: .15em; }
+.connection-progress-percent { flex: 0 0 auto; color: #7dd3fc; font: 900 .7rem/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.connection-progress-track { height: 7px; margin: 11px 0 12px; overflow: hidden; border: 1px solid rgba(255,255,255,.07); border-radius: 999px; background: rgba(2,6,23,.72); }
+.connection-progress-track span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #0ea5e9, #22d3ee, #a3e635); box-shadow: 0 0 13px rgba(34,211,238,.42); transition: width .35s ease; }
+.connection-progress-steps { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.connection-progress-steps li { position: relative; min-height: 17px; padding-left: 23px; color: #64748b; font-size: .62rem; line-height: 1.35; transition: color .2s ease; }
+.connection-progress-steps li::before { content: ''; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border: 2px solid #475569; border-radius: 50%; background: #0b1424; }
+.connection-progress-steps li.active { color: #bae6fd; }
+.connection-progress-steps li.active::before { border-color: #38bdf8; box-shadow: 0 0 0 4px rgba(56,189,248,.12), 0 0 10px rgba(56,189,248,.4); animation: connection-pulse 1.2s ease-in-out infinite; }
+.connection-progress-steps li.complete { color: #a7f3d0; }
+.connection-progress-steps li.complete::before { content: '\2713'; display: grid; place-items: center; width: 14px; height: 14px; top: 0; left: 0; border: 0; background: #059669; color: white; font-size: .55rem; font-weight: 900; }
+.connection-progress-detail { margin-top: 10px; color: #cbd5e1; font-size: .65rem; line-height: 1.4; }
+.connection-progress-log { max-height: 74px; margin-top: 8px; overflow: auto; color: #7890aa; font: .54rem/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; scrollbar-width: thin; }
+.connection-progress-error { margin-top: 10px; padding: 9px 10px; border: 1px solid rgba(251,113,133,.35); border-radius: 9px; background: rgba(127,29,29,.26); color: #fecdd3; font-size: .63rem; line-height: 1.4; overflow-wrap: anywhere; }
+.connection-progress-error.hidden, .connection-progress-retry.hidden { display: none; }
+.connection-progress-retry { width: 100%; min-height: 38px; margin: 10px 0 0; padding: 8px 10px; border: 1px solid rgba(251,113,133,.4); border-radius: 9px; background: linear-gradient(135deg, #9f1239, #be123c); color: white; font-size: .64rem; font-weight: 900; letter-spacing: .06em; }
+.connection-progress.complete { border-color: rgba(52,211,153,.34); }
+.connection-progress.complete .connection-progress-track span { background: linear-gradient(90deg, #059669, #34d399); }
+.connection-progress.failed { border-color: rgba(251,113,133,.36); }
+.connection-progress.failed .connection-progress-track span { background: linear-gradient(90deg, #be123c, #fb7185); }
+@keyframes connection-pulse { 50% { transform: scale(.72); opacity: .58; } }
 @media (max-width: 620px) {
     .lobby-card { width: min(100%, calc(100vw - 28px), 520px) !important; max-width: calc(100vw - 28px); min-width: 0; }
     .lobby-box { width: min(100%, calc(100vw - 28px), 420px) !important; max-width: calc(100vw - 28px); min-width: 0; }
@@ -38,4 +64,6 @@
     .join-actions { grid-template-columns: 1fr; }
     .spectator-controls { top: 57px; max-width: calc(100vw - 20px); }
     .spectator-controls span { min-width: 104px; }
+    .connection-progress { margin-top: 10px; padding: 12px; border-radius: 12px; }
+    .connection-progress-log { max-height: 58px; }
 }

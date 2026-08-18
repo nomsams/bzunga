@@ -17,6 +17,46 @@ assert.strictEqual(engine.state.talon.length, 18, 'The remaining cards form the 
 assert(engine.state.trumpSuit, 'The turn-up card must establish trumps');
 assert.strictEqual(engine.state.talon[0].id, engine.state.trumpCardId, 'The face-up trump must remain the last talon card');
 
+const lobbyRecovery = new DurakGameEngine({ random: () => 0.29 });
+lobbyRecovery.addPlayer({ id: 'host', name: 'Host', connected: true });
+lobbyRecovery.addPlayer({ id: 'gone', name: 'Gone', connected: false });
+lobbyRecovery.addPlayer({ id: 'bot', name: 'Bot', isBot: true, connected: true });
+assert.strictEqual(lobbyRecovery.startGame().ok, true, 'A host and bot must be able to start after a lobby guest disconnects');
+assert.deepStrictEqual(lobbyRecovery.state.players.map(player => player.id), ['host', 'bot'], 'Disconnected lobby seats must not receive Durak cards');
+assert.strictEqual(lobbyRecovery.state.players.every(player => player.hand.length === 6), true, 'Only active Durak seats are dealt a hand');
+
+const reconnectGrace = new DurakGameEngine({ random: () => 0.33 });
+reconnectGrace.addPlayer({ id: 'grace-a', name: 'Grace A', connected: true });
+reconnectGrace.addPlayer({ id: 'grace-b', name: 'Grace B', connected: true });
+reconnectGrace.startGame();
+const graceAwayId = reconnectGrace.state.attackTurnId;
+assert.strictEqual(reconnectGrace.disconnectPlayer(graceAwayId), true);
+assert.strictEqual(reconnectGrace.state.phase, 'waiting', 'A two-player deal must reserve a disconnected seat instead of ending immediately');
+assert.strictEqual(reconnectGrace.getPlayer(graceAwayId).disconnectTurns, 1, 'Entering the waiting state counts one skipped turn');
+assert.strictEqual(reconnectGrace.reconnectPlayer(graceAwayId, graceAwayId), true);
+assert.strictEqual(reconnectGrace.state.phase, 'attack', 'Reconnecting during the grace window must resume the deal');
+assert.strictEqual(reconnectGrace.getPlayer(graceAwayId).hand.length, 6, 'A timely reconnect must preserve the Durak hand');
+
+const expiryGrace = new DurakGameEngine({ random: () => 0.35 });
+expiryGrace.addPlayer({ id: 'expiry-a', name: 'Expiry A', connected: true });
+expiryGrace.addPlayer({ id: 'expiry-b', name: 'Expiry B', connected: true });
+expiryGrace.startGame();
+const expiredSeatId = expiryGrace.state.attackTurnId;
+expiryGrace.disconnectPlayer(expiredSeatId);
+expiryGrace.resumeWaitingRound();
+expiryGrace.resumeWaitingRound();
+assert(expiryGrace.getPlayer(expiredSeatId), 'The disconnected Durak seat must survive three skipped turns');
+expiryGrace.resumeWaitingRound();
+assert.strictEqual(expiryGrace.getPlayer(expiredSeatId), undefined, 'The hand is recycled only after the third skipped-turn grace period');
+
+const replay = new DurakGameEngine({ random: () => 0.39 });
+replay.addPlayer({ id: 'replay-a', name: 'Replay A', connected: true });
+replay.addPlayer({ id: 'replay-b', name: 'Replay B', connected: true });
+assert.strictEqual(replay.startGame().ok, true);
+replay.state.phase = 'game_over';
+assert.strictEqual(replay.startGame().ok, true, 'The host must be able to deal another Durak game after the result');
+assert.strictEqual(replay.state.players.every(player => player.hand.length === 6), true, 'A Durak replay must deal fresh hands');
+
 const initialView = engine.getViewState('a');
 assert.strictEqual(initialView.players.find(player => player.id === 'a').hand[0].rank !== undefined, true, 'A player sees their own hand');
 assert.strictEqual(initialView.players.find(player => player.id === 'b').hand[0].hidden, true, 'Opponent card values must stay private');

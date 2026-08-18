@@ -80,6 +80,8 @@
                 </div>
                 <div id="qr-container"></div>
             </div>
+            <button id="btn-copy-invite" class="copy-invite" type="button">COPY INVITE LINK</button>
+            <div class="room-profile"><label for="room-player-name">YOUR NAME</label><div class="room-inline-action"><input id="room-player-name" type="text" maxlength="24" autocomplete="nickname"><button id="btn-room-rename" class="secondary" type="button">CHANGE</button></div></div>
             <div id="lobby-players" class="player-list"></div>
             <div id="host-controls" class="host-controls hidden">
                 <label class="spectator-setting"><input id="allow-spectators" type="checkbox" checked> Allow spectators (god view)</label>
@@ -108,6 +110,7 @@
                 <button id="btn-start-game" class="primary large">DEAL SIX CARDS EACH</button>
             </div>
             <div id="client-waiting" class="waiting hidden">Waiting for the host to deal…</div>
+            <section class="lobby-chat" aria-label="Room chat"><div class="lobby-chat-title">ROOM CHAT</div><div id="lobby-chat-messages" class="lobby-chat-messages" aria-live="polite"></div><div class="chat-compose lobby-chat-compose"><input id="lobby-chat-input" type="text" maxlength="240" placeholder="Say something"><button id="lobby-chat-send" type="button">SEND</button></div></section>
             <button id="btn-room-rules" class="text-button">Rules &amp; table guide</button>
         </div>
     </section>
@@ -199,6 +202,7 @@
             </header>
             <div id="chat-messages"></div>
             <div id="typing-indicator"></div>
+            <div class="drawer-profile"><input id="game-player-name" type="text" maxlength="24" aria-label="Your player name"><button id="btn-game-rename" type="button">RENAME</button></div>
             <div class="chat-compose">
                 <input id="chat-input" maxlength="240" placeholder="Say something…" autocomplete="off">
                 <button id="chat-send">SEND</button>

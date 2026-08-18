@@ -16,6 +16,8 @@ assert(html.includes('fresh-pile leader holding only 2s is skipped'), 'The rules
 assert(html.includes('id="chat-drawer"'), 'The game needs table chat and commentary');
 assert(html.includes('src="rules.js"') && html.includes('src="engine.js"') && html.includes('src="bots.js"'), 'President code must stay modular');
 assert(css.includes('.hand-scroll.two-rows'), 'Large hands need a two-row mobile layout');
+assert(css.includes('--hand-height: 214px') && css.includes('width: 52px') && css.includes('height: 69px') && css.includes('width: 57px') && css.includes('height: 77px'), 'President mobile hand cards must be about 10% larger while both rows stay visible');
+assert(app.includes("player.connected === false ? 'REMOVE' : 'KICK'"), 'President hosts must be able to remove abandoned lobby seats');
 assert(css.includes('@keyframes flyCard'), 'Multi-card table plays need a clear flight animation');
 assert(css.includes('@media (max-height: 680px) and (orientation: landscape)'), 'The table must adapt to short landscape phones');
 assert(css.includes('height: 100svh'), 'Mobile table height must stay stable when browser chrome changes');
@@ -31,8 +33,8 @@ assert(bazunga.includes('aria-label="Choose a card game"'), 'The BAZUNGA lobby n
 assert(bazunga.includes('href="./president/index.html?game=president"'), 'The chooser must preserve the President game selection');
 assert(html.includes('aria-label="Choose a card game"'), 'The President lobby needs the same game chooser');
 assert(html.includes('href="../index.html?game=bazunga"'), 'The President chooser must preserve the BAZUNGA selection');
-assert(bazunga.includes("RoomTools.inviteUrl('bazunga', id)"), 'BAZUNGA QR links must identify their game and room');
-assert(app.includes("RoomTools.inviteUrl('president', peerId)"), 'President QR links must identify their game and room');
+assert(bazunga.includes("RoomTools.configureInvite('bazunga', peerId,"), 'BAZUNGA QR links must identify their game and room');
+assert(app.includes("RoomTools.configureInvite('president', peerId,"), 'President QR links must identify their game and room');
 assert(bazunga.includes("urlParams.get('game') === 'president'"), 'Shared links must route straight to President');
 assert(app.includes("query.get('game') === 'bazunga'"), 'Shared links must route straight to BAZUNGA');
 assert(!bazunga.includes('president/app.js'), 'President scripts must not overlap the BAZUNGA runtime');

@@ -22,7 +22,7 @@
 
         createInitialState() {
             return {
-                phase: 'lobby', settings: { rounds: 6, viewingYaku: false, bustedViewing: false, cardBack: 'hana-red' },
+                phase: 'lobby', settings: { rounds: 6, viewingYaku: false, bustedViewing: false, cardBack: 'hana-red', cardFront: 'original' },
                 players: [], dealerId: null, turnPlayerId: null, roundNumber: 0, deck: [], field: [],
                 pending: null, currentTurn: null, koiKoi: {}, roundBaselines: {}, roundResult: null,
                 matchResult: null, logs: [], nextLogId: 0, lastAction: null, redeals: 0,
@@ -61,7 +61,8 @@
                 rounds: [3, 6, 12].includes(Number(settings.rounds)) ? Number(settings.rounds) : 6,
                 viewingYaku: Boolean(settings.viewingYaku),
                 bustedViewing: Boolean(settings.viewingYaku && settings.bustedViewing),
-                cardBack: cleanText(settings.cardBack, 20, 'hana-red')
+                cardBack: cleanText(settings.cardBack, 20, 'hana-red'),
+                cardFront: ['original', 'invert', 'white-red'].includes(settings.cardFront) ? settings.cardFront : 'original'
             };
             this.state.dealerId = active[Math.floor(this.random() * active.length)].id;
             this._dealRound();
@@ -120,12 +121,42 @@
             const player = this.getPlayer(playerId);
             if (!player || !action?.type) return { ok: false, reason: 'Invalid action.' };
             if (action.type === 'CHAT') return this._handleChat(player, action.message);
+            if (action.type === 'RENAME') return this.renamePlayer(playerId, action.name);
             if (action.type === 'PLAY_HAND_CARD') return this.playHandCard(playerId, action.cardId);
             if (action.type === 'CHOOSE_CAPTURE') return this.chooseCapture(playerId, action.cardId);
             if (action.type === 'KOI_KOI') return this.resolveKoiChoice(playerId, true);
             if (action.type === 'SHOBU') return this.resolveKoiChoice(playerId, false);
             if (action.type === 'START_NEXT_ROUND') return this.startNextRound(playerId);
             return { ok: false, reason: 'Unknown action.' };
+        }
+
+        renamePlayer(playerId, requestedName) {
+            const player = this.getPlayer(playerId);
+            if (!player || player.isBot) return { ok: false, reason: 'That seat cannot be renamed.' };
+            const base = cleanText(requestedName, 24);
+            if (!base) return { ok: false, reason: 'Enter a name first.' };
+            const used = new Set(this.state.players.filter(item => item.id !== playerId).map(item => item.name.toLowerCase()));
+            let name = base;
+            let suffix = 2;
+            while (used.has(name.toLowerCase())) {
+                const ending = ` ${suffix++}`;
+                name = `${base.slice(0, 24 - ending.length)}${ending}`;
+            }
+            if (name === player.name) return { ok: true, name };
+            const previous = player.name;
+            player.name = name;
+            this._log(`${previous} is now playing as ${name}.`, 'info');
+            this._emit({ type: 'rename', playerId, name });
+            return { ok: true, name };
+        }
+
+        setHost(playerId) {
+            const player = this.getPlayer(playerId);
+            if (!player || player.isBot || player.connected === false) return false;
+            this.state.players.forEach(item => { item.isHost = item.id === playerId; });
+            this._log(`${player.name} is now the table host.`, 'info');
+            this._emit({ type: 'host_changed', playerId });
+            return true;
         }
 
         playHandCard(playerId, cardId) {
@@ -284,6 +315,11 @@
         reconnectPlayer(oldId, newId) {
             const player = this.getPlayer(oldId);
             if (!player) return false;
+            if (oldId === newId) {
+                player.connected = true;
+                this._emit({ type: 'reconnect', playerId: oldId });
+                return true;
+            }
             player.id = newId; player.connected = true;
             for (const card of [...player.hand, ...player.captured]) card.ownerId = newId;
             if (this.state.dealerId === oldId) this.state.dealerId = newId;

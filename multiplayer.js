@@ -12,6 +12,8 @@
     const JOIN_RETRY_MS = 1600;
     const STATE_SYNC_TIMEOUT_MS = 7000;
     const DIRECT_FALLBACK_MS = 5000;
+    const ROOM_PING_MS = 2500;
+    const ROOM_SILENCE_TIMEOUT_MS = 8500;
     const RELAY_CONNECT_TIMEOUT_MS = 18000;
     const RELAY_SCRIPT_URLS = [
         'https://unpkg.com/mqtt@5.14.1/dist/mqtt.min.js',
@@ -79,6 +81,73 @@
         url.searchParams.set('join', peerId);
         if (spectator) url.searchParams.set('spectate', '1');
         return url.href;
+    }
+
+    function pinRoomUrl(game, peerId, spectator = false) {
+        if (!root.history?.replaceState || !peerId || /^offline-/i.test(peerId)) return '';
+        const url = new URL(inviteUrl(game, peerId, spectator));
+        root.history.replaceState({ game, roomId: peerId, spectator }, '', url.href);
+        return url.href;
+    }
+
+    async function copyText(value) {
+        const text = String(value || '');
+        if (!text) return false;
+        try {
+            await root.navigator?.clipboard?.writeText?.(text);
+            return true;
+        } catch (error) {}
+        const input = root.document.createElement('textarea');
+        input.value = text;
+        input.setAttribute('readonly', '');
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        root.document.body.appendChild(input);
+        input.select();
+        let copied = false;
+        try { copied = root.document.execCommand('copy'); } catch (error) {}
+        input.remove();
+        return copied;
+    }
+
+    function bindInviteButton(button, game, peerId, onResult) {
+        if (!button) return '';
+        const url = inviteUrl(game, peerId);
+        button.dataset.inviteUrl = url;
+        button.onclick = async () => {
+            const copied = await copyText(url);
+            const original = button.dataset.defaultLabel || button.textContent || 'COPY INVITE URL';
+            button.dataset.defaultLabel = original;
+            button.textContent = copied ? 'COPIED!' : 'COPY FAILED';
+            button.classList.toggle('copy-failed', !copied);
+            if (typeof onResult === 'function') onResult(copied, url);
+            root.setTimeout(() => {
+                button.textContent = original;
+                button.classList.remove('copy-failed');
+            }, 1800);
+        };
+        return url;
+    }
+
+    function configureInvite(game, peerId, options = {}) {
+        const url = inviteUrl(game, peerId);
+        if (options.qrContainer) {
+            renderQr(options.qrContainer, url, options.size || 220);
+            bindQr(options.qrContainer);
+        }
+        bindInviteButton(options.copyButton, game, peerId, options.onCopy);
+        if (options.pin !== false) pinRoomUrl(game, peerId, Boolean(options.spectator));
+        return url;
+    }
+
+    function chooseViceHost(players, currentHostId) {
+        return (Array.isArray(players) ? players : []).find(player =>
+            player && player.id !== currentHostId && !player.isBot && player.connected !== false
+        ) || null;
+    }
+
+    function cloneState(value) {
+        return JSON.parse(JSON.stringify(value));
     }
 
     function qrOptions(text, size) {
@@ -602,17 +671,39 @@
             let directTimer = null;
             let joinTimer = null;
             let syncTimer = null;
+            let livenessTimer = null;
             let stopped = false;
             let relayStarting = false;
             let receivedState = false;
+            let lastHostSignalAt = Date.now();
 
             const clearTimers = () => {
                 clearTimeout(directTimer);
                 clearInterval(joinTimer);
                 clearTimeout(syncTimer);
+                clearInterval(livenessTimer);
                 directTimer = null;
                 joinTimer = null;
                 syncTimer = null;
+                livenessTimer = null;
+            };
+
+            const startLivenessCheck = (connection, transport) => {
+                clearInterval(livenessTimer);
+                lastHostSignalAt = Date.now();
+                livenessTimer = setInterval(() => {
+                    if (stopped || activeConnection !== connection || !receivedState) return;
+                    const silentFor = Date.now() - lastHostSignalAt;
+                    if (silentFor >= ROOM_SILENCE_TIMEOUT_MS) {
+                        clearTimers();
+                        connection._switchingTransport = true;
+                        publishConnection(null, transport);
+                        try { connection.close(); } catch (error) {}
+                        options.onDrop?.(transport, 'heartbeat-timeout');
+                        return;
+                    }
+                    try { connection.send({ type: 'ROOM_PING', sentAt: Date.now() }); } catch (error) {}
+                }, ROOM_PING_MS);
             };
 
             const publishConnection = (connection, transport = '') => {
@@ -697,6 +788,8 @@
                 connection.on('open', opened);
                 connection.on('data', data => {
                     if (stopped || activeConnection !== connection) return;
+                    lastHostSignalAt = Date.now();
+                    if (data?.type === 'ROOM_PONG') return;
                     if (data?.type === 'STATE_UPDATE' || data?.type === 'JOIN_REJECTED') {
                         receivedState = true;
                         clearInterval(joinTimer);
@@ -704,6 +797,7 @@
                         if (data.type === 'STATE_UPDATE') {
                             ConnectionProgress.success(transport);
                             options.onReady?.(transport);
+                            startLivenessCheck(connection, transport);
                         } else {
                             ConnectionProgress.fail(
                                 'The table rejected the join',
@@ -806,6 +900,12 @@
         resolveJoinId,
         suggestions,
         inviteUrl,
+        pinRoomUrl,
+        copyText,
+        bindInviteButton,
+        configureInvite,
+        chooseViceHost,
+        cloneState,
         renderQr,
         bindQr,
         openQr,
@@ -819,6 +919,8 @@
         JOIN_RETRY_MS,
         STATE_SYNC_TIMEOUT_MS,
         DIRECT_FALLBACK_MS,
+        ROOM_PING_MS,
+        ROOM_SILENCE_TIMEOUT_MS,
         RELAY_CONNECT_TIMEOUT_MS,
         isNameCollision: error => error?.type === 'unavailable-id'
     };

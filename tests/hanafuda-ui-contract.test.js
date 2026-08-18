@@ -12,7 +12,11 @@ assert(html.includes('#EF1D1E') && html.includes('id="viewing-yaku"') && html.in
 assert(css.includes('height: 100svh') && !app.includes("window.addEventListener('resize'"), 'Mobile table must not jump on browser chrome resizes');
 assert(css.includes('@media (max-height: 680px) and (orientation: landscape)'));
 assert(engine.includes('delete state.deck') && app.includes('getViewState(perspectiveId, spectator)'));
-assert(app.includes("RoomTools.inviteUrl('hanafuda', peerId)") && app.includes("RoomTools.resolveJoinId('hanafuda'"));
+assert(app.includes("RoomTools.configureInvite('hanafuda', peerId,") && app.includes("RoomTools.resolveJoinId('hanafuda'") && html.includes('id="btn-copy-invite"'));
+assert(html.includes('value="invert"') && html.includes('value="white-red"'), 'Hanafuda needs readable artwork modes for dark SVGs');
+assert(app.includes('UI.syncModalOverlay()') && app.includes('UI.hideResult(); Net.sendAction'), 'Advancing a month must remove the iOS blur overlay before dealing');
+assert(app.includes("player.connected === false ? 'REMOVE' : 'KICK'"), 'Hanafuda hosts must be able to remove an abandoned second seat and invite a replacement');
+for (const phrase of ['What am I trying to do?', 'What happens on my turn?', 'Example:', 'Koi-Koi means', 'Last turn and an empty round']) assert(html.includes(phrase), `Easy Hanafuda guide is missing: ${phrase}`);
 assert(html.includes('src="rules.js"') && html.includes('src="engine.js"') && html.includes('src="bots.js"'));
 for (const other of ['../index.html?game=bazunga', '../president/index.html?game=president', '../durak/index.html?game=durak']) assert(html.includes(other));
 console.log('Hanafuda UI: isolated routing, stable mobile table, Yaku actions, art/back settings, P2P privacy, spectator, and chat passed.');

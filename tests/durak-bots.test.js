@@ -2,6 +2,8 @@ const assert = require('assert');
 const Bots = require('../durak/bots.js');
 const Rules = require('../durak/rules.js');
 
+assert(Bots.DISCONNECT_TURN_MS >= 10000, 'Each disconnected-player grace turn must allow realistic relay reconnection time');
+
 const basePlayers = [
     {
         id: 'bot', name: 'Baba', isBot: true, botDifficulty: 5, handCount: 5,

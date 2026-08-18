@@ -9,6 +9,8 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (Rules, HistoricalBots) {
     'use strict';
 
+    const DISCONNECT_TURN_MS = 10000;
+
     const PROFILES = {
         1: { name: 'Village Rookie', min: 2600, max: 5600, error: 0.28, chat: 0.78 },
         2: { name: 'Street Player', min: 2100, max: 4500, error: 0.16, chat: 0.72 },
@@ -1241,6 +1243,7 @@
             this.gameOverCommented = false;
             this.recentLines = new Map();
             this.lastHumanChatId = 0;
+            this.waitingReadyAt = 0;
         }
 
         start() {
@@ -1256,6 +1259,7 @@
             for (const timer of this.typingTimers) clearTimeout(timer);
             this.typingTimers.clear();
             this.schedule = null;
+            this.waitingReadyAt = 0;
         }
 
         token(view, botId) {
@@ -1353,6 +1357,15 @@
             const state = this.engine.state;
             if (state.phase === 'lobby') return;
             this.respondToHumanChat(state);
+            if (state.phase === 'waiting') {
+                if (!this.waitingReadyAt) this.waitingReadyAt = this.now() + DISCONNECT_TURN_MS;
+                if (this.now() < this.waitingReadyAt) return;
+                this.waitingReadyAt = 0;
+                this.engine.resumeWaitingRound();
+                this.onStateChange();
+                return;
+            }
+            this.waitingReadyAt = 0;
             if (state.phase === 'game_over') {
                 if (this.gameOverCommented) return;
                 this.gameOverCommented = true;
@@ -1415,6 +1428,7 @@
         chooseAction,
         getDecisionDelay,
         lineFor,
+        DISCONNECT_TURN_MS,
         DurakBotController
     };
 });

@@ -311,6 +311,7 @@
             if (!player || !action || typeof action.type !== 'string') return { ok: false, reason: 'Invalid action.' };
 
             if (action.type === 'CHAT') return this._handleChat(player, action.message);
+            if (action.type === 'RENAME') return this.renamePlayer(playerId, action.name);
             if (action.type === 'START_NEXT_ROUND') {
                 return { ok: this.startNextRound(playerId), reason: 'Only the host can start the next round.' };
             }
@@ -318,6 +319,38 @@
             if (action.type === 'PLAY_CARDS') return this.playCards(playerId, action.cardIds);
             if (action.type === 'PASS') return this.pass(playerId);
             return { ok: false, reason: 'Unknown action.' };
+        }
+
+        renamePlayer(playerId, requestedName) {
+            const player = this.getPlayer(playerId);
+            if (!player || player.isBot) return { ok: false, reason: 'That seat cannot be renamed.' };
+            const base = cleanText(requestedName, 24);
+            if (!base) return { ok: false, reason: 'Enter a name first.' };
+            const used = new Set(this.state.players.filter(item => item.id !== playerId).map(item => item.name.toLowerCase()));
+            let name = base;
+            let suffix = 2;
+            while (used.has(name.toLowerCase())) {
+                const ending = ` ${suffix++}`;
+                name = `${base.slice(0, 24 - ending.length)}${ending}`;
+            }
+            if (name === player.name) return { ok: true, name };
+            const previous = player.name;
+            player.name = name;
+            for (const play of [...this.state.history, ...this.state.trick.plays]) {
+                if (play.playerId === playerId) play.playerName = name;
+            }
+            this._log(`${previous} is now playing as ${name}.`, 'info');
+            this._emit({ type: 'player_renamed', playerId, previous, name });
+            return { ok: true, name };
+        }
+
+        setHost(playerId) {
+            const nextHost = this.getPlayer(playerId);
+            if (!nextHost || nextHost.isBot || nextHost.connected === false) return false;
+            for (const player of this.state.players) player.isHost = player.id === playerId;
+            this._log(`${nextHost.name} is now the table host.`, 'success');
+            this._emit({ type: 'host_changed', playerId });
+            return true;
         }
 
         playCards(playerId, cardIds) {

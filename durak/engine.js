@@ -36,6 +36,7 @@
                 mainAttackerId: null,
                 defenderId: null,
                 attackTurnId: null,
+                waitingAttackerId: null,
                 lastAttackerId: null,
                 attackLimit: 0,
                 passedAttackers: [],
@@ -62,6 +63,7 @@
             this.state.players.push({
                 id: String(player.id),
                 name: String(player.name || 'Player').slice(0, 24),
+                isHost: Boolean(player.isHost),
                 isBot: Boolean(player.isBot),
                 botDifficulty: Number(player.botDifficulty || 0),
                 historicalPersona: String(player.historicalPersona || '').slice(0, 40),
@@ -205,6 +207,7 @@
             this.state.mainAttackerId = replace(this.state.mainAttackerId);
             this.state.defenderId = replace(this.state.defenderId);
             this.state.attackTurnId = replace(this.state.attackTurnId);
+            this.state.waitingAttackerId = replace(this.state.waitingAttackerId);
             this.state.lastAttackerId = replace(this.state.lastAttackerId);
             this.state.durakId = replace(this.state.durakId);
             this.state.finishedOrder = this.state.finishedOrder.map(replace);
@@ -213,13 +216,21 @@
                 pair.attackerId = replace(pair.attackerId);
             }
             this.log(`${player.name} reconnected to their seat.`, 'success');
+            if (this.state.phase === 'waiting' && this.availablePlayers().length >= 2) {
+                this.beginRound(this.state.waitingAttackerId || player.id);
+            }
             return true;
         }
 
         startGame() {
-            if (this.state.players.length < 2 || this.state.players.length > MAX_PLAYERS) {
+            if (!['lobby', 'game_over'].includes(this.state.phase)) {
+                return { ok: false, reason: 'The deal has already started.' };
+            }
+            const activePlayers = this.state.players.filter(player => player.isBot || player.connected !== false);
+            if (activePlayers.length < 2 || activePlayers.length > MAX_PLAYERS) {
                 return { ok: false, reason: 'Durak needs 2 to 6 players.' };
             }
+            this.state.players = activePlayers;
             const deck = Rules.shuffle(Rules.createDeck(), this.random);
             const turnUp = deck.pop();
             this.state.talon = [turnUp, ...deck];
@@ -234,6 +245,7 @@
             this.state.typingBots = [];
             this.state.lastAction = null;
             this.state.lastRoundResult = null;
+            this.state.waitingAttackerId = null;
             this.state.startedAt = this.now();
             this.state.players.forEach(player => {
                 player.hand = [];
@@ -278,14 +290,21 @@
             if (!attacker) return this.finishIfNeeded();
             const defender = this.nextActiveAfter(attacker.id);
             if (!defender || defender.id === attacker.id) {
-                const disconnected = this.activePlayers().filter(player => !player.isBot && !player.connected);
+                const disconnected = this.activePlayers().filter(player => !player.isBot && player.connected === false);
                 if (disconnected.length) {
-                    disconnected.forEach(player => { player.disconnectTurns = Math.max(4, player.disconnectTurns || 0); });
-                    disconnected.forEach(player => this.recycleDisconnectedPlayer(player.id));
+                    this.state.phase = 'waiting';
+                    this.state.mainAttackerId = attacker.id;
+                    this.state.defenderId = null;
+                    this.state.attackTurnId = null;
+                    this.state.waitingAttackerId = attacker.id;
+                    this.state.lastAction = { type: 'waiting_for_player', attackerId: attacker.id, time: this.now() };
+                    this.log('Waiting for a disconnected player to return. Their seat is reserved for three skipped turns.', 'warning');
+                    return false;
                 }
                 if (this.availablePlayers().length < 2) return this.finishIfNeeded();
-                return this.beginRound(attacker.id);
+                return false;
             }
+            this.state.waitingAttackerId = null;
             this.state.roundNumber += 1;
             this.state.phase = 'attack';
             this.state.mainAttackerId = attacker.id;
@@ -302,6 +321,15 @@
                 defenderId: defender.id,
                 time: this.now()
             };
+            return true;
+        }
+
+        resumeWaitingRound() {
+            if (this.state.phase !== 'waiting') return false;
+            const attackerId = this.state.waitingAttackerId || this.availablePlayers()[0]?.id;
+            if (!attackerId) return this.finishIfNeeded();
+            this.beginRound(attackerId);
+            return true;
         }
 
         attackOrder(startId = this.state.mainAttackerId) {
@@ -345,6 +373,7 @@
             const player = this.getPlayer(playerId);
             if (!player || !action?.type) return { ok: false, reason: 'Invalid action.' };
             if (action.type === 'CHAT') return this.addChat(playerId, action.message);
+            if (action.type === 'RENAME') return this.renamePlayer(playerId, action.name);
             if (this.state.phase === 'game_over') return { ok: false, reason: 'The deal is over.' };
 
             switch (action.type) {
@@ -359,6 +388,33 @@
                 default:
                     return { ok: false, reason: 'Unknown action.' };
             }
+        }
+
+        renamePlayer(playerId, requestedName) {
+            const player = this.getPlayer(playerId);
+            if (!player || player.isBot) return { ok: false, reason: 'That seat cannot be renamed.' };
+            const base = String(requestedName || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 24);
+            if (!base) return { ok: false, reason: 'Enter a name first.' };
+            const used = new Set(this.state.players.filter(item => item.id !== playerId).map(item => item.name.toLowerCase()));
+            let name = base;
+            let suffix = 2;
+            while (used.has(name.toLowerCase())) {
+                const ending = ` ${suffix++}`;
+                name = `${base.slice(0, 24 - ending.length)}${ending}`;
+            }
+            if (name === player.name) return { ok: true, name };
+            const previous = player.name;
+            player.name = name;
+            this.log(`${previous} is now playing as ${name}.`, 'system');
+            return { ok: true, name };
+        }
+
+        setHost(playerId) {
+            const player = this.getPlayer(playerId);
+            if (!player || player.isBot || player.connected === false) return false;
+            this.state.players.forEach(item => { item.isHost = item.id === playerId; });
+            this.log(`${player.name} is now the table host.`, 'system');
+            return true;
         }
 
         playAttack(player, cardId) {
@@ -580,6 +636,7 @@
                 return {
                     id: player.id,
                     name: player.name,
+                    isHost: player.isHost,
                     isBot: player.isBot,
                     botDifficulty: player.botDifficulty,
                     historicalPersona: player.historicalPersona,

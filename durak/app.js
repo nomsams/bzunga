@@ -55,6 +55,10 @@
         everConnected: false,
         leaving: false,
         joinRejected: false,
+        hostBackup: null,
+        viceHostId: null,
+        promotionTimer: null,
+        lastBackupSignature: '',
         ui: {
             selectedCardId: null,
             sortMode: 'rank',
@@ -85,6 +89,7 @@
         resetJoinAttempt(resetButtons = true) {
             clearTimeout(App.peerOpenTimer);
             clearTimeout(App.reconnectTimer);
+            clearTimeout(App.promotionTimer);
             App.guestLink?.stop?.();
             App.guestLink = null;
             const connection = App.hostConnection;
@@ -102,6 +107,7 @@
             App.everConnected = false;
             App.transport = '';
             App.reconnectTimer = null;
+            App.promotionTimer = null;
             try { peer?.destroy?.(); } catch (error) {}
             if (resetButtons) UI.resetLobbyButtons();
         },
@@ -205,6 +211,7 @@
         hostOpened(peerId, offline = false) {
             if (Game.engine) return;
             App.localId = peerId;
+            App.hostId = peerId;
             App.offlineHost = offline;
             App.allowSpectators = document.getElementById('allow-spectators')?.checked !== false;
             const engine = Game.createEngine();
@@ -213,6 +220,7 @@
                 name: App.localName,
                 sessionToken: App.sessionToken,
                 connected: true,
+                isHost: true,
                 isBot: false
             });
             UI.showRoom(offline ? 'OFFLINE • BOTS ONLY' : peerId, true);
@@ -230,7 +238,7 @@
                     connection => Net.acceptConnection(connection),
                     message => console.info(`[multiplayer relay] ${message}`)
                 );
-                if (!App.isHost || App.localId !== peerId || App.leaving) return relay.close();
+                if (!App.isHost || App.hostId !== peerId || App.leaving) return relay.close();
                 App.roomRelay?.close?.();
                 App.roomRelay = relay;
             } catch (error) {
@@ -267,10 +275,18 @@
                 },
                 onReady: () => {
                     App.everConnected = true;
+                    UI.showRoom(`Connected to ${cleanHostId}`, false);
+                    document.getElementById('qr-container').classList.remove('hidden');
+                    UI.renderQr(cleanHostId);
                 },
                 onData: data => Net.receiveFromHost(data, cleanHostId),
                 onDrop: () => {
                     if (App.leaving || App.joinRejected) return;
+                    if (App.hostBackup?.vicePlayerId === App.localId) {
+                        UI.showToast('Host left. Taking over the Durak table...', 'danger');
+                        Net.schedulePromotion(cleanHostId);
+                        return;
+                    }
                     UI.showToast('Connection dropped. Rejoining your seat...', 'danger');
                     Net.scheduleReconnect(cleanHostId);
                 },
@@ -289,10 +305,62 @@
             }, 1700);
         },
 
+        schedulePromotion(hostId) {
+            if (App.leaving || App.isHost || App.promotionTimer) return;
+            App.promotionTimer = setTimeout(() => { App.promotionTimer = null; Net.promoteFromBackup(hostId); }, 1100);
+        },
+
+        promoteFromBackup(hostId) {
+            const backup = App.hostBackup;
+            if (!backup?.state || backup.vicePlayerId !== App.localId) { Net.scheduleReconnect(hostId); return false; }
+            const stablePlayerId = App.localId;
+            App.guestLink?.stop?.(); App.guestLink = null; try { App.hostConnection?.close?.(); } catch (error) {} App.hostConnection = null; try { App.peer?.destroy?.(); } catch (error) {} App.peer = null;
+            Game.bots?.stop?.(); App.isHost = true; App.offlineHost = false; App.hostId = hostId; App.connections = {}; App.connectionRoles = {}; App.spectators = {}; App.allowSpectators = backup.allowSpectators !== false; App.lastBackupSignature = '';
+            Game.createEngine(); Game.engine.state = RoomTools.cloneState(backup.state);
+            const oldHost = Game.engine.getPlayer(backup.hostPlayerId); if (oldHost?.connected !== false) Game.engine.disconnectPlayer(oldHost.id);
+            Game.engine.setHost(stablePlayerId); Game.bots.start();
+            UI.showRoom(hostId, true); document.getElementById('allow-spectators').checked = App.allowSpectators; document.getElementById('qr-container').classList.remove('hidden'); UI.renderQr(hostId); Net.startHostRelay(hostId); Net.broadcast();
+            if (typeof Peer === 'function') try {
+                const peer = new Peer(hostId, RoomTools.peerOptions()); App.peer = peer;
+                peer.on('open', () => UI.showToast('You are now the host. The deal continued.', 'success'));
+                peer.on('connection', connection => Net.acceptConnection(connection));
+                peer.on('disconnected', () => { if (!peer.destroyed) try { peer.reconnect(); } catch (error) {} });
+                peer.on('error', error => { if (!RoomTools.isNameCollision(error)) console.warn('Direct host takeover unavailable; relay remains active.', error); });
+            } catch (error) { console.warn('Direct host takeover unavailable; relay remains active.', error); }
+            return true;
+        },
+
+        sendHostBackup() {
+            if (!App.isHost || !Game.engine || App.offlineHost) return;
+            const vice = RoomTools.chooseViceHost(Game.engine.state.players, App.localId); App.viceHostId = vice?.id || null; if (!vice) return;
+            const entry = Object.entries(App.connectionRoles).find(([, role]) => role?.role === 'player' && role.playerId === vice.id); if (!entry) return;
+            const connection = App.connections[entry[0]]; if (!connection?.open) return;
+            const state = Game.engine.state; const signature = [vice.id, state.phase, state.roundNumber, state.lastAction?.time || '', state.lastAction?.type || '', state.nextLogId, state.players.map(player => `${player.id}:${player.connected !== false}:${player.isHost}`).join('|')].join(':');
+            if (signature === App.lastBackupSignature) return; App.lastBackupSignature = signature;
+            try { connection.send({ type: 'HOST_BACKUP', roomId: App.hostId, state: RoomTools.cloneState(state), hostPlayerId: App.localId, vicePlayerId: vice.id, allowSpectators: App.allowSpectators }); } catch (error) {}
+        },
+
+        kickPlayer(playerId) {
+            if (!App.isHost || !playerId || playerId === App.localId) return false;
+            const entry = Object.entries(App.connectionRoles).find(([, role]) => role?.role === 'player' && role.playerId === playerId);
+            const transportId = entry?.[0]; const connection = App.connections[transportId]; try { connection?.send?.({ type: 'KICKED', reason: 'The host removed you from this table. You can join again whenever you want.' }); } catch (error) {}
+            if (Game.engine?.state.phase === 'lobby') {
+                Game.engine.removePlayer(playerId);
+                if (transportId) { delete App.connections[transportId]; delete App.connectionRoles[transportId]; }
+                setTimeout(() => { try { connection?.close?.(); } catch (error) {} }, 180); Net.broadcast(); return true;
+            }
+            if (!entry) return false;
+            Game.engine?.disconnectPlayer(playerId); setTimeout(() => { try { connection?.close?.(); } catch (error) {} }, 180); return true;
+        },
+
         acceptConnection(connection) {
             if (!App.isHost || !Game.engine) return;
             connection.on('data', data => {
                 if (!data || typeof data !== 'object') return;
+                if (data.type === 'ROOM_PING') {
+                    if (connection.open) connection.send({ type: 'ROOM_PONG', sentAt: data.sentAt || Date.now() });
+                    return;
+                }
                 if (data.type === 'JOIN') {
                     if (data.role === 'spectator') {
                         if (!App.allowSpectators) {
@@ -310,8 +378,8 @@
                     const sameSeat = Game.engine.state.players.find(player => player.id === connection.peer);
                     if (sameSeat) {
                         App.connections[connection.peer] = connection;
-                        App.connectionRoles[connection.peer] = { role: 'player' };
-                        if (sameSeat.connected === false) Game.engine.reconnectPlayer(sameSeat.id, connection.peer);
+                        App.connectionRoles[connection.peer] = { role: 'player', playerId: sameSeat.id };
+                        if (sameSeat.connected === false) Game.engine.reconnectPlayer(sameSeat.id, sameSeat.id);
                         Net.sendState(connection, connection.peer);
                         Net.broadcast();
                         return;
@@ -323,8 +391,8 @@
                         : null;
                     if (reconnecting) {
                         App.connections[connection.peer] = connection;
-                        App.connectionRoles[connection.peer] = { role: 'player' };
-                        Game.engine.reconnectPlayer(reconnecting.id, connection.peer);
+                        App.connectionRoles[connection.peer] = { role: 'player', playerId: reconnecting.id };
+                        Game.engine.reconnectPlayer(reconnecting.id, reconnecting.id);
                         Net.sendState(connection, connection.peer);
                         Net.broadcast();
                         return;
@@ -349,7 +417,7 @@
                         return;
                     }
                     App.connections[connection.peer] = connection;
-                    App.connectionRoles[connection.peer] = { role: 'player' };
+                    App.connectionRoles[connection.peer] = { role: 'player', playerId: connection.peer };
                     Net.sendState(connection, connection.peer);
                     Net.broadcast();
                     return;
@@ -360,17 +428,20 @@
                 }
                 if (App.connectionRoles[connection.peer]?.role === 'spectator') return;
                 if (data.type === 'ACTION') {
-                    const result = Game.engine.processAction(data.action, connection.peer);
+                    const actorId = App.connectionRoles[connection.peer]?.playerId || connection.peer;
+                    const result = Game.engine.processAction(data.action, actorId);
                     if (!result?.ok) connection.send({ type: 'ACTION_REJECTED', reason: result?.reason || 'Action rejected.' });
                     Net.broadcast();
                 }
             });
             connection.on('close', () => {
                 if (App.connections[connection.peer] !== connection) return;
-                const wasSpectator = App.connectionRoles[connection.peer]?.role === 'spectator';
+                const role = App.connectionRoles[connection.peer];
+                const wasSpectator = role?.role === 'spectator';
+                const playerId = role?.playerId || connection.peer;
                 delete App.connections[connection.peer];
                 if (!wasSpectator) {
-                    Game.engine?.disconnectPlayer(connection.peer);
+                    Game.engine?.disconnectPlayer(playerId);
                 }
                 delete App.connectionRoles[connection.peer];
                 delete App.spectators[connection.peer];
@@ -382,9 +453,16 @@
             if (!data || typeof data !== 'object') return;
             if (data.type === 'STATE_UPDATE') {
                 App.isSpectator = Boolean(data.state.spectatorMode);
-                if (App.isSpectator && data.state.viewerId) App.localId = data.state.viewerId;
+                if (data.state.viewerId) App.localId = data.state.viewerId;
                 if (data.state.phase === 'lobby') UI.showRoom(`Connected to ${hostId}`, false);
                 UI.render(data.state);
+            } else if (data.type === 'HOST_BACKUP' && data.state?.players) {
+                App.hostBackup = { roomId: Utils.clean(data.roomId, 80), state: RoomTools.cloneState(data.state), hostPlayerId: Utils.clean(data.hostPlayerId, 80), vicePlayerId: Utils.clean(data.vicePlayerId, 80), allowSpectators: data.allowSpectators !== false };
+                App.viceHostId = App.hostBackup.vicePlayerId;
+            } else if (data.type === 'KICKED') {
+                App.joinRejected = true; App.guestLink?.stop?.(); try { App.hostConnection?.close?.(); } catch (error) {}
+                document.getElementById('join-id').value = hostId; document.getElementById('lobby-start').classList.remove('hidden'); document.getElementById('lobby-room').classList.add('hidden');
+                RoomTools.ConnectionProgress.fail('Removed from this table', Utils.clean(data.reason, 160, 'The host removed you. You may join again.'), 'KICKED'); UI.resetLobbyButtons();
             } else if (data.type === 'JOIN_REJECTED') {
                 App.joinRejected = true;
                 Net.resetJoinAttempt();
@@ -422,6 +500,7 @@
             for (const [peerId, connection] of Object.entries(App.connections)) {
                 Net.sendState(connection, peerId);
             }
+            Net.sendHostBackup();
             UI.render(Game.engine.getViewState(App.localId));
         },
 
@@ -432,7 +511,7 @@
             if (spectator && !Game.engine.state.players.some(player => player.id === role.perspectiveId)) {
                 role.perspectiveId = Game.engine.state.players[0]?.id || null;
             }
-            const perspectiveId = spectator ? (role.perspectiveId || Game.engine.state.players[0]?.id) : peerId;
+            const perspectiveId = spectator ? (role.perspectiveId || Game.engine.state.players[0]?.id) : (role.playerId || peerId);
             const state = Game.engine.getViewState(perspectiveId, spectator);
             if (spectator) {
                 state.spectatorMode = true;
@@ -493,6 +572,7 @@
                 assetBase: '../',
                 onChange: () => App.gameState && UI.render(App.gameState)
             });
+            const savedName = Utils.clean(localStorage.getItem('durak-player-name'), 24); if (savedName) document.getElementById('player-name').value = savedName;
             if (joinId) {
                 const joinInput = document.getElementById('join-id');
                 joinInput.value = joinId.replace(/[^a-zA-Z0-9_-]/g, '');
@@ -549,6 +629,11 @@
                     UI.sendChat();
                 } else if (event.key === 'Escape') UI.setChatOpen(false);
             });
+            document.getElementById('lobby-chat-send').onclick = UI.sendLobbyChat;
+            document.getElementById('lobby-chat-input').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); UI.sendLobbyChat(); } });
+            document.getElementById('btn-room-rename').onclick = () => UI.renamePlayer('room-player-name');
+            document.getElementById('btn-game-rename').onclick = () => UI.renamePlayer('game-player-name');
+            ['room-player-name', 'game-player-name'].forEach(id => document.getElementById(id).addEventListener('keydown', event => { if (event.key === 'Enter') UI.renamePlayer(id); }));
             ['btn-open-rules', 'btn-room-rules', 'btn-table-rules'].forEach(id => {
                 document.getElementById(id).onclick = UI.openRules;
             });
@@ -597,8 +682,7 @@
 
         renderQr(peerId) {
             const container = document.getElementById('qr-container');
-            RoomTools.renderQr(container, RoomTools.inviteUrl('durak', peerId), 220);
-            RoomTools.bindQr(container);
+            RoomTools.configureInvite('durak', peerId, { qrContainer: container, copyButton: document.getElementById('btn-copy-invite'), size: 220, onCopy: copied => UI.showToast(copied ? 'Invite link copied.' : 'Could not copy the invite link.', copied ? 'success' : 'danger') });
         },
 
         addBot() {
@@ -673,6 +757,7 @@
                     <span>
                         <small>${player.isBot ? `BOT L${player.botDifficulty}` : player.connected ? 'CONNECTED' : 'OFFLINE'}</small>
                         ${App.isHost && player.isBot ? `<button data-remove-bot="${Utils.escape(player.id)}">REMOVE</button>` : ''}
+                        ${App.isHost && !player.isBot && player.id !== App.localId ? `<button data-kick-player="${Utils.escape(player.id)}">${player.connected === false ? 'REMOVE' : 'KICK'}</button>` : ''}
                     </span>
                 </div>
             `).join('');
@@ -682,10 +767,13 @@
                     Net.broadcast();
                 };
             });
+            list.querySelectorAll('[data-kick-player]').forEach(button => { button.onclick = () => Net.kickPlayer(button.dataset.kickPlayer); });
+            UI.renderChat(state); UI.syncNameInputs(state);
             const start = document.getElementById('btn-start-game');
             if (start) {
-                start.disabled = state.players.length < 2;
-                start.textContent = state.players.length < 2 ? 'ADD AT LEAST ONE OPPONENT' : `DEAL TO ${state.players.length} PLAYERS`;
+                const activeCount = state.players.filter(player => player.isBot || player.connected !== false).length;
+                start.disabled = activeCount < 2;
+                start.textContent = activeCount < 2 ? 'ADD AT LEAST ONE OPPONENT' : `DEAL TO ${activeCount} PLAYERS`;
             }
         },
 
@@ -702,6 +790,7 @@
                 attack: state.pickupDeclared ? 'THROW IN' : 'ATTACK',
                 defend: 'DEFEND',
                 throw_in: 'PICKUP',
+                waiting: 'WAITING',
                 game_over: 'COMPLETE'
             };
             document.getElementById('phase-display').textContent = phaseNames[state.phase] || state.phase.toUpperCase();
@@ -712,6 +801,8 @@
             if (App.isSpectator) {
                 const viewed = state.players.find(player => player.id === state.viewerId);
                 status = `God view: ${viewed?.name || 'table'} perspective. Every hand is available.`;
+            } else if (state.phase === 'waiting') {
+                status = 'Waiting for a disconnected player. Their seat remains reserved for three skipped turns.';
             } else if (state.phase === 'game_over') {
                 status = `${state.players.find(player => player.id === state.durakId)?.name || 'Nobody'} is the Durak.`;
             } else if (state.phase === 'defend') {
@@ -1014,6 +1105,9 @@
                 : `<div class="chat-message system">${Utils.escape(log.message)}</div>`
             ).join('');
             if (wasBottom) box.scrollTop = box.scrollHeight;
+            const lobbyBox = document.getElementById('lobby-chat-messages');
+            if (lobbyBox) { lobbyBox.innerHTML = box.innerHTML; lobbyBox.scrollTop = lobbyBox.scrollHeight; }
+            UI.syncNameInputs(state);
 
             const newChats = state.logs.filter(log => log.id > App.ui.lastLogId && log.type === 'chat');
             for (const log of newChats) UI.showChatBubble(log.name, log.message);
@@ -1064,6 +1158,10 @@
             Net.sendAction({ type: 'CHAT', message });
             input.value = '';
         },
+
+        sendLobbyChat() { const input = document.getElementById('lobby-chat-input'); const message = Utils.clean(input.value, 240); if (!message) return; Net.sendAction({ type: 'CHAT', message }); input.value = ''; },
+        renamePlayer(inputId) { const input = document.getElementById(inputId); const name = Utils.clean(input?.value, 24); if (!name) return UI.showToast('Enter a name first.', 'danger'); App.localName = name; localStorage.setItem('durak-player-name', name); Net.sendAction({ type: 'RENAME', name }); },
+        syncNameInputs(state) { const me = state?.players?.find(player => player.id === App.localId); if (!me) return; App.localName = me.name; ['room-player-name', 'game-player-name'].forEach(id => { const input = document.getElementById(id); if (input && document.activeElement !== input) input.value = me.name; }); },
 
         openRules() {
             document.getElementById('modal-overlay').classList.remove('hidden');

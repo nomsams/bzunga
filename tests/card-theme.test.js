@@ -83,6 +83,6 @@ assert(bazungaSource.includes("getPropertyValue('--card-w')"), 'Bazunga layout m
 assert(bazungaSource.includes("getPropertyValue('--card-h')"), 'Bazunga layout math must use the active theme card height');
 assert(bazungaSource.includes('const cardGap = Math.max(3, 4 * scale);'), 'Every Bazunga card theme must keep a visible gutter');
 assert(!bazungaSource.includes('const cardGap = isMobile'), 'Desktop illustrated cards must not collapse their gutter');
-assert(/\[data-card-theme\^="svg-"\] \.playing-card\s*\{\s*width: 58px;\s*height: 83px;/.test(fs.readFileSync(path.join(root, 'president', 'styles.css'), 'utf8')), 'President illustrated hands must be larger on mobile');
+assert(/\[data-card-theme\^="svg-"\] \.playing-card\s*\{\s*width: 64px;\s*height: 91px;/.test(fs.readFileSync(path.join(root, 'president', 'styles.css'), 'utf8')), 'President illustrated hands must be about 10% larger on mobile');
 
 console.log('Card themes: 56 SVG assets, privacy-safe progressive loading, idle cache warmup, exact-fit backs, and shared controls passed.');

@@ -27,7 +27,13 @@
         './durak/rules.js',
         './durak/engine.js',
         './durak/bots.js',
-        './durak/app.js'
+        './durak/app.js',
+        './hanafuda/index.html',
+        './hanafuda/styles.css',
+        './hanafuda/rules.js',
+        './hanafuda/engine.js',
+        './hanafuda/bots.js',
+        './hanafuda/app.js'
     ];
     const sharedRemoteFiles = [
         'https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js',
@@ -36,6 +42,12 @@
         'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap',
         'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap'
     ];
+    const hanafudaMonths = ['January_Pine', 'February_Plum', 'March_Cherry', 'April_Wisteria', 'May_Iris', 'June_Peony', 'July_Clover', 'August_Pampas', 'September_Chrysanthemum', 'October_Maple', 'November_Willow', 'December_Paulownia'];
+    for (let month = 1; month <= 12; month++) {
+        for (let card = 1; card <= 4; card++) {
+            localFiles.push(`./assets/hanafuda-svg/${String(month).padStart(2, '0')}_${hanafudaMonths[month - 1]}_Card_${card}.svg`);
+        }
+    }
 
     function unique(values) {
         return [...new Set(values.filter(Boolean))];
@@ -106,7 +118,7 @@
                 throw new Error(`${result.failed.length} files could not be saved. Check the connection and retry.`);
             }
             root.localStorage?.setItem(statusKey, new Date().toISOString());
-            setStatus(button, status, 'Ready: all three games, bot code and card designs are cached.', true);
+            setStatus(button, status, 'Ready: all four games, bot code and card designs are cached.', true);
         } catch (error) {
             setStatus(button, status, error?.message || 'Offline download failed. Please retry while online.');
         }

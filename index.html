@@ -54,7 +54,7 @@
     /* Lobby */
     #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; text-align: center; background: radial-gradient(circle at top, #1e293b 0%, var(--bg-color) 100%); z-index: 100; position: absolute; top:0; left:0; width: 100%; }
     .lobby-box { background: var(--surface); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); max-width: 420px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
-    .game-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 4px 0 18px; }
+    .game-picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin: 4px 0 18px; }
     .game-choice { display: flex; min-height: 64px; padding: 10px; flex-direction: column; align-items: flex-start; justify-content: center; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; background: rgba(0,0,0,0.22); color: #cbd5e1; text-align: left; text-decoration: none; transition: transform 0.2s, border-color 0.2s, background 0.2s; }
     .game-choice:hover, .game-choice:focus-visible { transform: translateY(-2px); border-color: rgba(251,191,36,0.55); outline: none; }
     .game-choice strong { color: white; font-size: 0.62rem; letter-spacing: 0.045em; line-height: 1.2; }
@@ -666,6 +666,10 @@
                 <a class="game-choice" href="./durak/index.html?game=durak">
                     <strong>THE FOOL / DURAK</strong>
                     <span>Attack, defend and escape the fool</span>
+                </a>
+                <a class="game-choice" href="./hanafuda/index.html?game=hanafuda">
+                    <strong>HANAFUDA · KOI-KOI</strong>
+                    <span>Capture months and press your luck</span>
                 </a>
             </div>
             <label class="card-theme-setting" for="card-theme-select">
@@ -2026,6 +2030,14 @@ const UI = {
             if (joinId) durakUrl.searchParams.set('join', joinId.replace(/[^a-zA-Z0-9-]/g, ''));
             if (spectateInvite) durakUrl.searchParams.set('spectate', '1');
             window.location.replace(durakUrl.href);
+            return;
+        }
+        if (urlParams.get('game') === 'hanafuda') {
+            const hanafudaUrl = new URL('./hanafuda/index.html', window.location.href);
+            hanafudaUrl.searchParams.set('game', 'hanafuda');
+            if (joinId) hanafudaUrl.searchParams.set('join', joinId.replace(/[^a-zA-Z0-9-]/g, ''));
+            if (spectateInvite) hanafudaUrl.searchParams.set('spectate', '1');
+            window.location.replace(hanafudaUrl.href);
             return;
         }
         CardTheme.bind({

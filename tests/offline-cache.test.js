@@ -7,7 +7,7 @@ const root = path.join(__dirname, '..');
 const offlineSource = fs.readFileSync(path.join(root, 'offline.js'), 'utf8');
 const workerSource = fs.readFileSync(path.join(root, 'service-worker.js'), 'utf8');
 
-for (const page of ['index.html', 'president/index.html', 'durak/index.html']) {
+for (const page of ['index.html', 'president/index.html', 'durak/index.html', 'hanafuda/index.html']) {
     const source = fs.readFileSync(path.join(root, page), 'utf8');
     assert(source.includes('id="btn-download-offline"'), `${page} must expose the all-modes offline download`);
     assert(source.includes('id="offline-download-status"'), `${page} must announce offline download progress`);
@@ -26,7 +26,11 @@ for (const gameFile of [
     './durak/index.html',
     './durak/app.js',
     './durak/engine.js',
-    './durak/bots.js'
+    './durak/bots.js',
+    './hanafuda/index.html',
+    './hanafuda/app.js',
+    './hanafuda/engine.js',
+    './hanafuda/bots.js'
 ]) {
     assert(offlineSource.includes(`'${gameFile}'`), `Offline manifest is missing ${gameFile}`);
 }
@@ -44,7 +48,7 @@ assert(workerSource.includes("request.mode !== 'navigate'"), 'Service worker mus
 assert(workerSource.includes("navigationUrl.search = ''"), 'Offline invite URLs must resolve to their cached game page');
 assert(!workerSource.includes('cache.match(request, { ignoreSearch: true })'), 'Remote resources with different query strings must not collide');
 
-for (const appFile of ['index.html', 'president/app.js', 'durak/app.js']) {
+for (const appFile of ['index.html', 'president/app.js', 'durak/app.js', 'hanafuda/app.js']) {
     const source = fs.readFileSync(path.join(root, appFile), 'utf8');
     assert(source.includes('openOfflineHost'), `${appFile} must start bot games without PeerJS`);
     assert(source.includes('!navigator.onLine'), `${appFile} must detect offline host startup immediately`);

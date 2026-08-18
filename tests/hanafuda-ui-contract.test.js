@@ -1,0 +1,18 @@
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const root = path.join(__dirname, '..');
+const html = fs.readFileSync(path.join(root, 'hanafuda', 'index.html'), 'utf8');
+const css = fs.readFileSync(path.join(root, 'hanafuda', 'styles.css'), 'utf8');
+const app = fs.readFileSync(path.join(root, 'hanafuda', 'app.js'), 'utf8');
+const engine = fs.readFileSync(path.join(root, 'hanafuda', 'engine.js'), 'utf8');
+for (const id of ['field-cards', 'draw-pile', 'local-hand', 'capture-modal', 'btn-koi', 'btn-shobu', 'spectator-controls', 'chat-drawer']) assert(html.includes(`id="${id}"`), `Missing ${id}`);
+assert(html.includes('value="3"') && html.includes('value="6"') && html.includes('value="12"'));
+assert(html.includes('#EF1D1E') && html.includes('id="viewing-yaku"') && html.includes('id="busted-viewing"'));
+assert(css.includes('height: 100svh') && !app.includes("window.addEventListener('resize'"), 'Mobile table must not jump on browser chrome resizes');
+assert(css.includes('@media (max-height: 680px) and (orientation: landscape)'));
+assert(engine.includes('delete state.deck') && app.includes('getViewState(perspectiveId, spectator)'));
+assert(app.includes("RoomTools.inviteUrl('hanafuda', peerId)") && app.includes("RoomTools.resolveJoinId('hanafuda'"));
+assert(html.includes('src="rules.js"') && html.includes('src="engine.js"') && html.includes('src="bots.js"'));
+for (const other of ['../index.html?game=bazunga', '../president/index.html?game=president', '../durak/index.html?game=durak']) assert(html.includes(other));
+console.log('Hanafuda UI: isolated routing, stable mobile table, Yaku actions, art/back settings, P2P privacy, spectator, and chat passed.');

@@ -1061,6 +1061,17 @@
                 score: PresidentBotBrain.scoreCandidate(candidate, bot, state, context, difficulty, threat)
             })).sort((left, right) => left.score - right.score);
 
+            if (difficulty >= 4 && scored.length > 1) {
+                const shortlistSize = difficulty === 5 ? Math.min(9, scored.length) : Math.min(5, scored.length);
+                const shortlist = scored.slice(0, shortlistSize);
+                for (const item of shortlist) {
+                    const search = PresidentBotBrain.informationSetSearch(item.candidate, bot, context, difficulty, random);
+                    item.search = search;
+                    item.score -= search * (difficulty === 5 ? 7.4 : 4.2);
+                }
+                scored.sort((left, right) => left.score - right.score || (right.search || 0) - (left.search || 0));
+            }
+
             const best = scored[0];
             const expensiveWildPlay = best.candidate.combo.wildCount > 0 && bot.hand.length > 5;
             const highControlPlay = best.candidate.combo.rankPower >= Rules.RANK_POWER.K && bot.hand.length > 7;
@@ -1121,6 +1132,136 @@
                 if (combo.count >= 3) score -= 8;
             }
             return score;
+        }
+
+        static informationSetSearch(candidate, bot, context, difficulty, random) {
+            const ranks = Rules.PLAYABLE_RANKS;
+            const unseen = [];
+            for (const rank of Rules.RANKS) {
+                const own = bot.hand.filter(card => card.rank === rank).length;
+                const publicCount = context.publicRankCounts[rank] || 0;
+                for (let count = 0; count < Math.max(0, 4 - own - publicCount); count++) unseen.push(rank);
+            }
+            const opponents = context.players.filter(player => player.id !== bot.id && !player.finished);
+            if (!opponents.length) return 100;
+            const iterations = difficulty === 5 ? 52 : 18;
+            let utility = 0;
+            for (let sample = 0; sample < iterations; sample++) {
+                const pool = [...unseen];
+                for (let index = pool.length - 1; index > 0; index--) {
+                    const swap = Math.floor(random() * (index + 1));
+                    [pool[index], pool[swap]] = [pool[swap], pool[index]];
+                }
+                const hands = new Map();
+                const ownAfter = bot.hand.filter(card => !candidate.cards.some(chosen => chosen.id === card.id)).map(card => card.rank);
+                hands.set(bot.id, ownAfter);
+                let cursor = 0;
+                for (const opponent of opponents) {
+                    hands.set(opponent.id, pool.slice(cursor, cursor + opponent.handCount));
+                    cursor += opponent.handCount;
+                }
+                utility += PresidentBotBrain.rolloutDeterminization(candidate, bot.id, context, hands, ranks, difficulty, random);
+            }
+            return utility / iterations;
+        }
+
+        static rolloutDeterminization(opening, botId, context, hands, ranks, difficulty, random) {
+            const livePlayers = context.players.filter(player => !player.finished).map(player => ({ ...player }));
+            const botIndex = livePlayers.findIndex(player => player.id === botId);
+            if (botIndex < 0) return 0;
+            let trick = opening.combo.clearsTrick
+                ? { rank: null, rankPower: null, count: 0, lastPlayerId: null }
+                : { rank: opening.combo.rank, rankPower: opening.combo.rankPower, count: opening.combo.count, lastPlayerId: botId };
+            let turnIndex = opening.combo.clearsTrick ? botIndex : (botIndex + 1) % livePlayers.length;
+            const passed = new Set();
+            const finishOrder = [];
+            if ((hands.get(botId) || []).length === 0) finishOrder.push(botId);
+
+            for (let ply = 0; ply < 70 && finishOrder.length < livePlayers.length - 1; ply++) {
+                const actor = livePlayers[turnIndex];
+                if (finishOrder.includes(actor.id) || passed.has(actor.id)) {
+                    turnIndex = (turnIndex + 1) % livePlayers.length;
+                    continue;
+                }
+                const hand = hands.get(actor.id) || [];
+                const moves = PresidentBotBrain.abstractLegalMoves(hand, trick, ranks);
+                if (!moves.length) {
+                    passed.add(actor.id);
+                } else {
+                    const otherCounts = livePlayers.filter(player => player.id !== actor.id && !finishOrder.includes(player.id))
+                        .map(player => (hands.get(player.id) || []).length);
+                    const danger = otherCounts.length ? Math.min(...otherCounts) : 0;
+                    const move = PresidentBotBrain.pickRolloutMove(moves, hand, trick, danger, actor.id === botId, difficulty, random);
+                    if (!move && trick.rank) passed.add(actor.id);
+                    else if (move) {
+                        const remaining = [...hand];
+                        for (const rank of move.cards) remaining.splice(remaining.indexOf(rank), 1);
+                        hands.set(actor.id, remaining);
+                        trick = move.rank === 'A'
+                            ? { rank: null, rankPower: null, count: 0, lastPlayerId: null }
+                            : { rank: move.rank, rankPower: Rules.RANK_POWER[move.rank], count: move.cards.length, lastPlayerId: actor.id };
+                        if (!remaining.length) {
+                            finishOrder.push(actor.id);
+                            trick = { rank: null, rankPower: null, count: 0, lastPlayerId: null };
+                            passed.clear();
+                        } else if (!trick.rank) {
+                            passed.clear();
+                            turnIndex = livePlayers.findIndex(player => player.id === actor.id);
+                        }
+                    }
+                }
+
+                const unfinished = livePlayers.filter(player => !finishOrder.includes(player.id));
+                const available = unfinished.filter(player => !passed.has(player.id));
+                if (trick.rank && available.length <= 1) {
+                    const leader = available[0] || unfinished.find(player => player.id === trick.lastPlayerId) || unfinished[0];
+                    trick = { rank: null, rankPower: null, count: 0, lastPlayerId: null };
+                    passed.clear();
+                    turnIndex = Math.max(0, livePlayers.findIndex(player => player.id === leader?.id));
+                    continue;
+                }
+                turnIndex = (turnIndex + 1) % livePlayers.length;
+            }
+
+            const botFinish = finishOrder.indexOf(botId);
+            const botRemaining = (hands.get(botId) || []).length;
+            const smallestOpponent = Math.min(...livePlayers.filter(player => player.id !== botId).map(player => (hands.get(player.id) || []).length));
+            if (botFinish === 0) return 30;
+            if (botFinish > 0) return 16 - botFinish * 5;
+            return -botRemaining * 2.8 + smallestOpponent * 1.4;
+        }
+
+        static abstractLegalMoves(hand, trick, ranks) {
+            const counts = Object.fromEntries(ranks.map(rank => [rank, hand.filter(cardRank => cardRank === rank).length]));
+            const twos = hand.filter(rank => rank === '2').length;
+            const moves = [];
+            for (const rank of ranks) {
+                if (!counts[rank]) continue;
+                if (trick.rank && Rules.RANK_POWER[rank] <= trick.rankPower) continue;
+                for (let natural = 1; natural <= counts[rank]; natural++) {
+                    for (let wild = 0; wild <= twos; wild++) {
+                        const amount = natural + wild;
+                        if (trick.rank && amount < trick.count) continue;
+                        if (amount === hand.length && wild) continue;
+                        moves.push({ rank, cards: [...Array(natural).fill(rank), ...Array(wild).fill('2')], wild });
+                    }
+                }
+            }
+            return moves;
+        }
+
+        static pickRolloutMove(moves, hand, trick, danger, isBot, difficulty, random) {
+            const scored = moves.map(move => {
+                const remaining = hand.length - move.cards.length;
+                let score = Rules.RANK_POWER[move.rank] * 2.2 + move.wild * 18 - move.cards.length * (trick.rank ? 3 : 6);
+                if (remaining === 0) score -= 1000;
+                if (move.rank === 'A') score -= danger <= 2 ? 32 : 8;
+                if (danger <= 2) score -= Rules.RANK_POWER[move.rank] * 1.8;
+                return { move, score };
+            }).sort((left, right) => left.score - right.score);
+            if (trick.rank && danger > 2 && scored[0]?.move.wild && random() < 0.2) return null;
+            if (!isBot && difficulty < 5 && scored.length > 1 && random() < 0.16) return scored[1].move;
+            return scored[0]?.move || null;
         }
 
         static getNextPublicPlayer(botId, players) {

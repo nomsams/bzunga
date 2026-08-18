@@ -1,7 +1,7 @@
 'use strict';
 
 const CACHE_PREFIX = 'bzunga-offline-';
-const CACHE_NAME = `${CACHE_PREFIX}v5`;
+const CACHE_NAME = `${CACHE_PREFIX}v6`;
 
 self.addEventListener('install', event => {
     event.waitUntil(self.skipWaiting());
@@ -94,7 +94,9 @@ async function cachedResponse(request) {
             ? './president/index.html'
             : path.includes('/durak/')
                 ? './durak/index.html'
-                : './index.html';
+                : path.includes('/hanafuda/')
+                    ? './hanafuda/index.html'
+                    : './index.html';
         return cache.match(new URL(fallback, self.registration.scope).href, { ignoreSearch: true });
     }
 }

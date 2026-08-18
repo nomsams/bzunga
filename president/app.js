@@ -510,6 +510,14 @@
                 window.location.replace(durakUrl.href);
                 return;
             }
+            if (query.get('game') === 'hanafuda') {
+                const hanafudaUrl = new URL('../hanafuda/index.html', window.location.href);
+                hanafudaUrl.searchParams.set('game', 'hanafuda');
+                if (joinId) hanafudaUrl.searchParams.set('join', joinId.replace(/[^a-zA-Z0-9-]/g, ''));
+                if (spectateInvite) hanafudaUrl.searchParams.set('spectate', '1');
+                window.location.replace(hanafudaUrl.href);
+                return;
+            }
             CardTheme.bind({
                 selectIds: ['card-theme-select'],
                 buttonIds: ['btn-card-theme'],

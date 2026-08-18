@@ -7,10 +7,12 @@ const RoomTools = global.RoomTools;
 const multiplayerSource = fs.readFileSync(path.join(__dirname, '..', 'multiplayer.js'), 'utf8');
 const { PresidentGameEngine } = require('../president/engine.js');
 const { DurakGameEngine } = require('../durak/engine.js');
+const { HanafudaGameEngine } = require('../hanafuda/engine.js');
 
 assert.strictEqual(RoomTools.makeRoomId('president', ' Friday   Cabinet! '), 'bz-president-friday-cabinet');
 assert.strictEqual(RoomTools.makeRoomId('president', 'FRIDAY-CABINET'), 'bz-president-friday-cabinet', 'Similar names must claim the same normalized room');
 assert.strictEqual(RoomTools.makeRoomId('durak', 'Friday Cabinet'), 'bz-durak-friday-cabinet', 'Room namespaces must stay game-specific');
+assert.strictEqual(RoomTools.makeRoomId('hanafuda', 'Moon Room'), 'bz-hanafuda-moon-room', 'Hanafuda needs its own room namespace');
 assert.strictEqual(RoomTools.resolveJoinId('bazunga', 'My Table'), 'bz-bazunga-my-table');
 assert.strictEqual(RoomTools.resolveJoinId('bazunga', 'bz-bazunga-direct-room'), 'bz-bazunga-direct-room');
 assert.strictEqual(RoomTools.suggestions('My Table').length, 3);
@@ -70,5 +72,15 @@ absent.connected = false;
 for (let turn = 0; turn < 4; turn++) durak.advanceDisconnectClock();
 assert.strictEqual(durak.getPlayer('d3'), undefined, 'A Durak player missing more than three turns must lose their seat');
 assert.strictEqual(durak.state.talon.length, talonBefore + recycledCount, 'The removed Durak hand must be shuffled back into the talon');
+
+const hanafuda = new HanafudaGameEngine({ random: () => 0.37 });
+hanafuda.addPlayer({ id: 'h1', name: 'One', connected: true, sessionToken: 'hana-one' });
+hanafuda.addPlayer({ id: 'h2', name: 'Two', connected: true, sessionToken: 'hana-two' });
+assert.strictEqual(hanafuda.startGame().ok, true);
+const privateHanafuda = hanafuda.getViewState('h1');
+const godHanafuda = hanafuda.getViewState('h1', true);
+assert(privateHanafuda.players.find(player => player.id === 'h2').hand.every(card => card.hidden), 'Regular Hanafuda views must hide opponents');
+assert(godHanafuda.players.every(player => player.hand.every(card => !card.hidden)), 'Hanafuda spectators need god view');
+assert.strictEqual(privateHanafuda.deck, undefined, 'The Hanafuda draw order must never cross the network');
 
 console.log('Multiplayer: resilient encrypted joins, normalized rooms, private/god views, reconnect skips, and Durak recycling passed.');

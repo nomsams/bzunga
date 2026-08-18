@@ -4,7 +4,8 @@
     const GAME_PREFIX = {
         bazunga: 'bz-bazunga-',
         president: 'bz-president-',
-        durak: 'bz-durak-'
+        durak: 'bz-durak-',
+        hanafuda: 'bz-hanafuda-'
     };
     const PEER_OPEN_TIMEOUT_MS = 10000;
     const CONNECTION_OPEN_TIMEOUT_MS = 12000;
@@ -53,7 +54,7 @@
             if (invitedId) return invitedId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80);
         } catch (error) {}
         const safe = raw.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
-        if (direct || /^bz-(bazunga|president|durak)-/i.test(safe) || /^offline-/i.test(safe)) {
+        if (direct || /^bz-(bazunga|president|durak|hanafuda)-/i.test(safe) || /^offline-/i.test(safe)) {
             return safe.replace(/\s+/g, '-').slice(0, 80);
         }
         return makeRoomId(game, safe);

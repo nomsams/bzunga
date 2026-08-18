@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" data-hanafuda-back="hana-red">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#10100e">
+    <title>Hanafuda: Koi-Koi — P2P Card Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../multiplayer.css">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<main id="hanafuda-app">
+    <section id="lobby" aria-label="Hanafuda Koi-Koi game lobby">
+        <div class="lobby-card" id="lobby-start">
+            <div class="game-picker" role="group" aria-label="Choose a card game">
+                <a class="game-choice" href="../index.html?game=bazunga"><strong>BAZUNGA</strong><span>Memory, powers and chaos</span></a>
+                <a class="game-choice" href="../president/index.html?game=president"><strong>PRESIDENT &amp; SLAVE</strong><span>Climb combinations</span></a>
+                <a class="game-choice" href="../durak/index.html?game=durak"><strong>THE FOOL / DURAK</strong><span>Attack and defend</span></a>
+                <a class="game-choice selected" href="./index.html?game=hanafuda" aria-current="page"><strong>HANAFUDA · KOI-KOI</strong><span>Capture months, form Yaku, press your luck</span><span class="selected-label">SELECTED</span></a>
+            </div>
+            <div class="eyebrow">JAPANESE FLOWER CARDS</div>
+            <h1>花札 <span>KOI-KOI</span></h1>
+            <p class="lobby-copy">Match months, build Yaku, then stop safely or call Koi-Koi and risk everything for a larger score.</p>
+            <label for="player-name">Your table name</label>
+            <input id="player-name" type="text" maxlength="24" placeholder="Enter your name" autocomplete="name">
+            <label for="room-name">Custom room name</label>
+            <input id="room-name" type="text" maxlength="28" placeholder="e.g. Moon Viewing" autocomplete="off">
+            <div id="room-name-suggestions" class="room-suggestions hidden" aria-live="polite"></div>
+            <button id="btn-host" class="primary large">CREATE A TABLE</button>
+            <div class="divider"><span>OR JOIN A TABLE</span></div>
+            <label for="join-id">Room name, Game ID or invite</label>
+            <div class="join-row"><input id="join-id" type="text" maxlength="120" placeholder="Paste invite or enter room" autocomplete="off"><div class="join-actions"><button id="btn-join" class="secondary">JOIN</button><button id="btn-spectate" class="secondary">SPECTATE</button></div></div>
+            <button id="btn-open-rules" class="text-button">Read the complete rules</button>
+            <button id="btn-download-offline" class="offline-download-button">⬇ DOWNLOAD ALL MODES</button>
+            <p id="offline-download-status" class="offline-download-status" aria-live="polite">Save every game for offline bot play.</p>
+        </div>
+
+        <div class="lobby-card hidden" id="lobby-room">
+            <div class="room-heading"><div><div class="eyebrow">PRIVATE P2P TABLE</div><h2>Koi-Koi Room</h2></div><a class="game-switch compact" href="../index.html">ALL GAMES</a></div>
+            <div class="room-code-wrap"><div><span>GAME ID</span><strong id="room-id-display">CONNECTING…</strong></div><div id="qr-container"></div></div>
+            <div id="lobby-players" class="player-list"></div>
+            <div id="host-controls" class="host-controls hidden">
+                <label class="spectator-setting"><input id="allow-spectators" type="checkbox" checked> Allow spectators (god view)</label>
+                <div class="setting-grid"><label>Add an opponent<select id="bot-difficulty"><option value="1">Casual Bot</option><option value="2">Clever Bot</option><option value="3">Hard Bot</option><option value="4">Expert Bot</option><option value="5">Baba Gupta · Koi-Koi Master</option></select></label><button id="btn-add-bot" class="secondary">+ ADD BOT</button></div>
+                <div class="setting-grid three">
+                    <label>Match length<select id="round-count"><option value="3">3 months</option><option value="6" selected>6 months</option><option value="12">12 months</option></select></label>
+                    <label>Card back<select id="card-back-select"><option value="hana-red" selected>Traditional red · #EF1D1E</option><option value="svg-red">Illustrated red</option><option value="svg-blue">Illustrated blue</option><option value="classic">Classic pattern</option></select></label>
+                    <label class="toggle-setting"><input id="viewing-yaku" type="checkbox"> Moon / Blossom Viewing</label>
+                </div>
+                <label class="toggle-setting"><input id="busted-viewing" type="checkbox" disabled> Lightning busts Viewing Yaku</label>
+                <button id="btn-start-game" class="primary large">DEAL THE FLOWERS</button>
+            </div>
+            <div id="client-waiting" class="waiting hidden">Waiting for the host to deal…</div>
+            <button id="btn-room-rules" class="text-button">Rules &amp; Yaku list</button>
+        </div>
+    </section>
+
+    <section id="game-view" class="hidden" aria-label="Hanafuda Koi-Koi table">
+        <div id="spectator-controls" class="spectator-controls hidden"><button id="spectator-prev" aria-label="Previous player">&lt;</button><span id="spectator-label">GOD VIEW</span><button id="spectator-next" aria-label="Next player">&gt;</button></div>
+        <header id="status-banner"><div><span class="month-chip" id="month-display">MONTH 1 / 6</span><strong id="status-text">Waiting…</strong><small id="activity-text"></small></div><div class="scoreboard" id="scoreboard"></div><button id="btn-table-rules" class="header-button">RULES</button></header>
+        <div id="table-stage">
+            <div id="table">
+                <div class="felt-mark">花札</div>
+                <section id="opponent-zone" class="player-zone opponent-zone"><div class="player-meta"><strong id="opponent-name">OPPONENT</strong><span id="opponent-score">0 pts</span></div><div id="opponent-hand" class="mini-hand"></div><div id="opponent-captures" class="capture-groups"></div></section>
+                <section id="field-zone"><div class="zone-title">FIELD · MATCH THE MONTH</div><div id="field-cards"></div></section>
+                <section id="deck-zone"><div id="draw-pile" class="hana-card card-back"><span id="deck-count">24</span></div><span>DRAW</span></section>
+                <section id="local-captures" class="capture-groups local-captures"></section>
+            </div>
+        </div>
+        <aside id="action-panel" class="hidden"><strong id="turn-prompt">Choose one card from your hand.</strong><span id="selection-feedback"></span><div id="choice-actions" class="choice-actions hidden"><button id="btn-koi" class="koi-button">KOI-KOI · CONTINUE</button><button id="btn-shobu" class="shobu-button">SHOBU · BANK POINTS</button></div></aside>
+        <section id="hand-dock"><div class="hand-toolbar"><div><strong>YOUR HAND</strong><span id="hand-count">8 cards</span></div><span id="hand-hint">Tap a flower card to play it</span></div><div id="local-hand" class="hand-scroll"></div></section>
+        <button id="chat-fab" aria-label="Open table chat" aria-expanded="false">CHAT</button>
+        <div id="chat-bubbles" aria-live="polite"></div><div id="toast-container" aria-live="assertive"></div>
+        <aside id="chat-drawer" role="dialog" aria-label="Table chat"><div class="chat-header"><div><span>LIVE TABLE</span><h3>Commentary</h3></div><button id="chat-close" aria-label="Close chat">×</button></div><div id="chat-messages"></div><div class="chat-compose"><input id="chat-input" type="text" maxlength="180" placeholder="Talk to the table…"><button id="chat-send">SEND</button></div></aside>
+    </section>
+
+    <div id="modal-overlay" class="hidden"></div>
+    <section id="rules-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="rules-title"><button id="btn-close-rules" class="modal-close" aria-label="Close rules">×</button><div class="eyebrow">COMPLETE TABLE GUIDE</div><h2 id="rules-title">Hanafuda · Koi-Koi</h2><div class="rules-grid">
+        <article><strong>Deal &amp; turns</strong><p>Two players receive 8 cards each; 8 cards form the field. Oya plays a hand card, captures the same month when possible, then automatically draws and resolves one deck card.</p></article>
+        <article><strong>Matching choices</strong><p>One match captures automatically. With two matching field cards, choose one. Three matching field cards stay stacked; the fourth captures all four.</p></article>
+        <article><strong>Broken deals</strong><p>Four of one month on the field triggers an immediate redeal. Teshi (four of one month) or Kuttsuki (four pairs) in a hand wins 6; simultaneous wins go to Oya.</p></article>
+        <article><strong>Koi-Koi or Shobu</strong><p>A new or upgraded Yaku lets you stop and score, or call Koi-Koi and continue. A final-turn Yaku must stop. If your opponent wins after your Koi-Koi, their score doubles.</p></article>
+        <article><strong>Scoring</strong><p>Base scores of 7+ double. The failed Koi-Koi penalty doubles again, multiplicatively. An exhausted round awards Oya 6 points and Oya remains dealer.</p></article>
+        <article><strong>Core Yaku</strong><p>Five/Four/Rainy Four/Three Brights; Boar-Deer-Butterflies; Poetry and Blue ribbons; 5+ Animals, 5+ Ribbons, and 10+ Chaff. Sake Cup counts as both Animal and Chaff.</p></article>
+        <article><strong>Viewing setting</strong><p>Moon Viewing and Blossom Viewing are off by default. Enable them as 5-point Yaku; the separate Lightning toggle can nullify them.</p></article>
+        <article><strong>Full match</strong><p>Play 3, 6 or 12 months. The highest total wins. The round winner becomes Oya; instant wins and Oya-ken retain the current Oya.</p></article>
+    </div><button id="btn-rules-done" class="primary">BACK TO THE TABLE</button></section>
+
+    <section id="capture-modal" class="modal capture-modal hidden" role="dialog" aria-modal="true" aria-labelledby="capture-title"><div class="eyebrow">TWO MATCHES</div><h2 id="capture-title">Choose the card to capture</h2><div id="capture-options"></div></section>
+    <section id="result-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="result-title"><div class="eyebrow" id="result-kicker">MONTH COMPLETE</div><h2 id="result-title">Shobu</h2><div id="result-summary"></div><div id="result-actions"><button id="btn-view-table" class="secondary">VIEW TABLE</button><button id="btn-leave-game" class="danger">LEAVE GAME</button></div></section>
+    <div id="animation-layer" aria-hidden="true"></div>
+</main>
+
+<script src="../offline.js"></script><script src="../multiplayer.js"></script><script src="../historical-bots.js"></script><script src="rules.js"></script><script src="engine.js"></script><script src="bots.js"></script><script src="app.js"></script>
+</body>
+</html>

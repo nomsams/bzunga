@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-game-theme="president">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -16,7 +16,9 @@
 <body>
 <main id="president-app">
     <section id="lobby" aria-label="President and Slave game lobby">
-        <div class="lobby-card" id="lobby-start">
+        <div class="lobby-card game-lobby-card" id="lobby-start">
+            <a class="back-to-games" href="../index.html#game-selection">&#8592; BACK TO GAME SELECTION</a>
+            <div class="game-menu-header"><span>CHOOSE YOUR GAME</span><span>4 TABLE MODES</span></div>
             <div class="game-picker" role="group" aria-label="Choose a card game">
                 <a class="game-choice" href="../index.html?game=bazunga">
                     <strong>BAZUNGA</strong>
@@ -36,23 +38,24 @@
                     <span>Capture months and build Yaku</span>
                 </a>
             </div>
-            <div class="eyebrow">A SEPARATE CARD GAME</div>
-            <h1>THE PRESIDENT<br><span>&amp; THE SLAVE</span></h1>
-            <p class="lobby-copy">Climb the pile, build larger combinations, and empty your hand before the table reorganizes itself around you.</p>
-            <label for="card-theme-select">
+            <div class="game-identity">
+                <div class="eyebrow">CLIMB, RULE &amp; SURVIVE</div>
+                <h1 class="game-title">THE PRESIDENT<br><span>&amp; THE SLAVE</span></h1>
+                <p class="lobby-copy">Climb the pile, build larger combinations, and empty your hand before the table reorganizes itself around you.</p>
+            </div>
+            <label class="pre-room-option" for="card-theme-select">
                 Card design
                 <select id="card-theme-select" aria-label="Card design"></select>
             </label>
             <label for="player-name">Your table name</label>
             <input id="player-name" type="text" maxlength="24" placeholder="Enter your name" autocomplete="name">
-            <label class="room-name-field" for="room-name">Custom room name
-                <input id="room-name" type="text" maxlength="28" placeholder="e.g. Friday Cabinet" autocomplete="off">
-            </label>
+            <label class="room-name-field" for="room-name">Custom room name</label>
+            <input id="room-name" type="text" maxlength="28" placeholder="e.g. Friday Cabinet" autocomplete="off">
             <p class="room-name-hint">Spaces and punctuation are normalized, so confusingly similar names cannot create duplicate rooms.</p>
             <div id="room-name-suggestions" class="room-suggestions hidden" aria-live="polite"></div>
             <button id="btn-host" class="primary large">CREATE A TABLE</button>
             <div class="divider"><span>OR JOIN A TABLE</span></div>
-            <label for="join-id">Game ID</label>
+            <label for="join-id">Room name, Game ID or invite</label>
             <div class="join-row">
                 <input id="join-id" type="text" maxlength="120" placeholder="Room name, Game ID or invite link" autocomplete="off">
                 <div class="join-actions">
@@ -71,7 +74,7 @@
                     <div class="eyebrow">PRIVATE P2P TABLE</div>
                     <h2>Cabinet Room</h2>
                 </div>
-                <a class="game-switch compact" href="../index.html?game=bazunga">BAZUNGA</a>
+                <a class="back-to-games" href="../index.html#game-selection">&#8592; GAME SELECTION</a>
             </div>
             <div class="room-code-wrap">
                 <div>
@@ -148,6 +151,7 @@
                 <span id="activity-text"></span>
             </div>
             <div class="header-actions">
+                <a class="table-game-selection" href="../index.html#game-selection" aria-label="Back to game selection">GAMES</a>
                 <button id="btn-card-theme" class="header-button" data-short-label="OLD">CARDS: CLASSIC</button>
                 <button id="btn-table-rules" class="header-button">RULES</button>
             </div>

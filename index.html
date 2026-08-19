@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-game-theme="bazunga">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -664,9 +664,10 @@
 <div id="app">
     <!-- Lobby View -->
     <div id="lobby">
-        <div class="lobby-box" id="lobby-init">
-            <h1>BAZUNGA</h1>
-            <div class="game-picker" role="group" aria-label="Choose a card game">
+        <div class="lobby-box game-lobby-card" id="lobby-init">
+            <a class="back-to-games" href="./index.html#game-selection">&#8592; BACK TO GAME SELECTION</a>
+            <div class="game-menu-header"><span>CHOOSE YOUR GAME</span><span>4 TABLE MODES</span></div>
+            <div class="game-picker" id="game-selection" role="group" aria-label="Choose a card game">
                 <a class="game-choice selected" href="./index.html?game=bazunga" aria-current="page">
                     <strong>BAZUNGA</strong>
                     <span>Memory, powers and glorious chaos</span>
@@ -678,35 +679,44 @@
                 </a>
                 <a class="game-choice" href="./durak/index.html?game=durak">
                     <strong>THE FOOL / DURAK</strong>
-                    <span>Attack, defend and escape the fool</span>
+                    <span>Attack, defend and escape</span>
                 </a>
                 <a class="game-choice" href="./hanafuda/index.html?game=hanafuda">
                     <strong>HANAFUDA · KOI-KOI</strong>
-                    <span>Capture months and press your luck</span>
+                    <span>Capture months and build Yaku</span>
                 </a>
             </div>
-            <label class="card-theme-setting" for="card-theme-select">
+            <div class="game-identity">
+                <div class="eyebrow">MEMORY, POWERS &amp; CHAOS</div>
+                <h1 class="game-title">BAZUNGA</h1>
+                <p class="lobby-copy">Read the table, remember hidden cards, unleash powers, and empty your layout before everyone else.</p>
+            </div>
+            <label class="card-theme-setting pre-room-option" for="card-theme-select">
                 CARD DESIGN
                 <select id="card-theme-select" aria-label="Card design"></select>
             </label>
-            <input type="text" id="player-name" placeholder="Enter your name" maxlength="12">
-            <label class="room-name-field" for="room-name">CUSTOM ROOM NAME
-                <input id="room-name" type="text" maxlength="28" placeholder="e.g. Friday Bazunga" autocomplete="off">
-            </label>
+            <label for="player-name">Your table name</label>
+            <input type="text" id="player-name" placeholder="Enter your name" maxlength="24" autocomplete="name">
+            <label class="room-name-field" for="room-name">Custom room name</label>
+            <input id="room-name" type="text" maxlength="28" placeholder="e.g. Friday Bazunga" autocomplete="off">
             <p class="room-name-hint">Spaces and punctuation are normalized, so confusingly similar names cannot create duplicate rooms.</p>
             <div id="room-name-suggestions" class="room-suggestions hidden" aria-live="polite"></div>
-            <button id="btn-host">Create Game</button>
-            <div style="margin: 15px 0; color: #64748b; font-weight: 600; font-size: 0.85rem;">OR JOIN EXISTING</div>
-            <input type="text" id="join-id" maxlength="120" placeholder="Room name, Game ID or invite link">
-            <div class="join-actions">
-                <button id="btn-join" class="secondary">Join Game</button>
-                <button id="btn-spectate" class="secondary">Spectate</button>
+            <button id="btn-host" class="primary large">CREATE A TABLE</button>
+            <div class="divider"><span>OR JOIN A TABLE</span></div>
+            <label for="join-id">Room name, Game ID or invite</label>
+            <div class="join-row">
+                <input type="text" id="join-id" maxlength="120" placeholder="Paste invite or enter room">
+                <div class="join-actions">
+                    <button id="btn-join" class="secondary">JOIN</button>
+                    <button id="btn-spectate" class="secondary">SPECTATE</button>
+                </div>
             </div>
             <button id="btn-rules-lobby" class="secondary">How to Play</button>
             <button id="btn-download-offline" class="offline-download-button">&#11015; DOWNLOAD ALL MODES</button>
             <p id="offline-download-status" class="offline-download-status" aria-live="polite">Save every game and card design for offline bot play.</p>
         </div>
         <div class="lobby-box hidden" id="lobby-room" style="max-height: 90vh; overflow-y: auto; padding-bottom: 30px;">
+            <a class="back-to-games" href="./index.html#game-selection">&#8592; BACK TO GAME SELECTION</a>
             <h2 style="color: white; margin-bottom: 10px;">Game Lobby</h2>
             <div id="room-id-display" style="font-family: monospace; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; margin-bottom: 10px; word-break: break-all; color: var(--accent); font-size: 1rem; letter-spacing: 1px;"></div>
             <div id="qr-container"></div>
@@ -778,6 +788,7 @@
                 <div style="font-size: 0.75rem; color: #94a3b8; font-weight:800;" id="phase-display">PHASE</div>
                 <div id="status-text">Waiting for players...</div>
                 <div style="display: flex; gap: 5px;">
+                    <a class="table-game-selection" href="./index.html#game-selection" aria-label="Back to game selection">GAMES</a>
                     <button id="btn-toggle-layout" class="secondary" data-short-label="GRID" aria-label="Switch card layout" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Layout: GRID</button>
                     <button id="btn-toggle-anim" class="secondary" data-short-label="FX ON" aria-label="Toggle animations" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">Anim: ON</button>
                     <button id="btn-card-theme" class="secondary" data-short-label="OLD" aria-label="Change card design" style="width: auto; padding: 4px 8px; font-size: 0.7rem; margin: 0; border-radius: 6px;">CARDS: CLASSIC</button>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-hanafuda-back="hana-red">
+<html lang="en" data-game-theme="hanafuda" data-hanafuda-back="hana-red">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -16,20 +16,26 @@
 <body>
 <main id="hanafuda-app">
     <section id="lobby" aria-label="Hanafuda Koi-Koi game lobby">
-        <div class="lobby-card" id="lobby-start">
+        <div class="lobby-card game-lobby-card" id="lobby-start">
+            <a class="back-to-games" href="../index.html#game-selection">&#8592; BACK TO GAME SELECTION</a>
+            <div class="game-menu-header"><span>CHOOSE YOUR GAME</span><span>4 TABLE MODES</span></div>
             <div class="game-picker" role="group" aria-label="Choose a card game">
-                <a class="game-choice" href="../index.html?game=bazunga"><strong>BAZUNGA</strong><span>Memory, powers and chaos</span></a>
-                <a class="game-choice" href="../president/index.html?game=president"><strong>PRESIDENT &amp; SLAVE</strong><span>Climb combinations</span></a>
-                <a class="game-choice" href="../durak/index.html?game=durak"><strong>THE FOOL / DURAK</strong><span>Attack and defend</span></a>
-                <a class="game-choice selected" href="./index.html?game=hanafuda" aria-current="page"><strong>HANAFUDA · KOI-KOI</strong><span>Capture months, form Yaku, press your luck</span><span class="selected-label">SELECTED</span></a>
+                <a class="game-choice" href="../index.html?game=bazunga"><strong>BAZUNGA</strong><span>Memory, powers and glorious chaos</span></a>
+                <a class="game-choice" href="../president/index.html?game=president"><strong>PRESIDENT &amp; SLAVE</strong><span>Climb combinations and rule the table</span></a>
+                <a class="game-choice" href="../durak/index.html?game=durak"><strong>THE FOOL / DURAK</strong><span>Attack, defend and escape</span></a>
+                <a class="game-choice selected" href="./index.html?game=hanafuda" aria-current="page"><strong>HANAFUDA · KOI-KOI</strong><span>Capture months and build Yaku</span><span class="selected-label">SELECTED</span></a>
             </div>
-            <div class="eyebrow">JAPANESE FLOWER CARDS</div>
-            <h1>花札 <span>KOI-KOI</span></h1>
-            <p class="lobby-copy">Match months, build Yaku, then stop safely or call Koi-Koi and risk everything for a larger score.</p>
+            <div class="game-identity">
+                <div class="eyebrow">JAPANESE FLOWER CARDS</div>
+                <h1 class="game-title">花札 <span>KOI-KOI</span></h1>
+                <p class="lobby-copy">Match months, build Yaku, then stop safely or call Koi-Koi and risk everything for a larger score.</p>
+            </div>
+            <div class="pre-room-option hanafuda-style-note"><span>DECK STYLE</span><strong>Traditional Hanafuda</strong><small>Choose the card face and back after creating the room.</small></div>
             <label for="player-name">Your table name</label>
             <input id="player-name" type="text" maxlength="24" placeholder="Enter your name" autocomplete="name">
             <label for="room-name">Custom room name</label>
             <input id="room-name" type="text" maxlength="28" placeholder="e.g. Moon Viewing" autocomplete="off">
+            <p class="room-name-hint">Spaces and punctuation are normalized, so confusingly similar names cannot create duplicate rooms.</p>
             <div id="room-name-suggestions" class="room-suggestions hidden" aria-live="polite"></div>
             <button id="btn-host" class="primary large">CREATE A TABLE</button>
             <div class="divider"><span>OR JOIN A TABLE</span></div>
@@ -37,11 +43,11 @@
             <div class="join-row"><input id="join-id" type="text" maxlength="120" placeholder="Paste invite or enter room" autocomplete="off"><div class="join-actions"><button id="btn-join" class="secondary">JOIN</button><button id="btn-spectate" class="secondary">SPECTATE</button></div></div>
             <button id="btn-open-rules" class="text-button">Read the complete rules</button>
             <button id="btn-download-offline" class="offline-download-button">⬇ DOWNLOAD ALL MODES</button>
-            <p id="offline-download-status" class="offline-download-status" aria-live="polite">Save every game for offline bot play.</p>
+            <p id="offline-download-status" class="offline-download-status" aria-live="polite">Save every game and card design for offline bot play.</p>
         </div>
 
         <div class="lobby-card hidden" id="lobby-room">
-            <div class="room-heading"><div><div class="eyebrow">PRIVATE P2P TABLE</div><h2>Koi-Koi Room</h2></div><a class="game-switch compact" href="../index.html">ALL GAMES</a></div>
+            <div class="room-heading"><div><div class="eyebrow">PRIVATE P2P TABLE</div><h2>Koi-Koi Room</h2></div><a class="back-to-games" href="../index.html#game-selection">&#8592; GAME SELECTION</a></div>
             <div class="room-code-wrap"><div><span>GAME ID</span><strong id="room-id-display">CONNECTING…</strong></div><div id="qr-container"></div></div>
             <button id="btn-copy-invite" class="copy-invite" type="button">COPY INVITE LINK</button>
             <div class="room-profile"><label for="room-player-name">YOUR NAME</label><div class="room-inline-action"><input id="room-player-name" type="text" maxlength="24" autocomplete="nickname"><button id="btn-room-rename" class="secondary" type="button">CHANGE</button></div></div>
@@ -66,7 +72,7 @@
 
     <section id="game-view" class="hidden" aria-label="Hanafuda Koi-Koi table">
         <div id="spectator-controls" class="spectator-controls hidden"><button id="spectator-prev" aria-label="Previous player">&lt;</button><span id="spectator-label">GOD VIEW</span><button id="spectator-next" aria-label="Next player">&gt;</button></div>
-        <header id="status-banner"><div><span class="month-chip" id="month-display">MONTH 1 / 6</span><strong id="status-text">Waiting…</strong><small id="activity-text"></small></div><div class="scoreboard" id="scoreboard"></div><button id="btn-table-rules" class="header-button">RULES</button></header>
+        <header id="status-banner"><div><span class="month-chip" id="month-display">MONTH 1 / 6</span><strong id="status-text">Waiting…</strong><small id="activity-text"></small></div><div class="scoreboard" id="scoreboard"></div><div class="header-actions"><a class="table-game-selection" href="../index.html#game-selection" aria-label="Back to game selection">GAMES</a><button id="btn-table-rules" class="header-button">RULES</button></div></header>
         <div id="table-stage">
             <div id="table">
                 <div class="felt-mark">花札</div>

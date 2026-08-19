@@ -51,8 +51,8 @@ input:focus, select:focus { outline: 2px solid #d5a93688; border-color: #d5a936;
 .room-code-wrap { padding: 12px; border: 1px solid #ffffff1c; border-radius: 14px; background: #0005; }
 .room-code-wrap span { display: block; color: #92988e; font-size: .55rem; }
 #room-id-display { display: block; max-width: 430px; overflow-wrap: anywhere; font-size: .76rem; }
-#qr-container { flex: 0 0 100px; width: 100px; height: 100px; padding: 5px; background: white; border-radius: 8px; }
-#qr-container img, #qr-container canvas { width: 90px !important; height: 90px !important; }
+#qr-container { flex: 0 0 96px; width: 96px; height: 96px; padding: 0; background: white; border-radius: 8px; }
+#qr-container img, #qr-container canvas { width: 100% !important; height: 100% !important; }
 .copy-invite { width: 100%; margin-top: 7px; padding: 8px; border: 1px solid #d5a93655; border-radius: 8px; color: #e8cd78; background: #d5a93612; font-size: .6rem; font-weight: 900; }
 .room-profile { margin-top: 12px; }
 .room-inline-action, .drawer-profile { display: grid; grid-template-columns: 1fr auto; gap: 7px; }
@@ -78,6 +78,7 @@ input:focus, select:focus { outline: 2px solid #d5a93688; border-color: #d5a936;
 #status-banner, #table-stage, #hand-dock { min-width: 0; }
 #status-banner { z-index: 20; min-height: 58px; padding: 8px max(10px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left)); display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #ffffff14; background: #080b09f2; }
 #status-banner > div:first-child { min-width: 0; display: grid; }
+.header-actions { display: flex; align-items: center; gap: 5px; }
 #status-text { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: .78rem; }
 #activity-text { color: #d4b75d; font-size: .58rem; }
 .month-chip { color: #e0be55; font-size: .55rem; font-weight: 900; letter-spacing: .08em; }
@@ -115,7 +116,7 @@ input:focus, select:focus { outline: 2px solid #d5a93688; border-color: #d5a936;
 .capture-group .hana-card { position: absolute; transform: scale(.72); transform-origin: top left; }
 .capture-group .hana-card:nth-child(n+2) { margin-left: calc(var(--index) * 12px); }
 
-.hana-card { width: var(--card-w); height: var(--card-h); position: relative; flex: 0 0 auto; overflow: hidden; padding: 0; color: #12110f; border: 2px solid #151411; border-radius: calc(var(--card-w) * .09); background: #f5edd9; box-shadow: 0 4px 10px #0007; transform: translateZ(0); }
+.hana-card { width: var(--card-w); height: var(--card-h); position: relative; flex: 0 0 auto; overflow: hidden; padding: 0; color: #12110f; border: 2px solid #ef1d1e; border-radius: calc(var(--card-w) * .09); background: #fff; box-shadow: 0 4px 10px #0007; transform: translateZ(0); }
 button.hana-card { appearance: none; transition: translate .16s, box-shadow .16s, filter .16s; }
 button.hana-card:not(:disabled):hover { translate: 0 -5px; box-shadow: 0 9px 17px #0009; }
 button.hana-card:not(:disabled):active { translate: 0 -1px; }
@@ -128,21 +129,22 @@ html[data-hanafuda-back="svg-red"] .card-back, html[data-hanafuda-back="svg-blue
 html[data-hanafuda-back="svg-red"] .card-back { background-image: url('../assets/deck-svg/Deck_Back_Red.svg'); }
 html[data-hanafuda-back="svg-blue"] .card-back { background-image: url('../assets/deck-svg/Deck_Back_Blue.svg'); }
 html[data-hanafuda-back^="svg-"] .card-back::before { display: none; }
-.hana-face { position: absolute; inset: 0; overflow: hidden; background: linear-gradient(180deg, #faf4e5, #e8dec5); }
+.hana-face { position: absolute; inset: 0; overflow: hidden; background: #fff; }
 .hana-face::before { content: ''; position: absolute; inset: 48% -20% -18%; border-radius: 50% 50% 0 0; background: var(--plant, #597447); opacity: .9; rotate: var(--slope, -7deg); }
 .hana-face::after { content: ''; position: absolute; width: 8%; height: 92%; left: 48%; bottom: -8%; border-radius: 50%; background: #30291d; rotate: var(--stem, 26deg); transform-origin: bottom; box-shadow: -13px 20px 0 -2px var(--plant, #597447), 14px 8px 0 -2px var(--plant, #597447); }
-.hana-art { position: absolute; z-index: 5; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: #0b0b0a; }
-html[data-hanafuda-front="invert"] .hana-art { filter: invert(1) hue-rotate(180deg); background: #f7f3e8; }
+.hana-art { position: absolute; z-index: 5; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; background: transparent; }
+html[data-hanafuda-front="invert"] .hana-art { filter: invert(1) hue-rotate(180deg); background: transparent; }
 html[data-hanafuda-front="white-red"] .hana-face { background: #fff; }
-html[data-hanafuda-front="white-red"] .hana-art { filter: none; background: #fff; }
+html[data-hanafuda-front="white-red"] .hana-art { filter: none; background: transparent; }
 html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef1d1e; }
 .hana-card:has(.hana-art) .hana-face::before, .hana-card:has(.hana-art) .hana-face::after, .hana-card:has(.hana-art) .motif-glyph, .hana-card:has(.hana-art) .motif-name, .hana-card:has(.hana-art) .month-number { display: none; }
 .month-number { position: absolute; z-index: 4; top: 3px; left: 4px; font-size: calc(var(--card-w) * .18); font-weight: 900; }
 .motif-glyph { position: absolute; z-index: 3; inset: 14% 4% auto; min-height: 47%; display: grid; place-items: center; font-family: Georgia, serif; font-size: calc(var(--card-w) * .39); line-height: 1; text-align: center; text-shadow: 0 1px white; }
 .motif-name { position: absolute; z-index: 4; inset: auto 2px 2px; padding: 2px 1px; color: #fff; border-radius: 3px; background: #111d; font-size: calc(var(--card-w) * .095); font-weight: 800; line-height: 1.05; text-align: center; }
-.hana-card[data-category~="Bright"] { border-color: #c49327; box-shadow: 0 0 0 1px #f6d66b, 0 4px 12px #0008; }
+.hana-card[data-category~="Bright"] { border-color: #ef1d1e; box-shadow: 0 0 0 1px #f6d66b, 0 4px 12px #0008; }
 .hana-card[data-category~="Ribbon"] .hana-face { background: linear-gradient(120deg, #f7eddb 0 43%, #d73131 44% 60%, #f7eddb 61%); }
 .hana-card[data-category~="Blue"] .hana-face { background: linear-gradient(120deg, #f7eddb 0 43%, #315cae 44% 60%, #f7eddb 61%); }
+.hana-card:has(.hana-art) .hana-face { background: #fff; }
 .hana-card[data-month="3"] { --plant: #d47895; }
 .hana-card[data-month="6"] { --plant: #9a4a68; }
 .hana-card[data-month="8"] { --plant: #a59655; }

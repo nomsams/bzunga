@@ -33,7 +33,8 @@
         './hanafuda/rules.js',
         './hanafuda/engine.js',
         './hanafuda/bots.js',
-        './hanafuda/app.js'
+        './hanafuda/app.js',
+        './assets/hanafuda-svg/Hanafuda_overview.svg'
     ];
     const sharedRemoteFiles = [
         'https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js',

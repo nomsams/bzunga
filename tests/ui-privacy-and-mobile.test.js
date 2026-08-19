@@ -73,6 +73,26 @@ const longDuration = durationContext.result.UI.getMessageDuration('This is a muc
 assert(longDuration > shortDuration, 'Long chat messages should remain visible longer');
 assert(longDuration <= 10500, 'Chat duration must stay bounded');
 
+const discardPoseStart = html.indexOf('    getDiscardPose:');
+const discardPoseEnd = html.indexOf('    getGridOffset:', discardPoseStart);
+assert(discardPoseStart >= 0 && discardPoseEnd > discardPoseStart, 'getDiscardPose implementation not found');
+const discardPoseMethod = html.slice(discardPoseStart, discardPoseEnd);
+const discardContext = { result: {}, Math };
+vm.runInNewContext(`const UI = { ${discardPoseMethod} }; result.UI = UI;`, discardContext);
+const discardCards = Array.from({ length: 24 }, (_, index) => ({ id: `discard-${index}`, value: index, suit: 'TEST' }));
+const poses = discardCards.map(card => discardContext.result.UI.getDiscardPose(card));
+assert.deepStrictEqual(
+    discardContext.result.UI.getDiscardPose(discardCards[7]),
+    poses[7],
+    'A discard card must keep the same pose across rerenders'
+);
+assert(poses.every(pose => Math.abs(pose.rotation) <= 2.4), 'Discard rotation must stay subtle');
+assert(poses.every(pose => Math.abs(pose.x) <= 2 && Math.abs(pose.y) <= 2), 'Discard offset must stay inside a two-pixel range');
+assert(new Set(poses.map(pose => `${pose.rotation}:${pose.x}:${pose.y}`)).size > 8, 'Discard cards need visibly varied poses');
+assert(poses.some(pose => pose.rotation === 0), 'Some discard cards should still land squarely');
+assert(html.includes('discardLeft + discardPose.x') && html.includes('deckTop + discardPose.y'), 'Discard offsets must be applied to the rendered pile');
+assert(!html.includes('Math.random() * 20 - 10'), 'The old excessive and unstable discard rotation must stay removed');
+
 assert(html.includes('.chat-open #bot-typing-indicator'), 'Chat-open state must hide the activity pill');
 assert(html.includes('.chat-open #chat-bubble-container'), 'Chat-open state must hide floating bubbles');
 assert(html.includes("gameView.classList.toggle('chat-open', open)"), 'Chat drawer and game overlay state must be synchronized');

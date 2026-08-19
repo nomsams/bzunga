@@ -13,6 +13,11 @@
 .back-to-games { display: inline-flex; align-items: center; width: fit-content; min-height: 34px; margin: 0 0 13px; padding: 7px 11px; border: 1px solid rgba(255,255,255,.14); border-radius: 10px; background: rgba(2,6,23,.28); color: #fde68a; font-size: .65rem; font-weight: 900; letter-spacing: .075em; line-height: 1; text-decoration: none; }
 .back-to-games:hover, .back-to-games:focus-visible, .table-game-selection:hover, .table-game-selection:focus-visible { border-color: rgba(251,191,36,.65); background: rgba(251,191,36,.12); outline: none; }
 .table-game-selection { display: inline-flex; align-items: center; justify-content: center; min-height: 32px; padding: 5px 9px; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: rgba(255,255,255,.07); color: #fde68a; font-size: .58rem; font-weight: 900; letter-spacing: .055em; line-height: 1; text-decoration: none; }
+.postgame-dock { position: fixed; z-index: 65; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); translate: -50% 0; width: min(720px, calc(100vw - 24px)); padding: 9px; display: flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid rgba(var(--menu-accent-rgb, 251,191,36), .48); border-radius: 14px; background: rgba(7,12,20,.94); box-shadow: 0 16px 42px rgba(0,0,0,.62); backdrop-filter: blur(12px); }
+.postgame-dock strong { margin-right: auto; padding-left: 5px; color: var(--menu-accent, #fbbf24); font-size: .62rem; letter-spacing: .08em; white-space: nowrap; }
+.postgame-dock button { min-height: 38px; margin: 0; padding: 7px 10px; border: 1px solid rgba(255,255,255,.16); border-radius: 9px; color: white; background: rgba(255,255,255,.08); font-size: .58rem; font-weight: 900; letter-spacing: .025em; white-space: nowrap; }
+.postgame-dock button.primary { color: var(--menu-button-ink, #171005); border-color: transparent; background: var(--menu-accent, #fbbf24); }
+.postgame-dock button.danger { border-color: rgba(239,68,68,.42); background: rgba(127,29,29,.72); }
 
 /* Shared game-creation lobby. Each mode supplies only its accent personality. */
 html[data-game-theme="bazunga"] { --menu-accent: #fbbf24; --menu-accent-rgb: 251,191,36; --menu-button-ink: #1b1303; --menu-panel-start: #202b40; --menu-panel-end: #0c1425; }
@@ -117,6 +122,9 @@ html[data-game-theme] .game-lobby-card .offline-download-status { min-height: 1.
     #qr-container { width: 72px !important; height: 72px !important; min-width: 72px !important; min-height: 72px !important; }
     #qr-container img, #qr-container canvas { width: 100% !important; height: 100% !important; }
     .table-game-selection { min-height: 30px; padding: 4px 7px; font-size: .54rem; }
+    .postgame-dock { bottom: max(7px, env(safe-area-inset-bottom)); width: calc(100vw - 14px); padding: 7px; flex-wrap: wrap; gap: 5px; }
+    .postgame-dock strong { flex: 1 0 100%; margin: 0; padding: 1px 0 2px; text-align: center; }
+    .postgame-dock button { flex: 1 1 auto; min-height: 34px; padding: 6px 7px; font-size: .53rem; }
     html[data-game-theme] #lobby { padding: 14px 10px; }
     html[data-game-theme] .game-lobby-card { width: min(100%, calc(100vw - 20px)) !important; max-width: calc(100vw - 20px) !important; padding: 19px 15px 22px !important; border-radius: 20px !important; }
     html[data-game-theme] .game-lobby-card .back-to-games { min-height: 31px; margin-bottom: 13px; padding: 6px 9px; font-size: .57rem; }

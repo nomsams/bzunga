@@ -642,6 +642,9 @@
             document.getElementById('btn-view-table').onclick = UI.hideResults;
             document.getElementById('btn-leave-game').onclick = UI.leaveGame;
             document.getElementById('btn-play-again').onclick = UI.playAgain;
+            document.getElementById('btn-postgame-results').onclick = UI.showResultsFromDock;
+            document.getElementById('btn-postgame-next').onclick = UI.playAgain;
+            document.getElementById('btn-postgame-new-table').onclick = UI.leaveGame;
             document.getElementById('modal-overlay').onclick = () => {
                 if (!document.getElementById('rules-modal').classList.contains('hidden')) UI.closeRules();
             };
@@ -746,6 +749,7 @@
             UI.renderActions(state);
             UI.renderChat(state);
             UI.renderLastAction(state);
+            UI.renderPostgameDock(state);
             if (state.phase === 'game_over') UI.showResults(state);
         },
 
@@ -1175,7 +1179,13 @@
             }
         },
 
-        showResults(state) {
+        renderPostgameDock(state) {
+            const complete = state.phase === 'game_over';
+            document.getElementById('postgame-dock').classList.toggle('hidden', !complete);
+            document.getElementById('btn-postgame-next').classList.toggle('hidden', !complete || !App.isHost);
+        },
+
+        showResults(state, immediate = false) {
             if (App.ui.resultsShown) return;
             App.ui.resultsShown = true;
             const durak = state.players.find(player => player.id === state.durakId);
@@ -1190,7 +1200,13 @@
             setTimeout(() => {
                 document.getElementById('modal-overlay').classList.remove('hidden');
                 document.getElementById('results-modal').classList.remove('hidden');
-            }, 1500);
+            }, immediate ? 0 : 1500);
+        },
+
+        showResultsFromDock() {
+            if (App.gameState?.phase !== 'game_over') return;
+            App.ui.resultsShown = false;
+            UI.showResults(App.gameState, true);
         },
 
         hideResults() {

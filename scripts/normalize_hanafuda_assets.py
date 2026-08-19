@@ -263,7 +263,7 @@ def main() -> None:
     parser.add_argument("--gutter", type=int, default=2)
     args = parser.parse_args()
 
-    paths = sorted(args.assets.glob("*.svg"))
+    paths = sorted(args.assets.glob("*_Card_*.svg"))
     if len(paths) != 48:
         raise SystemExit(f"Expected 48 Hanafuda SVGs, found {len(paths)} in {args.assets}")
 

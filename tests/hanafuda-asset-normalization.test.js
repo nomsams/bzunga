@@ -4,8 +4,9 @@ const path = require('path');
 const zlib = require('zlib');
 
 const assetDir = path.join(__dirname, '..', 'assets', 'hanafuda-svg');
-const files = fs.readdirSync(assetDir).filter(file => file.endsWith('.svg')).sort();
+const files = fs.readdirSync(assetDir).filter(file => /_Card_\d+\.svg$/.test(file)).sort();
 assert.strictEqual(files.length, 48, 'The normalized Hanafuda deck must contain 48 cards');
+assert(fs.existsSync(path.join(assetDir, 'Hanafuda_overview.svg')), 'The complete 48-card overview must be available in the Hanafuda asset folder');
 
 function paeth(a, b, c) {
     const estimate = a + b - c;

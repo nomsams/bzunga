@@ -15,7 +15,7 @@
         connections: {}, connectionRoles: {}, spectators: {}, allowSpectators: true, isSpectator: false,
         requestedSpectator: false, requestedRoomName: '', hostId: '', reconnectTimer: null, leaving: false,
         joinRejected: false, hostBackup: null, viceHostId: null, promotionTimer: null, lastBackupSignature: '', gameState: null,
-        ui: { lastLogId: 0, lastActionNonce: null, chatOpen: false, dismissedRound: null }
+        ui: { lastLogId: 0, lastActionNonce: null, chatOpen: false, dismissedRound: null, overviewZoom: 1, captureInspectTimer: null }
     };
     const Game = { engine: null, bots: null };
 
@@ -281,18 +281,26 @@
             document.getElementById('allow-spectators').onchange = event => { App.allowSpectators = event.currentTarget.checked; Net.broadcast(); };
             document.getElementById('btn-add-bot').onclick = UI.addBot; document.getElementById('btn-start-game').onclick = UI.startGame;
             document.getElementById('viewing-yaku').onchange = event => { document.getElementById('busted-viewing').disabled = !event.currentTarget.checked; if (!event.currentTarget.checked) document.getElementById('busted-viewing').checked = false; };
-            document.getElementById('card-back-select').onchange = event => { UI.setCardBack(event.currentTarget.value); localStorage.setItem('hanafuda_card_back', event.currentTarget.value); };
-            document.getElementById('card-front-select').onchange = event => { UI.setCardFront(event.currentTarget.value); localStorage.setItem('hanafuda_card_front', event.currentTarget.value); };
+            document.getElementById('card-back-select').onchange = event => UI.saveCardBack(event.currentTarget.value);
+            document.getElementById('card-front-select').onchange = event => UI.saveCardFront(event.currentTarget.value);
+            document.getElementById('game-card-back-select').onchange = event => UI.saveCardBack(event.currentTarget.value);
+            document.getElementById('game-card-front-select').onchange = event => UI.saveCardFront(event.currentTarget.value);
             document.getElementById('spectator-prev').onclick = () => Net.sendAction({ type: 'SPECTATOR_PERSPECTIVE', direction: -1 }); document.getElementById('spectator-next').onclick = () => Net.sendAction({ type: 'SPECTATOR_PERSPECTIVE', direction: 1 });
             document.getElementById('btn-koi').onclick = () => Net.sendAction({ type: 'KOI_KOI' }); document.getElementById('btn-shobu').onclick = () => Net.sendAction({ type: 'SHOBU' });
             ['btn-open-rules', 'btn-room-rules', 'btn-table-rules'].forEach(id => document.getElementById(id).onclick = UI.openRules);
             document.getElementById('btn-close-rules').onclick = UI.closeRules; document.getElementById('btn-rules-done').onclick = UI.closeRules; document.getElementById('modal-overlay').onclick = UI.closeTopModal;
+            document.getElementById('btn-card-overview').onclick = UI.openOverview; document.getElementById('btn-close-overview').onclick = UI.closeOverview;
+            document.getElementById('btn-overview-zoom-out').onclick = () => UI.setOverviewZoom(App.ui.overviewZoom - 0.25); document.getElementById('btn-overview-zoom-in').onclick = () => UI.setOverviewZoom(App.ui.overviewZoom + 0.25); document.getElementById('btn-overview-fit').onclick = () => UI.setOverviewZoom(1);
+            document.getElementById('hanafuda-overview').ondblclick = () => UI.setOverviewZoom(App.ui.overviewZoom > 1 ? 1 : 2);
+            document.getElementById('overview-viewport').onwheel = event => { if (!event.ctrlKey) return; event.preventDefault(); UI.setOverviewZoom(App.ui.overviewZoom + (event.deltaY < 0 ? 0.25 : -0.25)); };
+            document.getElementById('btn-card-appearance').onclick = UI.openAppearance; document.getElementById('btn-close-appearance').onclick = UI.closeAppearance; document.getElementById('btn-appearance-done').onclick = UI.closeAppearance;
             document.getElementById('chat-fab').onclick = () => UI.setChatOpen(true); document.getElementById('chat-close').onclick = () => UI.setChatOpen(false); document.getElementById('chat-send').onclick = UI.sendChat;
             document.getElementById('chat-input').onkeydown = event => { if (event.key === 'Enter') { event.preventDefault(); UI.sendChat(); } else if (event.key === 'Escape') UI.setChatOpen(false); };
             document.getElementById('lobby-chat-send').onclick = UI.sendLobbyChat; document.getElementById('lobby-chat-input').onkeydown = event => { if (event.key === 'Enter') { event.preventDefault(); UI.sendLobbyChat(); } };
             document.getElementById('btn-room-rename').onclick = () => UI.renamePlayer('room-player-name'); document.getElementById('btn-game-rename').onclick = () => UI.renamePlayer('game-player-name');
             ['room-player-name', 'game-player-name'].forEach(id => document.getElementById(id).onkeydown = event => { if (event.key === 'Enter') UI.renamePlayer(id); });
             document.getElementById('btn-view-table').onclick = UI.hideResult; document.getElementById('btn-leave-game').onclick = UI.leaveGame;
+            document.getElementById('btn-postgame-results').onclick = UI.showResult; document.getElementById('btn-postgame-next').onclick = UI.startNextMonth; document.getElementById('btn-postgame-new-table').onclick = UI.leaveGame;
             document.addEventListener('keydown', event => { if (event.key === 'Escape') UI.closeTopModal(); });
             window.addEventListener('orientationchange', () => setTimeout(() => App.gameState && UI.render(App.gameState), 180));
             if (joinId) document.getElementById(spectate ? 'btn-spectate' : 'btn-join').click();
@@ -303,8 +311,18 @@
             if (!hostId) return UI.showToast('Enter a room name or invite.', 'danger');
             event.currentTarget.disabled = true; event.currentTarget.textContent = spectator ? 'CONNECTING…' : 'JOINING…'; App.isHost = false; Net.initialize(document.getElementById('player-name').value, hostId, spectator);
         },
-        setCardBack(value) { document.documentElement.dataset.hanafudaBack = ['hana-red', 'svg-red', 'svg-blue', 'classic'].includes(value) ? value : 'hana-red'; },
-        setCardFront(value) { document.documentElement.dataset.hanafudaFront = ['original', 'invert', 'white-red'].includes(value) ? value : 'original'; },
+        setCardBack(value) {
+            const safe = ['hana-red', 'svg-red', 'svg-blue', 'classic'].includes(value) ? value : 'hana-red';
+            document.documentElement.dataset.hanafudaBack = safe;
+            ['card-back-select', 'game-card-back-select'].forEach(id => { const select = document.getElementById(id); if (select && select.value !== safe) select.value = safe; });
+        },
+        setCardFront(value) {
+            const safe = ['original', 'invert', 'white-red'].includes(value) ? value : 'original';
+            document.documentElement.dataset.hanafudaFront = safe;
+            ['card-front-select', 'game-card-front-select'].forEach(id => { const select = document.getElementById(id); if (select && select.value !== safe) select.value = safe; });
+        },
+        saveCardBack(value) { UI.setCardBack(value); localStorage.setItem('hanafuda_card_back', document.documentElement.dataset.hanafudaBack); },
+        saveCardFront(value) { UI.setCardFront(value); localStorage.setItem('hanafuda_card_front', document.documentElement.dataset.hanafudaFront); },
         resetLobbyButtons() { const values = [['btn-host', 'CREATE A TABLE'], ['btn-join', 'JOIN'], ['btn-spectate', 'SPECTATE']]; values.forEach(([id, label]) => { const button = document.getElementById(id); button.disabled = false; button.textContent = label; }); },
         showRoomCollision(name) { UI.showToast('That room name is already in use.', 'danger'); RoomTools.showSuggestions(document.getElementById('room-name-suggestions'), name, choice => { document.getElementById('room-name').value = choice; document.getElementById('room-name-suggestions').classList.add('hidden'); document.getElementById('btn-host').click(); }); },
         renderQr(peerId) { const container = document.getElementById('qr-container'); RoomTools.configureInvite('hanafuda', peerId, { qrContainer: container, copyButton: document.getElementById('btn-copy-invite'), size: 220, onCopy: copied => UI.showToast(copied ? 'Invite link copied.' : 'Could not copy the invite link.', copied ? 'success' : 'danger') }); },
@@ -322,7 +340,10 @@
         },
 
         render(state) {
-            App.gameState = state; UI.setCardBack(state.settings?.cardBack || document.documentElement.dataset.hanafudaBack); UI.setCardFront(state.settings?.cardFront || document.documentElement.dataset.hanafudaFront); UI.renderLogs(state);
+            App.gameState = state;
+            UI.setCardBack(localStorage.getItem('hanafuda_card_back') || state.settings?.cardBack || 'hana-red');
+            UI.setCardFront(localStorage.getItem('hanafuda_card_front') || state.settings?.cardFront || 'original');
+            UI.renderLogs(state);
             if (state.phase === 'lobby') return UI.renderLobby(state);
             document.getElementById('lobby').classList.add('hidden'); document.getElementById('game-view').classList.remove('hidden');
             UI.renderSpectator(state); UI.renderStatus(state); UI.renderOpponent(state); UI.renderField(state); UI.renderCaptures(state); UI.renderHand(state); UI.renderActions(state); UI.renderResult(state); UI.animateAction(state);
@@ -359,11 +380,26 @@
         },
         renderCaptures(state) {
             const me = state.players.find(player => player.id === App.localId); const opponent = state.players.find(player => player.id !== me?.id);
-            document.getElementById('local-captures').innerHTML = UI.captureGroups(me?.captured || []); document.getElementById('opponent-captures').innerHTML = UI.captureGroups(opponent?.captured || []);
+            const local = document.getElementById('local-captures'); const remote = document.getElementById('opponent-captures');
+            local.innerHTML = UI.captureGroups(me?.captured || []); remote.innerHTML = UI.captureGroups(opponent?.captured || []);
+            UI.bindCaptureInspection(local); UI.bindCaptureInspection(remote);
         },
         captureGroups(cards) {
             const groups = ['Bright', 'Animal', 'Ribbon', 'Chaff'].map(category => ({ category, cards: cards.filter(card => card.categories?.includes(category)) })).filter(group => group.cards.length);
-            return groups.map(group => `<div class="capture-group" title="${group.category}: ${group.cards.length}">${group.cards.slice(0, 8).map((card, index) => UI.cardMarkup(card, false, 'capture', index)).join('')}</div>`).join('');
+            return groups.map(group => {
+                const visible = group.cards.slice(0, 8); const names = visible.map(card => card.name).join(', ');
+                return `<button type="button" class="capture-group" aria-label="${group.category}, ${group.cards.length} captured cards. Press to enlarge: ${Utils.escape(names)}" title="${group.category}: ${group.cards.length} · click to inspect" style="width:${Math.max(44, 39 + (visible.length - 1) * 12)}px"><span class="capture-group-label">${group.category.toUpperCase()} · ${group.cards.length}</span>${visible.map((card, index) => UI.cardMarkup(card, false, 'capture', index)).join('')}</button>`;
+            }).join('');
+        },
+        bindCaptureInspection(container) {
+            container.querySelectorAll('.capture-group').forEach(group => {
+                group.onclick = () => {
+                    clearTimeout(App.ui.captureInspectTimer);
+                    document.querySelectorAll('.capture-group.is-inspecting').forEach(item => item.classList.remove('is-inspecting'));
+                    group.classList.remove('is-inspecting'); void group.offsetWidth; group.classList.add('is-inspecting');
+                    App.ui.captureInspectTimer = setTimeout(() => group.classList.remove('is-inspecting'), 1400);
+                };
+            });
         },
         renderHand(state) {
             const me = state.players.find(player => player.id === App.localId); const hand = document.getElementById('local-hand'); if (!me) return hand.replaceChildren();
@@ -379,29 +415,65 @@
             return `<${tag} class="hana-card ${interactive ? 'playable' : ''} ${locationName === 'capture' ? 'capture-card' : ''}" ${attrs} data-month="${card.month}" data-category="${Utils.escape((card.categories || []).join(' '))}" style="--index:${index}"><div class="hana-face">${art}<span class="month-number">${card.month}</span><span class="motif-glyph">${GLYPHS[card.motif] || '花'}</span><span class="motif-name">${Utils.escape(card.name)}</span></div></${tag}>`;
         },
         renderActions(state) {
-            const panel = document.getElementById('action-panel'); const choice = document.getElementById('choice-actions'); const mine = state.turnPlayerId === App.localId && !App.isSpectator;
-            panel.classList.toggle('hidden', !mine || ['END_ROUND', 'MATCH_OVER'].includes(state.phase)); choice.classList.toggle('hidden', !(mine && state.phase === 'WAIT_KOI_KOI_CHOICE'));
+            const panel = document.getElementById('action-panel'); const koiModal = document.getElementById('koi-choice-modal'); const mine = state.turnPlayerId === App.localId && !App.isSpectator;
+            const choosingKoi = mine && state.phase === 'WAIT_KOI_KOI_CHOICE' && state.pending?.playerId === App.localId;
+            panel.classList.toggle('hidden', !mine || choosingKoi || ['END_ROUND', 'MATCH_OVER'].includes(state.phase)); koiModal.classList.toggle('hidden', !choosingKoi);
             if (mine && state.phase === 'WAIT_HAND_SELECTION') { document.getElementById('turn-prompt').textContent = 'Choose one card from your hand.'; document.getElementById('selection-feedback').textContent = 'A matching month captures; the deck then draws automatically.'; }
             if (mine && state.phase.includes('CAPTURE')) { document.getElementById('turn-prompt').textContent = 'Two cards match. Choose one to capture.'; document.getElementById('selection-feedback').textContent = 'The other card stays on the field.'; }
-            if (mine && state.phase === 'WAIT_KOI_KOI_CHOICE') { const evaluation = state.pending.evaluation; document.getElementById('turn-prompt').textContent = `${evaluation.yaku.map(item => item.name).join(' + ')} · ${evaluation.points} base`; document.getElementById('selection-feedback').textContent = 'Shobu banks it. Koi-Koi continues and puts these points at risk.'; }
+            if (choosingKoi) { const evaluation = state.pending.evaluation; document.getElementById('koi-choice-title').textContent = `${evaluation.points} point${evaluation.points === 1 ? '' : 's'} ready`; document.getElementById('koi-choice-summary').textContent = evaluation.yaku.map(item => item.name).join(' + '); }
+            UI.syncModalOverlay();
         },
         openCaptureChoice(state) {
             const modal = document.getElementById('capture-modal'); const field = document.getElementById('capture-options'); const cards = state.field.filter(card => state.pending.choiceIds.includes(card.id));
-            field.innerHTML = cards.map(card => UI.cardMarkup(card, true, 'choice')).join(''); field.querySelectorAll('button').forEach(button => button.onclick = () => Net.sendAction({ type: 'CHOOSE_CAPTURE', cardId: button.dataset.cardId }));
+            const played = state.pending.card;
+            field.innerHTML = cards.map(card => `<button type="button" class="capture-pair-option" data-card-id="${Utils.escape(card.id)}" aria-label="Capture ${Utils.escape(played.name)} with ${Utils.escape(card.name)}"><span class="pair-cards">${UI.cardMarkup(played, false, 'choice')}${UI.cardMarkup(card, false, 'choice')}</span><strong>TAKE THIS ${Utils.escape(card.monthName).toUpperCase()} PAIR</strong></button>`).join('');
+            field.querySelectorAll('.capture-pair-option').forEach(button => button.onclick = () => {
+                field.querySelectorAll('.capture-pair-option').forEach(option => { option.disabled = true; });
+                button.classList.add('selected-pair');
+                setTimeout(() => Net.sendAction({ type: 'CHOOSE_CAPTURE', cardId: button.dataset.cardId }), 220);
+            });
             document.getElementById('modal-overlay').classList.remove('hidden'); modal.classList.remove('hidden');
         },
-        closeCaptureChoice() { document.getElementById('capture-modal').classList.add('hidden'); if (document.getElementById('rules-modal').classList.contains('hidden') && document.getElementById('result-modal').classList.contains('hidden')) document.getElementById('modal-overlay').classList.add('hidden'); },
+        closeCaptureChoice() { document.getElementById('capture-modal').classList.add('hidden'); UI.syncModalOverlay(); },
         renderResult(state) {
-            const modal = document.getElementById('result-modal'); if (!['END_ROUND', 'MATCH_OVER'].includes(state.phase) || App.ui.dismissedRound === state.roundNumber) { modal.classList.add('hidden'); UI.syncModalOverlay(); return; }
-            const winner = state.players.find(player => player.id === (state.matchResult?.winnerId || state.roundResult?.winnerId)); const matchOver = state.phase === 'MATCH_OVER';
+            const modal = document.getElementById('result-modal'); const dock = document.getElementById('postgame-dock'); const complete = ['END_ROUND', 'MATCH_OVER'].includes(state.phase); const matchOver = state.phase === 'MATCH_OVER';
+            dock.classList.toggle('hidden', !complete); document.getElementById('postgame-dock-label').textContent = matchOver ? 'MATCH COMPLETE' : `MONTH ${state.roundNumber} COMPLETE`; document.getElementById('btn-postgame-next').classList.toggle('hidden', !App.isHost || matchOver);
+            if (!complete || App.ui.dismissedRound === state.roundNumber) { modal.classList.add('hidden'); UI.syncModalOverlay(); return; }
+            const winner = state.players.find(player => player.id === (state.matchResult?.winnerId || state.roundResult?.winnerId));
             document.getElementById('result-kicker').textContent = matchOver ? 'MATCH COMPLETE' : `MONTH ${state.roundNumber} COMPLETE`; document.getElementById('result-title').textContent = matchOver ? `${winner?.name || 'Winner'} wins` : state.roundResult.reason === 'oya-ken' ? 'Oya-ken' : 'Shobu';
             const yaku = state.roundResult?.yaku || []; document.getElementById('result-summary').innerHTML = `<div class="result-score"><strong>${Utils.escape(winner?.name || 'Oya')} · +${state.roundResult?.points || 0}</strong><p>${yaku.length ? yaku.map(item => Utils.escape(item.name || item.label)).join(' · ') : 'Dealer award / instant result'}</p></div>${state.players.map(player => `<div>${Utils.escape(player.name)} · <strong>${player.score} points</strong></div>`).join('')}`;
             document.getElementById('result-actions').querySelector('#btn-next-round')?.remove();
-            if (App.isHost && !matchOver) { const button = document.createElement('button'); button.id = 'btn-next-round'; button.className = 'primary'; button.textContent = 'DEAL NEXT MONTH'; button.onclick = () => { App.ui.dismissedRound = state.roundNumber; UI.hideResult(); Net.sendAction({ type: 'START_NEXT_ROUND' }); }; document.getElementById('result-actions').prepend(button); }
+            if (App.isHost && !matchOver) { const button = document.createElement('button'); button.id = 'btn-next-round'; button.className = 'primary'; button.textContent = 'DEAL NEXT MONTH'; button.onclick = UI.startNextMonth; document.getElementById('result-actions').prepend(button); }
             document.getElementById('modal-overlay').classList.remove('hidden'); modal.classList.remove('hidden');
         },
-        syncModalOverlay() { const open = ['rules-modal', 'capture-modal', 'result-modal'].some(id => !document.getElementById(id).classList.contains('hidden')); document.getElementById('modal-overlay').classList.toggle('hidden', !open); },
+        openOverview() {
+            const image = document.getElementById('hanafuda-overview'); if (!image.src) image.src = image.dataset.src;
+            UI.setOverviewZoom(1);
+            document.getElementById('overview-modal').classList.remove('hidden'); document.getElementById('modal-overlay').classList.remove('hidden');
+            setTimeout(() => document.getElementById('overview-viewport').focus(), 30);
+        },
+        closeOverview() { document.getElementById('overview-modal').classList.add('hidden'); UI.syncModalOverlay(); },
+        setOverviewZoom(value) {
+            const zoom = Math.max(0.75, Math.min(3, Math.round(Number(value || 1) * 4) / 4));
+            App.ui.overviewZoom = zoom;
+            document.getElementById('hanafuda-overview').style.width = `${zoom * 100}%`;
+            document.getElementById('overview-zoom').textContent = `${Math.round(zoom * 100)}%`;
+            document.getElementById('btn-overview-zoom-out').disabled = zoom <= 0.75;
+            document.getElementById('btn-overview-zoom-in').disabled = zoom >= 3;
+        },
+        openAppearance() {
+            const state = App.gameState || {}; const me = state.players?.find(player => player.id === App.localId);
+            let cards = [...(me?.hand || []), ...(me?.captured || []), ...(state.field || [])].filter(card => !card.hidden && card.asset).slice(0, 4);
+            if (cards.length < 3 && typeof HanafudaRules?.createDeck === 'function') cards = HanafudaRules.createDeck(() => 0.37).slice(0, 4);
+            document.getElementById('appearance-preview').innerHTML = `${cards.map(card => UI.cardMarkup(card)).join('')}<div class="hana-card card-back" role="img" aria-label="Selected card back"></div>`;
+            UI.setCardBack(document.documentElement.dataset.hanafudaBack); UI.setCardFront(document.documentElement.dataset.hanafudaFront);
+            document.getElementById('appearance-modal').classList.remove('hidden'); document.getElementById('modal-overlay').classList.remove('hidden');
+        },
+        closeAppearance() { document.getElementById('appearance-modal').classList.add('hidden'); UI.syncModalOverlay(); },
+        syncModalOverlay() { const open = ['rules-modal', 'capture-modal', 'koi-choice-modal', 'overview-modal', 'appearance-modal', 'result-modal'].some(id => !document.getElementById(id).classList.contains('hidden')); document.getElementById('modal-overlay').classList.toggle('hidden', !open); },
         hideResult() { if (App.gameState) App.ui.dismissedRound = App.gameState.roundNumber; document.getElementById('result-modal').classList.add('hidden'); UI.syncModalOverlay(); },
+        showResult() { if (!App.gameState || !['END_ROUND', 'MATCH_OVER'].includes(App.gameState.phase)) return; App.ui.dismissedRound = null; UI.renderResult(App.gameState); },
+        startNextMonth() { if (!App.isHost || App.gameState?.phase !== 'END_ROUND') return UI.showToast('Only the host can deal the next month.', 'danger'); App.ui.dismissedRound = App.gameState.roundNumber; UI.hideResult(); Net.sendAction({ type: 'START_NEXT_ROUND' }); },
         animateAction(state) {
             const action = state.lastAction; if (!action?.nonce || action.nonce === App.ui.lastActionNonce) return; App.ui.lastActionNonce = action.nonce;
             if (!['capture', 'field_play'].includes(action.type) || !action.card) return;
@@ -422,8 +494,14 @@
         renamePlayer(inputId) { const input = document.getElementById(inputId); const name = Utils.clean(input?.value, 24); if (!name) return UI.showToast('Enter a name first.', 'danger'); App.localName = name; localStorage.setItem('hanafuda_player_name', name); Net.sendAction({ type: 'RENAME', name }); },
         syncNameInputs(state) { const me = state?.players?.find(player => player.id === App.localId); if (!me) return; App.localName = me.name; ['room-player-name', 'game-player-name'].forEach(id => { const input = document.getElementById(id); if (input && document.activeElement !== input) input.value = me.name; }); },
         openRules() { document.getElementById('modal-overlay').classList.remove('hidden'); document.getElementById('rules-modal').classList.remove('hidden'); },
-        closeRules() { document.getElementById('rules-modal').classList.add('hidden'); if (document.getElementById('capture-modal').classList.contains('hidden') && document.getElementById('result-modal').classList.contains('hidden')) document.getElementById('modal-overlay').classList.add('hidden'); },
-        closeTopModal() { if (!document.getElementById('rules-modal').classList.contains('hidden')) UI.closeRules(); else if (!document.getElementById('result-modal').classList.contains('hidden')) UI.hideResult(); },
+        closeRules() { document.getElementById('rules-modal').classList.add('hidden'); UI.syncModalOverlay(); },
+        closeTopModal() {
+            if (!document.getElementById('appearance-modal').classList.contains('hidden')) UI.closeAppearance();
+            else if (!document.getElementById('overview-modal').classList.contains('hidden')) UI.closeOverview();
+            else if (!document.getElementById('rules-modal').classList.contains('hidden')) UI.closeRules();
+            else if (!document.getElementById('result-modal').classList.contains('hidden')) UI.hideResult();
+            else if (!document.getElementById('koi-choice-modal').classList.contains('hidden')) UI.showToast('Choose Shobu or Koi-Koi to continue.', 'danger');
+        },
         leaveGame() { App.leaving = true; Game.bots?.stop(); Object.values(App.connections).forEach(connection => { try { connection.close(); } catch (error) {} }); App.guestLink?.stop?.(); App.roomRelay?.close?.(); try { App.hostConnection?.close(); } catch (error) {} try { App.peer?.destroy(); } catch (error) {} const url = new URL(location.href); url.search = ''; url.hash = ''; location.replace(url.href); }
     };
 

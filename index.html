@@ -2674,6 +2674,23 @@ const UI = {
         return `<span style="color: var(--${colorClass || 'text-light'})">${c.value}${c.suit}(${v})</span>`;
     },
 
+    getDiscardPose: (card) => {
+        // A stable hash keeps the pile casually imperfect without making cards
+        // jump to a new angle whenever a state update rerenders the table.
+        const key = String(card?.id || `${card?.value || ''}-${card?.suit || ''}`);
+        let hash = 2166136261;
+        for (let i = 0; i < key.length; i++) {
+            hash ^= key.charCodeAt(i);
+            hash = Math.imul(hash, 16777619) >>> 0;
+        }
+        const rotations = [-2.4, -1.7, -1.1, -0.5, 0, 0.5, 1.1, 1.7, 2.4];
+        return {
+            rotation: rotations[hash % rotations.length],
+            x: ((hash >>> 8) % 5) - 2,
+            y: ((hash >>> 16) % 5) - 2
+        };
+    },
+
     getGridOffset: (index, layoutMode) => {
         if (layoutMode === 'line') return { c: index, r: 0 };
         const gridMap = [
@@ -3247,11 +3264,13 @@ const UI = {
         state.discardPile.forEach((c, i) => {
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
-            el.style.left = `${discardLeft}px`; el.style.top = `${deckTop}px`; el.style.zIndex = 100 + i;
+            const discardPose = UI.getDiscardPose(c);
+            el.style.left = `${discardLeft + discardPose.x}px`;
+            el.style.top = `${deckTop + discardPose.y}px`;
+            el.style.zIndex = 100 + i;
 
             el.style.setProperty('--local-scale', '1');
-            if (!el.dataset.rot) el.dataset.rot = (Math.random() * 20 - 10);
-            el.style.setProperty('--local-rot', `${el.dataset.rot}deg`);
+            el.style.setProperty('--local-rot', `${discardPose.rotation}deg`);
 
             el.querySelector('.card-inner').classList.remove('is-flipped');
             UI.setCardFace(el, c, true);

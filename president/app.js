@@ -792,6 +792,9 @@
             document.getElementById('btn-rules-done').onclick = UI.closeRules;
             document.getElementById('btn-view-table').onclick = UI.hideResults;
             document.getElementById('btn-leave-game').onclick = UI.leaveGame;
+            document.getElementById('btn-postgame-results').onclick = UI.showResults;
+            document.getElementById('btn-postgame-next').onclick = UI.startNextRound;
+            document.getElementById('btn-postgame-new-table').onclick = UI.leaveGame;
             document.getElementById('modal-overlay').onclick = () => {
                 if (!document.getElementById('rules-modal').classList.contains('hidden')) UI.closeRules();
             };
@@ -1379,13 +1382,17 @@
 
         renderResults(state) {
             const modal = document.getElementById('results-modal');
+            const dock = document.getElementById('postgame-dock');
             if (state.phase !== 'game_over') {
+                dock.classList.add('hidden');
                 modal.classList.add('hidden');
                 if (document.getElementById('rules-modal').classList.contains('hidden')) {
                     document.getElementById('modal-overlay').classList.add('hidden');
                 }
                 return;
             }
+            dock.classList.remove('hidden');
+            document.getElementById('btn-postgame-next').classList.toggle('hidden', !App.isHost);
             if (App.ui.dismissedResultsRound === state.roundNumber) return;
             const list = document.getElementById('results-list');
             list.innerHTML = state.result.order.map((playerId, index) => {
@@ -1405,11 +1412,7 @@
                 nextButton.id = 'btn-next-round';
                 nextButton.className = 'primary';
                 nextButton.textContent = 'DEAL NEXT ROUND';
-                nextButton.onclick = () => {
-                    App.ui.selectedIds.clear();
-                    App.ui.dismissedResultsRound = state.roundNumber;
-                    Net.sendAction({ type: 'START_NEXT_ROUND' });
-                };
+                nextButton.onclick = UI.startNextRound;
                 document.getElementById('results-actions').appendChild(nextButton);
             }
             document.getElementById('modal-overlay').classList.remove('hidden');
@@ -1422,6 +1425,20 @@
             if (document.getElementById('rules-modal').classList.contains('hidden')) {
                 document.getElementById('modal-overlay').classList.add('hidden');
             }
+        },
+
+        showResults() {
+            if (App.gameState?.phase !== 'game_over') return;
+            App.ui.dismissedResultsRound = null;
+            UI.renderResults(App.gameState);
+        },
+
+        startNextRound() {
+            if (!App.isHost || App.gameState?.phase !== 'game_over') return UI.showToast('Only the host can deal the next round.', 'danger');
+            App.ui.selectedIds.clear();
+            App.ui.dismissedResultsRound = App.gameState.roundNumber;
+            UI.hideResults();
+            Net.sendAction({ type: 'START_NEXT_ROUND' });
         },
 
         leaveGame() {

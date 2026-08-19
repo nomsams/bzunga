@@ -35,6 +35,7 @@ for (const gameFile of [
     assert(offlineSource.includes(`'${gameFile}'`), `Offline manifest is missing ${gameFile}`);
 }
 assert(offlineSource.includes('CardTheme.allFaceUrls'), 'Offline download must include every illustrated face');
+assert(offlineSource.includes("'./assets/hanafuda-svg/Hanafuda_overview.svg'"), 'Offline download must include the zoomable Hanafuda overview');
 assert(offlineSource.includes("getBackUrl(siteRoot.href, 'svg-blue')"), 'Offline download must include the blue back');
 assert(offlineSource.includes("getBackUrl(siteRoot.href, 'svg-red')"), 'Offline download must include the red back');
 assert(offlineSource.includes('mqtt@5.14.1'), 'Offline assets must include the pinned relay client for later online joins');

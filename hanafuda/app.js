@@ -83,6 +83,7 @@
             Game.engine = new HanafudaGameEngine({ makeId: Utils.id, onEvent: (event, state) => Game.bots?.handleEvent(event, state), onChange: () => Net.broadcast() });
             Game.bots = new HanafudaBotController(Game.engine); Game.bots.start();
             Game.engine.addPlayer({ id: peerId, name: App.localName, sessionToken: App.sessionToken, isHost: true, connected: true });
+            Game.engine.setTableMode(peerId, document.getElementById('create-table-mode').value);
             document.getElementById('lobby-start').classList.add('hidden'); document.getElementById('lobby-room').classList.remove('hidden'); document.getElementById('host-controls').classList.remove('hidden');
             document.getElementById('room-id-display').textContent = offline ? 'OFFLINE · BOTS ONLY' : peerId;
             document.getElementById('qr-container').classList.toggle('hidden', offline);
@@ -134,7 +135,9 @@
             App.isHost = true; App.offlineHost = false; App.hostId = hostId; App.connections = {}; App.connectionRoles = {}; App.spectators = {}; App.allowSpectators = backup.allowSpectators !== false; App.lastBackupSignature = '';
             Game.engine = new HanafudaGameEngine({ makeId: Utils.id, onEvent: (event, state) => Game.bots?.handleEvent(event, state), onChange: () => Net.broadcast() });
             Game.engine.state = RoomTools.cloneState(backup.state);
-            const oldHost = Game.engine.getPlayer(backup.hostPlayerId); if (oldHost?.connected !== false) Game.engine.disconnectPlayer(oldHost.id);
+            for (const player of Game.engine.state.players) {
+                if (!player.isBot && player.id !== stablePlayerId && player.connected !== false) Game.engine.disconnectPlayer(player.id);
+            }
             Game.engine.setHost(stablePlayerId);
             Game.bots = new HanafudaBotController(Game.engine); Game.bots.start();
             document.getElementById('host-controls').classList.remove('hidden'); document.getElementById('client-waiting').classList.add('hidden'); document.getElementById('allow-spectators').checked = App.allowSpectators; document.getElementById('room-id-display').textContent = hostId; document.getElementById('qr-container').classList.remove('hidden'); UI.renderQr(hostId);
@@ -209,7 +212,8 @@
             const returning = token.length >= 6 ? state.players.find(player => player.sessionToken === token && !player.connected && !player.isBot) : null;
             if (returning) { App.connections[connection.peer] = connection; App.connectionRoles[connection.peer] = { role: 'player', playerId: returning.id }; Game.engine.reconnectPlayer(returning.id, returning.id); Net.sendState(connection, connection.peer); Net.broadcast(); return; }
             if (state.phase !== 'lobby') return connection.send({ type: 'JOIN_REJECTED', reason: 'This match is already in progress. Join as a spectator instead.' });
-            if (state.players.length >= 2) return connection.send({ type: 'JOIN_REJECTED', reason: 'Koi-Koi has exactly two player seats.' });
+            const mode = HanafudaRules.tableMode(state.settings?.mode);
+            if (state.players.length >= mode.playerCount) return connection.send({ type: 'JOIN_REJECTED', reason: `${mode.name} is full (${mode.playerCount} seats). Join as a spectator or ask the host to choose a larger table.` });
             let name = Utils.clean(data.name, 24, 'Player');
             if (state.players.some(player => player.name.toLowerCase() === name.toLowerCase())) name = `${name.slice(0, 22)} 2`;
             App.connections[connection.peer] = connection; App.connectionRoles[connection.peer] = { role: 'player', playerId: connection.peer };
@@ -273,14 +277,16 @@
             const savedBack = localStorage.getItem('hanafuda_card_back') || 'hana-red'; document.getElementById('card-back-select').value = savedBack; UI.setCardBack(savedBack);
             const savedFront = localStorage.getItem('hanafuda_card_front') || 'original'; document.getElementById('card-front-select').value = savedFront; UI.setCardFront(savedFront);
             const savedArt = localStorage.getItem('hanafuda_card_art') || 'scanned-svg'; document.getElementById('card-art-select').value = savedArt; UI.setCardArt(savedArt);
+            const savedMode = HanafudaRules.tableMode(localStorage.getItem('hanafuda_table_mode')).id; document.getElementById('create-table-mode').value = savedMode; document.getElementById('table-mode').value = savedMode;
             const savedName = Utils.clean(localStorage.getItem('hanafuda_player_name'), 24); if (savedName) document.getElementById('player-name').value = savedName;
             if (joinId) { const input = document.getElementById('join-id'); input.value = joinId.replace(/[^a-zA-Z0-9_-]/g, ''); input.dataset.direct = '1'; }
-            document.getElementById('btn-host').onclick = event => { event.currentTarget.disabled = true; event.currentTarget.textContent = 'CONNECTING…'; App.isHost = true; App.requestedRoomName = RoomTools.cleanRoomName(document.getElementById('room-name').value, `${document.getElementById('player-name').value || 'Koi'} ${Utils.id().slice(0, 4)}`); Net.initialize(document.getElementById('player-name').value); };
+            document.getElementById('btn-host').onclick = event => { event.currentTarget.disabled = true; event.currentTarget.textContent = 'CONNECTING…'; App.isHost = true; localStorage.setItem('hanafuda_table_mode', document.getElementById('create-table-mode').value); App.requestedRoomName = RoomTools.cleanRoomName(document.getElementById('room-name').value, `${document.getElementById('player-name').value || 'Koi'} ${Utils.id().slice(0, 4)}`); Net.initialize(document.getElementById('player-name').value); };
             document.getElementById('btn-join').onclick = event => UI.join(event, false);
             document.getElementById('btn-spectate').onclick = event => UI.join(event, true);
             document.getElementById('join-id').oninput = event => delete event.currentTarget.dataset.direct;
             document.getElementById('allow-spectators').onchange = event => { App.allowSpectators = event.currentTarget.checked; Net.broadcast(); };
             document.getElementById('btn-add-bot').onclick = UI.addBot; document.getElementById('btn-start-game').onclick = UI.startGame;
+            document.getElementById('table-mode').onchange = event => UI.changeTableMode(event.currentTarget.value);
             document.getElementById('viewing-yaku').onchange = event => { document.getElementById('busted-viewing').disabled = !event.currentTarget.checked; if (!event.currentTarget.checked) document.getElementById('busted-viewing').checked = false; };
             document.getElementById('card-back-select').onchange = event => UI.saveCardBack(event.currentTarget.value);
             document.getElementById('card-front-select').onchange = event => UI.saveCardFront(event.currentTarget.value);
@@ -344,15 +350,23 @@
         showRoomCollision(name) { UI.showToast('That room name is already in use.', 'danger'); RoomTools.showSuggestions(document.getElementById('room-name-suggestions'), name, choice => { document.getElementById('room-name').value = choice; document.getElementById('room-name-suggestions').classList.add('hidden'); document.getElementById('btn-host').click(); }); },
         renderQr(peerId) { const container = document.getElementById('qr-container'); RoomTools.configureInvite('hanafuda', peerId, { qrContainer: container, copyButton: document.getElementById('btn-copy-invite'), size: 220, onCopy: copied => UI.showToast(copied ? 'Invite link copied.' : 'Could not copy the invite link.', copied ? 'success' : 'danger') }); },
 
+        changeTableMode(modeId) {
+            if (!App.isHost || !Game.engine || Game.engine.state.phase !== 'lobby') return;
+            const result = Net.sendAction({ type: 'SET_TABLE_MODE', mode: modeId });
+            if (result?.ok) localStorage.setItem('hanafuda_table_mode', modeId);
+            if (result && !result.ok) UI.renderLobby(Game.engine.getViewState(App.localId));
+        },
+
         addBot() {
             if (!App.isHost || !Game.engine || Game.engine.state.phase !== 'lobby') return;
-            if (Game.engine.state.players.length >= 2) return UI.showToast('Koi-Koi has exactly two seats.', 'danger');
+            const mode = HanafudaRules.tableMode(Game.engine.state.settings?.mode);
+            if (Game.engine.state.players.length >= mode.playerCount) return UI.showToast(`${mode.name} is full.`, 'danger');
             const difficulty = Number(document.getElementById('bot-difficulty').value) || 1;
             Game.engine.addPlayer({ id: `bot-${Utils.id()}`, name: BOT_NAMES[difficulty], isBot: true, botDifficulty: difficulty, connected: true });
         },
         startGame() {
             if (!App.isHost || !Game.engine) return;
-            const result = Game.engine.startGame({ rounds: Number(document.getElementById('round-count').value), viewingYaku: document.getElementById('viewing-yaku').checked, bustedViewing: document.getElementById('busted-viewing').checked, cardBack: document.getElementById('card-back-select').value, cardFront: document.getElementById('card-front-select').value, cardArt: document.getElementById('card-art-select').value });
+            const result = Game.engine.startGame({ mode: document.getElementById('table-mode').value, rounds: Number(document.getElementById('round-count').value), viewingYaku: document.getElementById('viewing-yaku').checked, bustedViewing: document.getElementById('busted-viewing').checked, cardBack: document.getElementById('card-back-select').value, cardFront: document.getElementById('card-front-select').value, cardArt: document.getElementById('card-art-select').value });
             if (!result.ok) UI.showToast(result.reason, 'danger');
         },
 
@@ -364,30 +378,36 @@
             UI.renderLogs(state);
             if (state.phase === 'lobby') return UI.renderLobby(state);
             document.getElementById('lobby').classList.add('hidden'); document.getElementById('game-view').classList.remove('hidden');
-            UI.renderSpectator(state); UI.renderStatus(state); UI.renderOpponent(state); UI.renderField(state); UI.renderCaptures(state); UI.renderHand(state); UI.renderActions(state); UI.renderResult(state); UI.animateAction(state);
+            UI.renderSpectator(state); UI.renderStatus(state); UI.renderOpponents(state); UI.renderField(state); UI.renderCaptures(state); UI.renderHand(state); UI.renderActions(state); UI.renderResult(state); UI.animateAction(state);
         },
         renderLobby(state) {
-            const list = document.getElementById('lobby-players'); list.innerHTML = state.players.map(player => `<div class="lobby-player"><div><strong>${Utils.escape(player.name)}</strong><span>${player.isHost ? 'Host · Oya candidate' : player.isBot ? `Bot · Level ${player.botDifficulty}` : player.connected === false ? 'Player · Offline' : 'Player'}</span></div>${App.isHost && player.isBot ? `<button class="secondary remove-bot" data-id="${Utils.escape(player.id)}">REMOVE</button>` : ''}${App.isHost && !player.isBot && player.id !== App.localId ? `<button class="kick-player" data-id="${Utils.escape(player.id)}">${player.connected === false ? 'REMOVE' : 'KICK'}</button>` : ''}</div>`).join('');
+            const mode = HanafudaRules.tableMode(state.settings?.mode); const seatsOpen = Math.max(0, mode.playerCount - state.players.length);
+            const modeSummary = document.getElementById('table-mode-summary'); modeSummary.innerHTML = `<div><span>TABLE MODE</span><strong>${Utils.escape(mode.name.toUpperCase())}${mode.variant ? ' · VARIANT' : ' · CLASSIC'}</strong></div><p>${Utils.escape(mode.description)} · ${state.players.length} of ${mode.playerCount} seats filled${seatsOpen ? ` · ${seatsOpen} open` : ' · READY'}</p>`;
+            const modeSelect = document.getElementById('table-mode'); modeSelect.value = mode.id; document.getElementById('table-mode-help').textContent = mode.description;
+            const addBot = document.getElementById('btn-add-bot'); addBot.disabled = state.players.length >= mode.playerCount; addBot.textContent = addBot.disabled ? 'TABLE FULL' : '+ ADD BOT';
+            const list = document.getElementById('lobby-players'); list.innerHTML = state.players.map((player, index) => `<div class="lobby-player"><div><strong><span class="seat-number">${index + 1}</span>${Utils.escape(player.name)}</strong><span>${player.isHost ? 'Host · Oya candidate' : player.isBot ? `Bot · Level ${player.botDifficulty}` : player.connected === false ? 'Player · Offline' : 'Player'} · Seat ${index + 1}</span></div>${App.isHost && player.isBot ? `<button class="secondary remove-bot" data-id="${Utils.escape(player.id)}">REMOVE</button>` : ''}${App.isHost && !player.isBot && player.id !== App.localId ? `<button class="kick-player" data-id="${Utils.escape(player.id)}">${player.connected === false ? 'REMOVE' : 'KICK'}</button>` : ''}</div>`).join('');
             list.querySelectorAll('.remove-bot').forEach(button => button.onclick = () => Game.engine?.removePlayer(button.dataset.id));
             list.querySelectorAll('.kick-player').forEach(button => button.onclick = () => Net.kickPlayer(button.dataset.id)); UI.syncNameInputs(state);
         },
         renderSpectator(state) { const controls = document.getElementById('spectator-controls'); controls.classList.toggle('hidden', !App.isSpectator); if (App.isSpectator) { const player = state.players.find(item => item.id === state.viewerId); document.getElementById('spectator-label').textContent = `GOD VIEW · ${player?.name || 'TABLE'}`; } },
         renderStatus(state) {
-            const active = state.players.find(player => player.id === state.turnPlayerId); const me = state.players.find(player => player.id === App.localId); const opponent = state.players.find(player => player.id !== me?.id);
-            document.getElementById('month-display').textContent = `MONTH ${state.roundNumber} / ${state.settings.rounds}`;
+            const active = state.players.find(player => player.id === state.turnPlayerId); const me = state.players.find(player => player.id === App.localId); const mode = HanafudaRules.tableMode(state.settings?.mode);
+            document.getElementById('month-display').textContent = `${mode.shortName} · MONTH ${state.roundNumber} / ${state.settings.rounds}`;
             let status = active ? `${active.name}'s turn` : 'Round complete';
             if (state.phase === 'WAIT_HAND_SELECTION' && active?.id === App.localId && !App.isSpectator) status = 'Your turn · choose a card from your hand';
             if (state.phase.includes('CAPTURE') && state.pending?.playerId === App.localId && !App.isSpectator) status = 'Choose which matching field card to capture';
-            if (state.phase === 'WAIT_KOI_KOI_CHOICE') status = state.pending?.playerId === App.localId ? 'Yaku! Koi-Koi or Shobu?' : `${active?.name || 'Opponent'} is weighing the risk…`;
+            if (state.phase === 'WAIT_KOI_KOI_CHOICE') status = state.pending?.playerId === App.localId ? 'Yaku! Koi-Koi or Shobu?' : `${active?.name || 'Another player'} is weighing the risk…`;
             document.getElementById('status-text').textContent = status;
             const thinkers = state.players.filter(player => state.thinkingBots.includes(player.id)).map(player => `${player.name} is thinking…`); const typers = state.players.filter(player => state.typingBots.includes(player.id)).map(player => `${player.name} is typing…`);
             document.getElementById('activity-text').textContent = [...thinkers, ...typers].join(' · ');
-            document.getElementById('scoreboard').innerHTML = [me, opponent].filter(Boolean).map(player => `<span class="score-pill ${player.id === state.dealerId ? 'active' : ''}">${Utils.escape(player.name)} · ${player.score} ${player.id === state.dealerId ? '· OYA' : ''}</span>`).join('');
+            const ordered = me ? [me, ...state.players.filter(player => player.id !== me.id)] : state.players;
+            document.getElementById('scoreboard').innerHTML = ordered.map(player => `<span class="score-pill ${player.id === state.dealerId ? 'active' : ''} ${player.id === state.turnPlayerId ? 'current-turn' : ''}">${Utils.escape(player.name)} · ${player.score}${player.id === state.dealerId ? ' · OYA' : ''}</span>`).join('');
         },
-        renderOpponent(state) {
-            const me = state.players.find(player => player.id === App.localId); const opponent = state.players.find(player => player.id !== me?.id); if (!opponent) return;
-            const meta = document.getElementById('opponent-name'); meta.textContent = opponent.name; meta.classList.toggle('turn-dot', opponent.id === state.turnPlayerId); document.getElementById('opponent-score').textContent = `${opponent.score} pts`;
-            document.getElementById('opponent-hand').innerHTML = opponent.hand.map(card => card.hidden ? '<div class="hana-card card-back"></div>' : UI.cardMarkup(card, false)).join('');
+        renderOpponents(state) {
+            const me = state.players.find(player => player.id === App.localId); const opponents = state.players.filter(player => player.id !== me?.id); const seats = document.getElementById('opponent-seats');
+            seats.dataset.count = String(opponents.length);
+            seats.innerHTML = opponents.map(player => `<article class="opponent-seat ${player.id === state.turnPlayerId ? 'active-turn' : ''} ${player.connected === false ? 'offline' : ''}"><div class="player-meta"><strong>${Utils.escape(player.name)}</strong><span>${player.score} pts${player.id === state.dealerId ? ' · OYA' : ''}${player.connected === false ? ' · AWAY' : ''}</span></div><div class="mini-hand">${player.hand.map(card => card.hidden ? '<div class="hana-card card-back"></div>' : UI.cardMarkup(card, false)).join('')}</div><div class="capture-groups">${UI.captureGroups(player.captured || [])}</div></article>`).join('');
+            UI.bindCaptureInspection(seats);
         },
         renderField(state) {
             const groups = HanafudaRules.byMonth(state.field); const choiceIds = new Set(state.pending?.playerId === App.localId ? state.pending.choiceIds || [] : []);
@@ -397,10 +417,8 @@
             else UI.closeCaptureChoice();
         },
         renderCaptures(state) {
-            const me = state.players.find(player => player.id === App.localId); const opponent = state.players.find(player => player.id !== me?.id);
-            const local = document.getElementById('local-captures'); const remote = document.getElementById('opponent-captures');
-            local.innerHTML = UI.captureGroups(me?.captured || []); remote.innerHTML = UI.captureGroups(opponent?.captured || []);
-            UI.bindCaptureInspection(local); UI.bindCaptureInspection(remote);
+            const me = state.players.find(player => player.id === App.localId); const local = document.getElementById('local-captures');
+            local.innerHTML = UI.captureGroups(me?.captured || []); UI.bindCaptureInspection(local);
         },
         captureGroups(cards) {
             const groups = ['Bright', 'Animal', 'Ribbon', 'Chaff'].map(category => ({ category, cards: cards.filter(card => card.categories?.includes(category)) })).filter(group => group.cards.length);

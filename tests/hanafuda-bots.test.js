@@ -15,6 +15,19 @@ state.phase = 'WAIT_KOI_KOI_CHOICE';
 state.pending = { playerId: 'bot', evaluation: { yaku: [{ id: 'goko', points: 10 }], points: 10 } };
 assert.strictEqual(HanafudaBotBrain.chooseAction(bot, state, () => 0.5).type, 'SHOBU', 'Baba should bank a high-value Yaku instead of gambling blindly');
 
+const secondSecretHand = Array.from({ length: 7 }, (_, index) => new Proxy({ id: `secret-two-${index}` }, { get(target, key) { if (['month', 'name', 'categories', 'motif'].includes(key)) throw new Error('Bot inspected a second opponent hidden card'); return target[key]; } }));
+const trioState = {
+    ...state,
+    phase: 'WAIT_HAND_SELECTION',
+    pending: null,
+    settings: { rounds: 6, mode: 'trio' },
+    players: [bot, state.players[1], { id: 'human-two', name: 'Human Two', hand: secondSecretHand, captured: deck.slice(33, 38), score: 4 }]
+};
+const trioContext = HanafudaBotBrain.publicContext(bot, trioState);
+assert.strictEqual(trioContext.opponents.length, 2, 'Bots must evaluate every rival at a Trio table');
+assert.strictEqual(trioContext.opponentHandCount, 7, 'Bots should react to the rival closest to an empty hand');
+assert.doesNotThrow(() => HanafudaBotBrain.chooseAction(bot, trioState, () => 0.41), 'Multi-opponent strategy must use public counts and captures only');
+
 assert.strictEqual(HanafudaDialogue.classifyChatIntent('dude'), 'greeting');
 assert.strictEqual(HanafudaDialogue.classifyChatIntent('Bro you suck'), 'insult');
 assert.strictEqual(HanafudaDialogue.classifyChatIntent('your mom is cardboard'), 'family');

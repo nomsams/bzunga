@@ -222,17 +222,30 @@
 
     class HanafudaBotBrain {
         static publicContext(bot, state) {
-            const opponent = state.players.find(player => player.id !== bot.id);
+            const opponents = state.players.filter(player => player.id !== bot.id).map(player => ({
+                id: player.id,
+                captured: copyField(player.captured || []),
+                handCount: player.hand?.length || 0,
+                score: player.score || 0,
+                koiKoiCalls: Number(state.koiKoi?.[player.id]) || 0
+            }));
+            const primaryOpponent = opponents.slice().sort((left, right) => {
+                const leftYaku = Rules.evaluateYaku(left.captured, state.settings).points;
+                const rightYaku = Rules.evaluateYaku(right.captured, state.settings).points;
+                return rightYaku - leftYaku || left.handCount - right.handCount || right.score - left.score;
+            })[0] || { captured: [], handCount: 0, score: 0 };
             return {
                 field: copyField(state.field || []),
                 ownHand: copyField(bot.hand || []),
                 ownCaptured: copyField(bot.captured || []),
-                opponentCaptured: copyField(opponent?.captured || []),
-                opponentHandCount: opponent?.hand?.length || 0,
+                opponents,
+                allOpponentCaptured: opponents.flatMap(opponent => opponent.captured),
+                opponentCaptured: primaryOpponent.captured,
+                opponentHandCount: opponents.length ? Math.min(...opponents.map(opponent => opponent.handCount)) : 0,
                 deckCount: state.deck?.length || state.deckCount || 0,
                 settings: { ...state.settings },
                 ownScore: bot.score || 0,
-                opponentScore: opponent?.score || 0,
+                opponentScore: opponents.length ? Math.max(...opponents.map(opponent => opponent.score)) : 0,
                 roundNumber: state.roundNumber || 1
             };
         }
@@ -281,13 +294,14 @@
             }
 
             if (bestImmediate === -Infinity) { bestImmediate = 0; bestField = [...context.field, card]; }
-            const opponentEval = Rules.evaluateYaku(context.opponentCaptured, context.settings);
+            const opponentEvaluations = context.opponents.map(opponent => Rules.evaluateYaku(opponent.captured, context.settings));
+            const opponentEval = opponentEvaluations.sort((left, right) => right.points - left.points)[0] || { points: 0 };
             const exposedCost = matches.length ? 0 : Rules.cardPriority(card) * (difficulty >= 4 ? 2.3 : 1.45);
             const monthOnField = bestField.filter(item => item.month === card.month).length;
             const stackPressure = monthOnField === 3 ? -18 : monthOnField === 2 ? -6 : 0;
             const ownMonthOptions = context.ownHand.filter(item => item.id !== card.id && item.month === card.month).length;
             const preservePair = ownMonthOptions * (difficulty >= 4 ? 3.8 : 2);
-            const opponentThreat = HanafudaBotBrain.yakuThreat(context.opponentCaptured, context.field, context.settings)
+            const opponentThreat = Math.max(0, ...context.opponents.map(opponent => HanafudaBotBrain.yakuThreat(opponent.captured, context.field, context.settings)))
                 * (difficulty >= 4 ? 1.25 : 0.65);
 
             let score = bestImmediate - exposedCost + stackPressure - preservePair - opponentThreat;
@@ -299,7 +313,7 @@
 
         static sampleFuture(card, context, difficulty, random) {
             const seen = new Set([
-                ...context.field, ...context.ownHand, ...context.ownCaptured, ...context.opponentCaptured
+                ...context.field, ...context.ownHand, ...context.ownCaptured, ...context.allOpponentCaptured
             ].map(item => item.id));
             const unknown = canonicalDeck().filter(item => !seen.has(item.id));
             if (!unknown.length) return 0;
@@ -350,7 +364,7 @@
             const evaluation = state.pending?.evaluation || Rules.evaluateYaku(bot.captured, state.settings);
             if (difficulty === 1) return { type: random() < 0.46 ? 'KOI_KOI' : 'SHOBU' };
             const context = HanafudaBotBrain.publicContext(bot, state);
-            const opponentThreat = HanafudaBotBrain.yakuThreat(context.opponentCaptured, context.field, context.settings);
+            const opponentThreat = Math.max(0, ...context.opponents.map(opponent => HanafudaBotBrain.yakuThreat(opponent.captured, context.field, context.settings)));
             const turnsLeft = bot.hand.length;
             const behind = context.ownScore < context.opponentScore;
             let continueUtility = turnsLeft * 1.4 + (behind ? 5 : -1) - evaluation.points * 1.8 - opponentThreat * 1.25;

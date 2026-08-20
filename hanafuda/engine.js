@@ -22,7 +22,7 @@
 
         createInitialState() {
             return {
-                phase: 'lobby', settings: { rounds: 6, viewingYaku: false, bustedViewing: false, cardBack: 'hana-red', cardFront: 'original', cardArt: 'scanned-svg' },
+                phase: 'lobby', settings: { mode: 'duel', rounds: 6, viewingYaku: false, bustedViewing: false, cardBack: 'hana-red', cardFront: 'original', cardArt: 'scanned-svg' },
                 players: [], dealerId: null, turnPlayerId: null, roundNumber: 0, deck: [], field: [],
                 pending: null, currentTurn: null, koiKoi: {}, roundBaselines: {}, roundResult: null,
                 matchResult: null, logs: [], nextLogId: 0, lastAction: null, redeals: 0,
@@ -31,7 +31,8 @@
         }
 
         addPlayer(player) {
-            if (this.state.phase !== 'lobby' || !player?.id || this.state.players.length >= 2) return false;
+            const mode = Rules.tableMode(this.state.settings.mode);
+            if (this.state.phase !== 'lobby' || !player?.id || this.state.players.length >= mode.playerCount) return false;
             if (this.state.players.some(existing => existing.id === player.id)) return false;
             this.state.players.push({
                 id: player.id, name: cleanText(player.name, 24, 'Player'), sessionToken: cleanText(player.sessionToken, 80),
@@ -41,6 +42,23 @@
             });
             this._emit({ type: 'player_joined', playerId: player.id });
             return true;
+        }
+
+        setTableMode(playerId, modeId) {
+            const host = this.getPlayer(playerId);
+            const mode = Rules.tableMode(modeId);
+            if (this.state.phase !== 'lobby') return { ok: false, reason: 'Table mode cannot change after the deal.' };
+            if (!host?.isHost) return { ok: false, reason: 'Only the host can change the table mode.' };
+            if (!Rules.TABLE_MODES[modeId]) return { ok: false, reason: 'Choose a valid Hanafuda table mode.' };
+            if (this.state.players.length > mode.playerCount) {
+                return { ok: false, reason: `${mode.name} has ${mode.playerCount} seats. Remove ${this.state.players.length - mode.playerCount} player${this.state.players.length - mode.playerCount === 1 ? '' : 's'} first.` };
+            }
+            if (this.state.settings.mode === mode.id) return { ok: true, mode: mode.id };
+            this.state.settings.mode = mode.id;
+            this.state.lastAction = { type: 'mode_changed', nonce: this.makeId(), playerId, mode: mode.id, time: this.now() };
+            this._log(`${host.name} changed the table to ${mode.name} (${mode.playerCount} players).`, 'info');
+            this._emit({ type: 'mode_changed', playerId, mode: mode.id });
+            return { ok: true, mode: mode.id };
         }
 
         removePlayer(playerId) {
@@ -54,10 +72,16 @@
 
         startGame(settings = {}) {
             if (this.state.phase !== 'lobby') return { ok: false, reason: 'The match has already started.' };
+            const mode = Rules.tableMode(settings.mode || this.state.settings.mode);
             const active = this.state.players.filter(player => player.isBot || player.connected !== false);
-            if (active.length !== 2) return { ok: false, reason: 'Koi-Koi requires exactly two players.' };
+            if (active.length !== mode.playerCount) {
+                const difference = Math.abs(mode.playerCount - active.length);
+                const instruction = active.length < mode.playerCount ? `Add ${difference} more` : `Remove ${difference}`;
+                return { ok: false, reason: `${mode.name} requires exactly ${mode.playerCount} active players. ${instruction} player${difference === 1 ? '' : 's'} or choose another mode.` };
+            }
             this.state.players = active;
             this.state.settings = {
+                mode: mode.id,
                 rounds: [3, 6, 12].includes(Number(settings.rounds)) ? Number(settings.rounds) : 6,
                 viewingYaku: Boolean(settings.viewingYaku),
                 bustedViewing: Boolean(settings.viewingYaku && settings.bustedViewing),
@@ -82,15 +106,18 @@
             let attempts = 0;
             while (attempts++ < 200) {
                 const deck = Rules.createDeck(this.random);
+                const mode = Rules.tableMode(this.state.settings.mode);
                 for (const player of this.state.players) {
                     player.hand = [];
                     player.captured = [];
                 }
                 const field = [];
-                for (let index = 0; index < 8; index++) {
+                for (let index = 0; index < mode.handSize; index++) {
                     for (const player of this.state.players) {
                         const card = deck.pop(); card.ownerId = player.id; player.hand.push(card);
                     }
+                }
+                for (let index = 0; index < mode.fieldSize; index++) {
                     const fieldCard = deck.pop(); fieldCard.ownerId = null; field.push(fieldCard);
                 }
                 if (Object.values(Rules.byMonth(field)).some(group => group.length === 4)) {
@@ -114,7 +141,8 @@
             }
             this.state.phase = 'WAIT_HAND_SELECTION';
             this.state.turnPlayerId = this.state.dealerId;
-            this._log(`Month ${this.state.roundNumber} begins. ${this.getPlayer(this.state.dealerId).name} is Oya and plays first.`, 'info');
+            const mode = Rules.tableMode(this.state.settings.mode);
+            this._log(`Month ${this.state.roundNumber} begins in ${mode.name}. ${this.getPlayer(this.state.dealerId).name} is Oya and plays first.`, 'info');
             this._emit({ type: 'round_started', roundNumber: this.state.roundNumber, playerId: this.state.dealerId });
         }
 
@@ -123,6 +151,7 @@
             if (!player || !action?.type) return { ok: false, reason: 'Invalid action.' };
             if (action.type === 'CHAT') return this._handleChat(player, action.message);
             if (action.type === 'RENAME') return this.renamePlayer(playerId, action.name);
+            if (action.type === 'SET_TABLE_MODE') return this.setTableMode(playerId, action.mode);
             if (action.type === 'PLAY_HAND_CARD') return this.playHandCard(playerId, action.cardId);
             if (action.type === 'CHOOSE_CAPTURE') return this.chooseCapture(playerId, action.cardId);
             if (action.type === 'KOI_KOI') return this.resolveKoiChoice(playerId, true);
@@ -256,10 +285,10 @@
                 this._switchTurn();
                 return { ok: true };
             }
-            const opponent = this.state.players.find(item => item.id !== playerId);
-            const scoring = Rules.scoreWin(evaluation.points, Boolean(this.state.koiKoi[opponent?.id]));
+            const riskyOpponents = this.state.players.filter(item => item.id !== playerId && Boolean(this.state.koiKoi[item.id]));
+            const scoring = Rules.scoreWin(evaluation.points, riskyOpponents.length > 0);
             this._log(`${player.name} calls Shobu for ${scoring.total} point${scoring.total === 1 ? '' : 's'}.`, 'result');
-            this._endRound(playerId, scoring.total, 'shobu', { scoring, yaku: evaluation.yaku });
+            this._endRound(playerId, scoring.total, 'shobu', { scoring, yaku: evaluation.yaku, koiKoiPenaltyPlayerIds: riskyOpponents.map(item => item.id) });
             return { ok: true };
         }
 

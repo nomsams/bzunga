@@ -72,6 +72,26 @@
         Chaff: { name: 'カス札', reading: 'Kasu-fuda' }
     };
 
+    const TABLE_MODES = Object.freeze({
+        duel: Object.freeze({
+            id: 'duel', name: 'Koi-Koi Duel', shortName: 'DUEL', playerCount: 2,
+            handSize: 8, fieldSize: 8, variant: false,
+            description: 'Classic head-to-head Koi-Koi. Eight cards each and eight cards on the field.'
+        }),
+        trio: Object.freeze({
+            id: 'trio', name: 'Koi-Koi Trio', shortName: 'TRIO', playerCount: 3,
+            handSize: 7, fieldSize: 6, variant: true,
+            description: 'Three-player Koi-Koi variant using the traditional Hana-Awase seven-card, six-field deal.'
+        }),
+        party: Object.freeze({
+            id: 'party', name: 'Koi-Koi Party', shortName: 'PARTY', playerCount: 4,
+            handSize: 5, fieldSize: 8, variant: true,
+            description: 'Fast four-player Koi-Koi variant with five cards each and eight cards on the field.'
+        })
+    });
+
+    const tableMode = modeId => TABLE_MODES[modeId] || TABLE_MODES.duel;
+
     const YAKU_GUIDE = [
         { id: 'kasu', name: 'Kasu · Chaff', japanese: 'カス', points: '1 point at 10 · +1 each extra', description: 'Collect 10 Chaff cards. The September Sake Cup also counts as Chaff.', cardIds: ['h-1-2', 'h-2-2', 'h-3-2', 'h-4-2'] },
         { id: 'tanzaku', name: 'Tanzaku · Ribbons', japanese: '短冊', points: '1 point at 5 · +1 each extra', description: 'Collect any 5 Ribbon cards.', cardIds: ['h-1-1', 'h-2-1', 'h-3-1', 'h-4-1', 'h-5-1'] },
@@ -242,6 +262,8 @@
         MANTIA_ASSETS,
         JAPANESE_CARD_NAMES,
         JAPANESE_TYPES,
+        TABLE_MODES,
+        tableMode,
         YAKU_GUIDE,
         SPECIAL,
         shuffle,

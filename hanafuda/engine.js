@@ -386,7 +386,7 @@
             state.viewerId = viewerId;
             for (const player of state.players) {
                 if (!spectator && player.id !== viewerId) {
-                    player.hand = player.hand.map(card => ({ id: card.id, ownerId: player.id, hidden: true }));
+                    player.hand = player.hand.map((card, index) => ({ id: `hidden-${player.id}-${index}`, ownerId: player.id, hidden: true }));
                 }
                 player.sessionToken = '';
             }

@@ -88,6 +88,7 @@ assert.strictEqual(hanafuda.startGame().ok, true);
 const privateHanafuda = hanafuda.getViewState('h1');
 const godHanafuda = hanafuda.getViewState('h1', true);
 assert(privateHanafuda.players.find(player => player.id === 'h2').hand.every(card => card.hidden), 'Regular Hanafuda views must hide opponents');
+assert(privateHanafuda.players.find(player => player.id === 'h2').hand.every(card => card.id.startsWith('hidden-')), 'Hanafuda hidden IDs must not reveal month/card identity');
 assert(godHanafuda.players.every(player => player.hand.every(card => !card.hidden)), 'Hanafuda spectators need god view');
 assert.strictEqual(privateHanafuda.deck, undefined, 'The Hanafuda draw order must never cross the network');
 hanafuda.state.koiKoi.h1 = { calls: 1 };

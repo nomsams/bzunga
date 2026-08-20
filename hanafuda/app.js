@@ -303,6 +303,7 @@
             document.getElementById('btn-overview-background').onclick = () => UI.setOverviewBackground(!App.ui.overviewLight);
             document.getElementById('btn-overview-cards').onclick = () => UI.setOverviewTab('cards'); document.getElementById('btn-overview-yaku').onclick = () => UI.setOverviewTab('yaku');
             document.getElementById('hanafuda-overview').ondblclick = () => UI.setOverviewZoom(App.ui.overviewZoom > 1 ? 1 : 2);
+            document.getElementById('hanafuda-theme-overview').ondblclick = () => UI.setOverviewZoom(App.ui.overviewZoom > 1 ? 1 : 2);
             document.getElementById('overview-viewport').onwheel = event => { if (!event.ctrlKey) return; event.preventDefault(); UI.setOverviewZoom(App.ui.overviewZoom + (event.deltaY < 0 ? 0.25 : -0.25)); };
             document.getElementById('btn-close-card-detail').onclick = UI.closeCardDetail;
             document.getElementById('btn-card-appearance').onclick = UI.openAppearance; document.getElementById('btn-close-appearance').onclick = UI.closeAppearance; document.getElementById('btn-appearance-done').onclick = UI.closeAppearance;
@@ -343,7 +344,7 @@
         saveCardArt(value) {
             UI.setCardArt(value); localStorage.setItem('hanafuda_card_art', document.documentElement.dataset.hanafudaArt);
             if (App.gameState && App.gameState.phase !== 'lobby') UI.render(App.gameState);
-            if (!document.getElementById('overview-modal').classList.contains('hidden')) UI.renderReferenceGuides();
+            if (!document.getElementById('overview-modal').classList.contains('hidden')) { UI.renderOverviewDeck(); UI.renderReferenceGuides(); }
             if (!document.getElementById('appearance-modal').classList.contains('hidden')) UI.openAppearance();
         },
         resetLobbyButtons() { const values = [['btn-host', 'CREATE A TABLE'], ['btn-join', 'JOIN'], ['btn-spectate', 'SPECTATE']]; values.forEach(([id, label]) => { const button = document.getElementById(id); button.disabled = false; button.textContent = label; }); },
@@ -406,25 +407,26 @@
         renderOpponents(state) {
             const me = state.players.find(player => player.id === App.localId); const opponents = state.players.filter(player => player.id !== me?.id); const seats = document.getElementById('opponent-seats');
             seats.dataset.count = String(opponents.length);
-            seats.innerHTML = opponents.map(player => `<article class="opponent-seat ${player.id === state.turnPlayerId ? 'active-turn' : ''} ${player.connected === false ? 'offline' : ''}"><div class="player-meta"><strong>${Utils.escape(player.name)}</strong><span>${player.score} pts${player.id === state.dealerId ? ' · OYA' : ''}${player.connected === false ? ' · AWAY' : ''}</span></div><div class="mini-hand">${player.hand.map(card => card.hidden ? '<div class="hana-card card-back"></div>' : UI.cardMarkup(card, false)).join('')}</div><div class="capture-groups">${UI.captureGroups(player.captured || [])}</div></article>`).join('');
-            UI.bindCaptureInspection(seats);
+            seats.innerHTML = opponents.map(player => `<article class="opponent-seat ${player.id === state.turnPlayerId ? 'active-turn' : ''} ${player.connected === false ? 'offline' : ''}"><div class="player-meta"><strong>${Utils.escape(player.name)}</strong><span>${player.score} pts${player.id === state.dealerId ? ' · OYA' : ''}${player.connected === false ? ' · AWAY' : ''}</span></div><div class="mini-hand">${player.hand.map(card => card.hidden ? '<div class="hana-card card-back"></div>' : UI.cardMarkup(card, false, 'opponent')).join('')}</div><div class="capture-groups">${UI.captureGroups(player.captured || [])}</div></article>`).join('');
+            UI.bindCaptureInspection(seats); UI.bindCardDetails(seats);
         },
         renderField(state) {
             const groups = HanafudaRules.byMonth(state.field); const choiceIds = new Set(state.pending?.playerId === App.localId ? state.pending.choiceIds || [] : []);
             document.getElementById('field-cards').innerHTML = Object.values(groups).sort((a, b) => a[0].month - b[0].month).map(group => `<div class="month-stack ${group.length === 3 ? 'three' : ''} ${group.some(card => choiceIds.has(card.id)) ? 'choice' : ''}">${group.map(card => UI.cardMarkup(card, choiceIds.has(card.id), 'field')).join('')}</div>`).join('');
+            UI.bindCardDetails(document.getElementById('field-cards'));
             document.getElementById('deck-count').textContent = state.deckCount;
             if (choiceIds.size && !App.isSpectator) UI.openCaptureChoice(state);
             else UI.closeCaptureChoice();
         },
         renderCaptures(state) {
             const me = state.players.find(player => player.id === App.localId); const local = document.getElementById('local-captures');
-            local.innerHTML = UI.captureGroups(me?.captured || []); UI.bindCaptureInspection(local);
+            local.innerHTML = UI.captureGroups(me?.captured || []); UI.bindCaptureInspection(local); UI.bindCardDetails(local);
         },
         captureGroups(cards) {
             const groups = ['Bright', 'Animal', 'Ribbon', 'Chaff'].map(category => ({ category, cards: cards.filter(card => card.categories?.includes(category)) })).filter(group => group.cards.length);
             return groups.map(group => {
                 const visible = group.cards.slice(0, 8); const names = visible.map(card => card.name).join(', ');
-                return `<button type="button" class="capture-group" aria-label="${group.category}, ${group.cards.length} captured cards. Press to enlarge: ${Utils.escape(names)}" title="${group.category}: ${group.cards.length} · click to inspect" style="width:${Math.max(44, 39 + (visible.length - 1) * 12)}px"><span class="capture-group-label">${group.category.toUpperCase()} · ${group.cards.length}</span>${visible.map((card, index) => UI.cardMarkup(card, false, 'capture', index)).join('')}</button>`;
+                return `<div class="capture-group" aria-label="${group.category}, ${group.cards.length} captured cards: ${Utils.escape(names)}" title="${group.category}: ${group.cards.length}" style="width:${Math.max(44, 39 + (visible.length - 1) * 12)}px"><span class="capture-group-label">${group.category.toUpperCase()} · ${group.cards.length}</span>${visible.map((card, index) => UI.cardMarkup(card, false, 'capture', index)).join('')}</div>`;
             }).join('');
         },
         bindCaptureInspection(container) {
@@ -437,16 +439,29 @@
                 };
             });
         },
+        bindCardDetails(container, allowPlay = false) {
+            container.querySelectorAll('.hana-card[data-info-card-id]').forEach(element => {
+                if (element.tagName !== 'BUTTON') { element.setAttribute('role', 'button'); element.tabIndex = 0; }
+                const inspect = event => { event.preventDefault(); event.stopPropagation(); UI.openCardDetail(element.dataset.infoCardId, allowPlay); };
+                element.onclick = inspect;
+                if (element.tagName !== 'BUTTON') element.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') inspect(event); };
+            });
+        },
         renderHand(state) {
             const me = state.players.find(player => player.id === App.localId); const hand = document.getElementById('local-hand'); if (!me) return hand.replaceChildren();
             const canPlay = !App.isSpectator && state.phase === 'WAIT_HAND_SELECTION' && state.turnPlayerId === App.localId && me.connected !== false;
             const sorted = [...me.hand].sort((a, b) => a.month - b.month || HanafudaRules.cardPriority(b) - HanafudaRules.cardPriority(a));
             hand.innerHTML = sorted.map(card => UI.cardMarkup(card, canPlay, 'hand')).join(''); document.getElementById('hand-count').textContent = `${me.hand.length} card${me.hand.length === 1 ? '' : 's'}`;
-            hand.querySelectorAll('button[data-card-id]').forEach(button => button.onclick = () => Net.sendAction({ type: 'PLAY_HAND_CARD', cardId: button.dataset.cardId }));
+            document.getElementById('hand-hint').textContent = canPlay ? 'Tap a card to inspect, then play it' : 'Tap a card to inspect it';
+            UI.bindCardDetails(hand, canPlay);
+        },
+        cardPresentation(card) {
+            return HanafudaRules.cardPresentation(card, document.documentElement.dataset.hanafudaArt);
         },
         cardMarkup(card, interactive = false, locationName = '', index = 0) {
             if (card.hidden) return '<div class="hana-card card-back"></div>';
-            const tag = interactive ? 'button' : 'div'; const attrs = interactive ? `type="button" data-card-id="${Utils.escape(card.id)}" aria-label="Play ${Utils.escape(card.name)} from ${card.monthName}"` : '';
+            const presentation = UI.cardPresentation(card);
+            const tag = interactive ? 'button' : 'div'; const attrs = interactive ? `type="button" data-card-id="${Utils.escape(card.id)}" aria-label="Inspect ${Utils.escape(presentation.name)} from ${Utils.escape(presentation.monthName)}, then choose whether to play it"` : '';
             const artTheme = document.documentElement.dataset.hanafudaArt;
             const useMantia = artTheme === 'mantia-png' && card.mantiaAsset;
             const useHawaii = artTheme === 'hawaii-svg' && card.hawaiiAsset;
@@ -454,7 +469,8 @@
             const artClass = useMantia ? 'mantia-art' : useHawaii ? 'hawaii-art' : 'scanned-art';
             const eager = !['capture', 'reference', 'yaku'].includes(locationName);
             const art = asset ? `<img class="hana-art ${artClass}" src="${Utils.escape(asset)}" alt="" draggable="false" loading="${eager ? 'eager' : 'lazy'}" decoding="async"${eager ? ' fetchpriority="high"' : ''}>` : '';
-            return `<${tag} class="hana-card ${interactive ? 'playable' : ''} ${locationName === 'capture' ? 'capture-card' : ''}" ${attrs} data-month="${card.month}" data-category="${Utils.escape((card.categories || []).join(' '))}" style="--index:${index}"><div class="hana-face">${art}<span class="month-number">${card.month}</span><span class="motif-glyph">${GLYPHS[card.motif] || '花'}</span><span class="motif-name">${Utils.escape(card.name)}</span></div></${tag}>`;
+            const info = locationName === 'detail' ? '' : `data-info-card-id="${Utils.escape(card.id)}"`;
+            return `<${tag} class="hana-card ${interactive ? 'playable' : ''} ${locationName === 'capture' ? 'capture-card' : ''}" ${attrs} ${info} data-month="${card.month}" data-category="${Utils.escape((card.categories || []).join(' '))}" style="--index:${index}"><div class="hana-face">${art}<span class="month-number">${card.month}</span><span class="motif-glyph">${GLYPHS[card.motif] || '花'}</span><span class="motif-name">${Utils.escape(presentation.name)}</span></div></${tag}>`;
         },
         renderActions(state) {
             const panel = document.getElementById('action-panel'); const koiModal = document.getElementById('koi-choice-modal'); const mine = state.turnPlayerId === App.localId && !App.isSpectator;
@@ -489,8 +505,7 @@
             document.getElementById('modal-overlay').classList.remove('hidden'); modal.classList.remove('hidden');
         },
         openOverview() {
-            const image = document.getElementById('hanafuda-overview'); if (!image.src) image.src = image.dataset.src;
-            UI.renderReferenceGuides();
+            UI.renderOverviewDeck(); UI.renderReferenceGuides();
             UI.setOverviewZoom(1);
             UI.setOverviewBackground(localStorage.getItem('hanafuda_overview_background') !== 'dark');
             UI.setOverviewTab('cards');
@@ -512,26 +527,46 @@
             const zoom = Math.max(0.75, Math.min(3, Math.round(Number(value || 1) * 4) / 4));
             App.ui.overviewZoom = zoom;
             document.getElementById('hanafuda-overview').style.width = `${zoom * 100}%`;
+            document.getElementById('hanafuda-theme-overview').style.width = `${zoom * 100}%`;
             document.getElementById('overview-zoom').textContent = `${Math.round(zoom * 100)}%`;
             document.getElementById('btn-overview-zoom-out').disabled = zoom <= 0.75;
             document.getElementById('btn-overview-zoom-in').disabled = zoom >= 3;
         },
         referenceDeck() { return HanafudaRules.createDeck(() => 0.999999).sort((a, b) => a.month - b.month || a.monthIndex - b.monthIndex); },
+        renderOverviewDeck() {
+            const artTheme = document.documentElement.dataset.hanafudaArt;
+            const image = document.getElementById('hanafuda-overview'); const themed = document.getElementById('hanafuda-theme-overview');
+            const useScannedSheet = artTheme === 'scanned-svg';
+            image.classList.toggle('hidden', !useScannedSheet); themed.classList.toggle('hidden', useScannedSheet);
+            document.getElementById('overview-title').textContent = `All 12 months · 48 cards · ${useScannedSheet ? 'Scanned traditional' : artTheme === 'hawaii-svg' ? 'Hawaii style' : 'Louie Mantia'}`;
+            if (useScannedSheet) { if (!image.src) image.src = image.dataset.src; themed.replaceChildren(); return; }
+            const groups = HanafudaRules.byMonth(UI.referenceDeck());
+            themed.innerHTML = Object.values(groups).map(cards => {
+                const first = cards[0]; const presentation = UI.cardPresentation(first);
+                return `<section class="theme-overview-month"><header><strong>${first.month}. ${Utils.escape(presentation.calendarMonth)} · ${Utils.escape(presentation.monthName)}</strong><span>${Utils.escape(first.japaneseMonth)}</span></header><div>${cards.map(card => { const item = UI.cardPresentation(card); return `<button type="button" class="theme-overview-card" data-info-card="${Utils.escape(card.id)}" aria-label="Open ${Utils.escape(item.name)} details">${UI.cardMarkup(card, false, 'overview')}<span>${Utils.escape(item.name)}</span><small>${Utils.escape(item.pointLabel)}</small></button>`; }).join('')}</div></section>`;
+            }).join('');
+            themed.querySelectorAll('.theme-overview-card').forEach(button => button.onclick = () => UI.openCardDetail(button.dataset.infoCard));
+        },
         renderReferenceGuides() {
             const deck = UI.referenceDeck(); const groups = HanafudaRules.byMonth(deck);
             document.getElementById('card-reference-grid').innerHTML = Object.values(groups).map(cards => {
-                const first = cards[0];
-                return `<section class="reference-month"><header><strong>${first.month}. ${Utils.escape(first.monthName)}</strong><small lang="ja">${Utils.escape(first.japaneseMonth)} · ${Utils.escape(first.japaneseMonthReading)}</small></header><div class="reference-card-row">${cards.map(card => `<button class="card-info-trigger" type="button" data-info-card="${Utils.escape(card.id)}" aria-label="Details for ${Utils.escape(card.name)}">${UI.cardMarkup(card, false, 'reference')}<span>${Utils.escape(card.name)}</span></button>`).join('')}</div></section>`;
+                const first = cards[0]; const firstPresentation = UI.cardPresentation(first);
+                return `<section class="reference-month"><header><strong>${first.month}. ${Utils.escape(firstPresentation.calendarMonth)} · ${Utils.escape(firstPresentation.monthName)}</strong><small lang="ja">${Utils.escape(first.japaneseMonth)} · ${Utils.escape(first.japaneseMonthReading)}</small></header><div class="reference-card-row">${cards.map(card => { const presentation = UI.cardPresentation(card); return `<button class="card-info-trigger" type="button" data-info-card="${Utils.escape(card.id)}" aria-label="Details for ${Utils.escape(presentation.name)}">${UI.cardMarkup(card, false, 'reference')}<span>${Utils.escape(presentation.name)}</span></button>`; }).join('')}</div></section>`;
             }).join('');
             const byId = Object.fromEntries(deck.map(card => [card.id, card]));
             document.getElementById('yaku-reference-grid').innerHTML = HanafudaRules.YAKU_GUIDE.map(yaku => `<article class="yaku-reference ${yaku.variant ? 'variant' : ''} ${yaku.optional ? 'optional' : ''}"><header><div><strong>${Utils.escape(yaku.name)}</strong><small lang="ja">${Utils.escape(yaku.japanese)}</small></div><b>${Utils.escape(yaku.points)}</b></header><p>${Utils.escape(yaku.description)}</p>${yaku.cardIds.length ? `<div class="yaku-card-row">${yaku.cardIds.map(id => byId[id]).filter(Boolean).map(card => `<button class="card-info-trigger" type="button" data-info-card="${Utils.escape(card.id)}" aria-label="Details for ${Utils.escape(card.name)}">${UI.cardMarkup(card, false, 'yaku')}</button>`).join('')}</div>` : '<div class="system-yaku-badge">DEALER / ROUND RESULT</div>'}</article>`).join('');
             document.querySelectorAll('#card-reference-grid .card-info-trigger, #yaku-reference-grid .card-info-trigger').forEach(button => button.onclick = () => UI.openCardDetail(button.dataset.infoCard));
         },
-        openCardDetail(cardId) {
-            const card = UI.referenceDeck().find(item => item.id === cardId); if (!card) return;
+        openCardDetail(cardId, allowPlay = false) {
+            const state = App.gameState || {}; const visibleLiveCards = [...(state.field || []), ...(state.players || []).flatMap(player => [...(player.hand || []), ...(player.captured || [])])].filter(card => !card.hidden);
+            const card = visibleLiveCards.find(item => item.id === cardId) || UI.referenceDeck().find(item => item.id === cardId); if (!card) return;
+            const presentation = UI.cardPresentation(card);
             const categoryYaku = { kasu: 'Chaff', tanzaku: 'Ribbon', tane: 'Animal' };
             const related = HanafudaRules.YAKU_GUIDE.filter(yaku => !yaku.variant && (yaku.cardIds.includes(card.id) || card.categories.includes(categoryYaku[yaku.id])));
-            document.getElementById('card-detail-content').innerHTML = `<div class="card-detail-layout"><div class="card-detail-art">${UI.cardMarkup(card, false, 'detail')}</div><div class="card-detail-copy"><div class="eyebrow">MONTH ${card.month} · CARD ${card.monthIndex + 1}</div><h2 id="card-detail-title">${Utils.escape(card.name)}</h2><div class="card-detail-japanese" lang="ja"><strong>${Utils.escape(card.japaneseName)}</strong><span>${Utils.escape(card.japaneseMonth)} · ${Utils.escape(card.japaneseMonthReading)}</span></div><dl><div><dt>Month</dt><dd>${card.month}. ${Utils.escape(card.monthName)}</dd></div><div><dt>Type</dt><dd>${Utils.escape((card.categories || []).join(' · '))}</dd></div><div><dt>Japanese type</dt><dd lang="ja">${Utils.escape(card.japaneseType)} <small>${Utils.escape(card.japaneseTypeReading)}</small></dd></div></dl><div class="card-yaku-links"><strong>Appears in these combinations</strong><p>${related.length ? related.map(yaku => Utils.escape(yaku.name)).join(' · ') : 'A useful month-matching card; it mainly contributes to category totals.'}</p></div></div></div>`;
+            const me = state.players?.find(player => player.id === App.localId); const canPlay = Boolean(allowPlay && !App.isSpectator && state.phase === 'WAIT_HAND_SELECTION' && state.turnPlayerId === App.localId && me?.hand?.some(item => item.id === card.id));
+            document.getElementById('card-detail-content').innerHTML = `<div class="card-detail-layout"><div class="card-detail-art">${UI.cardMarkup(card, false, 'detail')}</div><div class="card-detail-copy"><div class="eyebrow">${Utils.escape(presentation.deckName.toUpperCase())} · MONTH ${card.month} · CARD ${card.monthIndex + 1}</div><h2 id="card-detail-title">${Utils.escape(presentation.name)}</h2><p class="card-detail-summary">${Utils.escape(presentation.calendarMonth)} · ${Utils.escape(presentation.monthName)} · ${Utils.escape(presentation.name)} · ${Utils.escape(presentation.pointLabel)}</p><div class="card-detail-japanese" lang="ja"><strong>${Utils.escape(card.japaneseName)}</strong><span>${Utils.escape(card.japaneseMonth)} · ${Utils.escape(card.japaneseMonthReading)}</span></div><dl><div><dt>Month</dt><dd>${Utils.escape(presentation.calendarMonth)} · ${Utils.escape(presentation.monthName)}</dd></div><div><dt>Card</dt><dd>${Utils.escape(presentation.name)}</dd></div><div><dt>${Utils.escape(presentation.pointTitle)}</dt><dd>${Utils.escape(presentation.pointLabel)}</dd></div><div><dt>Yaku type</dt><dd>${Utils.escape((card.categories || []).join(' · '))}</dd></div><div><dt>Japanese type</dt><dd lang="ja">${Utils.escape(card.japaneseType)} <small>${Utils.escape(card.japaneseTypeReading)}</small></dd></div></dl><div class="card-yaku-links"><strong>Appears in these combinations</strong><p>${related.length ? related.map(yaku => Utils.escape(yaku.name)).join(' · ') : 'A useful month-matching card; it mainly contributes to category totals.'}</p></div><div class="card-detail-actions">${canPlay ? `<button id="btn-detail-play" class="primary" type="button">PLAY THIS CARD</button>` : ''}<button id="btn-detail-close" class="secondary" type="button">BACK TO TABLE</button></div></div></div>`;
+            const playButton = document.getElementById('btn-detail-play'); if (playButton) playButton.onclick = () => { UI.closeCardDetail(); Net.sendAction({ type: 'PLAY_HAND_CARD', cardId: card.id }); };
+            document.getElementById('btn-detail-close').onclick = UI.closeCardDetail;
             document.getElementById('card-detail-modal').classList.remove('hidden'); document.getElementById('modal-overlay').classList.remove('hidden');
         },
         closeCardDetail() { document.getElementById('card-detail-modal').classList.add('hidden'); UI.syncModalOverlay(); },

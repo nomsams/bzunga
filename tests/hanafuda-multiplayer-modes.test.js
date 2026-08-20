@@ -40,7 +40,7 @@ for (const [modeId, deal] of Object.entries(expected)) {
         const view = engine.getViewState(viewer.id);
         assert.strictEqual(view.deck, undefined, `${modeId} leaked its draw order`);
         assert(view.players.find(player => player.id === viewer.id).hand.every(card => card.month), `${modeId} hid the viewer's own cards`);
-        assert(view.players.filter(player => player.id !== viewer.id).every(player => player.hand.every(card => card.hidden && !card.month)), `${modeId} exposed another hand`);
+        assert(view.players.filter(player => player.id !== viewer.id).every(player => player.hand.every(card => card.hidden && !card.month && card.id.startsWith('hidden-'))), `${modeId} exposed another hand`);
     }
     const godView = engine.getViewState(engine.state.players[0].id, true);
     assert(godView.players.every(player => player.hand.every(card => card.month)), `${modeId} spectator view should expose every hand`);

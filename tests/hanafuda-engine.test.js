@@ -19,6 +19,7 @@ const privateView = engine.getViewState('host');
 assert.strictEqual(privateView.deck, undefined, 'The deck order must never leave the host');
 assert.strictEqual(privateView.deckCount, 24);
 assert(privateView.players.find(player => player.id === 'guest').hand.every(card => card.hidden && !card.month));
+assert(privateView.players.find(player => player.id === 'guest').hand.every(card => card.id.startsWith('hidden-') && !card.id.startsWith('h-')), 'Hidden Hanafuda IDs must not encode card identity');
 assert(privateView.players.every(player => player.sessionToken === ''));
 const godView = engine.getViewState('host', true);
 assert(godView.players.every(player => player.hand.every(card => card.month)));

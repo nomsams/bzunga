@@ -9,6 +9,7 @@
         'Pine', 'Plum', 'Cherry', 'Wisteria', 'Iris', 'Peony',
         'Bush Clover', 'Pampas', 'Chrysanthemum', 'Maple', 'Willow', 'Paulownia'
     ];
+    const CALENDAR_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const ASSET_MONTHS = ['January_Pine', 'February_Plum', 'March_Cherry', 'April_Wisteria', 'May_Iris', 'June_Peony', 'July_Clover', 'August_Pampas', 'September_Chrysanthemum', 'October_Maple', 'November_Willow', 'December_Paulownia'];
     const HAWAII_ASSET_MONTHS = ['January_Pine', 'February_Plum', 'March_Cherry', 'April_Wisteria', 'May_Iris', 'June_Peony', 'July_BushClover', 'August_Grass', 'September_Chrysanthemum', 'October_Maple', 'November_Willow', 'December_Paulownia'];
     const JAPANESE_MONTHS = [
@@ -49,6 +50,61 @@
         'Hanafuda_November_Hikari.png', 'Hanafuda_November_Tane.png', 'Hanafuda_November_Tanzaku.png', 'Hanafuda_November_Kasu.png',
         'Hanafuda_December_Hikari.png', 'Hanafuda_December_Kasu_1.png', 'Hanafuda_December_Kasu_2.png', 'Hanafuda_December_Kasu_3.png'
     ];
+
+    // Hawaii's printed deck order differs from the traditional blueprint order.
+    // Keep this list aligned with CARD_BLUEPRINTS so art, Yaku category and card details never drift apart.
+    const HAWAII_CARDS = [
+        { file: '01_January_Pine_Card_1.svg', name: 'Crane & Sun', printedPoints: '20 Points' },
+        { file: '01_January_Pine_Card_2.svg', name: 'Poetry Ribbon', printedPoints: '10 Points' },
+        { file: '01_January_Pine_Card_3.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '01_January_Pine_Card_4.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '02_February_Plum_Card_2.svg', name: 'Bush Warbler in Tree', printedPoints: '5 Points' },
+        { file: '02_February_Plum_Card_1.svg', name: 'Poetry Ribbon', printedPoints: '10 Points' },
+        { file: '02_February_Plum_Card_3.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '02_February_Plum_Card_4.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '03_March_Cherry_Card_1.svg', name: 'Camp Curtain', printedPoints: '20 Points' },
+        { file: '03_March_Cherry_Card_2.svg', name: 'Poetry Ribbon', printedPoints: '10 Points' },
+        { file: '03_March_Cherry_Card_3.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '03_March_Cherry_Card_4.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '04_April_Wisteria_Card_2.svg', name: 'Cuckoo Bird', printedPoints: 'No points printed' },
+        { file: '04_April_Wisteria_Card_1.svg', name: 'Red Ribbon', printedPoints: '10 Points' },
+        { file: '04_April_Wisteria_Card_3.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '04_April_Wisteria_Card_4.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '05_May_Iris_Card_2.svg', name: 'Eight-Plank Bridge', printedPoints: '5 Points' },
+        { file: '05_May_Iris_Card_1.svg', name: 'Red Ribbon', printedPoints: '10 Points' },
+        { file: '05_May_Iris_Card_3.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '05_May_Iris_Card_4.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '06_June_Peony_Card_2.svg', name: 'Butterflies', printedPoints: '5 Points' },
+        { file: '06_June_Peony_Card_1.svg', name: 'Blue Ribbon', printedPoints: '10 Points' },
+        { file: '06_June_Peony_Card_3.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '06_June_Peony_Card_4.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '07_July_BushClover_Card_2.svg', name: 'Boar', printedPoints: '5 Points' },
+        { file: '07_July_BushClover_Card_1.svg', name: 'Red Ribbon', printedPoints: '10 Points' },
+        { file: '07_July_BushClover_Card_3.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '07_July_BushClover_Card_4.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '08_August_Grass_Card_1.svg', name: 'Moon & Rabbit', printedPoints: '20 Points' },
+        { file: '08_August_Grass_Card_2.svg', name: 'Geese Flying', printedPoints: '5 Points' },
+        { file: '08_August_Grass_Card_3.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '08_August_Grass_Card_4.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '09_September_Chrysanthemum_Card_2.svg', name: 'Sake Cup', printedPoints: '5 Points' },
+        { file: '09_September_Chrysanthemum_Card_1.svg', name: 'Blue Ribbon', printedPoints: '10 Points' },
+        { file: '09_September_Chrysanthemum_Card_3.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '09_September_Chrysanthemum_Card_4.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '10_October_Maple_Card_2.svg', name: 'Deer', printedPoints: '5 Points' },
+        { file: '10_October_Maple_Card_1.svg', name: 'Blue Ribbon', printedPoints: '10 Points' },
+        { file: '10_October_Maple_Card_3.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '10_October_Maple_Card_4.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '11_November_Willow_Card_2.svg', name: 'Rainman', printedPoints: 'No points printed' },
+        { file: '11_November_Willow_Card_3.svg', name: 'Swallow Bird', printedPoints: '5 Points' },
+        { file: '11_November_Willow_Card_1.svg', name: 'Red Ribbon', printedPoints: '10 Points' },
+        { file: '11_November_Willow_Card_4.svg', name: 'Lightning Storm · Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '12_December_Paulownia_Card_1.svg', name: 'Phoenix', printedPoints: '20 Points' },
+        { file: '12_December_Paulownia_Card_2.svg', name: 'Yellow Base Chaff', printedPoints: '10 Points' },
+        { file: '12_December_Paulownia_Card_3.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' },
+        { file: '12_December_Paulownia_Card_4.svg', name: 'Plain (Chaff)', printedPoints: 'No points printed' }
+    ];
+
+    const HAWAII_MONTH_NAMES = ['Pine', 'Plum', 'Cherry', 'Wisteria', 'Iris', 'Peony', 'Bush Clover', 'Grass', 'Chrysanthemum', 'Maple', 'Willow', 'Paulownia'];
 
     const JAPANESE_CARD_NAMES = [
         '松に鶴', '赤短', '松のカス', '松のカス',
@@ -131,10 +187,12 @@
         return shuffle(CARD_BLUEPRINTS.map(([month, name, categories, motif], blueprintIndex) => {
             const monthIndex = monthOffsets[month - 1]++;
             const cardTypes = ['Bright', 'Animal', 'Ribbon', 'Chaff'].filter(category => categories.includes(category));
+            const hawaii = HAWAII_CARDS[blueprintIndex];
             return {
                 id: `h-${month}-${monthIndex}`,
                 month,
                 monthIndex,
+                calendarMonth: CALENDAR_MONTHS[month - 1],
                 monthName: MONTHS[month - 1],
                 name,
                 japaneseName: JAPANESE_CARD_NAMES[blueprintIndex],
@@ -146,7 +204,10 @@
                 motif,
                 asset: `../assets/hanafuda-svg/${String(month).padStart(2, '0')}_${ASSET_MONTHS[month - 1]}_Card_${monthIndex + 1}.svg`,
                 mantiaAsset: `../assets/hanafuda-mantia/${MANTIA_ASSETS[blueprintIndex]}`,
-                hawaiiAsset: `../assets/hanafuda-hawaii/${String(month).padStart(2, '0')}_${HAWAII_ASSET_MONTHS[month - 1]}_Card_${monthIndex + 1}.svg`,
+                hawaiiAsset: `../assets/hanafuda-hawaii/${hawaii.file}`,
+                hawaiiName: hawaii.name,
+                hawaiiPrintedPoints: hawaii.printedPoints,
+                hawaiiMonthName: HAWAII_MONTH_NAMES[month - 1],
                 ownerId: null
             };
         }), random);
@@ -253,13 +314,38 @@
             + (card.id === SPECIAL.sake ? 7 : 0);
     }
 
+    function cardPresentation(card, artTheme = 'scanned-svg') {
+        if (artTheme === 'hawaii-svg' && card?.hawaiiName) {
+            return {
+                name: card.hawaiiName,
+                calendarMonth: card.calendarMonth || CALENDAR_MONTHS[(card.month || 1) - 1],
+                monthName: card.hawaiiMonthName || card.monthName,
+                pointLabel: card.hawaiiPrintedPoints || 'No points printed',
+                pointTitle: 'Printed value',
+                deckName: 'Hawaii style'
+            };
+        }
+        const traditionalPoints = card?.categories?.includes('Bright') ? 20 : card?.categories?.includes('Animal') ? 10 : card?.categories?.includes('Ribbon') ? 5 : 1;
+        return {
+            name: card?.name || 'Hanafuda card',
+            calendarMonth: card?.calendarMonth || CALENDAR_MONTHS[((card?.month || 1) - 1)],
+            monthName: card?.monthName || '',
+            pointLabel: `${traditionalPoints} Point${traditionalPoints === 1 ? '' : 's'}`,
+            pointTitle: 'Traditional card value',
+            deckName: artTheme === 'mantia-png' ? 'Louie Mantia' : 'Scanned traditional'
+        };
+    }
+
     return {
         MONTHS,
+        CALENDAR_MONTHS,
         ASSET_MONTHS,
         HAWAII_ASSET_MONTHS,
         JAPANESE_MONTHS,
         CARD_BLUEPRINTS,
         MANTIA_ASSETS,
+        HAWAII_CARDS,
+        HAWAII_MONTH_NAMES,
         JAPANESE_CARD_NAMES,
         JAPANESE_TYPES,
         TABLE_MODES,
@@ -275,6 +361,7 @@
         scoreWin,
         matchingFieldCards,
         resolveCapture,
-        cardPriority
+        cardPriority,
+        cardPresentation
     };
 });

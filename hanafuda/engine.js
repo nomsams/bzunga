@@ -24,7 +24,7 @@
             return {
                 phase: 'lobby', settings: { mode: 'duel', rounds: 6, viewingYaku: false, bustedViewing: false, cardBack: 'hana-red', cardFront: 'original', cardArt: 'scanned-svg' },
                 players: [], dealerId: null, turnPlayerId: null, roundNumber: 0, deck: [], field: [],
-                pending: null, currentTurn: null, koiKoi: {}, roundBaselines: {}, roundResult: null,
+                pending: null, currentTurn: null, turnAnimation: null, koiKoi: {}, roundBaselines: {}, roundResult: null,
                 matchResult: null, logs: [], nextLogId: 0, lastAction: null, redeals: 0,
                 thinkingBots: [], typingBots: []
             };
@@ -99,6 +99,7 @@
             this.state.roundResult = null;
             this.state.pending = null;
             this.state.currentTurn = null;
+            this.state.turnAnimation = null;
             this.state.koiKoi = {};
             this.state.roundBaselines = {};
             this.state.thinkingBots = [];
@@ -240,15 +241,27 @@
             };
             this._log(`${player.name} ${resolution.captured.length ? `captured ${resolution.captured.length} cards` : 'added a card to the field'} from the ${source}.`, 'play');
             if (source === 'hand') return this._drawForTurn(player);
+            this._publishTurnAnimation();
             return this._finishTurn(player);
         }
 
         _drawForTurn(player) {
             const card = this.state.deck.pop();
-            if (!card) return this._finishTurn(player);
+            if (!card) { this._publishTurnAnimation(); return this._finishTurn(player); }
             this.state.currentTurn.drawCard = card;
             this.state.phase = 'AUTO_DECK_DRAW';
             return this._resolvePlayedCard(player, card, 'draw');
+        }
+
+        _publishTurnAnimation() {
+            const turn = this.state.currentTurn;
+            if (!turn?.handCard) return null;
+            this.state.turnAnimation = {
+                nonce: this.makeId(), playerId: turn.playerId, time: this.now(),
+                hand: { card: { ...turn.handCard }, captured: (turn.handCaptured || []).map(card => ({ ...card })) },
+                draw: turn.drawCard ? { card: { ...turn.drawCard }, captured: (turn.drawCaptured || []).map(card => ({ ...card })) } : null
+            };
+            return this.state.turnAnimation;
         }
 
         _finishTurn(player) {
@@ -356,6 +369,7 @@
             if (this.state.turnPlayerId === oldId) this.state.turnPlayerId = newId;
             if (this.state.pending?.playerId === oldId) this.state.pending.playerId = newId;
             if (this.state.currentTurn?.playerId === oldId) this.state.currentTurn.playerId = newId;
+            if (this.state.turnAnimation?.playerId === oldId) this.state.turnAnimation.playerId = newId;
             if (this.state.koiKoi[oldId]) { this.state.koiKoi[newId] = this.state.koiKoi[oldId]; delete this.state.koiKoi[oldId]; }
             if (this.state.roundBaselines[oldId]) { this.state.roundBaselines[newId] = this.state.roundBaselines[oldId]; delete this.state.roundBaselines[oldId]; }
             this._emit({ type: 'reconnect', playerId: newId });

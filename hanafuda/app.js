@@ -15,7 +15,7 @@
         connections: {}, connectionRoles: {}, spectators: {}, allowSpectators: true, isSpectator: false,
         requestedSpectator: false, requestedRoomName: '', hostId: '', reconnectTimer: null, leaving: false,
         joinRejected: false, hostBackup: null, viceHostId: null, promotionTimer: null, lastBackupSignature: '', gameState: null,
-        ui: { lastLogId: 0, lastActionNonce: null, chatOpen: false, dismissedRound: null, overviewZoom: 1, overviewTab: 'cards', overviewLight: true, handTapInfo: true }
+        ui: { lastLogId: 0, lastTurnAnimationNonce: null, animationRun: 0, animatingCardIds: [], chatOpen: false, dismissedRound: null, overviewZoom: 1, overviewTab: 'cards', overviewLight: true, handTapInfo: true }
     };
     const Game = { engine: null, bots: null };
 
@@ -390,7 +390,7 @@
             UI.renderLogs(state);
             if (state.phase === 'lobby') return UI.renderLobby(state);
             document.getElementById('lobby').classList.add('hidden'); document.getElementById('game-view').classList.remove('hidden');
-            UI.renderSpectator(state); UI.renderStatus(state); UI.renderOpponents(state); UI.renderField(state); UI.renderCaptures(state); UI.renderHand(state); UI.renderActions(state); UI.renderResult(state); UI.animateAction(state);
+            UI.renderSpectator(state); UI.renderStatus(state); UI.renderOpponents(state); UI.renderField(state); UI.renderCaptures(state); UI.renderHand(state); UI.renderActions(state); UI.renderResult(state); Promise.resolve(UI.animateAction(state)).catch(() => UI.clearTurnAnimation());
         },
         renderLobby(state) {
             const mode = HanafudaRules.tableMode(state.settings?.mode); const seatsOpen = Math.max(0, mode.playerCount - state.players.length);
@@ -418,7 +418,7 @@
         renderOpponents(state) {
             const me = state.players.find(player => player.id === App.localId); const opponents = state.players.filter(player => player.id !== me?.id); const seats = document.getElementById('opponent-seats');
             seats.dataset.count = String(opponents.length);
-            seats.innerHTML = opponents.map(player => `<article class="opponent-seat ${player.id === state.turnPlayerId ? 'active-turn' : ''} ${player.connected === false ? 'offline' : ''}"><div class="player-meta"><strong>${Utils.escape(player.name)}</strong><span>${player.score} pts${player.id === state.dealerId ? ' · OYA' : ''}${player.connected === false ? ' · AWAY' : ''}</span></div><div class="mini-hand">${player.hand.map(card => card.hidden ? '<div class="hana-card card-back"></div>' : UI.cardMarkup(card, false, 'opponent')).join('')}</div><div class="capture-groups">${UI.captureGroups(player.captured || [])}</div></article>`).join('');
+            seats.innerHTML = opponents.map(player => `<article class="opponent-seat ${player.id === state.turnPlayerId ? 'active-turn' : ''} ${player.connected === false ? 'offline' : ''}" data-player-id="${Utils.escape(player.id)}"><div class="player-meta"><strong>${Utils.escape(player.name)}</strong><span>${player.score} pts${player.id === state.dealerId ? ' · OYA' : ''}${player.connected === false ? ' · AWAY' : ''}</span></div><div class="mini-hand">${player.hand.map(card => card.hidden ? '<div class="hana-card card-back"></div>' : UI.cardMarkup(card, false, 'opponent')).join('')}</div><div class="capture-groups">${UI.captureGroups(player.captured || [])}</div></article>`).join('');
             UI.bindCaptureInspection(seats); UI.bindCardDetails(seats);
         },
         renderField(state) {
@@ -608,11 +608,83 @@
         hideResult() { if (App.gameState) App.ui.dismissedRound = App.gameState.roundNumber; document.getElementById('result-modal').classList.add('hidden'); UI.syncModalOverlay(); },
         showResult() { if (!App.gameState || !['END_ROUND', 'MATCH_OVER'].includes(App.gameState.phase)) return; App.ui.dismissedRound = null; UI.renderResult(App.gameState); },
         startNextMonth() { if (!App.isHost || App.gameState?.phase !== 'END_ROUND') return UI.showToast('Only the host can deal the next month.', 'danger'); App.ui.dismissedRound = App.gameState.roundNumber; UI.hideResult(); Net.sendAction({ type: 'START_NEXT_ROUND' }); },
-        animateAction(state) {
-            const action = state.lastAction; if (!action?.nonce || action.nonce === App.ui.lastActionNonce) return; App.ui.lastActionNonce = action.nonce;
-            if (!['capture', 'field_play'].includes(action.type) || !action.card) return;
-            const source = action.source === 'hand' ? document.getElementById('hand-dock').getBoundingClientRect() : document.getElementById('draw-pile').getBoundingClientRect(); const target = document.getElementById('field-zone').getBoundingClientRect();
-            const wrap = document.createElement('div'); wrap.innerHTML = UI.cardMarkup(action.card); const card = wrap.firstElementChild; card.classList.add('flight-card'); card.style.setProperty('--sx', `${source.left + source.width / 2 - 25}px`); card.style.setProperty('--sy', `${source.top + source.height / 2 - 38}px`); card.style.setProperty('--tx', `${target.left + target.width / 2 - 25}px`); card.style.setProperty('--ty', `${target.top + target.height / 2 - 38}px`); document.getElementById('animation-layer').appendChild(card); setTimeout(() => card.remove(), 850);
+        animationPoint(rect, cardWidth, cardHeight) { return { x: rect.left + rect.width / 2 - cardWidth / 2, y: rect.top + rect.height / 2 - cardHeight / 2 }; },
+        animationSource(playerId, source, cardWidth, cardHeight) {
+            if (source === 'draw') return UI.animationPoint(document.getElementById('draw-pile').getBoundingClientRect(), cardWidth, cardHeight);
+            if (playerId === App.localId) return UI.animationPoint(document.getElementById('hand-dock').getBoundingClientRect(), cardWidth, cardHeight);
+            const seat = [...document.querySelectorAll('.opponent-seat')].find(item => item.dataset.playerId === playerId);
+            return UI.animationPoint((seat?.querySelector('.mini-hand') || seat || document.getElementById('opponent-zone')).getBoundingClientRect(), cardWidth, cardHeight);
+        },
+        resolutionTarget(cardId, playerId, cardWidth, cardHeight) {
+            const card = [...document.querySelectorAll('#table .hana-card[data-info-card-id]')].find(item => item.dataset.infoCardId === cardId && item.getBoundingClientRect().width > 0);
+            if (card) { const rect = card.getBoundingClientRect(); return { ...UI.animationPoint(rect, cardWidth, cardHeight), scale: Math.max(.38, Math.min(1, rect.width / cardWidth)) }; }
+            const local = playerId === App.localId; const seat = [...document.querySelectorAll('.opponent-seat')].find(item => item.dataset.playerId === playerId);
+            const fallback = local ? document.getElementById('local-captures') : seat?.querySelector('.capture-groups');
+            const rect = (fallback || document.getElementById('field-zone')).getBoundingClientRect();
+            return { ...UI.animationPoint(rect, cardWidth, cardHeight), scale: fallback ? .58 : 1 };
+        },
+        hideResolutionTargets(cardIds) {
+            const ids = new Set(cardIds || []);
+            document.querySelectorAll('#table .hana-card[data-info-card-id]').forEach(card => card.classList.toggle('resolution-hidden', ids.has(card.dataset.infoCardId)));
+        },
+        clearTurnAnimation() {
+            document.querySelectorAll('.turn-resolution-card').forEach(item => item.remove());
+            document.querySelectorAll('.resolution-hidden').forEach(item => item.classList.remove('resolution-hidden'));
+            App.ui.animatingCardIds = [];
+        },
+        makeResolutionCard(card, tone, label, cardWidth, fromDeck = false) {
+            const shell = document.createElement('div'); shell.className = `turn-resolution-card tone-${tone}${fromDeck ? ' from-deck' : ''}`; shell.style.setProperty('--card-w', `${cardWidth}px`); shell.dataset.cardId = card.id;
+            shell.innerHTML = fromDeck ? `<div class="resolution-flipper"><div class="resolution-side resolution-back"><div class="hana-card card-back"></div></div><div class="resolution-side resolution-front">${UI.cardMarkup(card, false, 'animation')}</div></div><span>${label}</span>` : `${UI.cardMarkup(card, false, 'animation')}<span>${label}</span>`;
+            document.getElementById('animation-layer').appendChild(shell); return shell;
+        },
+        moveResolutionCard(shell, from, to, duration, options = {}) {
+            const delay = options.delay || 0; const fromScale = options.fromScale ?? 1; const toScale = options.toScale ?? 1;
+            const animation = shell.animate([
+                { transform: `translate3d(${from.x}px, ${from.y}px, 0) scale(${fromScale})`, opacity: options.fromOpacity ?? 1 },
+                { transform: `translate3d(${to.x}px, ${to.y}px, 0) scale(${toScale})`, opacity: options.toOpacity ?? 1 }
+            ], { duration, delay, easing: options.easing || 'cubic-bezier(.2,.78,.2,1)', fill: 'forwards' });
+            return animation.finished.catch(() => {});
+        },
+        async animateAction(state) {
+            const sequence = state.turnAnimation;
+            if (!sequence?.nonce) { if (App.ui.animatingCardIds.length) { App.ui.animationRun += 1; UI.clearTurnAnimation(); } return; }
+            if (sequence.nonce === App.ui.lastTurnAnimationNonce) { UI.hideResolutionTargets(App.ui.animatingCardIds); return; }
+            App.ui.lastTurnAnimationNonce = sequence.nonce;
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const HAND_FLIGHT_MS = 420; const DRAW_FLIGHT_MS = 680; const run = ++App.ui.animationRun;
+            UI.clearTurnAnimation();
+            const sample = document.querySelector('#field-cards .hana-card, #local-hand .hana-card, #draw-pile'); const sampleRect = sample?.getBoundingClientRect();
+            const cardWidth = Math.max(42, sampleRect?.width || 58); const cardHeight = Math.max(64, sampleRect?.height || cardWidth * 1.52);
+            const fieldRect = document.getElementById('field-zone').getBoundingClientRect(); const center = UI.animationPoint(fieldRect, cardWidth, cardHeight);
+            const handStage = { x: center.x - cardWidth * .72, y: center.y + 4 }; const drawStage = { x: center.x + cardWidth * .72, y: center.y + 4 };
+            const handCapturedIds = new Set(sequence.hand.captured.map(card => card.id)); const drawCapturedIds = new Set((sequence.draw?.captured || []).map(card => card.id));
+            const uniqueCards = new Map();
+            [sequence.hand.card, ...sequence.hand.captured, sequence.draw?.card, ...(sequence.draw?.captured || [])].filter(Boolean).forEach(card => uniqueCards.set(card.id, card));
+            App.ui.animatingCardIds = [...uniqueCards.keys()]; UI.hideResolutionTargets(App.ui.animatingCardIds);
+
+            const handShell = UI.makeResolutionCard(sequence.hand.card, 'hand', 'FROM HAND', cardWidth);
+            const shells = new Map([[sequence.hand.card.id, handShell]]); const stagePoints = new Map([[sequence.hand.card.id, handStage]]);
+            const handMatches = sequence.hand.captured.filter(card => card.id !== sequence.hand.card.id);
+            handMatches.forEach((card, index) => { const shell = UI.makeResolutionCard(card, 'table', 'TABLE MATCH', cardWidth); shells.set(card.id, shell); const point = { x: handStage.x + cardWidth * (.34 + index * .17), y: handStage.y + 7 + index * 4 }; stagePoints.set(card.id, point); UI.moveResolutionCard(shell, point, point, 230, { delay: HAND_FLIGHT_MS - 100, fromScale: .76, fromOpacity: 0 }); });
+            await UI.moveResolutionCard(handShell, UI.animationSource(sequence.playerId, 'hand', cardWidth, cardHeight), handStage, HAND_FLIGHT_MS);
+            if (run !== App.ui.animationRun) return;
+
+            if (sequence.draw?.card) {
+                const drawShell = UI.makeResolutionCard(sequence.draw.card, 'draw', 'DECK DRAW', cardWidth, true); shells.set(sequence.draw.card.id, drawShell); stagePoints.set(sequence.draw.card.id, drawStage);
+                setTimeout(() => { if (run === App.ui.animationRun) drawShell.classList.add('revealed'); }, Math.round(DRAW_FLIGHT_MS * .38));
+                await UI.moveResolutionCard(drawShell, UI.animationSource(sequence.playerId, 'draw', cardWidth, cardHeight), drawStage, DRAW_FLIGHT_MS, { easing: 'cubic-bezier(.16,.72,.2,1)' });
+                if (run !== App.ui.animationRun) return;
+                const drawMatches = sequence.draw.captured.filter(card => card.id !== sequence.draw.card.id && !shells.has(card.id));
+                await Promise.all(drawMatches.map((card, index) => { const shell = UI.makeResolutionCard(card, 'table', 'TABLE MATCH', cardWidth); shells.set(card.id, shell); const point = { x: drawStage.x - cardWidth * (.34 + index * .17), y: drawStage.y + 7 + index * 4 }; stagePoints.set(card.id, point); return UI.moveResolutionCard(shell, point, point, 260, { fromScale: .76, fromOpacity: 0 }); }));
+            }
+            await new Promise(resolve => setTimeout(resolve, 430));
+            if (run !== App.ui.animationRun) return;
+            const settle = [...shells.entries()].map(([cardId, shell]) => {
+                const captured = handCapturedIds.has(cardId) || drawCapturedIds.has(cardId); const target = UI.resolutionTarget(cardId, sequence.playerId, cardWidth, cardHeight);
+                return UI.moveResolutionCard(shell, stagePoints.get(cardId) || center, target, captured ? 480 : 390, { toScale: target.scale, toOpacity: .82 });
+            });
+            await Promise.all(settle);
+            if (run === App.ui.animationRun) UI.clearTurnAnimation();
         },
         renderLogs(state) {
             const fresh = state.logs.filter(log => log.id > App.ui.lastLogId); fresh.forEach(log => { if (log.type === 'chat' && !App.ui.chatOpen) UI.showChatBubble(log.name, log.message); if (log.type === 'system' && ['result', 'warning'].includes(log.kind)) UI.showToast(log.message, log.kind === 'result' ? 'success' : 'danger'); }); if (fresh.length) App.ui.lastLogId = Math.max(...fresh.map(log => log.id));

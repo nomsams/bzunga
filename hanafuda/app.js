@@ -15,7 +15,7 @@
         connections: {}, connectionRoles: {}, spectators: {}, allowSpectators: true, isSpectator: false,
         requestedSpectator: false, requestedRoomName: '', hostId: '', reconnectTimer: null, leaving: false,
         joinRejected: false, hostBackup: null, viceHostId: null, promotionTimer: null, lastBackupSignature: '', gameState: null,
-        ui: { lastLogId: 0, lastActionNonce: null, chatOpen: false, dismissedRound: null, overviewZoom: 1, overviewTab: 'cards', overviewLight: true, captureInspectTimer: null }
+        ui: { lastLogId: 0, lastActionNonce: null, chatOpen: false, dismissedRound: null, overviewZoom: 1, overviewTab: 'cards', overviewLight: true, handTapInfo: true }
     };
     const Game = { engine: null, bots: null };
 
@@ -277,6 +277,7 @@
             const savedBack = localStorage.getItem('hanafuda_card_back') || 'hana-red'; document.getElementById('card-back-select').value = savedBack; UI.setCardBack(savedBack);
             const savedFront = localStorage.getItem('hanafuda_card_front') || 'original'; document.getElementById('card-front-select').value = savedFront; UI.setCardFront(savedFront);
             const savedArt = localStorage.getItem('hanafuda_card_art') || 'scanned-svg'; document.getElementById('card-art-select').value = savedArt; UI.setCardArt(savedArt);
+            UI.setHandTapInfo(localStorage.getItem('hanafuda_hand_tap') !== 'play');
             const savedMode = HanafudaRules.tableMode(localStorage.getItem('hanafuda_table_mode')).id; document.getElementById('create-table-mode').value = savedMode; document.getElementById('table-mode').value = savedMode;
             const savedName = Utils.clean(localStorage.getItem('hanafuda_player_name'), 24); if (savedName) document.getElementById('player-name').value = savedName;
             if (joinId) { const input = document.getElementById('join-id'); input.value = joinId.replace(/[^a-zA-Z0-9_-]/g, ''); input.dataset.direct = '1'; }
@@ -299,6 +300,7 @@
             ['btn-open-rules', 'btn-room-rules', 'btn-table-rules'].forEach(id => document.getElementById(id).onclick = UI.openRules);
             document.getElementById('btn-close-rules').onclick = UI.closeRules; document.getElementById('btn-rules-done').onclick = UI.closeRules; document.getElementById('modal-overlay').onclick = UI.closeTopModal;
             document.getElementById('btn-card-overview').onclick = UI.openOverview; document.getElementById('btn-close-overview').onclick = UI.closeOverview;
+            document.getElementById('btn-hand-tap-mode').onclick = () => UI.setHandTapInfo(!App.ui.handTapInfo, true);
             document.getElementById('btn-overview-zoom-out').onclick = () => UI.setOverviewZoom(App.ui.overviewZoom - 0.25); document.getElementById('btn-overview-zoom-in').onclick = () => UI.setOverviewZoom(App.ui.overviewZoom + 0.25); document.getElementById('btn-overview-fit').onclick = () => UI.setOverviewZoom(1);
             document.getElementById('btn-overview-background').onclick = () => UI.setOverviewBackground(!App.ui.overviewLight);
             document.getElementById('btn-overview-cards').onclick = () => UI.setOverviewTab('cards'); document.getElementById('btn-overview-yaku').onclick = () => UI.setOverviewTab('yaku');
@@ -315,6 +317,7 @@
             document.getElementById('btn-view-table').onclick = UI.hideResult; document.getElementById('btn-leave-game').onclick = UI.leaveGame;
             document.getElementById('btn-postgame-results').onclick = UI.showResult; document.getElementById('btn-postgame-next').onclick = UI.startNextMonth; document.getElementById('btn-postgame-new-table').onclick = UI.leaveGame;
             document.addEventListener('keydown', event => { if (event.key === 'Escape') UI.closeTopModal(); });
+            document.addEventListener('pointerdown', event => { if (!event.target.closest('.capture-group')) UI.collapseCaptureGroups(); });
             window.addEventListener('orientationchange', () => setTimeout(() => App.gameState && UI.render(App.gameState), 180));
             if (joinId) document.getElementById(spectate ? 'btn-spectate' : 'btn-join').click();
         },
@@ -347,6 +350,14 @@
             if (!document.getElementById('overview-modal').classList.contains('hidden')) { UI.renderOverviewDeck(); UI.renderReferenceGuides(); }
             if (!document.getElementById('appearance-modal').classList.contains('hidden')) UI.openAppearance();
         },
+        setHandTapInfo(showInfo, persist = false) {
+            App.ui.handTapInfo = Boolean(showInfo);
+            const button = document.getElementById('btn-hand-tap-mode');
+            if (button) { button.textContent = App.ui.handTapInfo ? 'TAP: INFO' : 'TAP: PLAY'; button.setAttribute('aria-pressed', String(App.ui.handTapInfo)); }
+            if (persist) localStorage.setItem('hanafuda_hand_tap', App.ui.handTapInfo ? 'info' : 'play');
+            if (App.gameState && App.gameState.phase !== 'lobby') UI.renderHand(App.gameState);
+        },
+        isMobileCardInput() { return window.matchMedia?.('(pointer: coarse)').matches || Math.min(window.innerWidth, window.innerHeight) <= 720; },
         resetLobbyButtons() { const values = [['btn-host', 'CREATE A TABLE'], ['btn-join', 'JOIN'], ['btn-spectate', 'SPECTATE']]; values.forEach(([id, label]) => { const button = document.getElementById(id); button.disabled = false; button.textContent = label; }); },
         showRoomCollision(name) { UI.showToast('That room name is already in use.', 'danger'); RoomTools.showSuggestions(document.getElementById('room-name-suggestions'), name, choice => { document.getElementById('room-name').value = choice; document.getElementById('room-name-suggestions').classList.add('hidden'); document.getElementById('btn-host').click(); }); },
         renderQr(peerId) { const container = document.getElementById('qr-container'); RoomTools.configureInvite('hanafuda', peerId, { qrContainer: container, copyButton: document.getElementById('btn-copy-invite'), size: 220, onCopy: copied => UI.showToast(copied ? 'Invite link copied.' : 'Could not copy the invite link.', copied ? 'success' : 'danger') }); },
@@ -426,23 +437,35 @@
             const groups = ['Bright', 'Animal', 'Ribbon', 'Chaff'].map(category => ({ category, cards: cards.filter(card => card.categories?.includes(category)) })).filter(group => group.cards.length);
             return groups.map(group => {
                 const visible = group.cards.slice(0, 8); const names = visible.map(card => card.name).join(', ');
-                return `<div class="capture-group" aria-label="${group.category}, ${group.cards.length} captured cards: ${Utils.escape(names)}" title="${group.category}: ${group.cards.length}" style="width:${Math.max(44, 39 + (visible.length - 1) * 12)}px"><span class="capture-group-label">${group.category.toUpperCase()} · ${group.cards.length}</span>${visible.map((card, index) => UI.cardMarkup(card, false, 'capture', index)).join('')}</div>`;
+                return `<div class="capture-group" role="group" tabindex="0" aria-expanded="false" aria-label="${group.category}, ${group.cards.length} captured cards: ${Utils.escape(names)}" title="${group.category}: ${group.cards.length} · tap to keep open" style="width:${Math.max(44, 39 + (visible.length - 1) * 12)}px"><span class="capture-group-label">${group.category.toUpperCase()} · ${group.cards.length}</span>${visible.map((card, index) => UI.cardMarkup(card, false, 'capture', index)).join('')}</div>`;
             }).join('');
+        },
+        collapseCaptureGroups(except = null) {
+            document.querySelectorAll('.capture-group.is-inspecting').forEach(group => {
+                if (group === except) return;
+                group.classList.remove('is-inspecting'); group.setAttribute('aria-expanded', 'false');
+            });
+        },
+        setCaptureInspection(group, expanded) {
+            UI.collapseCaptureGroups(group);
+            group.classList.toggle('is-inspecting', expanded); group.setAttribute('aria-expanded', String(expanded));
         },
         bindCaptureInspection(container) {
             container.querySelectorAll('.capture-group').forEach(group => {
-                group.onclick = () => {
-                    clearTimeout(App.ui.captureInspectTimer);
-                    document.querySelectorAll('.capture-group.is-inspecting').forEach(item => item.classList.remove('is-inspecting'));
-                    group.classList.remove('is-inspecting'); void group.offsetWidth; group.classList.add('is-inspecting');
-                    App.ui.captureInspectTimer = setTimeout(() => group.classList.remove('is-inspecting'), 1400);
-                };
+                const toggle = event => { event?.preventDefault(); UI.setCaptureInspection(group, !group.classList.contains('is-inspecting')); };
+                group.onclick = event => { if (!event.target.closest('.hana-card')) toggle(event); };
+                group.onkeydown = event => { if ((event.key === 'Enter' || event.key === ' ') && event.target === group) toggle(event); };
             });
         },
         bindCardDetails(container, allowPlay = false) {
             container.querySelectorAll('.hana-card[data-info-card-id]').forEach(element => {
                 if (element.tagName !== 'BUTTON') { element.setAttribute('role', 'button'); element.tabIndex = 0; }
-                const inspect = event => { event.preventDefault(); event.stopPropagation(); UI.openCardDetail(element.dataset.infoCardId, allowPlay); };
+                const inspect = event => {
+                    event.preventDefault(); event.stopPropagation();
+                    const captureGroup = element.closest('.capture-group');
+                    if (captureGroup && UI.isMobileCardInput() && !captureGroup.classList.contains('is-inspecting')) { UI.setCaptureInspection(captureGroup, true); return; }
+                    UI.openCardDetail(element.dataset.infoCardId, allowPlay);
+                };
                 element.onclick = inspect;
                 if (element.tagName !== 'BUTTON') element.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') inspect(event); };
             });
@@ -450,10 +473,12 @@
         renderHand(state) {
             const me = state.players.find(player => player.id === App.localId); const hand = document.getElementById('local-hand'); if (!me) return hand.replaceChildren();
             const canPlay = !App.isSpectator && state.phase === 'WAIT_HAND_SELECTION' && state.turnPlayerId === App.localId && me.connected !== false;
+            const directPlay = canPlay && UI.isMobileCardInput() && !App.ui.handTapInfo;
             const sorted = [...me.hand].sort((a, b) => a.month - b.month || HanafudaRules.cardPriority(b) - HanafudaRules.cardPriority(a));
             hand.innerHTML = sorted.map(card => UI.cardMarkup(card, canPlay, 'hand')).join(''); document.getElementById('hand-count').textContent = `${me.hand.length} card${me.hand.length === 1 ? '' : 's'}`;
-            document.getElementById('hand-hint').textContent = canPlay ? 'Tap a card to inspect, then play it' : 'Tap a card to inspect it';
-            UI.bindCardDetails(hand, canPlay);
+            document.getElementById('hand-hint').textContent = directPlay ? 'Tap a hand card to play it' : canPlay ? 'Tap a card to inspect, then play it' : 'Tap a card to inspect it';
+            if (directPlay) hand.querySelectorAll('[data-card-id]').forEach(card => { card.onclick = event => { event.preventDefault(); card.disabled = true; const result = Net.sendAction({ type: 'PLAY_HAND_CARD', cardId: card.dataset.cardId }); if (result && !result.ok) card.disabled = false; }; });
+            else UI.bindCardDetails(hand, canPlay);
         },
         cardPresentation(card) {
             return HanafudaRules.cardPresentation(card, document.documentElement.dataset.hanafudaArt);

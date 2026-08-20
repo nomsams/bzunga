@@ -46,6 +46,7 @@ const css = fs.readFileSync(path.join(root, 'multiplayer.css'), 'utf8');
 for (const theme of pages.map(([name]) => name)) assert(css.includes(`data-game-theme="${theme}"`), `Missing ${theme} lobby theme tokens`);
 assert(css.includes('width: min(720px, calc(100vw - 28px))'), 'Desktop creation menus need one shared width');
 assert(css.includes('justify-content: flex-start') && css.includes('overflow-y: auto'), 'Tall creation menus must remain scrollable instead of clipping at the top');
+assert(css.includes('flex: 0 0 auto') && css.includes('margin: 0 !important') && css.includes('scrollbar-gutter: stable'), 'Desktop lobby cards must start inside a stable scroll area so every creation control remains reachable');
 assert(css.includes('min-height: 100px') && css.includes('min-height: 2.55em'), 'Selector cards need aligned titles and descriptions');
 assert(css.includes('grid-template-rows: 18px 92px minmax(48px, auto)'), 'Game identity blocks need aligned title/copy rows');
 assert(css.includes('grid-template-columns: repeat(2, minmax(0, 1fr))'), 'Mobile game selection needs a consistent two-column layout');

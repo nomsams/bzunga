@@ -79,6 +79,7 @@
     <section id="game-view" class="hidden" aria-label="Hanafuda Koi-Koi table">
         <div id="spectator-controls" class="spectator-controls hidden"><button id="spectator-prev" aria-label="Previous player">&lt;</button><span id="spectator-label">GOD VIEW</span><button id="spectator-next" aria-label="Next player">&gt;</button></div>
         <header id="status-banner"><div><span class="month-chip" id="month-display">MONTH 1 / 6</span><strong id="status-text">Waiting…</strong><small id="activity-text"></small></div><div class="scoreboard" id="scoreboard"></div><div class="header-actions"><a class="table-game-selection" href="../index.html#game-selection" aria-label="Back to game selection">GAMES</a><button id="btn-table-rules" class="header-button">RULES</button></div></header>
+        <aside id="action-panel" class="hidden" aria-live="polite"><strong id="turn-prompt">Choose one card from your hand.</strong><span id="selection-feedback"></span></aside>
         <div id="table-stage">
             <div id="table">
                 <div class="felt-mark">花札</div>
@@ -88,8 +89,7 @@
                 <section id="local-captures" class="capture-groups local-captures"></section>
             </div>
         </div>
-        <aside id="action-panel" class="hidden"><strong id="turn-prompt">Choose one card from your hand.</strong><span id="selection-feedback"></span></aside>
-        <section id="hand-dock"><div class="hand-toolbar"><div><strong>YOUR HAND</strong><span id="hand-count">8 cards</span></div><div class="hand-tools"><span id="hand-hint">Tap a flower card to play it</span><button id="btn-card-overview" type="button">ALL 48</button><button id="btn-card-appearance" type="button">CARD LOOK</button></div></div><div id="local-hand" class="hand-scroll"></div></section>
+        <section id="hand-dock"><div class="hand-toolbar"><div><strong>YOUR HAND</strong><span id="hand-count">8 cards</span></div><div class="hand-tools"><span id="hand-hint">Tap a flower card to play it</span><button id="btn-card-overview" type="button">ALL 48</button><button id="btn-hand-tap-mode" class="mobile-hand-mode" type="button" aria-pressed="true" title="Choose whether a hand-card tap opens information or plays immediately">TAP: INFO</button><button id="btn-card-appearance" type="button">CARD LOOK</button></div></div><div id="local-hand" class="hand-scroll"></div></section>
         <aside id="postgame-dock" class="postgame-dock hidden" aria-label="Completed month actions"><strong id="postgame-dock-label">MONTH COMPLETE</strong><button id="btn-postgame-results" type="button">SHOW RESULTS</button><button id="btn-postgame-next" class="primary hidden" type="button">DEAL NEXT MONTH</button><button id="btn-postgame-new-table" class="danger" type="button">NEW TABLE</button></aside>
         <button id="chat-fab" aria-label="Open table chat" aria-expanded="false">CHAT</button>
         <div id="chat-bubbles" aria-live="polite"></div><div id="toast-container" aria-live="assertive"></div>

@@ -715,18 +715,14 @@
             <button id="btn-download-offline" class="offline-download-button">&#11015; DOWNLOAD ALL MODES</button>
             <p id="offline-download-status" class="offline-download-status" aria-live="polite">Save every game and card design for offline bot play.</p>
         </div>
-        <div class="lobby-box hidden" id="lobby-room" style="max-height: 90vh; overflow-y: auto; padding-bottom: 30px;">
-            <a class="back-to-games" href="./index.html#game-selection">&#8592; BACK TO GAME SELECTION</a>
-            <h2 style="color: white; margin-bottom: 10px;">Game Lobby</h2>
-            <div id="room-id-display" style="font-family: monospace; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; margin-bottom: 10px; word-break: break-all; color: var(--accent); font-size: 1rem; letter-spacing: 1px;"></div>
-            <div id="qr-container"></div>
-            <button id="btn-copy-invite" class="copy-invite" type="button">COPY INVITE LINK</button>
+        <div class="lobby-box game-room-card hidden" id="lobby-room">
+            <div class="room-heading"><div><div class="eyebrow">PRIVATE P2P TABLE</div><h2>Game Lobby</h2></div><a class="back-to-games" href="./index.html#game-selection">&#8592; GAME SELECTION</a></div>
+            <div class="room-code-wrap"><div class="room-invite-copy"><span>ROOM NAME / GAME ID</span><strong id="room-id-display">CONNECTING…</strong><button id="btn-copy-invite" class="copy-invite" type="button">COPY INVITE LINK</button></div><div id="qr-container"></div></div>
             <div class="room-profile"><label for="room-player-name">YOUR NAME</label><div class="room-inline-action"><input id="room-player-name" type="text" maxlength="24" autocomplete="nickname"><button id="btn-room-rename" class="secondary" type="button">CHANGE</button></div></div>
 
             <div class="player-list" id="lobby-players"></div>
 
-            <div id="host-controls" class="hidden" style="margin-top: 15px;">
-                <label class="spectator-setting"><input id="allow-spectators" type="checkbox" checked> Allow spectators (god view)</label>
+            <div id="host-controls" class="host-controls hidden">
                 <div style="display: flex; gap: 8px;">
                     <select id="bot-difficulty" style="flex: 2; margin: 0;">
                         <option value="1">Easy Bot</option>
@@ -753,7 +749,8 @@
                     </select>
                     <button id="btn-mode-info" class="secondary" style="flex: 0 0 45px; padding: 0; font-size: 1.2rem; margin: 0;" title="Game Mode Info">?</button>
                 </div>
-                <button id="btn-start-game" style="margin-top: 15px; font-size: 1.1rem; padding: 12px;">START GAME</button>
+                <label class="spectator-setting"><input id="allow-spectators" type="checkbox" checked> Allow spectators (god view)</label>
+                <button id="btn-start-game">START GAME</button>
             </div>
             <div id="client-waiting" class="hidden" style="margin-top: 15px; color: var(--info); font-weight: 600;">Waiting for Host to start...</div>
             <section class="lobby-chat" aria-label="Room chat"><div class="lobby-chat-title">ROOM CHAT</div><div id="lobby-chat-messages" class="lobby-chat-messages" aria-live="polite"></div><div class="lobby-chat-compose"><input id="lobby-chat-input" type="text" maxlength="240" placeholder="Say something"><button id="lobby-chat-send" type="button">SEND</button></div></section>

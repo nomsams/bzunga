@@ -25,6 +25,16 @@ for (const [name, html] of [['Bazunga', bazunga], ['President', presidentHtml], 
     assert(html.includes('id="btn-copy-invite"'), `${name} guests need a one-tap invite copy control`);
     assert(html.includes('id="room-player-name"') && html.includes('id="btn-room-rename"'), `${name} room players must be able to rename`);
     assert(html.includes('id="lobby-chat-messages"') && html.includes('id="lobby-chat-send"'), `${name} needs chat before the deal`);
+    const roomId = html.indexOf('id="lobby-room"');
+    const roomStart = html.lastIndexOf('<div', roomId);
+    const roomEnd = html.indexOf('id="game-view"', roomStart);
+    const room = html.slice(roomStart, roomEnd);
+    const inviteBlock = room.indexOf('class="room-invite-copy"');
+    const copyButton = room.indexOf('id="btn-copy-invite"');
+    const qrCode = room.indexOf('id="qr-container"');
+    assert(roomStart >= 0 && room.includes('game-room-card'), `${name} room needs the shared compact scroll surface`);
+    assert(inviteBlock >= 0 && copyButton > inviteBlock && qrCode > copyButton, `${name} copy action must sit below the room ID and to the left of its QR`);
+    assert(/id="allow-spectators"[\s\S]*?<\/label>\s*<button id="btn-start-game"/.test(room), `${name} spectator permission must sit directly above the deal action`);
 }
 
 assert(shared.includes("error?.type === 'unavailable-id'"), 'Room collisions must use the PeerJS unavailable-id signal');
@@ -33,6 +43,8 @@ assert(shared.includes('room-qr-modal') && shared.includes('Math.min(420'), 'Tap
 assert(shared.includes('modal._returnFocus'), 'Closing the enlarged QR must return keyboard focus to its trigger');
 assert(sharedCss.includes('cursor: zoom-in') && sharedCss.includes('#room-qr-large'), 'QR affordance and modal must be visibly styled');
 assert(sharedCss.includes('calc(100vw - 28px)') && sharedCss.includes('width: 72px !important'), 'Narrow mobile lobbies and their QR preview must stay inside the viewport');
+assert(sharedCss.includes('aspect-ratio: 1 / 1') && sharedCss.includes('object-fit: contain'), 'Room QR holders and generated codes must stay perfectly square');
+assert(sharedCss.includes('#lobby > .game-room-card') && sharedCss.includes('-webkit-overflow-scrolling: touch') && sharedCss.includes('touch-action: pan-y'), 'Mobile room settings must retain a reliable native scroll surface');
 assert(!bazunga.includes('user-scalable=no'), 'Bazunga must not disable native mobile zoom');
 
 for (const [name, app] of [['President', presidentApp], ['Durak', durakApp], ['Hanafuda', hanafudaApp]]) {

@@ -49,15 +49,13 @@
             <p id="offline-download-status" class="offline-download-status" aria-live="polite">Save every game and card design for offline bot play.</p>
         </div>
 
-        <div class="lobby-card hidden" id="lobby-room">
+        <div class="lobby-card game-room-card hidden" id="lobby-room">
             <div class="room-heading"><div><div class="eyebrow">PRIVATE P2P TABLE</div><h2>Hanafuda Room</h2></div><a class="back-to-games" href="../index.html#game-selection">&#8592; GAME SELECTION</a></div>
-            <div class="room-code-wrap"><div><span>GAME ID</span><strong id="room-id-display">CONNECTING…</strong></div><div id="qr-container"></div></div>
-            <button id="btn-copy-invite" class="copy-invite" type="button">COPY INVITE LINK</button>
+            <div class="room-code-wrap"><div class="room-invite-copy"><span>ROOM NAME / GAME ID</span><strong id="room-id-display">CONNECTING…</strong><button id="btn-copy-invite" class="copy-invite" type="button">COPY INVITE LINK</button></div><div id="qr-container"></div></div>
             <div class="room-profile"><label for="room-player-name">YOUR NAME</label><div class="room-inline-action"><input id="room-player-name" type="text" maxlength="24" autocomplete="nickname"><button id="btn-room-rename" class="secondary" type="button">CHANGE</button></div></div>
             <div id="table-mode-summary" class="table-mode-summary" aria-live="polite"><div><span>TABLE MODE</span><strong>KOI-KOI DUEL</strong></div><p>Classic two-player Koi-Koi · 1 of 2 seats filled</p></div>
             <div id="lobby-players" class="player-list"></div>
             <div id="host-controls" class="host-controls hidden">
-                <label class="spectator-setting"><input id="allow-spectators" type="checkbox" checked> Allow spectators (god view)</label>
                 <label class="mode-picker">Table mode<select id="table-mode"><option value="duel" selected>Koi-Koi Duel · 2 players</option><option value="trio">Koi-Koi Trio · 3 players</option><option value="party">Koi-Koi Party · 4 players</option></select><small id="table-mode-help">Classic head-to-head Koi-Koi. Eight cards each and eight cards on the field.</small></label>
                 <div class="setting-grid"><label>Add an opponent<select id="bot-difficulty"><option value="1">Casual Bot</option><option value="2">Clever Bot</option><option value="3">Hard Bot</option><option value="4">Expert Bot</option><option value="5">Baba Gupta · Koi-Koi Master</option></select></label><button id="btn-add-bot" class="secondary">+ ADD BOT</button></div>
                 <div class="setting-grid three">
@@ -68,6 +66,7 @@
                     <label class="toggle-setting"><input id="viewing-yaku" type="checkbox"> Moon / Blossom Viewing</label>
                 </div>
                 <label class="toggle-setting"><input id="busted-viewing" type="checkbox" disabled> Lightning busts Viewing Yaku</label>
+                <label class="spectator-setting"><input id="allow-spectators" type="checkbox" checked> Allow spectators (god view)</label>
                 <button id="btn-start-game" class="primary large">DEAL THE FLOWERS</button>
             </div>
             <div id="client-waiting" class="waiting hidden">Waiting for the host to deal…</div>

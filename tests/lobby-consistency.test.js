@@ -40,6 +40,7 @@ for (const [theme, file] of pages) {
         assert(html.includes(label), `${theme} setup form is missing the shared “${label}” label`);
     }
     assert(html.includes('Spaces and punctuation are normalized'), `${theme} needs the same custom-room guidance`);
+    assert(html.includes('game-room-card') && html.includes('room-invite-copy'), `${theme} needs the shared dense room layout`);
 }
 
 const css = fs.readFileSync(path.join(root, 'multiplayer.css'), 'utf8');
@@ -50,5 +51,7 @@ assert(css.includes('flex: 0 0 auto') && css.includes('margin: 0 !important') &&
 assert(css.includes('min-height: 100px') && css.includes('min-height: 2.55em'), 'Selector cards need aligned titles and descriptions');
 assert(css.includes('grid-template-rows: 18px 92px minmax(48px, auto)'), 'Game identity blocks need aligned title/copy rows');
 assert(css.includes('grid-template-columns: repeat(2, minmax(0, 1fr))'), 'Mobile game selection needs a consistent two-column layout');
+assert(css.includes('max-height: calc(100dvh - 12px)') && css.includes('overflow-y: auto !important'), 'Short mobile room screens must keep every control reachable');
+assert(css.includes('.game-room-card .lobby-chat-messages') && css.includes('max-height: 62px'), 'Room chat must stay useful without pushing deal controls off screen');
 
 console.log('Lobby consistency: shared selector geometry, aligned game identities/forms, responsive layout, and four accent themes passed.');

@@ -68,7 +68,7 @@
             <p id="offline-download-status" class="offline-download-status" aria-live="polite">Save every game and card design for offline bot play.</p>
         </div>
 
-        <div class="lobby-card hidden" id="lobby-room">
+        <div class="lobby-card game-room-card hidden" id="lobby-room">
             <div class="room-heading">
                 <div>
                     <div class="eyebrow">PRIVATE P2P TABLE</div>
@@ -77,13 +77,13 @@
                 <a class="back-to-games" href="../index.html#game-selection">&#8592; GAME SELECTION</a>
             </div>
             <div class="room-code-wrap">
-                <div>
-                    <span>GAME ID</span>
+                <div class="room-invite-copy">
+                    <span>ROOM NAME / GAME ID</span>
                     <strong id="room-id-display">CONNECTING…</strong>
+                    <button id="btn-copy-invite" class="copy-invite" type="button">COPY INVITE LINK</button>
                 </div>
-                <div id="qr-container" aria-hidden="true"></div>
+                <div id="qr-container"></div>
             </div>
-            <button id="btn-copy-invite" class="copy-invite" type="button">COPY INVITE LINK</button>
             <div class="room-profile">
                 <label for="room-player-name">YOUR NAME</label>
                 <div class="room-inline-action">
@@ -93,7 +93,6 @@
             </div>
             <div id="lobby-players" class="player-list"></div>
             <div id="host-controls" class="host-controls hidden">
-                <label class="spectator-setting"><input id="allow-spectators" type="checkbox" checked> Allow spectators (god view)</label>
                 <div class="setting-grid">
                     <label>
                         Add an opponent
@@ -123,6 +122,7 @@
                     </select>
                 </label>
                 <p class="setting-note">At five or more players, Vice-President and Vice-Slave also exchange one card.</p>
+                <label class="spectator-setting"><input id="allow-spectators" type="checkbox" checked> Allow spectators (god view)</label>
                 <button id="btn-start-game" class="primary large">DEAL THE CARDS</button>
             </div>
             <div id="client-waiting" class="waiting hidden">Waiting for the host to deal…</div>

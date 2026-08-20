@@ -15,7 +15,7 @@
         connections: {}, connectionRoles: {}, spectators: {}, allowSpectators: true, isSpectator: false,
         requestedSpectator: false, requestedRoomName: '', hostId: '', reconnectTimer: null, leaving: false,
         joinRejected: false, hostBackup: null, viceHostId: null, promotionTimer: null, lastBackupSignature: '', gameState: null,
-        ui: { lastLogId: 0, lastActionNonce: null, chatOpen: false, dismissedRound: null, overviewZoom: 1, captureInspectTimer: null }
+        ui: { lastLogId: 0, lastActionNonce: null, chatOpen: false, dismissedRound: null, overviewZoom: 1, overviewTab: 'cards', overviewLight: true, captureInspectTimer: null }
     };
     const Game = { engine: null, bots: null };
 
@@ -272,6 +272,7 @@
             if (routes[game]) { const url = new URL(routes[game], location.href); url.searchParams.set('game', game); if (joinId) url.searchParams.set('join', joinId); if (spectate) url.searchParams.set('spectate', '1'); location.replace(url.href); return; }
             const savedBack = localStorage.getItem('hanafuda_card_back') || 'hana-red'; document.getElementById('card-back-select').value = savedBack; UI.setCardBack(savedBack);
             const savedFront = localStorage.getItem('hanafuda_card_front') || 'original'; document.getElementById('card-front-select').value = savedFront; UI.setCardFront(savedFront);
+            const savedArt = localStorage.getItem('hanafuda_card_art') || 'scanned-svg'; document.getElementById('card-art-select').value = savedArt; UI.setCardArt(savedArt);
             const savedName = Utils.clean(localStorage.getItem('hanafuda_player_name'), 24); if (savedName) document.getElementById('player-name').value = savedName;
             if (joinId) { const input = document.getElementById('join-id'); input.value = joinId.replace(/[^a-zA-Z0-9_-]/g, ''); input.dataset.direct = '1'; }
             document.getElementById('btn-host').onclick = event => { event.currentTarget.disabled = true; event.currentTarget.textContent = 'CONNECTING…'; App.isHost = true; App.requestedRoomName = RoomTools.cleanRoomName(document.getElementById('room-name').value, `${document.getElementById('player-name').value || 'Koi'} ${Utils.id().slice(0, 4)}`); Net.initialize(document.getElementById('player-name').value); };
@@ -283,16 +284,21 @@
             document.getElementById('viewing-yaku').onchange = event => { document.getElementById('busted-viewing').disabled = !event.currentTarget.checked; if (!event.currentTarget.checked) document.getElementById('busted-viewing').checked = false; };
             document.getElementById('card-back-select').onchange = event => UI.saveCardBack(event.currentTarget.value);
             document.getElementById('card-front-select').onchange = event => UI.saveCardFront(event.currentTarget.value);
+            document.getElementById('card-art-select').onchange = event => UI.saveCardArt(event.currentTarget.value);
             document.getElementById('game-card-back-select').onchange = event => UI.saveCardBack(event.currentTarget.value);
             document.getElementById('game-card-front-select').onchange = event => UI.saveCardFront(event.currentTarget.value);
+            document.getElementById('game-card-art-select').onchange = event => UI.saveCardArt(event.currentTarget.value);
             document.getElementById('spectator-prev').onclick = () => Net.sendAction({ type: 'SPECTATOR_PERSPECTIVE', direction: -1 }); document.getElementById('spectator-next').onclick = () => Net.sendAction({ type: 'SPECTATOR_PERSPECTIVE', direction: 1 });
             document.getElementById('btn-koi').onclick = () => Net.sendAction({ type: 'KOI_KOI' }); document.getElementById('btn-shobu').onclick = () => Net.sendAction({ type: 'SHOBU' });
             ['btn-open-rules', 'btn-room-rules', 'btn-table-rules'].forEach(id => document.getElementById(id).onclick = UI.openRules);
             document.getElementById('btn-close-rules').onclick = UI.closeRules; document.getElementById('btn-rules-done').onclick = UI.closeRules; document.getElementById('modal-overlay').onclick = UI.closeTopModal;
             document.getElementById('btn-card-overview').onclick = UI.openOverview; document.getElementById('btn-close-overview').onclick = UI.closeOverview;
             document.getElementById('btn-overview-zoom-out').onclick = () => UI.setOverviewZoom(App.ui.overviewZoom - 0.25); document.getElementById('btn-overview-zoom-in').onclick = () => UI.setOverviewZoom(App.ui.overviewZoom + 0.25); document.getElementById('btn-overview-fit').onclick = () => UI.setOverviewZoom(1);
+            document.getElementById('btn-overview-background').onclick = () => UI.setOverviewBackground(!App.ui.overviewLight);
+            document.getElementById('btn-overview-cards').onclick = () => UI.setOverviewTab('cards'); document.getElementById('btn-overview-yaku').onclick = () => UI.setOverviewTab('yaku');
             document.getElementById('hanafuda-overview').ondblclick = () => UI.setOverviewZoom(App.ui.overviewZoom > 1 ? 1 : 2);
             document.getElementById('overview-viewport').onwheel = event => { if (!event.ctrlKey) return; event.preventDefault(); UI.setOverviewZoom(App.ui.overviewZoom + (event.deltaY < 0 ? 0.25 : -0.25)); };
+            document.getElementById('btn-close-card-detail').onclick = UI.closeCardDetail;
             document.getElementById('btn-card-appearance').onclick = UI.openAppearance; document.getElementById('btn-close-appearance').onclick = UI.closeAppearance; document.getElementById('btn-appearance-done').onclick = UI.closeAppearance;
             document.getElementById('chat-fab').onclick = () => UI.setChatOpen(true); document.getElementById('chat-close').onclick = () => UI.setChatOpen(false); document.getElementById('chat-send').onclick = UI.sendChat;
             document.getElementById('chat-input').onkeydown = event => { if (event.key === 'Enter') { event.preventDefault(); UI.sendChat(); } else if (event.key === 'Escape') UI.setChatOpen(false); };
@@ -321,8 +327,19 @@
             document.documentElement.dataset.hanafudaFront = safe;
             ['card-front-select', 'game-card-front-select'].forEach(id => { const select = document.getElementById(id); if (select && select.value !== safe) select.value = safe; });
         },
+        setCardArt(value) {
+            const safe = ['scanned-svg', 'mantia-png', 'hawaii-svg'].includes(value) ? value : 'scanned-svg';
+            document.documentElement.dataset.hanafudaArt = safe;
+            ['card-art-select', 'game-card-art-select'].forEach(id => { const select = document.getElementById(id); if (select && select.value !== safe) select.value = safe; });
+        },
         saveCardBack(value) { UI.setCardBack(value); localStorage.setItem('hanafuda_card_back', document.documentElement.dataset.hanafudaBack); },
         saveCardFront(value) { UI.setCardFront(value); localStorage.setItem('hanafuda_card_front', document.documentElement.dataset.hanafudaFront); },
+        saveCardArt(value) {
+            UI.setCardArt(value); localStorage.setItem('hanafuda_card_art', document.documentElement.dataset.hanafudaArt);
+            if (App.gameState && App.gameState.phase !== 'lobby') UI.render(App.gameState);
+            if (!document.getElementById('overview-modal').classList.contains('hidden')) UI.renderReferenceGuides();
+            if (!document.getElementById('appearance-modal').classList.contains('hidden')) UI.openAppearance();
+        },
         resetLobbyButtons() { const values = [['btn-host', 'CREATE A TABLE'], ['btn-join', 'JOIN'], ['btn-spectate', 'SPECTATE']]; values.forEach(([id, label]) => { const button = document.getElementById(id); button.disabled = false; button.textContent = label; }); },
         showRoomCollision(name) { UI.showToast('That room name is already in use.', 'danger'); RoomTools.showSuggestions(document.getElementById('room-name-suggestions'), name, choice => { document.getElementById('room-name').value = choice; document.getElementById('room-name-suggestions').classList.add('hidden'); document.getElementById('btn-host').click(); }); },
         renderQr(peerId) { const container = document.getElementById('qr-container'); RoomTools.configureInvite('hanafuda', peerId, { qrContainer: container, copyButton: document.getElementById('btn-copy-invite'), size: 220, onCopy: copied => UI.showToast(copied ? 'Invite link copied.' : 'Could not copy the invite link.', copied ? 'success' : 'danger') }); },
@@ -335,7 +352,7 @@
         },
         startGame() {
             if (!App.isHost || !Game.engine) return;
-            const result = Game.engine.startGame({ rounds: Number(document.getElementById('round-count').value), viewingYaku: document.getElementById('viewing-yaku').checked, bustedViewing: document.getElementById('busted-viewing').checked, cardBack: document.getElementById('card-back-select').value, cardFront: document.getElementById('card-front-select').value });
+            const result = Game.engine.startGame({ rounds: Number(document.getElementById('round-count').value), viewingYaku: document.getElementById('viewing-yaku').checked, bustedViewing: document.getElementById('busted-viewing').checked, cardBack: document.getElementById('card-back-select').value, cardFront: document.getElementById('card-front-select').value, cardArt: document.getElementById('card-art-select').value });
             if (!result.ok) UI.showToast(result.reason, 'danger');
         },
 
@@ -343,6 +360,7 @@
             App.gameState = state;
             UI.setCardBack(localStorage.getItem('hanafuda_card_back') || state.settings?.cardBack || 'hana-red');
             UI.setCardFront(localStorage.getItem('hanafuda_card_front') || state.settings?.cardFront || 'original');
+            UI.setCardArt(localStorage.getItem('hanafuda_card_art') || state.settings?.cardArt || 'scanned-svg');
             UI.renderLogs(state);
             if (state.phase === 'lobby') return UI.renderLobby(state);
             document.getElementById('lobby').classList.add('hidden'); document.getElementById('game-view').classList.remove('hidden');
@@ -411,7 +429,13 @@
         cardMarkup(card, interactive = false, locationName = '', index = 0) {
             if (card.hidden) return '<div class="hana-card card-back"></div>';
             const tag = interactive ? 'button' : 'div'; const attrs = interactive ? `type="button" data-card-id="${Utils.escape(card.id)}" aria-label="Play ${Utils.escape(card.name)} from ${card.monthName}"` : '';
-            const art = card.asset ? `<img class="hana-art" src="${Utils.escape(card.asset)}" alt="" draggable="false">` : '';
+            const artTheme = document.documentElement.dataset.hanafudaArt;
+            const useMantia = artTheme === 'mantia-png' && card.mantiaAsset;
+            const useHawaii = artTheme === 'hawaii-svg' && card.hawaiiAsset;
+            const asset = useMantia ? card.mantiaAsset : useHawaii ? card.hawaiiAsset : card.asset;
+            const artClass = useMantia ? 'mantia-art' : useHawaii ? 'hawaii-art' : 'scanned-art';
+            const eager = !['capture', 'reference', 'yaku'].includes(locationName);
+            const art = asset ? `<img class="hana-art ${artClass}" src="${Utils.escape(asset)}" alt="" draggable="false" loading="${eager ? 'eager' : 'lazy'}" decoding="async"${eager ? ' fetchpriority="high"' : ''}>` : '';
             return `<${tag} class="hana-card ${interactive ? 'playable' : ''} ${locationName === 'capture' ? 'capture-card' : ''}" ${attrs} data-month="${card.month}" data-category="${Utils.escape((card.categories || []).join(' '))}" style="--index:${index}"><div class="hana-face">${art}<span class="month-number">${card.month}</span><span class="motif-glyph">${GLYPHS[card.motif] || '花'}</span><span class="motif-name">${Utils.escape(card.name)}</span></div></${tag}>`;
         },
         renderActions(state) {
@@ -448,11 +472,24 @@
         },
         openOverview() {
             const image = document.getElementById('hanafuda-overview'); if (!image.src) image.src = image.dataset.src;
+            UI.renderReferenceGuides();
             UI.setOverviewZoom(1);
+            UI.setOverviewBackground(localStorage.getItem('hanafuda_overview_background') !== 'dark');
+            UI.setOverviewTab('cards');
             document.getElementById('overview-modal').classList.remove('hidden'); document.getElementById('modal-overlay').classList.remove('hidden');
             setTimeout(() => document.getElementById('overview-viewport').focus(), 30);
         },
-        closeOverview() { document.getElementById('overview-modal').classList.add('hidden'); UI.syncModalOverlay(); },
+        closeOverview() { UI.closeCardDetail(); document.getElementById('overview-modal').classList.add('hidden'); UI.syncModalOverlay(); },
+        setOverviewTab(tab) {
+            const safe = tab === 'yaku' ? 'yaku' : 'cards'; App.ui.overviewTab = safe;
+            document.getElementById('overview-cards-panel').classList.toggle('hidden', safe !== 'cards'); document.getElementById('overview-yaku-panel').classList.toggle('hidden', safe !== 'yaku');
+            [['btn-overview-cards', 'cards'], ['btn-overview-yaku', 'yaku']].forEach(([id, value]) => { const button = document.getElementById(id); const selected = value === safe; button.classList.toggle('active', selected); button.setAttribute('aria-selected', String(selected)); });
+        },
+        setOverviewBackground(light) {
+            App.ui.overviewLight = Boolean(light); const viewport = document.getElementById('overview-viewport'); const button = document.getElementById('btn-overview-background');
+            viewport.classList.toggle('light-background', App.ui.overviewLight); button.setAttribute('aria-pressed', String(App.ui.overviewLight)); button.textContent = App.ui.overviewLight ? 'WHITE BACKGROUND' : 'DARK BACKGROUND';
+            localStorage.setItem('hanafuda_overview_background', App.ui.overviewLight ? 'white' : 'dark');
+        },
         setOverviewZoom(value) {
             const zoom = Math.max(0.75, Math.min(3, Math.round(Number(value || 1) * 4) / 4));
             App.ui.overviewZoom = zoom;
@@ -461,6 +498,25 @@
             document.getElementById('btn-overview-zoom-out').disabled = zoom <= 0.75;
             document.getElementById('btn-overview-zoom-in').disabled = zoom >= 3;
         },
+        referenceDeck() { return HanafudaRules.createDeck(() => 0.999999).sort((a, b) => a.month - b.month || a.monthIndex - b.monthIndex); },
+        renderReferenceGuides() {
+            const deck = UI.referenceDeck(); const groups = HanafudaRules.byMonth(deck);
+            document.getElementById('card-reference-grid').innerHTML = Object.values(groups).map(cards => {
+                const first = cards[0];
+                return `<section class="reference-month"><header><strong>${first.month}. ${Utils.escape(first.monthName)}</strong><small lang="ja">${Utils.escape(first.japaneseMonth)} · ${Utils.escape(first.japaneseMonthReading)}</small></header><div class="reference-card-row">${cards.map(card => `<button class="card-info-trigger" type="button" data-info-card="${Utils.escape(card.id)}" aria-label="Details for ${Utils.escape(card.name)}">${UI.cardMarkup(card, false, 'reference')}<span>${Utils.escape(card.name)}</span></button>`).join('')}</div></section>`;
+            }).join('');
+            const byId = Object.fromEntries(deck.map(card => [card.id, card]));
+            document.getElementById('yaku-reference-grid').innerHTML = HanafudaRules.YAKU_GUIDE.map(yaku => `<article class="yaku-reference ${yaku.variant ? 'variant' : ''} ${yaku.optional ? 'optional' : ''}"><header><div><strong>${Utils.escape(yaku.name)}</strong><small lang="ja">${Utils.escape(yaku.japanese)}</small></div><b>${Utils.escape(yaku.points)}</b></header><p>${Utils.escape(yaku.description)}</p>${yaku.cardIds.length ? `<div class="yaku-card-row">${yaku.cardIds.map(id => byId[id]).filter(Boolean).map(card => `<button class="card-info-trigger" type="button" data-info-card="${Utils.escape(card.id)}" aria-label="Details for ${Utils.escape(card.name)}">${UI.cardMarkup(card, false, 'yaku')}</button>`).join('')}</div>` : '<div class="system-yaku-badge">DEALER / ROUND RESULT</div>'}</article>`).join('');
+            document.querySelectorAll('#card-reference-grid .card-info-trigger, #yaku-reference-grid .card-info-trigger').forEach(button => button.onclick = () => UI.openCardDetail(button.dataset.infoCard));
+        },
+        openCardDetail(cardId) {
+            const card = UI.referenceDeck().find(item => item.id === cardId); if (!card) return;
+            const categoryYaku = { kasu: 'Chaff', tanzaku: 'Ribbon', tane: 'Animal' };
+            const related = HanafudaRules.YAKU_GUIDE.filter(yaku => !yaku.variant && (yaku.cardIds.includes(card.id) || card.categories.includes(categoryYaku[yaku.id])));
+            document.getElementById('card-detail-content').innerHTML = `<div class="card-detail-layout"><div class="card-detail-art">${UI.cardMarkup(card, false, 'detail')}</div><div class="card-detail-copy"><div class="eyebrow">MONTH ${card.month} · CARD ${card.monthIndex + 1}</div><h2 id="card-detail-title">${Utils.escape(card.name)}</h2><div class="card-detail-japanese" lang="ja"><strong>${Utils.escape(card.japaneseName)}</strong><span>${Utils.escape(card.japaneseMonth)} · ${Utils.escape(card.japaneseMonthReading)}</span></div><dl><div><dt>Month</dt><dd>${card.month}. ${Utils.escape(card.monthName)}</dd></div><div><dt>Type</dt><dd>${Utils.escape((card.categories || []).join(' · '))}</dd></div><div><dt>Japanese type</dt><dd lang="ja">${Utils.escape(card.japaneseType)} <small>${Utils.escape(card.japaneseTypeReading)}</small></dd></div></dl><div class="card-yaku-links"><strong>Appears in these combinations</strong><p>${related.length ? related.map(yaku => Utils.escape(yaku.name)).join(' · ') : 'A useful month-matching card; it mainly contributes to category totals.'}</p></div></div></div>`;
+            document.getElementById('card-detail-modal').classList.remove('hidden'); document.getElementById('modal-overlay').classList.remove('hidden');
+        },
+        closeCardDetail() { document.getElementById('card-detail-modal').classList.add('hidden'); UI.syncModalOverlay(); },
         openAppearance() {
             const state = App.gameState || {}; const me = state.players?.find(player => player.id === App.localId);
             let cards = [...(me?.hand || []), ...(me?.captured || []), ...(state.field || [])].filter(card => !card.hidden && card.asset).slice(0, 4);
@@ -470,7 +526,7 @@
             document.getElementById('appearance-modal').classList.remove('hidden'); document.getElementById('modal-overlay').classList.remove('hidden');
         },
         closeAppearance() { document.getElementById('appearance-modal').classList.add('hidden'); UI.syncModalOverlay(); },
-        syncModalOverlay() { const open = ['rules-modal', 'capture-modal', 'koi-choice-modal', 'overview-modal', 'appearance-modal', 'result-modal'].some(id => !document.getElementById(id).classList.contains('hidden')); document.getElementById('modal-overlay').classList.toggle('hidden', !open); },
+        syncModalOverlay() { const open = ['rules-modal', 'capture-modal', 'koi-choice-modal', 'overview-modal', 'card-detail-modal', 'appearance-modal', 'result-modal'].some(id => !document.getElementById(id).classList.contains('hidden')); document.getElementById('modal-overlay').classList.toggle('hidden', !open); },
         hideResult() { if (App.gameState) App.ui.dismissedRound = App.gameState.roundNumber; document.getElementById('result-modal').classList.add('hidden'); UI.syncModalOverlay(); },
         showResult() { if (!App.gameState || !['END_ROUND', 'MATCH_OVER'].includes(App.gameState.phase)) return; App.ui.dismissedRound = null; UI.renderResult(App.gameState); },
         startNextMonth() { if (!App.isHost || App.gameState?.phase !== 'END_ROUND') return UI.showToast('Only the host can deal the next month.', 'danger'); App.ui.dismissedRound = App.gameState.roundNumber; UI.hideResult(); Net.sendAction({ type: 'START_NEXT_ROUND' }); },
@@ -496,7 +552,8 @@
         openRules() { document.getElementById('modal-overlay').classList.remove('hidden'); document.getElementById('rules-modal').classList.remove('hidden'); },
         closeRules() { document.getElementById('rules-modal').classList.add('hidden'); UI.syncModalOverlay(); },
         closeTopModal() {
-            if (!document.getElementById('appearance-modal').classList.contains('hidden')) UI.closeAppearance();
+            if (!document.getElementById('card-detail-modal').classList.contains('hidden')) UI.closeCardDetail();
+            else if (!document.getElementById('appearance-modal').classList.contains('hidden')) UI.closeAppearance();
             else if (!document.getElementById('overview-modal').classList.contains('hidden')) UI.closeOverview();
             else if (!document.getElementById('rules-modal').classList.contains('hidden')) UI.closeRules();
             else if (!document.getElementById('result-modal').classList.contains('hidden')) UI.hideResult();

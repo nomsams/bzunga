@@ -10,6 +10,15 @@
         'Bush Clover', 'Pampas', 'Chrysanthemum', 'Maple', 'Willow', 'Paulownia'
     ];
     const ASSET_MONTHS = ['January_Pine', 'February_Plum', 'March_Cherry', 'April_Wisteria', 'May_Iris', 'June_Peony', 'July_Clover', 'August_Pampas', 'September_Chrysanthemum', 'October_Maple', 'November_Willow', 'December_Paulownia'];
+    const HAWAII_ASSET_MONTHS = ['January_Pine', 'February_Plum', 'March_Cherry', 'April_Wisteria', 'May_Iris', 'June_Peony', 'July_BushClover', 'August_Grass', 'September_Chrysanthemum', 'October_Maple', 'November_Willow', 'December_Paulownia'];
+    const JAPANESE_MONTHS = [
+        { name: '睦月・松', reading: 'Mutsuki · Matsu' }, { name: '如月・梅', reading: 'Kisaragi · Ume' },
+        { name: '弥生・桜', reading: 'Yayoi · Sakura' }, { name: '卯月・藤', reading: 'Uzuki · Fuji' },
+        { name: '皐月・菖蒲', reading: 'Satsuki · Ayame' }, { name: '水無月・牡丹', reading: 'Minazuki · Botan' },
+        { name: '文月・萩', reading: 'Fumizuki · Hagi' }, { name: '葉月・芒', reading: 'Hazuki · Susuki' },
+        { name: '長月・菊', reading: 'Nagatsuki · Kiku' }, { name: '神無月・紅葉', reading: 'Kannazuki · Momiji' },
+        { name: '霜月・柳', reading: 'Shimotsuki · Yanagi' }, { name: '師走・桐', reading: 'Shiwasu · Kiri' }
+    ];
 
     const CARD_BLUEPRINTS = [
         [1, 'Crane & Sun', ['Bright'], 'crane'], [1, 'Poetry Ribbon', ['Ribbon', 'Poetry'], 'ribbon-poetry'], [1, 'Pine Chaff I', ['Chaff'], 'chaff'], [1, 'Pine Chaff II', ['Chaff'], 'chaff'],
@@ -24,6 +33,61 @@
         [10, 'Deer', ['Animal'], 'deer'], [10, 'Blue Ribbon', ['Ribbon', 'Blue'], 'ribbon-blue'], [10, 'Maple Chaff I', ['Chaff'], 'chaff'], [10, 'Maple Chaff II', ['Chaff'], 'chaff'],
         [11, 'Rain Man', ['Bright', 'Rain'], 'rain-man'], [11, 'Swallow', ['Animal'], 'swallow'], [11, 'Red Ribbon', ['Ribbon'], 'ribbon-red'], [11, 'Lightning', ['Chaff', 'Lightning'], 'lightning'],
         [12, 'Phoenix', ['Bright'], 'phoenix'], [12, 'Paulownia Chaff I', ['Chaff'], 'chaff'], [12, 'Paulownia Chaff II', ['Chaff'], 'chaff'], [12, 'Paulownia Chaff III', ['Chaff'], 'chaff']
+    ];
+
+    const MANTIA_ASSETS = [
+        'Hanafuda_January_Hikari.png', 'Hanafuda_January_Tanzaku.png', 'Hanafuda_January_Kasu_1.png', 'Hanafuda_January_Kasu_2.png',
+        'Hanafuda_February_Tane.png', 'Hanafuda_February_Tanzaku.png', 'Hanafuda_February_Kasu_1.png', 'Hanafuda_February_Kasu_2.png',
+        'Hanafuda_March_Hikari.png', 'Hanafuda_March_Tanzaku.png', 'Hanafuda_March_Kasu_1.png', 'Hanafuda_March_Kasu_2.png',
+        'Hanafuda_April_Tane.png', 'Hanafuda_April_Tanzaku.png', 'Hanafuda_April_Kasu_1.png', 'Hanafuda_April_Kasu_2.png',
+        'Hanafuda_May_Tane.png', 'Hanafuda_May_Tanzaku.png', 'Hanafuda_May_Kasu_1.png', 'Hanafuda_May_Kasu_2.png',
+        'Hanafuda_June_Tane.png', 'Hanafuda_June_Tanzaku.png', 'Hanafuda_June_Kasu_1.png', 'Hanafuda_June_Kasu_2.png',
+        'Hanafuda_July_Tane.png', 'Hanafuda_July_Tanzaku.png', 'Hanafuda_July_Kasu_1.png', 'Hanafuda_July_Kasu_2.png',
+        'Hanafuda_August_Hikari.png', 'Hanafuda_August_Tane.png', 'Hanafuda_August_Kasu_1.png', 'Hanafuda_August_Kasu_2.png',
+        'Hanafuda_September_Tane.png', 'Hanafuda_September_Tanzaku.png', 'Hanafuda_September_Kasu_1.png', 'Hanafuda_September_Kasu_2.png',
+        'Hanafuda_October_Tane.png', 'Hanafuda_October_Tanzaku.png', 'Hanafuda_October_Kasu_1.png', 'Hanafuda_October_Kasu_2.png',
+        'Hanafuda_November_Hikari.png', 'Hanafuda_November_Tane.png', 'Hanafuda_November_Tanzaku.png', 'Hanafuda_November_Kasu.png',
+        'Hanafuda_December_Hikari.png', 'Hanafuda_December_Kasu_1.png', 'Hanafuda_December_Kasu_2.png', 'Hanafuda_December_Kasu_3.png'
+    ];
+
+    const JAPANESE_CARD_NAMES = [
+        '松に鶴', '赤短', '松のカス', '松のカス',
+        '梅に鶯', '赤短', '梅のカス', '梅のカス',
+        '桜に幕', '赤短', '桜のカス', '桜のカス',
+        '藤に不如帰', '藤の短冊', '藤のカス', '藤のカス',
+        '菖蒲に八橋', '菖蒲の短冊', '菖蒲のカス', '菖蒲のカス',
+        '牡丹に蝶', '青短', '牡丹のカス', '牡丹のカス',
+        '萩に猪', '萩の短冊', '萩のカス', '萩のカス',
+        '芒に月', '芒に雁', '芒のカス', '芒のカス',
+        '菊に盃', '青短', '菊のカス', '菊のカス',
+        '紅葉に鹿', '青短', '紅葉のカス', '紅葉のカス',
+        '柳に小野道風', '柳に燕', '柳の短冊', '柳のカス',
+        '桐に鳳凰', '桐のカス', '桐のカス', '桐のカス'
+    ];
+
+    const JAPANESE_TYPES = {
+        Bright: { name: '光札', reading: 'Hikari-fuda' },
+        Animal: { name: '種札', reading: 'Tane-fuda' },
+        Ribbon: { name: '短冊札', reading: 'Tanzaku-fuda' },
+        Chaff: { name: 'カス札', reading: 'Kasu-fuda' }
+    };
+
+    const YAKU_GUIDE = [
+        { id: 'kasu', name: 'Kasu · Chaff', japanese: 'カス', points: '1 point at 10 · +1 each extra', description: 'Collect 10 Chaff cards. The September Sake Cup also counts as Chaff.', cardIds: ['h-1-2', 'h-2-2', 'h-3-2', 'h-4-2'] },
+        { id: 'tanzaku', name: 'Tanzaku · Ribbons', japanese: '短冊', points: '1 point at 5 · +1 each extra', description: 'Collect any 5 Ribbon cards.', cardIds: ['h-1-1', 'h-2-1', 'h-3-1', 'h-4-1', 'h-5-1'] },
+        { id: 'tane', name: 'Tane · Animals', japanese: 'タネ', points: '1 point at 5 · +1 each extra', description: 'Collect any 5 Animal cards. The September Sake Cup counts here too.', cardIds: ['h-2-0', 'h-4-0', 'h-5-0', 'h-6-0', 'h-7-0'] },
+        { id: 'inoshikacho', name: 'Ino-Shika-Chō · Boar, Deer, Butterflies', japanese: '猪鹿蝶', points: '5 points', description: 'Collect the July Boar, October Deer, and June Butterflies.', cardIds: ['h-7-0', 'h-10-0', 'h-6-0'] },
+        { id: 'akatan', name: 'Akatan · Red Poetry Ribbons', japanese: '赤短', points: '5 points', description: 'Collect all 3 red Poetry Ribbons from January, February, and March.', cardIds: ['h-1-1', 'h-2-1', 'h-3-1'] },
+        { id: 'aotan', name: 'Aotan · Blue Ribbons', japanese: '青短', points: '5 points', description: 'Collect all 3 blue Ribbons from June, September, and October.', cardIds: ['h-6-1', 'h-9-1', 'h-10-1'] },
+        { id: 'sanko', name: 'Sankō · Three Brights', japanese: '三光', points: '5 points', description: 'Collect any 3 Bright cards without the November Rain Man.', cardIds: ['h-1-0', 'h-3-0', 'h-8-0'] },
+        { id: 'ameshiko', name: 'Ame-Shikō · Rainy Four Brights', japanese: '雨四光', points: '7 points', description: 'Collect the November Rain Man plus any 3 other Bright cards.', cardIds: ['h-11-0', 'h-1-0', 'h-3-0', 'h-8-0'] },
+        { id: 'shiko', name: 'Shikō · Four Brights', japanese: '四光', points: '8 points', description: 'Collect all 4 non-rain Bright cards.', cardIds: ['h-1-0', 'h-3-0', 'h-8-0', 'h-12-0'] },
+        { id: 'goko', name: 'Gokō · Five Brights', japanese: '五光', points: '10 points', description: 'Collect all 5 Bright cards, including the November Rain Man.', cardIds: ['h-1-0', 'h-3-0', 'h-8-0', 'h-11-0', 'h-12-0'] },
+        { id: 'tsukimi', name: 'Tsukimi-zake · Moon Viewing', japanese: '月見酒', points: '5 points · optional rule', description: 'Collect the August Full Moon and September Sake Cup. This Yaku is off by default.', cardIds: ['h-8-0', 'h-9-0'], optional: true },
+        { id: 'hanami', name: 'Hanami-zake · Blossom Viewing', japanese: '花見酒', points: '5 points · optional rule', description: 'Collect the March Curtain and September Sake Cup. This Yaku is off by default.', cardIds: ['h-3-0', 'h-9-0'], optional: true },
+        { id: 'oya-ken', name: 'Oya-ken · Dealer privilege', japanese: '親権', points: '6 points', description: 'If both hands run out without a new winning Yaku, the dealer receives 6 points.', cardIds: [], system: true },
+        { id: 'bake-fuda', name: 'Bake-fuda · Dual-type Sake Cup', japanese: '化け札', points: 'Special card', description: 'The September Sake Cup counts once as an Animal and once as Chaff at the same time.', cardIds: ['h-9-0'], system: true },
+        { id: 'tsuki-fuda', name: 'Tsuki-fuda · Monthly Cards', japanese: '月札', points: '4 points in that variant · not active', description: 'Some variants award 4 points for all four cards of one month. This table does not score that Yaku.', cardIds: ['h-1-0', 'h-1-1', 'h-1-2', 'h-1-3'], variant: true }
     ];
 
     const SPECIAL = {
@@ -44,16 +108,25 @@
 
     function createDeck(random = Math.random) {
         const monthOffsets = Array(12).fill(0);
-        return shuffle(CARD_BLUEPRINTS.map(([month, name, categories, motif]) => {
+        return shuffle(CARD_BLUEPRINTS.map(([month, name, categories, motif], blueprintIndex) => {
             const monthIndex = monthOffsets[month - 1]++;
+            const cardTypes = ['Bright', 'Animal', 'Ribbon', 'Chaff'].filter(category => categories.includes(category));
             return {
                 id: `h-${month}-${monthIndex}`,
                 month,
+                monthIndex,
                 monthName: MONTHS[month - 1],
                 name,
+                japaneseName: JAPANESE_CARD_NAMES[blueprintIndex],
+                japaneseMonth: JAPANESE_MONTHS[month - 1].name,
+                japaneseMonthReading: JAPANESE_MONTHS[month - 1].reading,
+                japaneseType: cardTypes.map(type => JAPANESE_TYPES[type].name).join('・'),
+                japaneseTypeReading: cardTypes.map(type => JAPANESE_TYPES[type].reading).join(' / '),
                 categories: [...categories],
                 motif,
                 asset: `../assets/hanafuda-svg/${String(month).padStart(2, '0')}_${ASSET_MONTHS[month - 1]}_Card_${monthIndex + 1}.svg`,
+                mantiaAsset: `../assets/hanafuda-mantia/${MANTIA_ASSETS[blueprintIndex]}`,
+                hawaiiAsset: `../assets/hanafuda-hawaii/${String(month).padStart(2, '0')}_${HAWAII_ASSET_MONTHS[month - 1]}_Card_${monthIndex + 1}.svg`,
                 ownerId: null
             };
         }), random);
@@ -163,7 +236,13 @@
     return {
         MONTHS,
         ASSET_MONTHS,
+        HAWAII_ASSET_MONTHS,
+        JAPANESE_MONTHS,
         CARD_BLUEPRINTS,
+        MANTIA_ASSETS,
+        JAPANESE_CARD_NAMES,
+        JAPANESE_TYPES,
+        YAKU_GUIDE,
         SPECIAL,
         shuffle,
         createDeck,

@@ -22,7 +22,7 @@
 
         createInitialState() {
             return {
-                phase: 'lobby', settings: { rounds: 6, viewingYaku: false, bustedViewing: false, cardBack: 'hana-red', cardFront: 'original' },
+                phase: 'lobby', settings: { rounds: 6, viewingYaku: false, bustedViewing: false, cardBack: 'hana-red', cardFront: 'original', cardArt: 'scanned-svg' },
                 players: [], dealerId: null, turnPlayerId: null, roundNumber: 0, deck: [], field: [],
                 pending: null, currentTurn: null, koiKoi: {}, roundBaselines: {}, roundResult: null,
                 matchResult: null, logs: [], nextLogId: 0, lastAction: null, redeals: 0,
@@ -62,7 +62,8 @@
                 viewingYaku: Boolean(settings.viewingYaku),
                 bustedViewing: Boolean(settings.viewingYaku && settings.bustedViewing),
                 cardBack: cleanText(settings.cardBack, 20, 'hana-red'),
-                cardFront: ['original', 'invert', 'white-red'].includes(settings.cardFront) ? settings.cardFront : 'original'
+                cardFront: ['original', 'invert', 'white-red'].includes(settings.cardFront) ? settings.cardFront : 'original',
+                cardArt: ['scanned-svg', 'mantia-png', 'hawaii-svg'].includes(settings.cardArt) ? settings.cardArt : 'scanned-svg'
             };
             this.state.dealerId = active[Math.floor(this.random() * active.length)].id;
             this._dealRound();

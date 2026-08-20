@@ -36,6 +36,8 @@ for (const gameFile of [
 }
 assert(offlineSource.includes('CardTheme.allFaceUrls'), 'Offline download must include every illustrated face');
 assert(offlineSource.includes("'./assets/hanafuda-svg/Hanafuda_overview.svg'"), 'Offline download must include the zoomable Hanafuda overview');
+assert(offlineSource.includes('./assets/hanafuda-mantia/Hanafuda_${month}_${card}.png'), 'Offline download must include all optional Mantia PNG faces');
+assert(offlineSource.includes('./assets/hanafuda-hawaii/${String(month).padStart(2, \'0\')}_${hawaiiMonths[month - 1]}_Card_${card}.svg'), 'Offline download must include all Hawaii SVG faces');
 assert(offlineSource.includes("getBackUrl(siteRoot.href, 'svg-blue')"), 'Offline download must include the blue back');
 assert(offlineSource.includes("getBackUrl(siteRoot.href, 'svg-red')"), 'Offline download must include the red back');
 assert(offlineSource.includes('mqtt@5.14.1'), 'Offline assets must include the pinned relay client for later online joins');
@@ -56,4 +58,4 @@ for (const appFile of ['index.html', 'president/app.js', 'durak/app.js', 'hanafu
     assert(source.includes('BOTS ONLY'), `${appFile} must clearly label local-only rooms`);
 }
 
-console.log('Offline mode: all game code, 56 deck assets, progress UI, cache routing, and local bot hosts passed.');
+console.log('Offline mode: all game code, 152 deck assets, progress UI, cache routing, and local bot hosts passed.');

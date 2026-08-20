@@ -49,6 +49,21 @@
             localFiles.push(`./assets/hanafuda-svg/${String(month).padStart(2, '0')}_${hanafudaMonths[month - 1]}_Card_${card}.svg`);
         }
     }
+    const mantiaCards = {
+        January: ['Hikari', 'Tanzaku', 'Kasu_1', 'Kasu_2'], February: ['Tane', 'Tanzaku', 'Kasu_1', 'Kasu_2'],
+        March: ['Hikari', 'Tanzaku', 'Kasu_1', 'Kasu_2'], April: ['Tane', 'Tanzaku', 'Kasu_1', 'Kasu_2'],
+        May: ['Tane', 'Tanzaku', 'Kasu_1', 'Kasu_2'], June: ['Tane', 'Tanzaku', 'Kasu_1', 'Kasu_2'],
+        July: ['Tane', 'Tanzaku', 'Kasu_1', 'Kasu_2'], August: ['Hikari', 'Tane', 'Kasu_1', 'Kasu_2'],
+        September: ['Tane', 'Tanzaku', 'Kasu_1', 'Kasu_2'], October: ['Tane', 'Tanzaku', 'Kasu_1', 'Kasu_2'],
+        November: ['Hikari', 'Tane', 'Tanzaku', 'Kasu'], December: ['Hikari', 'Kasu_1', 'Kasu_2', 'Kasu_3']
+    };
+    for (const [month, cards] of Object.entries(mantiaCards)) {
+        for (const card of cards) localFiles.push(`./assets/hanafuda-mantia/Hanafuda_${month}_${card}.png`);
+    }
+    const hawaiiMonths = ['January_Pine', 'February_Plum', 'March_Cherry', 'April_Wisteria', 'May_Iris', 'June_Peony', 'July_BushClover', 'August_Grass', 'September_Chrysanthemum', 'October_Maple', 'November_Willow', 'December_Paulownia'];
+    for (let month = 1; month <= 12; month++) {
+        for (let card = 1; card <= 4; card++) localFiles.push(`./assets/hanafuda-hawaii/${String(month).padStart(2, '0')}_${hawaiiMonths[month - 1]}_Card_${card}.svg`);
+    }
 
     function unique(values) {
         return [...new Set(values.filter(Boolean))];

@@ -136,6 +136,12 @@ html[data-hanafuda-back^="svg-"] .card-back::before { display: none; }
 .hana-face::before { content: ''; position: absolute; inset: 48% -20% -18%; border-radius: 50% 50% 0 0; background: var(--plant, #597447); opacity: .9; rotate: var(--slope, -7deg); }
 .hana-face::after { content: ''; position: absolute; width: 8%; height: 92%; left: 48%; bottom: -8%; border-radius: 50%; background: #30291d; rotate: var(--stem, 26deg); transform-origin: bottom; box-shadow: -13px 20px 0 -2px var(--plant, #597447), 14px 8px 0 -2px var(--plant, #597447); }
 .hana-art { position: absolute; z-index: 5; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; background: transparent; }
+.hana-card:has(.mantia-art) { border-width: 1px; border-color: #4d1f14; background: #4d1f14; }
+.hana-card:has(.mantia-art) .hana-face { inset: 0; background: #4d1f14; }
+.mantia-art { object-fit: contain; image-rendering: auto; }
+.hana-card:has(.hawaii-art) { border: 0; background: #fff; }
+.hana-card:has(.hawaii-art) .hana-face { inset: 0; background: #fff; }
+.hawaii-art { object-fit: contain; image-rendering: auto; }
 html[data-hanafuda-front="original"] .hana-card:has(.hana-art) .hana-face { background: #050505; }
 html[data-hanafuda-front="invert"] .hana-card:has(.hana-art) .hana-face { background: #f8f5ed; }
 html[data-hanafuda-front="invert"] .hana-art { filter: invert(1) hue-rotate(180deg) saturate(1.12); background: transparent; }
@@ -228,16 +234,67 @@ html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef
 .koi-choice-modal .koi-button, .koi-choice-modal .shobu-button { min-height: 62px; padding: 12px; font-size: .78rem; box-shadow: 0 10px 24px #0008; }
 .koi-choice-modal small { display: block; margin-top: 12px; color: #aeb4ab; font-size: .62rem; line-height: 1.45; }
 .overview-modal { width: min(1120px, calc(100% - 24px)); max-height: 92svh; }
+.overview-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 10px; padding: 4px; border: 1px solid #ffffff17; border-radius: 12px; background: #070a08; }
+.overview-tabs button { min-height: 40px; border: 0; border-radius: 8px; color: #b7bcb4; background: transparent; font-size: .67rem; font-weight: 900; letter-spacing: .055em; }
+.overview-tabs button.active { color: #201803; background: linear-gradient(135deg, #f4d978, #cba134); box-shadow: 0 5px 16px #0008; }
 .overview-controls { position: sticky; z-index: 3; top: -1px; display: flex; align-items: center; justify-content: center; gap: 7px; margin: 0 0 10px; padding: 7px; border-radius: 11px; background: #111510f2; }
 .overview-controls button { min-width: 40px; min-height: 36px; padding: 5px 10px; border: 1px solid #d5a93655; border-radius: 8px; color: white; background: #ffffff0d; font-weight: 900; }
+#btn-overview-background[aria-pressed="true"] { color: #211b0d; background: #fff; border-color: #fff; }
 #overview-zoom { min-width: 58px; color: #f0d67f; font-size: .7rem; font-weight: 900; text-align: center; }
-#overview-viewport { max-height: 67svh; overflow: auto; border: 1px solid #ef1d1e66; border-radius: 12px; background: #050505; overscroll-behavior: contain; touch-action: pan-x pan-y; }
+#overview-viewport { max-height: 57svh; overflow: auto; border: 1px solid #ef1d1e66; border-radius: 12px; background: #161816; overscroll-behavior: contain; touch-action: pan-x pan-y; transition: background .18s ease; }
+#overview-viewport.light-background { background: #fff; }
 #hanafuda-overview { display: block; width: 100%; max-width: none; height: auto; transform-origin: top left; user-select: none; }
+.reference-heading { margin: 18px 0 9px; display: flex; align-items: end; justify-content: space-between; gap: 10px; color: #e8cf79; font-size: .69rem; letter-spacing: .06em; }
+.reference-heading span { color: #92998f; font-size: .57rem; font-weight: 600; letter-spacing: 0; }
+#card-reference-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.reference-month { min-width: 0; padding: 9px; border: 1px solid #ffffff16; border-radius: 12px; background: #090d0a; }
+.reference-month header { min-height: 35px; margin-bottom: 7px; display: flex; align-items: start; justify-content: space-between; gap: 6px; }
+.reference-month header strong { color: #f4dc8d; font-size: .65rem; }
+.reference-month header small { max-width: 58%; color: #929a91; font-size: .48rem; line-height: 1.25; text-align: right; }
+.reference-card-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+.card-info-trigger { min-width: 0; padding: 3px; border: 1px solid transparent; border-radius: 8px; color: #d9ddd6; background: transparent; text-align: center; }
+.card-info-trigger:hover, .card-info-trigger:focus-visible { z-index: 2; outline: none; border-color: #e3c45b99; background: #e3c45b10; transform: translateY(-2px); }
+.card-info-trigger .hana-card { width: 100%; height: auto; aspect-ratio: 1 / 1.52; margin: 0 auto; pointer-events: none; }
+.card-info-trigger > span { min-height: 2.45em; margin-top: 4px; display: block; overflow: hidden; font-size: .44rem; font-weight: 700; line-height: 1.2; }
+.yaku-score-note { margin: 2px 0 10px; padding: 10px 12px; display: grid; gap: 2px; border: 1px solid #d7b84b55; border-radius: 10px; color: #f2d77c; background: #d7b84b0b; font-size: .62rem; }
+.yaku-score-note span { color: #aeb4ab; font-size: .56rem; line-height: 1.45; }
+.yaku-score-note a { color: #f0d67f; }
+#yaku-reference-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.yaku-reference { min-width: 0; padding: 12px; border: 1px solid #ffffff17; border-radius: 13px; background: linear-gradient(145deg, #0d130f, #080b09); }
+.yaku-reference.optional { border-color: #477aa866; }
+.yaku-reference.variant { border-style: dashed; border-color: #d09d5166; background: #21170d; }
+.yaku-reference header { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+.yaku-reference header div { min-width: 0; display: grid; }
+.yaku-reference header strong { color: #f4e2a6; font-size: .7rem; line-height: 1.25; }
+.yaku-reference header small { color: #9fa69d; font-size: .58rem; }
+.yaku-reference header b { flex: 0 0 auto; max-width: 45%; padding: 4px 7px; border-radius: 999px; color: #211800; background: #e5c45a; font-size: .53rem; line-height: 1.25; text-align: center; }
+.yaku-reference p { margin: 8px 0; color: #b9bfb7; font-size: .58rem; line-height: 1.45; }
+.yaku-card-row { --card-w: 48px; display: flex; align-items: end; gap: 3px; overflow-x: auto; padding: 2px 1px 4px; }
+.yaku-card-row .card-info-trigger { flex: 0 0 calc(var(--card-w) + 6px); }
+.system-yaku-badge { min-height: 48px; display: grid; place-items: center; border: 1px dashed #e3c45b55; border-radius: 8px; color: #d8c47b; font-size: .57rem; font-weight: 900; letter-spacing: .08em; }
+.card-detail-modal { z-index: 74; width: min(680px, calc(100% - 20px)); }
+.card-detail-layout { display: grid; grid-template-columns: minmax(130px, .72fr) 1.28fr; align-items: center; gap: clamp(18px, 4vw, 34px); }
+.card-detail-art { --card-w: clamp(130px, 24vw, 190px); display: grid; place-items: center; }
+.card-detail-art .hana-card { box-shadow: 0 20px 42px #000c; }
+.card-detail-copy h2 { margin: 4px 0 7px; color: #f7e5a4; font-size: clamp(1.5rem, 5vw, 2.5rem); line-height: 1.05; }
+.card-detail-japanese { display: grid; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #ffffff17; }
+.card-detail-japanese strong { color: #f0f1ed; font-size: 1rem; }
+.card-detail-japanese span { color: #969d94; font-size: .58rem; }
+.card-detail-copy dl { margin: 0; display: grid; gap: 6px; }
+.card-detail-copy dl div { display: grid; grid-template-columns: 88px 1fr; gap: 8px; }
+.card-detail-copy dt { color: #8f978e; font-size: .58rem; font-weight: 800; text-transform: uppercase; }
+.card-detail-copy dd { margin: 0; color: #e1e5df; font-size: .67rem; font-weight: 700; }
+.card-detail-copy dd small { color: #979f96; font-size: .54rem; }
+.card-yaku-links { margin-top: 13px; padding: 10px; border-radius: 9px; background: #d5a9360d; }
+.card-yaku-links strong { color: #e6cb73; font-size: .58rem; text-transform: uppercase; }
+.card-yaku-links p { margin: 4px 0 0; color: #b9bfb7; font-size: .58rem; line-height: 1.5; }
 .appearance-modal { width: min(620px, calc(100% - 24px)); }
-.appearance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.appearance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .appearance-grid label { color: #e4e7e1; font-size: .68rem; font-weight: 800; }
 .appearance-grid select { margin-top: 5px; }
 #appearance-preview { min-height: calc(var(--card-h) + 26px); margin: 16px 0 13px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; overflow-x: auto; border: 1px solid #ffffff17; border-radius: 12px; background: #050705; }
+.art-credit { display: block; margin: -4px 0 13px; color: #a9aa9f; font-size: .59rem; line-height: 1.45; text-align: center; }
+.art-credit a { color: #e8cf79; }
 #btn-appearance-done { width: 100%; }
 #result-summary { display: grid; gap: 8px; }
 .result-score { padding: 12px; border-radius: 10px; background: #ffffff0b; }
@@ -278,7 +335,13 @@ html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef
     .appearance-grid { grid-template-columns: 1fr; }
     .koi-choice-modal .choice-actions { grid-template-columns: 1fr; }
     .overview-modal { width: calc(100% - 12px); padding: 17px 10px 12px; }
-    #overview-viewport { max-height: 70svh; }
+    #overview-viewport { max-height: 58svh; }
+    #card-reference-grid, #yaku-reference-grid { grid-template-columns: 1fr; }
+    .reference-heading { align-items: start; flex-direction: column; }
+    .overview-controls { flex-wrap: wrap; }
+    .card-detail-layout { grid-template-columns: 1fr; }
+    .card-detail-art { --card-w: min(42vw, 170px); }
+    .card-detail-copy { text-align: left; }
     .room-code-wrap { align-items: flex-start; }
     #room-id-display { max-width: 210px; }
 }

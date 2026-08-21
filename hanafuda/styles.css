@@ -193,7 +193,8 @@ html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef
 .hand-tools { min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
 .hand-tools button { min-height: 27px; padding: 4px 8px; border: 1px solid #d5a93655; border-radius: 8px; color: #f4dc8d; background: #d5a93610; font-size: .51rem; font-weight: 900; letter-spacing: .035em; white-space: nowrap; }
 .hand-tools button:hover, .hand-tools button:focus-visible { border-color: #edce70; background: #d5a93622; outline: none; }
-.mobile-hand-mode { display: none; }
+.mobile-hand-mode { display: inline-flex; align-items: center; }
+.card-input-mode[aria-pressed="false"] { color: #151004; border-color: #edcb65; background: linear-gradient(135deg, #f1d36e, #c4962b); box-shadow: 0 0 0 1px #f6dc7e44; }
 .hand-scroll { height: calc(var(--card-h) + 12px); display: flex; justify-content: center; align-items: end; gap: clamp(3px, .7vw, 8px); overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; touch-action: pan-x; }
 .hand-scroll .hana-card.playable { box-shadow: 0 0 0 2px #e7c45588, 0 5px 12px #0008; }
 #action-panel { z-index: 19; position: relative; min-width: 0; width: 100%; padding: 7px max(12px, env(safe-area-inset-right)) 7px max(12px, env(safe-area-inset-left)); display: flex; align-items: center; justify-content: center; flex-wrap: wrap; column-gap: 12px; row-gap: 2px; border-block: 1px solid #d5a93666; background: linear-gradient(90deg, #090b09f2, #1d1b0ff5, #090b09f2); box-shadow: 0 8px 24px #0008; text-align: center; }
@@ -308,26 +309,26 @@ html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef
 .yaku-card-row { --card-w: 48px; display: flex; align-items: end; gap: 3px; overflow-x: auto; padding: 2px 1px 4px; }
 .yaku-card-row .card-info-trigger { flex: 0 0 calc(var(--card-w) + 6px); }
 .system-yaku-badge { min-height: 48px; display: grid; place-items: center; border: 1px dashed #e3c45b55; border-radius: 8px; color: #d8c47b; font-size: .57rem; font-weight: 900; letter-spacing: .08em; }
-.card-detail-modal { z-index: 74; width: min(590px, calc(100% - 20px)); padding: clamp(16px, 3vw, 24px); }
-.card-detail-layout { display: grid; grid-template-columns: minmax(118px, 158px) minmax(0, 1fr); align-items: center; gap: clamp(12px, 2.5vw, 20px); }
-.card-detail-art { --card-w: clamp(118px, 16vw, 158px); display: grid; place-items: center; }
+.card-detail-modal { z-index: 74; width: min(650px, calc(100% - 16px)); max-height: min(92svh, 720px); padding: clamp(13px, 2.3vw, 19px); }
+.card-detail-layout { display: grid; grid-template-columns: minmax(190px, 228px) minmax(0, 1fr); align-items: center; gap: clamp(10px, 2vw, 15px); }
+.card-detail-art { --card-w: clamp(190px, 23vw, 228px); display: grid; place-items: center; }
 .card-detail-art .hana-card { box-shadow: 0 20px 42px #000c; }
 .card-detail-copy { min-width: 0; }
-.card-detail-copy .eyebrow { font-size: .52rem; letter-spacing: .1em; }
-.card-detail-copy h2 { margin: 3px 0 6px; color: #f7e5a4; font-size: clamp(1.15rem, 3.2vw, 1.85rem); line-height: 1.05; }
-.card-detail-summary { margin: 0 0 8px; padding: 6px 8px; border: 1px solid #e8c75e44; border-radius: 9px; color: #f5dc87; background: #e8c75e0c; font-size: .61rem; font-weight: 800; line-height: 1.3; }
-.card-detail-japanese { display: grid; margin-bottom: 8px; padding-bottom: 7px; border-bottom: 1px solid #ffffff17; }
-.card-detail-japanese strong { color: #f0f1ed; font-size: .82rem; }
-.card-detail-japanese span { color: #969d94; font-size: .58rem; }
-.card-detail-copy dl { margin: 0; display: grid; gap: 4px; }
-.card-detail-copy dl div { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 6px; }
+.card-detail-copy .eyebrow { font-size: .48rem; letter-spacing: .085em; }
+.card-detail-copy h2 { margin: 2px 0 5px; color: #f7e5a4; font-size: clamp(1.05rem, 2.7vw, 1.55rem); line-height: 1.02; }
+.card-detail-summary { margin: 0 0 6px; padding: 5px 7px; border: 1px solid #e8c75e44; border-radius: 8px; color: #f5dc87; background: #e8c75e0c; font-size: .56rem; font-weight: 800; line-height: 1.25; }
+.card-detail-japanese { display: grid; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid #ffffff17; }
+.card-detail-japanese strong { color: #f0f1ed; font-size: .75rem; }
+.card-detail-japanese span { color: #969d94; font-size: .53rem; }
+.card-detail-copy dl { margin: 0; display: grid; gap: 3px; }
+.card-detail-copy dl div { display: grid; grid-template-columns: 66px minmax(0, 1fr); gap: 5px; }
 .card-detail-copy dt { color: #8f978e; font-size: .51rem; font-weight: 800; text-transform: uppercase; }
 .card-detail-copy dd { margin: 0; color: #e1e5df; font-size: .59rem; font-weight: 700; overflow-wrap: anywhere; }
 .card-detail-copy dd small { color: #979f96; font-size: .54rem; }
-.card-yaku-links { margin-top: 13px; padding: 10px; border-radius: 9px; background: #d5a9360d; }
+.card-yaku-links { margin-top: 7px; padding: 6px 7px; border-radius: 8px; background: #d5a9360d; }
 .card-yaku-links strong { color: #e6cb73; font-size: .58rem; text-transform: uppercase; }
-.card-yaku-links p { margin: 4px 0 0; color: #b9bfb7; font-size: .58rem; line-height: 1.5; }
-.card-detail-actions { margin-top: 9px; display: flex; gap: 6px; }
+.card-yaku-links p { margin: 3px 0 0; color: #b9bfb7; font-size: .54rem; line-height: 1.35; }
+.card-detail-actions { margin-top: 6px; display: flex; gap: 5px; }
 .card-detail-actions button { flex: 1; min-height: 38px; padding: 7px 9px; font-size: .61rem; }
 .appearance-modal { width: min(620px, calc(100% - 24px)); }
 .appearance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
@@ -407,9 +408,9 @@ html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef
     #card-reference-grid, #yaku-reference-grid { grid-template-columns: 1fr; }
     .reference-heading { align-items: start; flex-direction: column; }
     .overview-controls { flex-wrap: wrap; }
-    .card-detail-modal { width: calc(100% - 10px); padding: 14px 10px; }
-    .card-detail-layout { grid-template-columns: minmax(108px, 39%) minmax(0, 1fr); align-items: start; gap: 9px; }
-    .card-detail-art { --card-w: min(36vw, 146px); }
+    .card-detail-modal { width: calc(100% - 8px); padding: 11px 8px; }
+    .card-detail-layout { grid-template-columns: minmax(132px, 45%) minmax(0, 1fr); align-items: start; gap: 8px; }
+    .card-detail-art { --card-w: min(43vw, 172px); }
     .card-detail-copy { text-align: left; }
     .card-detail-copy dl div { grid-template-columns: 58px minmax(0, 1fr); gap: 4px; }
     .card-yaku-links { margin-top: 7px; padding-top: 6px; }

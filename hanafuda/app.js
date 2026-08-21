@@ -15,7 +15,7 @@
         connections: {}, connectionRoles: {}, spectators: {}, allowSpectators: true, isSpectator: false,
         requestedSpectator: false, requestedRoomName: '', hostId: '', reconnectTimer: null, leaving: false,
         joinRejected: false, hostBackup: null, viceHostId: null, promotionTimer: null, lastBackupSignature: '', gameState: null,
-        ui: { lastLogId: 0, lastTurnAnimationNonce: null, animationRun: 0, animatingCardIds: [], chatOpen: false, dismissedRound: null, overviewZoom: 1, overviewTab: 'cards', overviewLight: true, handTapInfo: true }
+        ui: { lastLogId: 0, lastTurnAnimationNonce: null, activeAnimationNonce: null, animationOrigins: null, animationRun: 0, animatingCardIds: [], chatOpen: false, dismissedRound: null, overviewZoom: 1, overviewTab: 'cards', overviewLight: true, handTapInfo: true }
     };
     const Game = { engine: null, bots: null };
 
@@ -353,7 +353,8 @@
         setHandTapInfo(showInfo, persist = false) {
             App.ui.handTapInfo = Boolean(showInfo);
             const button = document.getElementById('btn-hand-tap-mode');
-            if (button) { button.textContent = App.ui.handTapInfo ? 'TAP: INFO' : 'TAP: PLAY'; button.setAttribute('aria-pressed', String(App.ui.handTapInfo)); }
+            const inputWord = UI.isMobileCardInput() ? 'TAP' : 'CLICK';
+            if (button) { button.textContent = `${inputWord}: ${App.ui.handTapInfo ? 'INFO' : 'PLAY'}`; button.setAttribute('aria-pressed', String(App.ui.handTapInfo)); }
             if (persist) localStorage.setItem('hanafuda_hand_tap', App.ui.handTapInfo ? 'info' : 'play');
             if (App.gameState && App.gameState.phase !== 'lobby') UI.renderHand(App.gameState);
         },
@@ -383,6 +384,7 @@
         },
 
         render(state) {
+            UI.captureTurnAnimationOrigins(state);
             App.gameState = state;
             UI.setCardBack(localStorage.getItem('hanafuda_card_back') || state.settings?.cardBack || 'hana-red');
             UI.setCardFront(localStorage.getItem('hanafuda_card_front') || state.settings?.cardFront || 'original');
@@ -390,7 +392,10 @@
             UI.renderLogs(state);
             if (state.phase === 'lobby') return UI.renderLobby(state);
             document.getElementById('lobby').classList.add('hidden'); document.getElementById('game-view').classList.remove('hidden');
-            UI.renderSpectator(state); UI.renderStatus(state); UI.renderOpponents(state); UI.renderField(state); UI.renderCaptures(state); UI.renderHand(state); UI.renderActions(state); UI.renderResult(state); Promise.resolve(UI.animateAction(state)).catch(() => UI.clearTurnAnimation());
+            UI.renderSpectator(state); UI.renderStatus(state); UI.renderOpponents(state); UI.renderField(state); UI.renderCaptures(state); UI.renderHand(state); UI.renderActions(state); UI.renderResult(state);
+            Promise.resolve(UI.animateAction(state)).catch(() => UI.clearTurnAnimation()).finally(() => {
+                if (App.gameState && ['END_ROUND', 'MATCH_OVER'].includes(App.gameState.phase)) UI.renderResult(App.gameState);
+            });
         },
         renderLobby(state) {
             const mode = HanafudaRules.tableMode(state.settings?.mode); const seatsOpen = Math.max(0, mode.playerCount - state.players.length);
@@ -473,10 +478,11 @@
         renderHand(state) {
             const me = state.players.find(player => player.id === App.localId); const hand = document.getElementById('local-hand'); if (!me) return hand.replaceChildren();
             const canPlay = !App.isSpectator && state.phase === 'WAIT_HAND_SELECTION' && state.turnPlayerId === App.localId && me.connected !== false;
-            const directPlay = canPlay && UI.isMobileCardInput() && !App.ui.handTapInfo;
+            const directPlay = canPlay && !App.ui.handTapInfo;
             const sorted = [...me.hand].sort((a, b) => a.month - b.month || HanafudaRules.cardPriority(b) - HanafudaRules.cardPriority(a));
             hand.innerHTML = sorted.map(card => UI.cardMarkup(card, canPlay, 'hand')).join(''); document.getElementById('hand-count').textContent = `${me.hand.length} card${me.hand.length === 1 ? '' : 's'}`;
-            document.getElementById('hand-hint').textContent = directPlay ? 'Tap a hand card to play it' : canPlay ? 'Tap a card to inspect, then play it' : 'Tap a card to inspect it';
+            const inputWord = UI.isMobileCardInput() ? 'Tap' : 'Click';
+            document.getElementById('hand-hint').textContent = directPlay ? `${inputWord} a hand card to play it` : canPlay ? `${inputWord} a card to inspect, then play it` : `${inputWord} a card to inspect it`;
             if (directPlay) hand.querySelectorAll('[data-card-id]').forEach(card => { card.onclick = event => { event.preventDefault(); card.disabled = true; const result = Net.sendAction({ type: 'PLAY_HAND_CARD', cardId: card.dataset.cardId }); if (result && !result.ok) card.disabled = false; }; });
             else UI.bindCardDetails(hand, canPlay);
         },
@@ -521,7 +527,7 @@
         renderResult(state) {
             const modal = document.getElementById('result-modal'); const dock = document.getElementById('postgame-dock'); const complete = ['END_ROUND', 'MATCH_OVER'].includes(state.phase); const matchOver = state.phase === 'MATCH_OVER';
             dock.classList.toggle('hidden', !complete); document.getElementById('postgame-dock-label').textContent = matchOver ? 'MATCH COMPLETE' : `MONTH ${state.roundNumber} COMPLETE`; document.getElementById('btn-postgame-next').classList.toggle('hidden', !App.isHost || matchOver);
-            if (!complete || App.ui.dismissedRound === state.roundNumber) { modal.classList.add('hidden'); UI.syncModalOverlay(); return; }
+            if (!complete || App.ui.dismissedRound === state.roundNumber || UI.shouldDeferResult(state)) { modal.classList.add('hidden'); UI.syncModalOverlay(); return; }
             const winner = state.players.find(player => player.id === (state.matchResult?.winnerId || state.roundResult?.winnerId));
             document.getElementById('result-kicker').textContent = matchOver ? 'MATCH COMPLETE' : `MONTH ${state.roundNumber} COMPLETE`; document.getElementById('result-title').textContent = matchOver ? `${winner?.name || 'Winner'} wins` : state.roundResult.reason === 'oya-ken' ? 'Oya-ken' : 'Shobu';
             const yaku = state.roundResult?.yaku || []; document.getElementById('result-summary').innerHTML = `<div class="result-score"><strong>${Utils.escape(winner?.name || 'Oya')} · +${state.roundResult?.points || 0}</strong><p>${yaku.length ? yaku.map(item => Utils.escape(item.name || item.label)).join(' · ') : 'Dealer award / instant result'}</p></div>${state.players.map(player => `<div>${Utils.escape(player.name)} · <strong>${player.score} points</strong></div>`).join('')}`;
@@ -608,7 +614,31 @@
         hideResult() { if (App.gameState) App.ui.dismissedRound = App.gameState.roundNumber; document.getElementById('result-modal').classList.add('hidden'); UI.syncModalOverlay(); },
         showResult() { if (!App.gameState || !['END_ROUND', 'MATCH_OVER'].includes(App.gameState.phase)) return; App.ui.dismissedRound = null; UI.renderResult(App.gameState); },
         startNextMonth() { if (!App.isHost || App.gameState?.phase !== 'END_ROUND') return UI.showToast('Only the host can deal the next month.', 'danger'); App.ui.dismissedRound = App.gameState.roundNumber; UI.hideResult(); Net.sendAction({ type: 'START_NEXT_ROUND' }); },
+        shouldDeferResult(state) {
+            const nonce = state?.turnAnimation?.nonce;
+            return Boolean(nonce && (App.ui.activeAnimationNonce === nonce || App.ui.lastTurnAnimationNonce !== nonce));
+        },
+        snapshotRect(element) {
+            if (!element) return null;
+            const rect = element.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0 ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height } : null;
+        },
+        captureTurnAnimationOrigins(state) {
+            const sequence = state?.turnAnimation;
+            if (!sequence?.nonce || sequence.nonce === App.ui.lastTurnAnimationNonce || sequence.nonce === App.ui.animationOrigins?.nonce) return;
+            const ids = new Set([sequence.hand?.card?.id, ...(sequence.hand?.captured || []).map(card => card.id), sequence.draw?.card?.id, ...(sequence.draw?.captured || []).map(card => card.id)].filter(Boolean));
+            const cards = {};
+            document.querySelectorAll('#field-cards .hana-card[data-info-card-id], #local-hand .hana-card[data-info-card-id]').forEach(element => {
+                const id = element.dataset.infoCardId;
+                if (ids.has(id) && !cards[id]) cards[id] = UI.snapshotRect(element);
+            });
+            App.ui.animationOrigins = { nonce: sequence.nonce, cards };
+        },
         animationPoint(rect, cardWidth, cardHeight) { return { x: rect.left + rect.width / 2 - cardWidth / 2, y: rect.top + rect.height / 2 - cardHeight / 2 }; },
+        animationOrigin(nonce, cardId, cardWidth, cardHeight, fallback) {
+            const rect = App.ui.animationOrigins?.nonce === nonce ? App.ui.animationOrigins.cards?.[cardId] : null;
+            return rect ? UI.animationPoint(rect, cardWidth, cardHeight) : fallback;
+        },
         animationSource(playerId, source, cardWidth, cardHeight) {
             if (source === 'draw') return UI.animationPoint(document.getElementById('draw-pile').getBoundingClientRect(), cardWidth, cardHeight);
             if (playerId === App.localId) return UI.animationPoint(document.getElementById('hand-dock').getBoundingClientRect(), cardWidth, cardHeight);
@@ -627,10 +657,16 @@
             const ids = new Set(cardIds || []);
             document.querySelectorAll('#table .hana-card[data-info-card-id]').forEach(card => card.classList.toggle('resolution-hidden', ids.has(card.dataset.infoCardId)));
         },
+        revealResolutionTargets(cardIds) {
+            const ids = new Set(cardIds || []);
+            document.querySelectorAll('#table .hana-card.resolution-hidden[data-info-card-id]').forEach(card => {
+                if (ids.has(card.dataset.infoCardId)) card.classList.remove('resolution-hidden');
+            });
+        },
         clearTurnAnimation() {
             document.querySelectorAll('.turn-resolution-card').forEach(item => item.remove());
             document.querySelectorAll('.resolution-hidden').forEach(item => item.classList.remove('resolution-hidden'));
-            App.ui.animatingCardIds = [];
+            App.ui.animatingCardIds = []; App.ui.activeAnimationNonce = null;
         },
         makeResolutionCard(card, tone, label, cardWidth, fromDeck = false) {
             const shell = document.createElement('div'); shell.className = `turn-resolution-card tone-${tone}${fromDeck ? ' from-deck' : ''}`; shell.style.setProperty('--card-w', `${cardWidth}px`); shell.dataset.cardId = card.id;
@@ -645,46 +681,62 @@
             ], { duration, delay, easing: options.easing || 'cubic-bezier(.2,.78,.2,1)', fill: 'forwards' });
             return animation.finished.catch(() => {});
         },
+        waitForAnimation(milliseconds) { return new Promise(resolve => setTimeout(resolve, milliseconds)); },
+        async settleResolutionGroup(entries, playerId, cardWidth, cardHeight, duration = 430) {
+            await Promise.all(entries.map(entry => {
+                const target = UI.resolutionTarget(entry.card.id, playerId, cardWidth, cardHeight);
+                return UI.moveResolutionCard(entry.shell, entry.stage, target, duration, { toScale: target.scale, toOpacity: .88, easing: 'cubic-bezier(.22,.7,.18,1)' });
+            }));
+            const ids = entries.map(entry => entry.card.id); UI.revealResolutionTargets(ids); entries.forEach(entry => entry.shell.remove());
+        },
         async animateAction(state) {
             const sequence = state.turnAnimation;
             if (!sequence?.nonce) { if (App.ui.animatingCardIds.length) { App.ui.animationRun += 1; UI.clearTurnAnimation(); } return; }
             if (sequence.nonce === App.ui.lastTurnAnimationNonce) { UI.hideResolutionTargets(App.ui.animatingCardIds); return; }
             App.ui.lastTurnAnimationNonce = sequence.nonce;
-            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { UI.clearTurnAnimation(); return; }
             const HAND_FLIGHT_MS = 420; const DRAW_FLIGHT_MS = 680; const run = ++App.ui.animationRun;
-            UI.clearTurnAnimation();
+            UI.clearTurnAnimation(); App.ui.activeAnimationNonce = sequence.nonce;
             const sample = document.querySelector('#field-cards .hana-card, #local-hand .hana-card, #draw-pile'); const sampleRect = sample?.getBoundingClientRect();
             const cardWidth = Math.max(42, sampleRect?.width || 58); const cardHeight = Math.max(64, sampleRect?.height || cardWidth * 1.52);
             const fieldRect = document.getElementById('field-zone').getBoundingClientRect(); const center = UI.animationPoint(fieldRect, cardWidth, cardHeight);
-            const handStage = { x: center.x - cardWidth * .72, y: center.y + 4 }; const drawStage = { x: center.x + cardWidth * .72, y: center.y + 4 };
-            const handCapturedIds = new Set(sequence.hand.captured.map(card => card.id)); const drawCapturedIds = new Set((sequence.draw?.captured || []).map(card => card.id));
             const uniqueCards = new Map();
             [sequence.hand.card, ...sequence.hand.captured, sequence.draw?.card, ...(sequence.draw?.captured || [])].filter(Boolean).forEach(card => uniqueCards.set(card.id, card));
             App.ui.animatingCardIds = [...uniqueCards.keys()]; UI.hideResolutionTargets(App.ui.animatingCardIds);
 
-            const handShell = UI.makeResolutionCard(sequence.hand.card, 'hand', 'FROM HAND', cardWidth);
-            const shells = new Map([[sequence.hand.card.id, handShell]]); const stagePoints = new Map([[sequence.hand.card.id, handStage]]);
-            const handMatches = sequence.hand.captured.filter(card => card.id !== sequence.hand.card.id);
-            handMatches.forEach((card, index) => { const shell = UI.makeResolutionCard(card, 'table', 'TABLE MATCH', cardWidth); shells.set(card.id, shell); const point = { x: handStage.x + cardWidth * (.34 + index * .17), y: handStage.y + 7 + index * 4 }; stagePoints.set(card.id, point); UI.moveResolutionCard(shell, point, point, 230, { delay: HAND_FLIGHT_MS - 100, fromScale: .76, fromOpacity: 0 }); });
-            await UI.moveResolutionCard(handShell, UI.animationSource(sequence.playerId, 'hand', cardWidth, cardHeight), handStage, HAND_FLIGHT_MS);
+            const stageLayout = cards => cards.map((card, index) => ({ card, stage: { x: center.x + (index - (cards.length - 1) / 2) * Math.min(cardWidth * .42, 26), y: center.y + Math.abs(index - (cards.length - 1) / 2) * 4 } }));
+            const handCards = [sequence.hand.card, ...sequence.hand.captured.filter(card => card.id !== sequence.hand.card.id)];
+            const handEntries = stageLayout(handCards).map((entry, index) => ({ ...entry, shell: UI.makeResolutionCard(entry.card, index ? 'table' : 'hand', index ? 'TABLE MATCH' : 'HAND PLAY', cardWidth) }));
+            await Promise.all(handEntries.map((entry, index) => {
+                const fallback = index ? { x: fieldRect.left + fieldRect.width * (.25 + index * .12), y: fieldRect.top + fieldRect.height * .45 } : UI.animationSource(sequence.playerId, 'hand', cardWidth, cardHeight);
+                const source = UI.animationOrigin(sequence.nonce, entry.card.id, cardWidth, cardHeight, fallback);
+                return UI.moveResolutionCard(entry.shell, source, entry.stage, HAND_FLIGHT_MS, { easing: 'cubic-bezier(.16,.76,.18,1)', fromOpacity: App.ui.animationOrigins?.cards?.[entry.card.id] ? 1 : .35 });
+            }));
             if (run !== App.ui.animationRun) return;
+            await UI.waitForAnimation(230);
+            if (run !== App.ui.animationRun) return;
+            await UI.settleResolutionGroup(handEntries, sequence.playerId, cardWidth, cardHeight, 420);
+            if (run !== App.ui.animationRun) return;
+            await UI.waitForAnimation(150);
 
             if (sequence.draw?.card) {
-                const drawShell = UI.makeResolutionCard(sequence.draw.card, 'draw', 'DECK DRAW', cardWidth, true); shells.set(sequence.draw.card.id, drawShell); stagePoints.set(sequence.draw.card.id, drawStage);
-                setTimeout(() => { if (run === App.ui.animationRun) drawShell.classList.add('revealed'); }, Math.round(DRAW_FLIGHT_MS * .38));
-                await UI.moveResolutionCard(drawShell, UI.animationSource(sequence.playerId, 'draw', cardWidth, cardHeight), drawStage, DRAW_FLIGHT_MS, { easing: 'cubic-bezier(.16,.72,.2,1)' });
+                const drawMatches = sequence.draw.captured.filter(card => card.id !== sequence.draw.card.id);
+                const drawCards = [sequence.draw.card, ...drawMatches];
+                const drawEntries = stageLayout(drawCards).map((entry, index) => ({ ...entry, shell: UI.makeResolutionCard(entry.card, index ? 'table' : 'draw', index ? 'TABLE MATCH' : 'DECK FLIP', cardWidth, index === 0) }));
+                const drawShell = drawEntries[0].shell;
+                setTimeout(() => { if (run === App.ui.animationRun) drawShell.classList.add('revealed'); }, Math.round(DRAW_FLIGHT_MS * .36));
+                await Promise.all(drawEntries.map((entry, index) => {
+                    if (!index) return UI.moveResolutionCard(entry.shell, UI.animationSource(sequence.playerId, 'draw', cardWidth, cardHeight), entry.stage, DRAW_FLIGHT_MS, { easing: 'cubic-bezier(.13,.72,.16,1)' });
+                    const fallback = { x: fieldRect.left + fieldRect.width * (.35 + index * .11), y: fieldRect.top + fieldRect.height * .5 };
+                    const source = UI.animationOrigin(sequence.nonce, entry.card.id, cardWidth, cardHeight, fallback);
+                    return UI.moveResolutionCard(entry.shell, source, entry.stage, DRAW_FLIGHT_MS - 250, { delay: 250, easing: 'cubic-bezier(.2,.74,.18,1)', fromOpacity: App.ui.animationOrigins?.cards?.[entry.card.id] ? 1 : .35 });
+                }));
                 if (run !== App.ui.animationRun) return;
-                const drawMatches = sequence.draw.captured.filter(card => card.id !== sequence.draw.card.id && !shells.has(card.id));
-                await Promise.all(drawMatches.map((card, index) => { const shell = UI.makeResolutionCard(card, 'table', 'TABLE MATCH', cardWidth); shells.set(card.id, shell); const point = { x: drawStage.x - cardWidth * (.34 + index * .17), y: drawStage.y + 7 + index * 4 }; stagePoints.set(card.id, point); return UI.moveResolutionCard(shell, point, point, 260, { fromScale: .76, fromOpacity: 0 }); }));
+                await UI.waitForAnimation(260);
+                if (run !== App.ui.animationRun) return;
+                await UI.settleResolutionGroup(drawEntries, sequence.playerId, cardWidth, cardHeight, sequence.draw.captured.length ? 470 : 390);
             }
-            await new Promise(resolve => setTimeout(resolve, 430));
-            if (run !== App.ui.animationRun) return;
-            const settle = [...shells.entries()].map(([cardId, shell]) => {
-                const captured = handCapturedIds.has(cardId) || drawCapturedIds.has(cardId); const target = UI.resolutionTarget(cardId, sequence.playerId, cardWidth, cardHeight);
-                return UI.moveResolutionCard(shell, stagePoints.get(cardId) || center, target, captured ? 480 : 390, { toScale: target.scale, toOpacity: .82 });
-            });
-            await Promise.all(settle);
-            if (run === App.ui.animationRun) UI.clearTurnAnimation();
+            if (run === App.ui.animationRun) { await UI.waitForAnimation(90); UI.clearTurnAnimation(); }
         },
         renderLogs(state) {
             const fresh = state.logs.filter(log => log.id > App.ui.lastLogId); fresh.forEach(log => { if (log.type === 'chat' && !App.ui.chatOpen) UI.showChatBubble(log.name, log.message); if (log.type === 'system' && ['result', 'warning'].includes(log.kind)) UI.showToast(log.message, log.kind === 'result' ? 'success' : 'danger'); }); if (fresh.length) App.ui.lastLogId = Math.max(...fresh.map(log => log.id));

@@ -989,8 +989,133 @@
             'Your campaign is one fart away from full transparency.'
         ]
     };
+    const PRESIDENT_PUB_ONE_LINERS = {
+        intro: [
+            'Welcome, pricks. Democracy has made another mistake.',
+            'Deal the cards. Dignity was never invited.',
+            'New term, same pub, fresh constitutional bullshit.',
+            'The cabinet is seated. Hide the beer and good ideas.',
+            'Election night begins. Every candidate looks guilty.'
+        ],
+        play: [
+            'Policy delivered. Complaints go under the wet coaster.',
+            'Card down. Your opposition just misplaced its trousers.',
+            'A modest bill with catastrophic effects on dickheads.',
+            'I play this under emergency pub powers.',
+            'There. Even my bad card has better leadership.'
+        ],
+        bigPlay: [
+            'That stack has more unity than your government.',
+            'Full cabinet deployed. Try not to cry on the cards.',
+            'Several cards, one glorious parliamentary car crash.',
+            'Big pile. Your campaign bus is now on fire.',
+            'Count them slowly. I enjoy the cabinet panic.'
+        ],
+        pass: [
+            'I pass like a minister near a live microphone.',
+            'Abstaining. This policy smells like warm lager.',
+            'Pass. I refuse to dignify that cardboard bullshit.',
+            'The opposition may enjoy one supervised moment.',
+            'Not touching that. I have standards somewhere.'
+        ],
+        ace: [
+            'Ace clears the pile and your imaginary mandate.',
+            'Government dissolved. Someone order chips.',
+            'Ace, bastards. Parliament is now a smoking crater.',
+            'Pile gone. Your speech may die with it.',
+            'Fresh pile. Same cabinet of absolute weapons.'
+        ],
+        lowHand: [
+            'Someone is nearly out. Ruin their fucking afternoon.',
+            'Tiny hand alert. Stop admiring yourselves.',
+            'That smug prick is close. Form a useless coalition.',
+            'One of you can smell the crown. Make it unpleasant.',
+            'Nearly finished? Parliament suddenly remembers you.'
+        ],
+        victory: [
+            'I won. Democracy apologises for doubting this idiot.',
+            'Crown secured. Drinks compulsory, speeches forbidden.',
+            'President, apparently. What a beautiful fucking country.',
+            'I take the chair. You lot keep the folding stools.',
+            'Term begins now. First law: stop touching my cards.'
+        ],
+        defeat: [
+            'Fine, prick. That ending was annoyingly magnificent.',
+            'You won. I demand a recount after the next round.',
+            'Fair play, bastard. Wear the crown irresponsibly.',
+            'Clean victory. Horrible news for the nation and me.',
+            'I lost office but kept the better pub story.'
+        ],
+        chat: [
+            '{target}, your manifesto is just please let this work.',
+            'Your cabinet is a pub quiz team with no pen.',
+            'Parliament has voted: you are a dickhead.',
+            'Your government collapsed during the loading screen.',
+            'Cabinet meeting cancelled. Nobody brought a brain.',
+            'Yo mama won the popular vote at this table.',
+            'That policy was shit. The card was somehow worse.',
+            'Fine move, opposition scum. Respectfully.',
+            'The crown fits. Your plan still does not.',
+            'You are my favourite constitutional disaster.',
+            'Good play, prick. I withdraw half my insults.',
+            'Your campaign slogan is fuck it, maybe this one.'
+        ]
+    };
+    const PRESIDENT_PUB_BABA = {
+        intro: [
+            'Baba opens parliament. Shoes optional, courage required.',
+            'Baba is the adult here, which is fucking terrifying.',
+            'Deal, mate. Baba has a republic to mismanage.'
+        ],
+        play: [
+            'Baba tables a bill called sit down, dickhead.',
+            'Card played. Baba accepts applause and cold beer.',
+            'Baba legislates. Your hand develops a nervous twitch.'
+        ],
+        bigPlay: [
+            'Baba emptied half the cabinet onto your stupid face.',
+            'Big stack, mate. Baba calls it peaceful transition.',
+            'Baba brought a coalition. You brought one sad card.'
+        ],
+        pass: [
+            'Baba passes. Even nonsense needs a responsible adult.',
+            'Not today, prick. Baba saves ammunition and dignity.',
+            'Baba abstains and privately calls the pile dogshit.'
+        ],
+        ace: [
+            'Ace. Baba closes parliament and opens the pub.',
+            'Meeting over, dickheads. Baba ate the minutes.',
+            'Baba clears the pile like unpaid bar tabs.'
+        ],
+        lowHand: [
+            'Tiny hand, big grin. Baba prepares the brick wall.',
+            'Someone smells victory. Baba smells bullshit.',
+            'Nearly out? Baba has cancelled nearly.'
+        ],
+        victory: [
+            'President Baba. Try not to look so democratically broken.',
+            'Baba wins. The cabinet may now fetch snacks.',
+            'Crown returned. Baba knew you were only borrowing it.'
+        ],
+        defeat: [
+            'Baba lost. Put that miracle somewhere safe, prick.',
+            'Fair win, mate. Baba hates you the friendly amount.',
+            'You beat Baba. The pub will hear this once.'
+        ],
+        chat: [
+            'Baba has seen smarter cabinets inside a kitchen drawer.',
+            'Yo mama asked Baba to veto your last move.',
+            'Your speech is long. Baba ordered the short disaster.',
+            'Good move, bastard. Baba nearly respected parliament.',
+            'Baba likes you. Your manifesto can get fucked.',
+            '{target}, your coalition is two pigeons and a hangover.'
+        ]
+    };
     addPresidentLines(PHRASES, PRESIDENT_UNFILTERED);
+    addPresidentLines(PHRASES, PRESIDENT_PUB_ONE_LINERS);
     addPresidentLines(BABA_PHRASES, PRESIDENT_UNFILTERED_BABA);
+    addPresidentLines(BABA_PHRASES, PRESIDENT_PUB_ONE_LINERS);
+    addPresidentLines(BABA_PHRASES, PRESIDENT_PUB_BABA);
     Object.assign(PROFILES[1], { chatChance: 0.72 });
     Object.assign(PROFILES[2], { chatChance: 0.76 });
     Object.assign(PROFILES[3], { chatChance: 0.8 });

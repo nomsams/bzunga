@@ -35,6 +35,92 @@
         chat: ['Yo mama matches cards by smell.', 'Knock knock. Who is there? Baba. Your points are gone.', 'Roses are red, ribbons are blue; nice little hand, shame what Baba will do.', 'That move was brave as hell. Still stupid.', 'Fair play, mate. That one had teeth.', 'You play like a pigeon choosing lunch.', 'Lovely confidence. Shame about the cards.', 'Oh shit. You fed Baba the whole damn month.', 'Yo mama spots a Yaku before your slow ass.', 'Shut the fuck up and watch the flowers, mate.', 'Your garden is weeds wearing confidence.']
     };
 
+    const HANAFUDA_PUB_EVENTS = {
+        intro: [
+            'Pretty flowers, ugly intentions, zero adult supervision.',
+            'New month. Bring cards, beer, and fragile confidence.',
+            'Welcome to the garden, dickheads. Mind the sharp bits.',
+            'Forty-eight flowers and somehow you picked trouble.',
+            'Deal them. The pond demands fresh bad decisions.'
+        ],
+        capture: [
+            'Mine, prick. The month chose a better parent.',
+            'Lovely pair. Your donation is deeply appreciated.',
+            'Yoink. That card looked happier leaving you.',
+            'Captured. Please direct whining toward the pond.',
+            'That pair fits me better, you generous bastard.',
+            'Clean pickup. Dirty grin. Beautiful afternoon.'
+        ],
+        yaku: [
+            'Yaku, dickhead. The flowers filed the paperwork.',
+            'That set is gorgeous. Your field is dogshit.',
+            'Points bloom. Somewhere your plan becomes compost.',
+            'Yaku. Even the chaff looks smug now.',
+            'There it is, mate. Beauty with a bar tab.'
+        ],
+        koi: [
+            'Koi-Koi. Greed looks fantastic on me.',
+            'Again, bastard. The pond has not suffered enough.',
+            'Koi-Koi. I choose glory and possible public embarrassment.',
+            'Double down. Common sense may wait outside.',
+            'More. My good judgement has gone to the pub.'
+        ],
+        stop: [
+            'Shobu. Pay up and water your disappointment.',
+            'Stop. I bank this before luck sobers up.',
+            'Shobu, prick. The garden closes early.',
+            'Enough. I take the points and your last nerve.',
+            'Banked. Greed may file a complaint tomorrow.'
+        ],
+        chat: [
+            'Pretty flowers. Ugly bloody decision.',
+            'That ribbon deserved a better owner.',
+            'Your garden has planning permission for weeds.',
+            'The Sake Cup saw your move and ordered doubles.',
+            'Your Phoenix is considering a transfer request.',
+            'The moon is beautiful. Your field is dogshit.',
+            'Your chaff has more personality than your plan.',
+            'That capture was clean. I resent your whole vibe.',
+            'Nice match, prick. Do it again and we are enemies.',
+            'One lucky flower and suddenly you have posture.',
+            'Yo mama matched that month from the car park.',
+            'Your hand is a botanical crime scene.'
+        ]
+    };
+    const HANAFUDA_PUB_BABA_EVENTS = {
+        intro: [
+            'Baba enters the garden. Hide the Sake Cup and bullshit.',
+            'New month, mate. Baba brought pruning shears and grudges.'
+        ],
+        capture: [
+            'Baba takes the pair. Your flower may stop screaming.',
+            'Mine, dickhead. Baba runs a rescue garden.'
+        ],
+        yaku: [
+            'Yaku. Baba grew points in your pile of manure.',
+            'Baba has a Yaku and an extremely rude little grin.'
+        ],
+        koi: [
+            'Koi-Koi. Baba chooses greed with both hands.',
+            'Again, prick. Baba has not finished ruining spring.'
+        ],
+        stop: [
+            'Shobu. Baba banks it before you accidentally improve.',
+            'Enough. Baba takes the points and nearest drink.'
+        ],
+        chat: [
+            'Baba likes you. Your flower choices can get fucked.',
+            'Your garden is one fart away from fertilised.',
+            'Baba nearly praised that. Do not ruin the moment.',
+            'Yo mama spots ribbon sets from another postcode.',
+            'That was clean, bastard. Baba resents cleanliness.',
+            'Baba brought tea. You brought botanical vandalism.'
+        ]
+    };
+    for (const [category, lines] of Object.entries(HANAFUDA_PUB_EVENTS)) PHRASES[category].push(...lines);
+    for (const [category, lines] of Object.entries(HANAFUDA_PUB_EVENTS)) BABA_PHRASES[category].push(...lines);
+    for (const [category, lines] of Object.entries(HANAFUDA_PUB_BABA_EVENTS)) BABA_PHRASES[category].push(...lines);
+
     const CHAT_POOLS = {
         shared: {
             greeting: [
@@ -186,6 +272,70 @@
             general: ['Oh shit. Baba did not expect that.', 'Where did that bastard come from?', 'Hopefully you do not have the matching bright.', 'Baba sees the plan and dislikes your face a respectful amount.', 'That was filthy. Baba approves reluctantly.', 'One more move like that and Baba starts concentrating.']
         }
     };
+
+    CHAT_POOLS.shared.insult.push(
+        'Your mouth is premium. Your card play is the free trial.',
+        'That insult had more bite than your whole bloody field.',
+        'Keep talking, prick. The flowers enjoy live comedy.',
+        'You have the menace of a damp bouquet.',
+        'Your hand wants a new owner and a quiet place to recover.',
+        'Mate, even the chaff is embarrassed for you.',
+        'You absolute watering can. Match a month.',
+        'Your confidence is blooming. Skill remains seasonal.'
+    );
+    CHAT_POOLS.shared.family.push(
+        'Yo mama matched that month through a steamed-up window.',
+        'Yo mama has better field vision in oven gloves.',
+        'Your mum called. She says stop blaming the little flowers.',
+        'Yo mama built a Yaku while making tea.',
+        'Your family roast was strong. Your capture remains missing.'
+    );
+    CHAT_POOLS.shared.challenge.push(
+        'Bring it, mate. The pond has room for your tears.',
+        'Gloves off. Try not to slap yourself with them.',
+        'You wanted rude. Play another terrible card.',
+        'Come on then, botanical warlord. Impress one flower.'
+    );
+    CHAT_POOLS.shared.compliment.push(
+        'Good move, prick. I hate being fair about it.',
+        'That was clean as hell. Drinks still on you.',
+        'Respect, bastard. Friendship restored for eight seconds.',
+        'Lovely capture. Annoying owner, excellent card.'
+    );
+    CHAT_POOLS.shared.general.push(
+        'That move smells like warm beer and blind confidence.',
+        'Oh shit. The garden just chose violence.',
+        'Did not expect that, you sneaky little turnip.',
+        'Your card arrived like it owns the bloody pond.',
+        'I hate that move. Nicely done.',
+        'One more surprise and I am blaming the Sake Cup.',
+        'This month has gone completely off the rails.',
+        'You lucky bastard. That was still a fine capture.'
+    );
+    CHAT_POOLS.baba.insult.push(
+        'Baba has seen scarier gardens outside petrol stations.',
+        'Your insult is fresh. Your card play died last month.',
+        'Shut it, mate. Baba is listening to the smarter chaff.',
+        'You talk like thunder and match like a wet sock.'
+    );
+    CHAT_POOLS.baba.family.push(
+        'Yo mama asked Baba to confiscate your ribbon cards.',
+        'Baba met your mum. She apologised for that capture.'
+    );
+    CHAT_POOLS.baba.challenge.push(
+        'Baba accepts. Bring flowers and a fucking helmet.',
+        'Good. Baba was worried this pond had gone soft.'
+    );
+    CHAT_POOLS.baba.compliment.push(
+        'Excellent move, dickhead. Baba hates this development.',
+        'Baba respects that. The tea remains non-transferable.'
+    );
+    CHAT_POOLS.baba.general.push(
+        'Baba sees one flower and seven incoming complaints.',
+        'That move was bullshit, luck, and beauty in equal parts.',
+        'Baba did not expect competence before the second drink.',
+        'Your field looks awful. Baba feels strangely at home.'
+    );
 
     const normalizeChat = message => String(message || '').toLowerCase().replace(/[^a-z0-9åäö!?\s']/gi, ' ').replace(/\s+/g, ' ').trim();
 

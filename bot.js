@@ -2100,10 +2100,121 @@ const BOT_UNFILTERED_BABA = {
     ]
 };
 
+const BOT_PUB_ONE_LINERS = {
+    banter: [
+        'Your plan has two brain cells and both called in sick.',
+        'That move was bullshit wearing a party hat.',
+        'Your cards filed a complaint against your thumb.',
+        'Mate, I have seen pub Wi-Fi decide faster.',
+        'The table asked for skill and you brought vibes.',
+        'Your comeback needs a tow truck and a packed lunch.',
+        'That plan smells like warm beer and panic.',
+        'You play like the undo button is coming.',
+        'Even your lucky card looks embarrassed.',
+        'Your strategy is three raccoons in a raincoat.',
+        'That move needs deleting from family history.',
+        'The deck saw you coming and hid the good cards.',
+        'I have seen quieter disasters in a kebab queue.',
+        'Your cards deserve a more responsible adult.',
+        'That card landed like a trolley falling downstairs.',
+        'You are my favourite idiot at this table.',
+        'I like you, mate. Your card choices remain criminal.',
+        'Drinks on me if that nonsense somehow works.',
+        'You are lovely and an absolute danger to cardboard.',
+        'That was clean. I hate that for me.',
+        'Good move, prick. Never make me praise you again.',
+        'Fair play, bastard. That was disgustingly tidy.',
+        'Nice one, arsehole. I nearly respected you.',
+        'The deck is not rigged. It just dislikes your attitude.',
+        'Your next good idea is still stuck in traffic.',
+        'That move had confidence, noise, and fuck-all else.',
+        'You absolute pub-chair of a player.',
+        'My condolences to every card you have touched.',
+        'That was less a play and more a cry for supervision.',
+        'Somewhere, a tutorial just burst into tears.'
+    ],
+    general: [
+        'Oh shit. I genuinely did not see that coming.',
+        'Where the hell did you find that?',
+        'Well, that ruined my lovely little afternoon.',
+        'Did not expect that. Fair play, you sneaky bastard.',
+        'Please do not have another one of those.',
+        'That card just made the table deeply suspicious.',
+        'Okay, dickhead. Now you have my attention.',
+        'Bloody hell. A competent move escaped you.',
+        'I hate it, which means it was probably good.',
+        'That came out of nowhere wearing muddy boots.',
+        'You nearly caught me asleep, you cheeky prick.',
+        'Fine move. Horrible person. Lovely table.',
+        'That was filthy enough to deserve applause.',
+        'I was confident five seconds ago. Fucking rude.',
+        'Not bad, mate. Do not become unbearable.',
+        'One decent move and suddenly you have posture.',
+        'Respect, dickhead. You actually found the move.',
+        'That worked? Someone check the building for gas.',
+        'I should be angry, but that was funny as hell.',
+        'You lucky little goblin. Nicely done.'
+    ],
+    insult: [
+        '{target}, your thumb needs adult supervision.',
+        'Your face leaks every card, you magnificent idiot.',
+        'You talk premium shit and play the free version.',
+        'Your big plan is a fart trapped in a lunchbox.',
+        'Keep barking, mate. The deck still cannot hear you.',
+        'You could fuck up a coin toss with written instructions.',
+        'Your best move is currently missing and presumed drunk.',
+        'You have all the menace of a damp tea towel.',
+        'Your hand looks like it lost a fight with a bin.',
+        'That roast was decent. Your cards remain dogshit.',
+        'Yo mama peeked once and asked for a harder table.',
+        'Yo mama keeps better secrets than your stupid face.',
+        'Yo mama called. She wants her bad decisions returned.',
+        'Knock knock. Who is there? Your last mistake, dickhead.',
+        'Dad joke: your hand has potential. Potential evidence.',
+        'You are not unlucky. The cards have standards.',
+        'Your confidence is doing unpaid work for your talent.',
+        'I would explain your mistake, but I need another beer.',
+        'Your cards are forming a support group without you.',
+        'Mate, even your excuses want a different owner.'
+    ]
+};
+
+const BOT_PUB_BABA = {
+    banter: [
+        'Baba has seen smarter plans written on toilet walls.',
+        'Baba likes you. Your cards can get fucked.',
+        'Baba brought tea. You brought a fucking incident.',
+        'Baba respects that move and resents the operator.',
+        'Baba gives that move one fart out of five.',
+        'Your plan arrived dead. Baba signed for it.',
+        'Baba nearly applauded. Then you touched another card.',
+        'Baba sees confidence. Evidence remains missing.',
+        'Shut up, mate. Baba is enjoying your collapse.',
+        'You absolute breadstick. Baba expected resistance.',
+        'Baba has seen sharper corners on mashed potato.',
+        'That move was so shit Baba briefly became religious.'
+    ],
+    insult: [
+        '{target}, yo mama asked Baba to teach you clockwise.',
+        'Baba likes your mouth. Shame about the attached player.',
+        'Your bullshit has better timing than your card play.',
+        'Baba would roast your hand, but it is already ashes.',
+        'You bargain-bin warlord, guard your bloody layout.',
+        'Your cards want a divorce and Baba knows a lawyer.',
+        'Keep talking, dickhead. Baba charges by the collapse.',
+        'Baba found your clever move. It was under somebody else.',
+        'Yo mama warned Baba you would tap the stupid one.',
+        'Your comeback arrived wearing its arse as a hat.'
+    ]
+};
+
 for (const persona of Object.keys(BotConfig.chatBank)) {
     pushFreshBotLines(BotConfig.chatBank[persona].banter, BOT_UNFILTERED_TABLE.banter);
     pushFreshBotLines(BotConfig.generalReplies[persona], BOT_UNFILTERED_TABLE.general);
     pushFreshBotLines(BotConfig.directReplies[persona].insult, BOT_UNFILTERED_TABLE.insult);
+    pushFreshBotLines(BotConfig.chatBank[persona].banter, BOT_PUB_ONE_LINERS.banter);
+    pushFreshBotLines(BotConfig.generalReplies[persona], BOT_PUB_ONE_LINERS.general);
+    pushFreshBotLines(BotConfig.directReplies[persona].insult, BOT_PUB_ONE_LINERS.insult);
     for (const [category, lines] of Object.entries(BOT_UNFILTERED_TABLE.replies)) {
         pushFreshBotLines(BotConfig.directReplies[persona][category], lines);
     }
@@ -2115,6 +2226,8 @@ for (const persona of Object.keys(BotConfig.chatBank)) {
 }
 pushFreshBotLines(BotConfig.chatBank.baba.banter, BOT_UNFILTERED_BABA.banter);
 pushFreshBotLines(BotConfig.directReplies.baba.insult, BOT_UNFILTERED_BABA.insult);
+pushFreshBotLines(BotConfig.chatBank.baba.banter, BOT_PUB_BABA.banter);
+pushFreshBotLines(BotConfig.directReplies.baba.insult, BOT_PUB_BABA.insult);
 
 const Bot = {
     chatHistory: [], lastChatTime: {}, usedLines: {},

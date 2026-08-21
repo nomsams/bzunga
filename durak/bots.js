@@ -1030,8 +1030,126 @@
             'You play like the fool title pays a pension.'
         ]
     };
+    const DURAK_PUB_ONE_LINERS = {
+        attack: [
+            'Cover this, you magnificent idiot.',
+            'A little card with a massive fuck-you attached.',
+            'Here, mate. Your relaxing evening was getting suspicious.',
+            'Attack delivered. Panic may begin whenever ready.',
+            'This card has travelled specifically to annoy you.',
+            'Beat that or wear the pile like a winter coat.',
+            'Your defence requested something easy. Request denied.',
+            'Card down. Let us hear your hand make excuses.'
+        ],
+        defend: [
+            'Fair cover, bastard. Annoyingly well done.',
+            'Covered. Your brave little card died for fuck-all.',
+            'That defence folded your attack like a pub napkin.',
+            'Nope. Put that nonsense back in the bin.',
+            'Covered, mate. I barely interrupted my disappointment.',
+            'Your attack met a card with adult supervision.',
+            'Nice try. The discard pile sends its regards.',
+            'Defended. Kindly remove that grin from the premises.'
+        ],
+        take: [
+            'Take the pile. It matches your emotional baggage.',
+            'Fine. I collect cardboard and deeply personal grudges.',
+            'My hand needed more clutter and fewer fucking options.',
+            'I take. Please keep the victory dance medically brief.',
+            'Lovely. My hand now needs its own postcode.',
+            'Pile accepted. Revenge has entered the building.',
+            'Give them here. Apparently I am the card orphanage.',
+            'I take it, you smug little coat rack.'
+        ],
+        throw: [
+            'One more card for your travelling circus.',
+            'Same rank, fresh misery, no refunds.',
+            'Your hand looked lonely. Here is another bastard.',
+            'Catch, dickhead. The pile brought a friend.',
+            'Another card? Absolutely. I am generous when cruel.',
+            'This one also wants to live in your enormous hand.',
+            'Special delivery from the department of fuck you.',
+            'Hold this while your evening gets heavier.'
+        ],
+        pass: [
+            'Pass. I have done enough damage to the friendship.',
+            'I am done. Even cruelty needs a drinks break.',
+            'Pass, mate. Your hand is ugly enough already.',
+            'No more. I want your panic fresh for next round.',
+            'That is me done, you overstuffed card wardrobe.',
+            'Pass. The fool hat is already warming up nicely.',
+            'I stop. Someone else may ruin your fucking evening.',
+            'Mercy granted by administrative accident.'
+        ],
+        transfer: [
+            'Same rank. Same mess. New victim.',
+            'Transfer accepted. Fuck you, clockwise.',
+            'The attack came back. Even the card hates you.',
+            'Not my circus anymore. Defend it, neighbour.',
+            'Return to sender, then forwarded to a dickhead.',
+            'I match it and pass the headache along.',
+            'Surprise. The problem has changed chairs.',
+            'Same card, new address, absolutely no sympathy.'
+        ],
+        chat: [
+            '{target}, your trumps are hiding from your decisions.',
+            'The fool hat is warming up for you.',
+            'Yo mama keeps trumps until they actually matter.',
+            'Yo mama defended that from the car park.',
+            'Your hand has more cards than your plan has ideas.',
+            'Nice cover, prick. Do not make me compliment you twice.',
+            'You play like pickup is a loyalty programme.',
+            'Your comeback arrived face down and soaking wet.',
+            'Mate, the talon is not your personal shopping basket.',
+            'That move was three pints past sensible.',
+            'Good play, bastard. Friendship temporarily suspended.',
+            'Your cards need a better legal guardian.'
+        ]
+    };
+    const DURAK_PUB_BABA = {
+        attack: [
+            'Baba sends one card and several personal problems.',
+            'Cover this, mate. Baba believes in difficult childhoods.',
+            'Baba attacks. Your evening has been downgraded.'
+        ],
+        defend: [
+            'Baba covers it. Your attack may collect its tiny coffin.',
+            'Not today, prick. Baba kept the receipt.',
+            'Clean defence. Baba accepts one irritated grunt.'
+        ],
+        take: [
+            'Baba takes the cards and writes your name on revenge.',
+            'Fine, dickhead. Baba needed a heavier drink anyway.',
+            'Pile accepted. Baba stores grudges alphabetically.'
+        ],
+        throw: [
+            'Baba adds another because your wrist looked comfortable.',
+            'One more from Baba, you human card cupboard.',
+            'Take this too. Baba believes in terrible abundance.'
+        ],
+        pass: [
+            'Baba passes. The friendship has suffered enough.',
+            'No more, mate. Baba saves cruelty for dessert.',
+            'Baba stops. Your hand already needs planning permission.'
+        ],
+        transfer: [
+            'Baba matches it. Defend your own fucking neighbourhood.',
+            'Same rank, new victim. Baba loves public transport.',
+            'Baba forwards the problem with no return address.'
+        ],
+        chat: [
+            'Baba likes you. Your Durak skills can get fucked.',
+            'Yo mama asked Baba why you waste the good trumps.',
+            'Your defence has the backbone of warm pudding.',
+            'Good cover, bastard. Baba nearly spilled the tea.',
+            'Baba has heard scarier threats from a broken kettle.',
+            '{target}, your hand is a skip with sleeves.'
+        ]
+    };
     for (let difficulty = 1; difficulty <= 5; difficulty++) addDurakLines(difficulty, DURAK_UNFILTERED);
+    for (let difficulty = 1; difficulty <= 5; difficulty++) addDurakLines(difficulty, DURAK_PUB_ONE_LINERS);
     addDurakLines(5, DURAK_UNFILTERED_BABA);
+    addDurakLines(5, DURAK_PUB_BABA);
     Object.assign(PROFILES[1], { chat: 0.86 });
     Object.assign(PROFILES[2], { chat: 0.84 });
     Object.assign(PROFILES[3], { chat: 0.82 });

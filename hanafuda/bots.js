@@ -32,7 +32,7 @@
         yaku: ['Yaku, prick. The garden has spoken.', 'Look at that set. Bloody gorgeous.', 'Baba built a Yaku from your bad decisions.', 'Points are blooming. Your hopes are compost.'],
         koi: ['Koi-Koi. Baba did not come here for bus fare.', 'Again. Baba wants the whole damn pond.', 'Baba presses. Courage or stupidity—same jacket.', 'Koi-Koi, mate. Start sweating politely.'],
         stop: ['Shobu. Empty your little wallet.', 'Baba banks it. Greed can wait one month.', 'Stop. That is enough public humiliation.', 'Points secured. Complaints rejected.'],
-        chat: ['Yo mama matches cards by smell.', 'Knock knock. Who is there? Baba. Your points are gone.', 'Roses are red, ribbons are blue; nice little hand, shame what Baba will do.', 'That move was brave as hell. Still stupid.', 'Fair play, mate. That one had teeth.', 'You play like a pigeon choosing lunch.', 'Lovely confidence. Shame about the cards.']
+        chat: ['Yo mama matches cards by smell.', 'Knock knock. Who is there? Baba. Your points are gone.', 'Roses are red, ribbons are blue; nice little hand, shame what Baba will do.', 'That move was brave as hell. Still stupid.', 'Fair play, mate. That one had teeth.', 'You play like a pigeon choosing lunch.', 'Lovely confidence. Shame about the cards.', 'Oh shit. You fed Baba the whole damn month.', 'Yo mama spots a Yaku before your slow ass.', 'Shut the fuck up and watch the flowers, mate.', 'Your garden is weeds wearing confidence.']
     };
 
     const CHAT_POOLS = {
@@ -386,6 +386,7 @@
             this.pendingChats = new Map();
             this.recent = new Map();
             this.humanMessages = new Map();
+            this.chatLaneFreeAt = 0;
         }
 
         start() { if (!this.interval) this.interval = setInterval(() => this.tick(), 220); }
@@ -394,6 +395,7 @@
             this.interval = null;
             for (const timers of this.pendingChats.values()) { clearTimeout(timers.start); clearTimeout(timers.send); }
             this.pendingChats.clear();
+            this.chatLaneFreeAt = 0;
         }
 
         tick() {
@@ -500,14 +502,19 @@
                 this.recent.set(bot.id, recent);
             }
             const timers = {};
+            const now = Date.now();
+            const typingDuration = Math.max(650, Math.min(3600, line.length * 42));
+            const naturalStart = now + 350 + this.random() * 650;
+            const startupDelay = Math.max(0, Math.max(naturalStart, this.chatLaneFreeAt) - now);
+            this.chatLaneFreeAt = now + startupDelay + typingDuration + 800 + this.random() * 1200;
             timers.start = setTimeout(() => {
                 this.engine.setBotActivity(bot.id, 'typing', true);
                 timers.send = setTimeout(() => {
                     this.engine.setBotActivity(bot.id, 'typing', false);
                     this.pendingChats.delete(bot.id);
                     this.engine.addBotChat(bot.id, line);
-                }, Math.max(650, Math.min(3600, line.length * 42)));
-            }, 350 + this.random() * 650);
+                }, typingDuration);
+            }, startupDelay);
             this.pendingChats.set(bot.id, timers);
         }
     }

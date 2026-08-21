@@ -142,6 +142,68 @@ assert.strictEqual(pickup.getPlayer('y').hand.length, 2, 'The defender must coll
 assert.strictEqual(pickup.state.mainAttackerId, 'x', 'After pickup, play moves left of the defender');
 assert.strictEqual(pickup.state.lastRoundResult.type, 'round_pickup', 'Pickup feedback must survive the next-round transition');
 
+// Transfer Durak: an untouched same-rank attack can travel around a multiplayer table,
+// including all the way back to the original attacker.
+const transfer = new DurakGameEngine({ now: () => 9200, idFactory: () => `transfer-${++id}` });
+transfer.state.phase = 'defend';
+transfer.state.durakMode = 'transfer';
+transfer.state.roundNumber = 2;
+transfer.state.players = [
+    { id: 'ta', name: 'A', connected: true, isBot: false, out: false, hand: [
+        { id: 'ta-10s', rank: '10', suit: '♠', ownerId: 'ta', loc: 'hand' },
+        { id: 'ta-10h', rank: '10', suit: '♥', ownerId: 'ta', loc: 'hand' },
+        { id: 'ta-10d', rank: '10', suit: '♦', ownerId: 'ta', loc: 'hand' }
+    ] },
+    { id: 'tb', name: 'B', connected: true, isBot: false, out: false, hand: [
+        { id: 'tb-9h', rank: '9', suit: '♥', ownerId: 'tb', loc: 'hand' }
+    ] },
+    { id: 'tc', name: 'C', connected: true, isBot: false, out: false, hand: [
+        { id: 'tc-9d', rank: '9', suit: '♦', ownerId: 'tc', loc: 'hand' },
+        { id: 'tc-6c', rank: '6', suit: '♣', ownerId: 'tc', loc: 'hand' }
+    ] }
+];
+transfer.state.trumpSuit = '♣';
+transfer.state.talon = [{ id: 'spare', rank: '6', suit: '♣', loc: 'talon' }];
+transfer.state.mainAttackerId = 'ta';
+transfer.state.defenderId = 'tb';
+transfer.state.attackTurnId = null;
+transfer.state.lastAttackerId = 'ta';
+transfer.state.attackLimit = 3;
+transfer.state.battle = [{
+    id: 'transfer-opening',
+    attackCard: { id: 'ta-9s', rank: '9', suit: '♠', ownerId: null, loc: 'battle' },
+    defenseCard: null,
+    attackerId: 'ta'
+}];
+transfer.state.passedAttackers = [];
+transfer.state.pickupDeclared = false;
+transfer.state.finishedOrder = [];
+transfer.state.logs = [];
+assert.strictEqual(transfer.processAction({ type: 'TRANSFER', cardId: 'tb-9h' }, 'tb').ok, true);
+assert.strictEqual(transfer.state.defenderId, 'tc', 'The player clockwise after the defender receives the whole attack');
+assert.strictEqual(transfer.processAction({ type: 'TRANSFER', cardId: 'tc-9d' }, 'tc').ok, true);
+assert.strictEqual(transfer.state.defenderId, 'ta', 'A multiplayer transfer chain may circle back to the original attacker');
+assert.strictEqual(transfer.state.battle.length, 3, 'Every transfer card becomes another uncovered attack');
+for (const pair of [...transfer.state.battle]) {
+    assert.strictEqual(transfer.processAction({ type: 'DEFEND', cardId: transfer.getPlayer('ta').hand[0].id, pairId: pair.id }, 'ta').ok, true);
+}
+assert.strictEqual(transfer.state.lastRoundResult.type, 'round_defended', 'The final receiving defender can cover the complete chain');
+assert.strictEqual(transfer.state.lastRoundResult.cardCount, 6, 'All attack and cover cards are discarded together');
+
+const firstBoutTransfer = new DurakGameEngine();
+firstBoutTransfer.state = JSON.parse(JSON.stringify(transfer.state));
+firstBoutTransfer.state.phase = 'defend';
+firstBoutTransfer.state.durakMode = 'transfer';
+firstBoutTransfer.state.roundNumber = 1;
+firstBoutTransfer.state.players = [
+    { id: 'first-a', name: 'First A', isBot: false, connected: true, out: false, hand: [{ id: 'first-extra', rank: '8', suit: '♣' }] },
+    { id: 'first-b', name: 'First B', isBot: false, connected: true, out: false, hand: [{ id: 'first-8h', rank: '8', suit: '♥' }] }
+];
+firstBoutTransfer.state.mainAttackerId = 'first-a';
+firstBoutTransfer.state.defenderId = 'first-b';
+firstBoutTransfer.state.battle = [{ id: 'first-pair', attackCard: { id: 'first-8s', rank: '8', suit: '♠' }, defenseCard: null, attackerId: 'first-a' }];
+assert.strictEqual(firstBoutTransfer.processAction({ type: 'TRANSFER', cardId: 'first-8h' }, 'first-b').ok, false, 'The engine must enforce the first-bout transfer restriction');
+
 // A throw-in that reaches the defender's attack limit resolves immediately.
 const cappedPickup = new DurakGameEngine({ now: () => 9500, idFactory: () => `cap-${++id}` });
 cappedPickup.state.phase = 'attack';

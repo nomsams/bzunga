@@ -19,9 +19,13 @@ assert(html.includes('id="battle-pairs"'), 'Attack and defence pairs need a dedi
 assert(css.includes('.battle-pair .defense-card') && css.includes('left: 22px'), 'Defence cards must visibly overlap their attacks');
 assert(html.includes('id="btn-finish-attack"'), 'Attackers need a Finish Attack control');
 assert(html.includes('id="btn-take-cards"'), 'Defenders need a Take All Cards control');
+assert(html.includes('id="durak-mode"') && html.includes('value="transfer"') && html.includes('ПЕРЕВОДНОЙ'), 'The lobby must offer an isolated Transfer Durak mode');
+assert(app.includes("type = state.phase === 'defend'") && app.includes("? 'TRANSFER'"), 'Defenders need a synchronized transfer action');
+assert(engine.includes('transferAttack(player, cardId)') && engine.includes('nextActiveAfter(player.id)'), 'The engine must pass transfer chains clockwise');
 assert(html.includes('id="local-hand"') && html.includes('id="btn-sort-hand"'), 'The player hand needs touch selection and auto-sort');
 assert(html.includes('viewport-fit=cover') && !html.includes('user-scalable=no'), 'Mobile players must retain native pinch zoom');
 assert(html.includes('id="chat-drawer"') && html.includes('id="chat-bubbles"'), 'Durak needs chat and floating commentary');
+assert(css.includes('bottom: calc(var(--hand-height) + 64px)'), 'Floating messages must clear the chat button');
 assert(html.includes('src="rules.js"') && html.includes('src="engine.js"') && html.includes('src="bots.js"'), 'Durak code must stay modular');
 assert(css.includes('@keyframes fly-to-battle'), 'Played cards need a clear flight animation');
 assert(css.includes('@media (max-height: 680px) and (orientation: landscape)'), 'Durak must adapt to short landscape phones');

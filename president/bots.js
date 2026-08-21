@@ -650,7 +650,7 @@
         lowHand: ['Baba sees the tiny hand.', 'Wake up, fools.', 'Some bastard is escaping.', 'Baba will handle it.'],
         victory: ['President Baba. Bow or sulk.', 'Baba wins. Obviously.', 'Crown secured, clowns.', 'The throne chose correctly.'],
         defeat: ['You beat Baba. Screenshot it.', 'Lucky bastard. Enjoy it.', 'Baba rejects this nonsense.', 'Fine. Take the chair.'],
-        chat: ['Yo mama deals faster.', '{target}, Baba heard enough.', 'That comeback was dogshit.', 'Talk less. Lose properly.']
+        chat: ['Yo mama deals faster.', '{target}, Baba heard enough.', 'That comeback was dogshit.', 'Talk less. Lose properly.', 'Yo mama would have cleared that pile, dickhead.', 'Shut the fuck up. The crown cannot hear you.', 'Your government is a fart in a borrowed suit.', 'Baba has seen coups with better card sense.']
     };
     for (const [category, lines] of Object.entries(PRESIDENT_SHORT_TABLE_TALK)) PHRASES[category].push(...lines);
     for (const [category, lines] of Object.entries(PRESIDENT_SHORT_BABA)) BABA_PHRASES[category].push(...lines);
@@ -1284,6 +1284,7 @@
             this.pendingChats = new Map();
             this.recentLines = new Map();
             this.globalRecent = [];
+            this.chatLaneFreeAt = 0;
             this.lastThreatNonce = null;
         }
 
@@ -1300,6 +1301,7 @@
                 clearTimeout(timer.sendTimer);
             }
             this.pendingChats.clear();
+            this.chatLaneFreeAt = 0;
             for (const player of this.engine.state.players.filter(item => item.isBot)) {
                 this.engine.setBotActivity(player.id, 'thinking', false);
                 this.engine.setBotActivity(player.id, 'typing', false);
@@ -1429,8 +1431,11 @@
                 ? historicalChoices
                 : (collection[category] || PHRASES[category] || PHRASES.play);
             const line = interpolate(this.pickFreshLine(bot.id, choices), context);
-            const startupDelay = 450 + this.random() * 900;
+            const now = Date.now();
+            const naturalStart = now + 450 + this.random() * 900;
+            const startupDelay = Math.max(0, Math.max(naturalStart, this.chatLaneFreeAt) - now);
             const typingDuration = Math.min(7200, Math.max(900, 420 + (line.length / (3.7 + this.random() * 1.3)) * 1000));
+            this.chatLaneFreeAt = now + startupDelay + typingDuration + 850 + this.random() * 1350;
             const timers = {};
             timers.startTimer = setTimeout(() => {
                 this.engine.setBotActivity(bot.id, 'typing', true);

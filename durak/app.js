@@ -615,6 +615,12 @@
             document.getElementById('spectator-prev').onclick = () => Net.sendAction({ type: 'SPECTATOR_PERSPECTIVE', direction: -1 });
             document.getElementById('spectator-next').onclick = () => Net.sendAction({ type: 'SPECTATOR_PERSPECTIVE', direction: 1 });
             document.getElementById('btn-add-bot').onclick = UI.addBot;
+            document.getElementById('durak-mode').onchange = event => {
+                if (!App.isHost || !Game.engine) return;
+                const result = Game.engine.setDurakMode(App.localId, event.currentTarget.value);
+                if (!result.ok) UI.showToast(result.reason, 'danger');
+                Net.broadcast();
+            };
             document.getElementById('btn-start-game').onclick = UI.startGame;
             document.getElementById('btn-sort-hand').onclick = UI.toggleSort;
             document.getElementById('btn-primary-action').onclick = UI.primaryAction;
@@ -773,6 +779,12 @@
             });
             list.querySelectorAll('[data-kick-player]').forEach(button => { button.onclick = () => Net.kickPlayer(button.dataset.kickPlayer); });
             UI.renderChat(state); UI.syncNameInputs(state);
+            const modeSelect = document.getElementById('durak-mode');
+            if (modeSelect && document.activeElement !== modeSelect) modeSelect.value = state.durakMode || 'throw-in';
+            const modeDisplay = document.getElementById('room-mode-display');
+            if (modeDisplay) modeDisplay.textContent = state.durakMode === 'transfer'
+                ? 'MODE · ПЕРЕВОДНОЙ ДУРАК · TRANSFER'
+                : 'MODE · CLASSIC THROW-IN DURAK';
             const start = document.getElementById('btn-start-game');
             if (start) {
                 const activeCount = state.players.filter(player => player.isBot || player.connected !== false).length;
@@ -798,6 +810,8 @@
                 game_over: 'COMPLETE'
             };
             document.getElementById('phase-display').textContent = phaseNames[state.phase] || state.phase.toUpperCase();
+            const tableModeMark = document.getElementById('table-mode-mark');
+            if (tableModeMark) tableModeMark.textContent = state.durakMode === 'transfer' ? 'ПЕРЕВОДНОЙ' : 'ДУРАК';
             const me = state.players.find(player => player.id === App.localId);
             const attacker = state.players.find(player => player.id === state.attackTurnId);
             const defender = state.players.find(player => player.id === state.defenderId);
@@ -812,7 +826,7 @@
             } else if (state.phase === 'defend') {
                 status = defender?.id === App.localId
                     ? DurakRules.getPrompt(state)
-                    : `${defender?.name || 'The defender'} must cover the attack or take the table.`;
+                    : `${defender?.name || 'The defender'} must cover${state.durakMode === 'transfer' ? ', transfer,' : ''} or take the attack.`;
             } else {
                 status = attacker?.id === App.localId
                     ? DurakRules.getPrompt(state)
@@ -989,12 +1003,29 @@
             const prompt = document.getElementById('action-prompt');
 
             if (isDefender) {
+                const defenderIndex = state.players.findIndex(player => player.id === state.defenderId);
+                let transferTarget = null;
+                for (let offset = 1; offset < state.players.length; offset += 1) {
+                    const candidate = state.players[(defenderIndex + offset) % state.players.length];
+                    if (!candidate.out && (candidate.isBot || candidate.connected !== false)) {
+                        transferTarget = candidate;
+                        break;
+                    }
+                }
+                const legalTransfer = state.durakMode === 'transfer'
+                    && selected
+                    && transferTarget
+                    && DurakRules.canTransfer(selected, state.battle, transferTarget.handCount, state.roundNumber, 6);
                 role.textContent = 'YOU ARE DEFENDING';
-                prompt.textContent = selected
-                    ? 'Now tap the uncovered attack card you want to beat.'
+                prompt.textContent = legalTransfer
+                    ? `Pass all ${state.battle.length + 1} attacks to ${transferTarget.name}.`
+                    : selected
+                    ? 'Tap an uncovered attack to cover it. A same-rank card can transfer before any cover.'
+                    : state.durakMode === 'transfer' && state.roundNumber > 1
+                    ? 'Select a defence card—or the same rank to transfer clockwise.'
                     : 'Select a card, then tap the attack it should cover.';
-                primary.textContent = selected ? 'SELECT AN ATTACK ABOVE' : 'SELECT A HAND CARD';
-                primary.disabled = true;
+                primary.textContent = legalTransfer ? `TRANSFER ${selected.rank} → ${transferTarget.name}` : 'SELECT AN ATTACK ABOVE';
+                primary.disabled = !legalTransfer;
                 finish.classList.add('hidden');
                 take.classList.remove('hidden');
                 return;
@@ -1019,7 +1050,10 @@
         primaryAction() {
             const state = App.gameState;
             if (!state || !App.ui.selectedCardId) return;
-            const result = Net.sendAction({ type: 'ATTACK', cardId: App.ui.selectedCardId });
+            const type = state.phase === 'defend' && state.defenderId === App.localId
+                ? 'TRANSFER'
+                : 'ATTACK';
+            const result = Net.sendAction({ type, cardId: App.ui.selectedCardId });
             if (result?.ok) App.ui.selectedCardId = null;
         },
 
@@ -1049,7 +1083,7 @@
                 const token = `${action.type}:${action.time}:${action.card?.id || ''}`;
                 if (token !== App.ui.lastActionToken) {
                     App.ui.lastActionToken = token;
-                    if (['attack', 'throw_in', 'defend'].includes(action.type) && action.card) {
+                    if (['attack', 'throw_in', 'defend', 'transfer'].includes(action.type) && action.card) {
                         requestAnimationFrame(() => UI.animateCard(action));
                     }
                 }

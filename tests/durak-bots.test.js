@@ -53,6 +53,21 @@ assert.strictEqual(defendAction.type, 'DEFEND');
 assert.strictEqual(defendAction.cardId, 'cover', 'The bot should use the cheapest legal plain-suit defence before trump');
 assert.strictEqual(Rules.canBeat(basePlayers[0].hand.find(card => card.id === defendAction.cardId), defending.battle[0].attackCard, '♦'), true);
 
+const transferDefence = {
+    ...defending,
+    durakMode: 'transfer',
+    roundNumber: 2,
+    players: [basePlayers[0], { ...basePlayers[1], handCount: 6 }, {
+        id: 'next-human', name: 'Next Human', isBot: false, connected: true, handCount: 5,
+        hand: Array.from({ length: 5 }, (_, index) => ({ id: `next-hidden-${index}`, hidden: true }))
+    }],
+    battle: [{ id: 'transfer-pair', attackCard: { id: 'attack-six', rank: '6', suit: '♠' }, defenseCard: null }]
+};
+const transferAction = Bots.chooseAction(transferDefence, 'bot', () => 0.5);
+assert.strictEqual(transferAction.type, 'TRANSFER', 'Baba should exploit a legal low-card transfer instead of spending a defence');
+assert(['low', 'pair'].includes(transferAction.cardId), 'The transfer card must match the attack rank');
+assert.notStrictEqual(Bots.chooseAction({ ...transferDefence, roundNumber: 1 }, 'bot', () => 0.5).type, 'TRANSFER', 'Bots must obey the first-bout restriction');
+
 const forcedTake = {
     ...defending,
     players: [{

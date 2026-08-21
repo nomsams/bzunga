@@ -2075,7 +2075,12 @@ const BOT_UNFILTERED_BABA = {
         'Your thumb is a liability with fingernails.',
         'Baba has seen toilets flush with more purpose.',
         'You are not confusing Baba. You are embarrassing randomness.',
-        'Every time you tap, a decent card player feels a disturbance.'
+        'Every time you tap, a decent card player feels a disturbance.',
+        'Oh shit. Even Baba did not expect you to fuck that up.',
+        'Yo mama peeked once and already knows more than you.',
+        'Baba has four cards and five reasons to call you a dickhead.',
+        'Your layout looks like a yard sale after a hurricane.',
+        'Mate, that move was arse with a loading screen.'
     ],
     insult: [
         '{target}, Baba says shut the fuck up and guard your layout.',
@@ -2087,7 +2092,11 @@ const BOT_UNFILTERED_BABA = {
         'Your brain and thumb are in a fucking custody dispute.',
         'You absolute gobshite, Baba saw that mistake yesterday.',
         'Keep barking. Baba already owns the house and the dog.',
-        'Your best card is begging Baba for asylum.'
+        'Your best card is begging Baba for asylum.',
+        '{target}, yo mama slaps faster with oven gloves.',
+        'Shut the fuck up, {target}. Your cards are already apologising.',
+        'Baba expected banter and got a fart with Wi-Fi.',
+        'You play like your thumb owes the deck money.'
     ]
 };
 
@@ -2111,7 +2120,7 @@ const Bot = {
     chatHistory: [], lastChatTime: {}, usedLines: {},
     recentLines: {}, globalRecentLines: [],
     frustration: {}, grudges: {}, eventCache: {}, deckMemory: {},
-    personality: {}, pendingResponseUntil: 0, conversationState: {},
+    personality: {}, pendingResponseUntil: 0, chatLaneFreeAt: 0, conversationState: {},
     decisionSchedules: {}, slapSchedules: {}, pendingChats: {}, humanState: {}, activitySources: {}, roundToken: 0,
     lastMagicProcessed: {}, // Track last magic processing time per bot
     lastResolvedMagicType: {}, // Track last resolved magic type per bot to prevent duplicate processing
@@ -2121,6 +2130,7 @@ const Bot = {
     start: () => {
         if (App.botInterval) clearInterval(App.botInterval);
         Object.values(Bot.pendingChats).forEach(pending => {
+            clearTimeout(pending.startTimer);
             clearTimeout(pending.typingTimer);
             clearTimeout(pending.sendTimer);
         });
@@ -2149,6 +2159,7 @@ const Bot = {
         Bot.lastResolvedMagicType = {};
         Bot.lastGlobalChatTime = 0;
         Bot.pendingResponseUntil = 0;
+        Bot.chatLaneFreeAt = 0;
 
         if (Engine.state.phase !== 'lobby') {
             Engine.state.players.filter(p => p.isBot).forEach(bot => {
@@ -2559,6 +2570,7 @@ const Bot = {
         const existing = Bot.pendingChats[bot.id];
         if (existing && !options.force) return false;
         if (existing) {
+            clearTimeout(existing.startTimer);
             clearTimeout(existing.typingTimer);
             clearTimeout(existing.sendTimer);
             Bot.setActivity(bot.id, 'thinking', 'chat', false);
@@ -2568,20 +2580,33 @@ const Bot = {
         const token = Bot.roundToken;
         const plan = Bot.getTypingPlan(bot, message, !!options.direct);
         const now = Utils.timestamp();
-        const pending = { token, message, ...plan };
+        const laneStartAt = Math.max(now, Number(Bot.chatLaneFreeAt || 0));
+        const laneDelayMs = Math.max(0, laneStartAt - now);
+        const sendAt = laneStartAt + plan.totalMs;
+        const conversationalGap = Math.round(Bot.randomBetween(900, 2100));
+        const pending = { token, message, laneStartAt, sendAt, ...plan };
         Bot.pendingChats[bot.id] = pending;
         Bot.lastChatTime[bot.id] = now;
-        Bot.lastGlobalChatTime = now;
+        Bot.lastGlobalChatTime = sendAt;
         Bot.lastChatSpeaker = bot.id;
-        Bot.pendingResponseUntil = Math.max(Bot.pendingResponseUntil, now + plan.totalMs + 400);
-        Bot.setActivity(bot.id, 'thinking', 'chat', true);
+        Bot.pendingResponseUntil = Math.max(Bot.pendingResponseUntil, sendAt + 400);
+        Bot.chatLaneFreeAt = sendAt + conversationalGap;
+
+        if (laneDelayMs) {
+            pending.startTimer = setTimeout(() => {
+                if (Bot.roundToken !== token || Bot.pendingChats[bot.id] !== pending) return;
+                Bot.setActivity(bot.id, 'thinking', 'chat', true);
+            }, laneDelayMs);
+        } else {
+            Bot.setActivity(bot.id, 'thinking', 'chat', true);
+        }
 
         pending.typingTimer = setTimeout(() => {
             if (Bot.roundToken !== token || Bot.pendingChats[bot.id] !== pending) return;
             Bot.setActivity(bot.id, 'thinking', 'chat', false);
             if (!Engine.state.players.some(p => p.id === bot.id)) return;
             Bot.setActivity(bot.id, 'typing', 'chat', true);
-        }, plan.thoughtMs);
+        }, laneDelayMs + plan.thoughtMs);
 
         pending.sendTimer = setTimeout(() => {
             if (Bot.roundToken !== token || Bot.pendingChats[bot.id] !== pending) return;
@@ -2591,7 +2616,7 @@ const Bot = {
             if (!Object.keys(Bot.pendingChats).length) Bot.pendingResponseUntil = 0;
             if (!Engine.state.players.some(p => p.id === bot.id)) return;
             Engine.chatLog(bot.name, message, isPirate);
-        }, plan.totalMs);
+        }, laneDelayMs + plan.totalMs);
         return true;
     },
 
@@ -2865,11 +2890,13 @@ const Bot = {
 
     onGameOver: () => {
         Object.values(Bot.pendingChats).forEach(pending => {
+            clearTimeout(pending.startTimer);
             clearTimeout(pending.typingTimer);
             clearTimeout(pending.sendTimer);
         });
         Bot.pendingChats = {};
         Bot.pendingResponseUntil = 0;
+        Bot.chatLaneFreeAt = 0;
         Bot.decisionSchedules = {};
         Bot.slapSchedules = {};
         Bot.activitySources = {};

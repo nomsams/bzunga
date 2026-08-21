@@ -10,10 +10,11 @@ const expected = [
     ['zao-medong', 'Zao Medong', 'Mao Zedong', 4],
     ['joris-bohnson', 'Joris Bohnson', 'Boris Johnson', 2],
     ['yoris-beltsin', 'Yoris Beltsin', 'Boris Yeltsin', 3],
-    ['rheodore-toosevelt', 'Rheodore Toosevelt', 'Theodore Roosevelt', 4]
+    ['rheodore-toosevelt', 'Rheodore Toosevelt', 'Theodore Roosevelt', 4],
+    ['adi-imin', 'Adi Imin', 'Idi Amin', 4]
 ];
 
-assert.strictEqual(HistoricalBots.list().length, expected.length, 'All six requested historical personas must exist');
+assert.strictEqual(HistoricalBots.list().length, expected.length, 'All seven requested historical personas must exist');
 for (const [id, displayName, realName, difficulty] of expected) {
     const persona = HistoricalBots.getPersona(id);
     assert(persona, `Missing persona ${id}`);

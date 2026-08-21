@@ -153,6 +153,34 @@
                 quote('We do not want to use force.', 'pass strategy', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr')
             ])
         }),
+        'adi-imin': Object.freeze({
+            id: 'adi-imin',
+            displayName: 'Adi Imin',
+            realName: 'Idi Amin',
+            difficulty: 4,
+            quotations: Object.freeze([
+                quote('I was not interested in being President.', 'intro chat', 'Recorded press interview as OAU chairman, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('I was forced to be President at gun-point.', 'setback chat', 'Recorded press interview as OAU chairman, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('I am free to meet anybody.', 'confidence chat', 'Recorded press interview as OAU chairman, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('I consider everyone in Uganda responsible for my security.', 'strategy confidence', 'Recorded press interview as OAU chairman, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('The people of Uganda are very grateful.', 'confidence chat', 'Recorded press interview as OAU chairman, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('No other head of state has done for his people what I did.', 'confidence victory', 'Recorded press interview as OAU chairman, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('98 or 99 per cent of the people of Uganda are with me.', 'confidence victory', 'Recorded press interview as OAU chairman, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('I have made history.', 'confidence victory', 'Recorded press interview as OAU chairman, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('I cannot disclose everything.', 'strategy chat', 'Recorded press interview as OAU chairman, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('There will be great changes in the world.', 'strategy confidence', 'Recorded press interview as OAU chairman, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('It is going to be a real disaster.', 'setback chat', 'Recorded press interview as OAU chairman, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('No-one should leave until we finished.', 'strategy confidence', 'Recorded press interview as OAU chairman, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('We are now the masters.', 'confidence victory', 'Public demonstration with British participants, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('They wanted to show that I really have power in my country.', 'confidence victory', 'Public demonstration with British participants, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('You make a note and ten years from now see if it has happened.', 'strategy confidence', 'Recorded press interview as OAU chairman, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('I am proud when they speak about me.', 'confidence chat', 'Cairo press conference, 1977', 'https://www.washingtonpost.com/archive/politics/1977/03/09/amin-uganda-is-prosperous-ruled-by-law/9a285912-2e33-47e2-a310-5aa1ecb4bcf2/'),
+                quote('Any strong man must be happy.', 'confidence victory', 'Cairo press conference, 1977', 'https://www.washingtonpost.com/archive/politics/1977/03/09/amin-uganda-is-prosperous-ruled-by-law/9a285912-2e33-47e2-a310-5aa1ecb4bcf2/'),
+                quote('We have the rule of law.', 'defend confidence', 'Cairo press conference, 1977', 'https://www.washingtonpost.com/archive/politics/1977/03/09/amin-uganda-is-prosperous-ruled-by-law/9a285912-2e33-47e2-a310-5aa1ecb4bcf2/'),
+                quote('I will not embarrass you.', 'intro confidence chat', 'OAU chairmanship acceptance speech, 1975', 'https://time.com/archive/6851440/africa-big-daddy-the-perfect-host/'),
+                quote('I do not want to speak to you in a foreign language.', 'intro chat', 'United Nations General Assembly address, 1975', 'https://digitallibrary.un.org/record/744741/files/A_PV-2370-EN.pdf')
+            ])
+        }),
         'rheodore-toosevelt': Object.freeze({
             id: 'rheodore-toosevelt',
             displayName: 'Rheodore Toosevelt',
@@ -202,6 +230,7 @@
         attack: 'confidence',
         defend: 'strategy',
         throw: 'confidence',
+        transfer: 'confidence',
         lowHand: 'confidence',
         goodDraw: 'confidence',
         blackKing: 'confidence',

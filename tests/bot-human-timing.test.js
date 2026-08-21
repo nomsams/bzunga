@@ -57,6 +57,8 @@ const longPlan = Bot.getTypingPlan(baba, 'That was a complicated move and I need
 assert(shortPlan.thoughtMs >= 700, 'Direct replies need a visible reading/composition pause');
 assert(longPlan.typingMs > shortPlan.typingMs, 'Long messages should take longer to type');
 assert.strictEqual(longPlan.totalMs, longPlan.thoughtMs + longPlan.typingMs);
+assert(source.includes('chatLaneFreeAt') && source.includes('const laneStartAt = Math.max'), 'Bot messages must reserve one shared conversational lane');
+assert(source.includes('const conversationalGap = Math.round'), 'Queued bot messages need a visible human pause between speakers');
 
 Bot.activitySources = {};
 Bot.setActivity('baba', 'thinking', 'decision', true);

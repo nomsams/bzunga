@@ -5,7 +5,7 @@
     if (!script?.src) return;
 
     const siteRoot = new URL('./', script.src);
-    const statusKey = 'bzunga-offline-cache-ready-v16';
+    const statusKey = 'bzunga-offline-cache-ready-v17';
     const localFiles = [
         './',
         './index.html',

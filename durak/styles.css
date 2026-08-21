@@ -416,6 +416,23 @@ select:focus {
     margin-top: 13px;
 }
 
+.room-mode-display {
+    margin: 10px 0 0;
+    color: #e8c867;
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+}
+
+.mode-setting {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 12px;
+    color: #aeb8c9;
+    font-size: 0.64rem;
+    font-weight: 800;
+}
+
 .setting-grid label {
     margin: 0;
 }
@@ -1075,7 +1092,7 @@ select:focus {
 #chat-bubbles {
     position: fixed;
     left: 12px;
-    bottom: calc(var(--hand-height) + 56px);
+    bottom: calc(var(--hand-height) + 64px);
     z-index: 84;
     display: grid;
     width: min(320px, calc(100% - 24px));
@@ -1084,7 +1101,7 @@ select:focus {
 }
 
 #game-view.action-visible #chat-bubbles {
-    bottom: calc(var(--hand-height) + var(--action-height) + 54px);
+    bottom: calc(var(--hand-height) + var(--action-height) + 64px);
 }
 
 .chat-bubble {
@@ -1644,7 +1661,7 @@ select:focus {
 
     #chat-bubbles,
     #game-view.action-visible #chat-bubbles {
-        bottom: calc(var(--hand-height) + 45px);
+        bottom: calc(var(--hand-height) + 53px);
     }
 }
 

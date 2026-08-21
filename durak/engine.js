@@ -26,6 +26,7 @@
         createInitialState() {
             return {
                 phase: 'lobby',
+                durakMode: 'throw-in',
                 roundNumber: 0,
                 players: [],
                 talon: [],
@@ -272,6 +273,21 @@
             return { ok: true };
         }
 
+        setDurakMode(playerId, mode) {
+            const player = this.getPlayer(playerId);
+            const normalized = mode === 'transfer' ? 'transfer' : 'throw-in';
+            if (!player?.isHost) return { ok: false, reason: 'Only the host can change the Durak mode.' };
+            if (this.state.phase !== 'lobby') return { ok: false, reason: 'Choose the mode before dealing.' };
+            this.state.durakMode = normalized;
+            this.log(
+                normalized === 'transfer'
+                    ? 'Transfer Durak selected. Same-rank cards can pass an untouched attack clockwise after the first bout.'
+                    : 'Classic Throw-in Durak selected.',
+                'system'
+            );
+            return { ok: true, mode: normalized };
+        }
+
         drawOne(player) {
             const card = this.state.talon.pop();
             if (!card) return null;
@@ -335,7 +351,8 @@
         attackOrder(startId = this.state.mainAttackerId) {
             const start = this.getPlayer(startId);
             if (!start || start.out || start.id === this.state.defenderId) {
-                const fallback = this.activePlayers().find(player => player.id !== this.state.defenderId);
+                const fallback = this.nextActiveAfter(this.state.defenderId)
+                    || this.activePlayers().find(player => player.id !== this.state.defenderId);
                 if (!fallback) return [];
                 startId = fallback.id;
             }
@@ -381,6 +398,8 @@
                     return this.playAttack(player, action.cardId);
                 case 'DEFEND':
                     return this.playDefense(player, action.cardId, action.pairId);
+                case 'TRANSFER':
+                    return this.transferAttack(player, action.cardId);
                 case 'TAKE_CARDS':
                     return this.declarePickup(player);
                 case 'PASS_ATTACK':
@@ -495,6 +514,11 @@
             this.state.history.push({ type: 'defend', playerId: player.id, card: clone(played) });
             this.log(`${player.name} covers ${Rules.describeCard(pair.attackCard)} with ${Rules.describeCard(played)}.`, 'play');
 
+            if (Rules.getUncoveredPairs(this.state.battle).length) {
+                this.state.phase = 'defend';
+                this.state.attackTurnId = null;
+                return { ok: true };
+            }
             if (this.state.battle.length >= this.state.attackLimit) {
                 this.resolveRound(false);
                 return { ok: true };
@@ -502,6 +526,64 @@
             this.state.phase = 'attack';
             this.resetAttackPriority(this.state.mainAttackerId);
             return { ok: true };
+        }
+
+        transferAttack(player, cardId) {
+            if (this.state.durakMode !== 'transfer') {
+                return { ok: false, reason: 'This table is playing classic Throw-in Durak.' };
+            }
+            if (this.state.phase !== 'defend' || player.id !== this.state.defenderId) {
+                return { ok: false, reason: 'Only the current defender may transfer an attack.' };
+            }
+            const nextDefender = this.nextActiveAfter(player.id);
+            if (!nextDefender || nextDefender.id === player.id) {
+                return { ok: false, reason: 'There is nobody available to receive the transfer.' };
+            }
+            const card = player.hand.find(candidate => candidate.id === cardId);
+            if (!Rules.canTransfer(card, this.state.battle, nextDefender.hand.length, this.state.roundNumber, 6)) {
+                if (this.state.roundNumber <= 1) return { ok: false, reason: 'Transfers are disabled during the first bout.' };
+                if (this.state.battle.some(pair => pair.defenseCard)) return { ok: false, reason: 'An attack cannot be transferred after any card has been covered.' };
+                return { ok: false, reason: `Play the same rank, and make sure ${nextDefender.name} has room for the full attack.` };
+            }
+
+            const played = this.removeCard(player, cardId);
+            played.ownerId = null;
+            played.loc = 'battle';
+            const pair = {
+                id: this.idFactory(),
+                attackCard: played,
+                defenseCard: null,
+                attackerId: player.id,
+                transferred: true
+            };
+            const previousDefenderId = player.id;
+            this.state.battle.push(pair);
+            this.state.defenderId = nextDefender.id;
+            this.state.attackTurnId = null;
+            this.state.lastAttackerId = player.id;
+            this.state.attackLimit = Math.min(6, Math.max(1, nextDefender.hand.length));
+            this.state.passedAttackers = [];
+            this.state.lastAction = {
+                type: 'transfer',
+                playerId: player.id,
+                previousDefenderId,
+                defenderId: nextDefender.id,
+                card: clone(played),
+                pairId: pair.id,
+                time: this.now()
+            };
+            this.state.history.push({
+                type: 'transfer',
+                playerId: player.id,
+                defenderId: nextDefender.id,
+                card: clone(played)
+            });
+            this.log(
+                `${player.name} transfers ${Rules.describeCard(played)}. ${nextDefender.name} must defend all ${this.state.battle.length}.`,
+                'play'
+            );
+            if (!nextDefender.isBot && nextDefender.connected === false) this.resolveRound(true);
+            return { ok: true, defenderId: nextDefender.id };
         }
 
         declarePickup(player) {

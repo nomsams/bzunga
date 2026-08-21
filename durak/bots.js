@@ -93,6 +93,8 @@
         }
     };
 
+    for (let difficulty = 1; difficulty <= 5; difficulty += 1) LINES[difficulty].transfer = [];
+
     const DURAK_ROASTS = {
         1: {
             attack: [
@@ -748,6 +750,7 @@
         take: ['Fine. Give me the damn pile.', 'Oh shit. I take.', 'Happy now, asshole?', 'Cards up. Grudge saved.'],
         throw: ['One more, dickhead.', 'Eat this one too.', 'Your hand looked lonely.', 'Special delivery, clown.'],
         pass: ['Pass. Keep the mess.', 'I am done here.', 'Not worth another card.', 'Carry on, you animals.'],
+        transfer: ['Not my problem now.', 'Same rank. Next victim.', 'Catch this mess, mate.', 'Passing the bastard clockwise.'],
         chat: ['Yo mama shuffles better.', 'Yo mama wants your trumps.', '{target}, that was dogshit.', 'Talk less. Defend better.']
     };
     const DURAK_SHORT_BABA = {
@@ -756,7 +759,8 @@
         take: ['Baba takes. Do not celebrate.', 'Fine. Baba keeps the grudge.'],
         throw: ['Baba adds one more.', 'Eat this too, peasant.'],
         pass: ['Baba passes. Keep dancing.', 'Baba is done. Carry on.'],
-        chat: ['Baba heard enough, {target}.', 'Yo mama deals faster than you.']
+        transfer: ['Baba passes the pain.', 'Same rank. Next clown.'],
+        chat: ['Baba heard enough, {target}.', 'Yo mama deals faster than you.', 'Yo mama saves trumps better than your dumb ass.', '{target}, shut the fuck up and find a defence.', 'Your hand is shit with sleeves, mate.', 'Yo mama transfers trouble faster than you.', 'Baba heard that comeback die halfway out.', 'You defend like a shopping trolley with one bad wheel.']
     };
     for (let difficulty = 1; difficulty <= 5; difficulty++) {
         for (const [category, lines] of Object.entries(DURAK_SHORT_TABLE_TALK)) {
@@ -1063,6 +1067,17 @@
         return null;
     }
 
+    function nextAvailableAfter(view, playerId) {
+        const players = view.players || [];
+        const start = players.findIndex(player => player.id === playerId);
+        if (start < 0) return null;
+        for (let offset = 1; offset < players.length; offset += 1) {
+            const candidate = players[(start + offset) % players.length];
+            if (!candidate.out && (candidate.isBot || candidate.connected !== false)) return candidate;
+        }
+        return null;
+    }
+
     function cardCost(card, trumpSuit) {
         return Rules.rankValue(card) + (card.suit === trumpSuit ? 18 : 0);
     }
@@ -1172,6 +1187,43 @@
             const pair = Rules.getUncoveredPairs(view.battle)[0];
             if (!pair) return null;
             const legal = Rules.getLegalDefenseCards(me.hand, pair.attackCard, view.trumpSuit);
+            if (view.durakMode === 'transfer') {
+                const nextDefender = nextAvailableAfter(view, botId);
+                const transfers = Rules.getLegalTransferCards(
+                    me.hand,
+                    view.battle,
+                    nextDefender?.handCount,
+                    view.roundNumber,
+                    6
+                );
+                if (transfers.length) {
+                    const talonOpen = Number(view.talonCount || 0) > 0;
+                    const plain = transfers.filter(card => card.suit !== view.trumpSuit);
+                    const candidates = plain.length ? plain : transfers;
+                    const transferCard = [...candidates].sort((left, right) =>
+                        Rules.cardStrength(left, view.trumpSuit) - Rules.cardStrength(right, view.trumpSuit)
+                    )[0];
+                    const cheapDefense = chooseLowestDefense(legal, view.trumpSuit);
+                    const targetUnderPressure = Number(nextDefender?.handCount || 0) <= view.battle.length + 2;
+                    const avoidsTrumpDefense = cheapDefense?.suit === view.trumpSuit && pair.attackCard.suit !== view.trumpSuit;
+                    const expertTransfer = difficulty >= 5 && (
+                        plain.length
+                        || !talonOpen
+                        || !legal.length
+                        || avoidsTrumpDefense
+                        || targetUnderPressure
+                    );
+                    const strongTransfer = difficulty === 4 && (
+                        (plain.length && (targetUnderPressure || avoidsTrumpDefense))
+                        || (!talonOpen && transferCard)
+                    );
+                    const opportunisticTransfer = difficulty === 3 && plain.length && random() < 0.64;
+                    const casualTransfer = difficulty <= 2 && random() < (difficulty === 2 ? 0.42 : 0.24);
+                    if (transferCard && (expertTransfer || strongTransfer || opportunisticTransfer || casualTransfer)) {
+                        return { type: 'TRANSFER', cardId: transferCard.id };
+                    }
+                }
+            }
             if (shouldTake(view, me, legal, difficulty)) return { type: 'TAKE_CARDS' };
             let card = chooseLowestDefense(legal, view.trumpSuit);
             if (profile.error > 0 && legal.length > 1 && random() < profile.error) {
@@ -1409,6 +1461,8 @@
             if (!action) return;
             const category = action.type === 'DEFEND'
                 ? 'defend'
+                : action.type === 'TRANSFER'
+                ? 'transfer'
                 : action.type === 'TAKE_CARDS'
                 ? 'take'
                 : action.type === 'PASS_ATTACK'

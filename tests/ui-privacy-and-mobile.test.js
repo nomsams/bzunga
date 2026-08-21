@@ -95,6 +95,7 @@ assert(!html.includes('Math.random() * 20 - 10'), 'The old excessive and unstabl
 
 assert(html.includes('.chat-open #bot-typing-indicator'), 'Chat-open state must hide the activity pill');
 assert(html.includes('.chat-open #chat-bubble-container'), 'Chat-open state must hide floating bubbles');
+assert(html.includes('bottom: calc(138px + env(safe-area-inset-bottom))'), 'Mobile chat bubbles must sit fully above the chat button');
 assert(html.includes("gameView.classList.toggle('chat-open', open)"), 'Chat drawer and game overlay state must be synchronized');
 assert(html.includes('#bot-typing-indicator {\n            display: none !important;'), 'The redundant mobile typing pill must not overlap table controls');
 assert(html.includes("document.getElementById('btn-return-lobby').onclick = UI.leaveGame"), 'Leave Game must be bound to the red game-over button');

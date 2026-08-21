@@ -75,6 +75,36 @@
         return (hand || []).filter(card => canBeat(card, attackCard, trumpSuit));
     }
 
+    function transferRank(battle) {
+        const pairs = battle || [];
+        if (!pairs.length || pairs.some(pair => pair.defenseCard)) return null;
+        const rank = pairs[0].attackCard?.rank;
+        return rank && pairs.every(pair => pair.attackCard?.rank === rank) ? rank : null;
+    }
+
+    function canTransfer(card, battle, nextDefenderHandCount, roundNumber, hardLimit = 6) {
+        const rank = transferRank(battle);
+        const nextCount = Number(nextDefenderHandCount || 0);
+        const maximum = Math.min(Number(hardLimit || 6), nextCount);
+        return Boolean(
+            card
+            && rank
+            && Number(roundNumber || 0) > 1
+            && card.rank === rank
+            && (battle || []).length + 1 <= maximum
+        );
+    }
+
+    function getLegalTransferCards(hand, battle, nextDefenderHandCount, roundNumber, hardLimit = 6) {
+        return (hand || []).filter(card => canTransfer(
+            card,
+            battle,
+            nextDefenderHandCount,
+            roundNumber,
+            hardLimit
+        ));
+    }
+
     function sortHand(hand, trumpSuit, mode = 'rank') {
         const copy = [...(hand || [])];
         const suitOrder = Object.fromEntries(SUITS.map((suit, index) => [suit, index]));
@@ -109,8 +139,11 @@
         }
         if (state.phase === 'defend') {
             const pair = getUncoveredPairs(state.battle)[0];
+            const transfer = state.durakMode === 'transfer'
+                && transferRank(state.battle)
+                && Number(state.roundNumber || 0) > 1;
             return pair
-                ? `Beat ${describeCard(pair.attackCard)} with a higher ${pair.attackCard.suit} or a trump.`
+                ? `Beat ${describeCard(pair.attackCard)} with a higher ${pair.attackCard.suit} or a trump${transfer ? `, or transfer with another ${pair.attackCard.rank}` : ''}.`
                 : 'Defence complete. Waiting for another attack.';
         }
         if (state.phase === 'throw_in') {
@@ -132,6 +165,9 @@
         getLegalAttackCards,
         getUncoveredPairs,
         getLegalDefenseCards,
+        transferRank,
+        canTransfer,
+        getLegalTransferCards,
         sortHand,
         cardStrength,
         describeCard,

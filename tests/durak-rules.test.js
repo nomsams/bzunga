@@ -25,6 +25,13 @@ assert.strictEqual(Rules.canAttack({ rank: '9', suit: '♦' }, battle, 6), true,
 assert.strictEqual(Rules.canAttack({ rank: '8', suit: '♦' }, battle, 6), false, 'Unseen ranks cannot be thrown in');
 assert.strictEqual(Rules.canAttack({ rank: '7', suit: '♥' }, battle, 2), false, 'The attack cap must be enforced');
 
+const transferable = [{ attackCard: { rank: '9', suit: '♠' }, defenseCard: null }];
+assert.strictEqual(Rules.canTransfer({ rank: '9', suit: '♥' }, transferable, 4, 2), true, 'An untouched attack may transfer with the same rank');
+assert.strictEqual(Rules.canTransfer({ rank: '8', suit: '♥' }, transferable, 4, 2), false, 'A transfer must match the attack rank');
+assert.strictEqual(Rules.canTransfer({ rank: '9', suit: '♥' }, transferable, 4, 1), false, 'The first bout must not allow transfers');
+assert.strictEqual(Rules.canTransfer({ rank: '9', suit: '♥' }, transferable, 1, 2), false, 'The receiving defender must have room for every attack card');
+assert.strictEqual(Rules.canTransfer({ rank: '9', suit: '♥' }, [{ ...transferable[0], defenseCard: { rank: '10', suit: '♠' } }], 4, 2), false, 'Covering any card permanently closes the transfer window');
+
 const sorted = Rules.sortHand([
     { rank: 'A', suit: '♦' },
     { rank: '6', suit: '♣' },
@@ -33,4 +40,4 @@ const sorted = Rules.sortHand([
 ], trump);
 assert.deepStrictEqual(sorted.map(card => `${card.rank}${card.suit}`), ['6♣', 'K♠', '7♦', 'A♦'], 'Trump cards belong at the far right');
 
-console.log('Durak rules: deck, rank matching, trump defence, attack limits, and sorting passed.');
+console.log('Durak rules: deck, rank matching, transfers, trump defence, attack limits, and sorting passed.');

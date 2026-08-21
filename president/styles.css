@@ -1259,7 +1259,7 @@ select:focus {
     position: fixed;
     z-index: 580;
     left: 10px;
-    bottom: calc(var(--hand-height) + 54px);
+    bottom: calc(var(--hand-height) + 62px);
     width: min(310px, calc(100vw - 20px));
     display: flex;
     flex-direction: column;
@@ -1268,7 +1268,7 @@ select:focus {
 }
 
 #game-view.action-visible #chat-bubbles {
-    bottom: calc(var(--hand-height) + var(--action-height) + 54px);
+    bottom: calc(var(--hand-height) + var(--action-height) + 62px);
 }
 
 .chat-bubble {
@@ -1871,7 +1871,7 @@ select:focus {
     }
 
     #chat-bubbles {
-        bottom: calc(var(--hand-height) + 48px);
+        bottom: calc(var(--hand-height) + 56px);
     }
 }
 

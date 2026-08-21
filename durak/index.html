@@ -86,7 +86,15 @@
             </div>
             <div class="room-profile"><label for="room-player-name">YOUR NAME</label><div class="room-inline-action"><input id="room-player-name" type="text" maxlength="24" autocomplete="nickname"><button id="btn-room-rename" class="secondary" type="button">CHANGE</button></div></div>
             <div id="lobby-players" class="player-list"></div>
+            <p id="room-mode-display" class="room-mode-display">MODE · CLASSIC THROW-IN DURAK</p>
             <div id="host-controls" class="host-controls hidden">
+                <label class="mode-setting" for="durak-mode">
+                    Durak mode
+                    <select id="durak-mode">
+                        <option value="throw-in">Подкидной · Classic throw-in</option>
+                        <option value="transfer">Переводной дурак · Transfer Durak</option>
+                    </select>
+                </label>
                 <div class="setting-grid">
                     <label>
                         Add an opponent
@@ -103,12 +111,13 @@
                                 <option value="historical:joris-bohnson">Joris Bohnson [Street]</option>
                                 <option value="historical:yoris-beltsin">Yoris Beltsin [Tactician]</option>
                                 <option value="historical:rheodore-toosevelt">Rheodore Toosevelt [Grandmaster]</option>
+                                <option value="historical:adi-imin">Adi Imin [Grandmaster]</option>
                             </optgroup>
                         </select>
                     </label>
                     <button id="btn-add-bot" class="secondary">+ ADD BOT</button>
                 </div>
-                <p class="setting-note">Durak supports 2–6 players. Six is legal, but the first defender starts under serious pressure.</p>
+                <p class="setting-note">Both modes support 2–6 players. In Transfer Durak, an untouched attack may be passed clockwise with the same rank after the first bout.</p>
                 <label class="spectator-setting"><input id="allow-spectators" type="checkbox" checked> Allow spectators (god view)</label>
                 <button id="btn-start-game" class="primary large">DEAL SIX CARDS EACH</button>
             </div>
@@ -139,7 +148,7 @@
 
         <div id="table-stage">
             <div id="game-table">
-                <div class="felt-mark">ДУРАК</div>
+                <div class="felt-mark" id="table-mode-mark">ДУРАК</div>
                 <div id="opponent-layer"></div>
                 <section id="battle-zone" aria-label="Attack and defence cards">
                     <div class="battle-heading">
@@ -237,6 +246,10 @@
             <article>
                 <strong>TAKE OR BEAT</strong>
                 <p>If you cannot or do not want to defend, take the entire battle. Other players may throw in matching ranks before finishing the attack.</p>
+            </article>
+            <article>
+                <strong>ПЕРЕВОДНОЙ · TRANSFER MODE</strong>
+                <p>Before covering anything, the defender may play the same rank as the attack. That card joins the attack and the next clockwise player must defend the whole chain. Transfers may continue—even back to the first attacker—but never during the first bout or when the next player has too few cards.</p>
             </article>
             <article>
                 <strong>REFILL ORDER</strong>

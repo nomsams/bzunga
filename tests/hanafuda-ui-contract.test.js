@@ -21,8 +21,10 @@ assert(css.includes('data-hanafuda-front="white-red"') && css.includes('data-han
 assert(app.includes("localStorage.getItem('hanafuda_card_front') || state.settings?.cardFront"), 'Live card appearance must preserve the local player preference');
 assert(html.includes('value="mantia-png"') && html.includes('Louie Mantia · PNG'), 'Players need a clear choice between the original SVG and optional PNG deck');
 assert(html.includes('value="hawaii-svg"') && html.includes('Hawaii style · SVG'), 'Players need the complete Hawaii artwork option');
+assert(html.includes('data-hanafuda-art="hawaii-svg"') && /value="hawaii-svg" selected/.test(html) && engine.includes("cardArt: 'hawaii-svg'"), 'Hawaii artwork must be the default for new Koi-Koi tables');
 assert(app.includes("localStorage.getItem('hanafuda_card_art') || state.settings?.cardArt") && app.includes('card.mantiaAsset'), 'The PNG deck must be a persistent local choice');
 assert(app.includes('card.hawaiiAsset') && css.includes('.hana-card:has(.hawaii-art)'), 'Hawaii cards need local selection and tailored rendering');
+assert(css.includes('data-hanafuda-art="hawaii-svg"') && css.includes('background: #fff'), 'Transparent Hawaii artwork must remain visible on a white card face');
 assert(app.includes('loading="${eager ? \'eager\' : \'lazy\'}"') && app.includes('decoding="async"'), 'Optional PNG cards must load progressively without fetching hidden hands');
 assert(css.includes('.hana-card:has(.mantia-art)') && css.includes('.art-credit'), 'The PNG artwork needs tailored framing and visible attribution');
 assert(html.includes('class="light-background"') && css.includes('#overview-viewport.light-background { background: #fff; }'), 'The transparent full-deck SVG must default to a white viewing surface');
@@ -51,6 +53,7 @@ assert(multiplayerCss.includes('#qr-container img, #qr-container canvas { displa
 assert(multiplayerCss.includes('padding: 4px; box-sizing: border-box; background: white;'), 'The full-size QR needs an internal white quiet zone for reliable scanning');
 assert(html.includes('class="back-to-games"') && html.includes('class="table-game-selection"'), 'Hanafuda needs a direct route back to game selection from lobby and table');
 assert(app.includes('UI.syncModalOverlay()') && app.includes('UI.hideResult(); Net.sendAction'), 'Advancing a month must remove the iOS blur overlay before dealing');
+assert(app.includes('inspectFinalTable()') && app.includes("overlay.toggleAttribute('hidden', !visible)") && app.includes("App.ui.animationRun += 1; UI.clearTurnAnimation()") && css.includes('#modal-overlay[hidden]'), 'Final-table inspection must cancel animations and fully detach the Safari blur layer');
 assert(html.includes('id="btn-manage-room"') && app.includes('openParticipantManager') && app.includes('kickParticipant'), 'Hanafuda hosts need one participant manager for players and spectators');
 assert(html.includes('Koi-Koi Duel · 2 players') && html.includes('Koi-Koi Trio · 3 players') && html.includes('Koi-Koi Party · 4 players'), 'The lobby must offer 2-, 3-, and 4-seat Hanafuda tables');
 assert(engine.includes('Rules.tableMode') && engine.includes("action.type === 'SET_TABLE_MODE'"), 'Seat capacity and deals must come from the synchronized engine mode');

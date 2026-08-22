@@ -340,7 +340,7 @@
             if (routes[game]) { const url = new URL(routes[game], location.href); url.searchParams.set('game', game); if (joinId) url.searchParams.set('join', joinId); if (spectate) url.searchParams.set('spectate', '1'); location.replace(url.href); return; }
             const savedBack = localStorage.getItem('hanafuda_card_back') || 'hana-red'; document.getElementById('card-back-select').value = savedBack; UI.setCardBack(savedBack);
             const savedFront = localStorage.getItem('hanafuda_card_front') || 'original'; document.getElementById('card-front-select').value = savedFront; UI.setCardFront(savedFront);
-            const savedArt = localStorage.getItem('hanafuda_card_art') || 'scanned-svg'; document.getElementById('card-art-select').value = savedArt; UI.setCardArt(savedArt);
+            const savedArt = localStorage.getItem('hanafuda_card_art') || 'hawaii-svg'; document.getElementById('card-art-select').value = savedArt; UI.setCardArt(savedArt);
             UI.setHandTapInfo(localStorage.getItem('hanafuda_hand_tap') !== 'play');
             UI.setTableZoom(Number(localStorage.getItem('hanafuda_table_zoom')) || 100);
             const savedMode = HanafudaRules.tableMode(localStorage.getItem('hanafuda_table_mode')).id; document.getElementById('create-table-mode').value = savedMode; document.getElementById('table-mode').value = savedMode;
@@ -382,7 +382,7 @@
             document.getElementById('lobby-chat-send').onclick = UI.sendLobbyChat; document.getElementById('lobby-chat-input').onkeydown = event => { if (event.key === 'Enter') { event.preventDefault(); UI.sendLobbyChat(); } };
             document.getElementById('btn-room-rename').onclick = () => UI.renamePlayer('room-player-name'); document.getElementById('btn-game-rename').onclick = () => UI.renamePlayer('game-player-name');
             ['room-player-name', 'game-player-name'].forEach(id => document.getElementById(id).onkeydown = event => { if (event.key === 'Enter') UI.renamePlayer(id); });
-            document.getElementById('btn-view-table').onclick = UI.hideResult; document.getElementById('btn-leave-game').onclick = UI.leaveGame;
+            document.getElementById('btn-view-table').onclick = UI.inspectFinalTable; document.getElementById('btn-leave-game').onclick = UI.leaveGame;
             document.getElementById('btn-postgame-results').onclick = UI.showResult; document.getElementById('btn-postgame-next').onclick = UI.startNextMonth; document.getElementById('btn-postgame-new-table').onclick = UI.leaveGame;
             document.addEventListener('keydown', event => { if (event.key === 'Escape') UI.closeTopModal(); });
             document.addEventListener('pointerdown', event => { if (!event.target.closest('.capture-group')) UI.collapseCaptureGroups(); });
@@ -406,7 +406,7 @@
             ['card-front-select', 'game-card-front-select'].forEach(id => { const select = document.getElementById(id); if (select && select.value !== safe) select.value = safe; });
         },
         setCardArt(value) {
-            const safe = ['scanned-svg', 'mantia-png', 'hawaii-svg'].includes(value) ? value : 'scanned-svg';
+            const safe = ['scanned-svg', 'mantia-png', 'hawaii-svg'].includes(value) ? value : 'hawaii-svg';
             document.documentElement.dataset.hanafudaArt = safe;
             ['card-art-select', 'game-card-art-select'].forEach(id => { const select = document.getElementById(id); if (select && select.value !== safe) select.value = safe; });
         },
@@ -467,10 +467,11 @@
             UI.renderRoleControl(state);
             UI.setCardBack(localStorage.getItem('hanafuda_card_back') || state.settings?.cardBack || 'hana-red');
             UI.setCardFront(localStorage.getItem('hanafuda_card_front') || state.settings?.cardFront || 'original');
-            UI.setCardArt(localStorage.getItem('hanafuda_card_art') || state.settings?.cardArt || 'scanned-svg');
+            UI.setCardArt(localStorage.getItem('hanafuda_card_art') || state.settings?.cardArt || 'hawaii-svg');
             UI.renderLogs(state);
             if (state.phase === 'lobby') return UI.renderLobby(state);
             document.getElementById('lobby').classList.add('hidden'); document.getElementById('game-view').classList.remove('hidden');
+            if (!['END_ROUND', 'MATCH_OVER'].includes(state.phase)) document.getElementById('game-view').classList.remove('final-table-inspection');
             UI.renderSpectator(state); UI.renderStatus(state); UI.renderOpponents(state); UI.renderField(state); UI.renderCaptures(state); UI.renderHand(state); UI.renderActions(state); UI.renderResult(state);
             Promise.resolve(UI.animateAction(state)).catch(() => UI.clearTurnAnimation()).finally(() => {
                 if (App.gameState && ['END_ROUND', 'MATCH_OVER'].includes(App.gameState.phase)) UI.renderResult(App.gameState);
@@ -613,7 +614,7 @@
                 button.classList.add('selected-pair');
                 setTimeout(() => Net.sendAction({ type: 'CHOOSE_CAPTURE', cardId: button.dataset.cardId }), 220);
             });
-            document.getElementById('modal-overlay').classList.remove('hidden'); modal.classList.remove('hidden');
+            modal.classList.remove('hidden'); UI.setModalOverlay(true);
         },
         closeCaptureChoice() { document.getElementById('capture-modal').classList.add('hidden'); UI.syncModalOverlay(); },
         renderResult(state) {
@@ -625,14 +626,14 @@
             const yaku = state.roundResult?.yaku || []; document.getElementById('result-summary').innerHTML = `<div class="result-score"><strong>${Utils.escape(winner?.name || 'Oya')} · +${state.roundResult?.points || 0}</strong><p>${yaku.length ? yaku.map(item => Utils.escape(item.name || item.label)).join(' · ') : 'Dealer award / instant result'}</p></div>${state.players.map(player => `<div>${Utils.escape(player.name)} · <strong>${player.score} points</strong></div>`).join('')}`;
             document.getElementById('result-actions').querySelector('#btn-next-round')?.remove();
             if (App.isHost && !matchOver) { const button = document.createElement('button'); button.id = 'btn-next-round'; button.className = 'primary'; button.textContent = 'DEAL NEXT MONTH'; button.onclick = UI.startNextMonth; document.getElementById('result-actions').prepend(button); }
-            document.getElementById('modal-overlay').classList.remove('hidden'); modal.classList.remove('hidden');
+            modal.classList.remove('hidden'); UI.setModalOverlay(true);
         },
         openOverview() {
             UI.renderOverviewDeck(); UI.renderReferenceGuides();
             UI.setOverviewZoom(1);
             UI.setOverviewBackground(localStorage.getItem('hanafuda_overview_background') !== 'dark');
             UI.setOverviewTab('cards');
-            document.getElementById('overview-modal').classList.remove('hidden'); document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('overview-modal').classList.remove('hidden'); UI.setModalOverlay(true);
             setTimeout(() => document.getElementById('overview-viewport').focus(), 30);
         },
         closeOverview() { UI.closeCardDetail(); document.getElementById('overview-modal').classList.add('hidden'); UI.syncModalOverlay(); },
@@ -688,9 +689,9 @@
             const related = HanafudaRules.YAKU_GUIDE.filter(yaku => !yaku.variant && (yaku.cardIds.includes(card.id) || card.categories.includes(categoryYaku[yaku.id])));
             const me = state.players?.find(player => player.id === App.localId); const canPlay = Boolean(allowPlay && !App.isSpectator && state.phase === 'WAIT_HAND_SELECTION' && state.turnPlayerId === App.localId && me?.hand?.some(item => item.id === card.id));
             document.getElementById('card-detail-content').innerHTML = `<div class="card-detail-layout"><div class="card-detail-art">${UI.cardMarkup(card, false, 'detail')}</div><div class="card-detail-copy"><div class="eyebrow">${Utils.escape(presentation.deckName.toUpperCase())} · MONTH ${card.month} · CARD ${card.monthIndex + 1}</div><h2 id="card-detail-title">${Utils.escape(presentation.name)}</h2><p class="card-detail-summary">${Utils.escape(presentation.calendarMonth)} · ${Utils.escape(presentation.monthName)} · ${Utils.escape(presentation.name)} · ${Utils.escape(presentation.pointLabel)}</p><div class="card-detail-japanese" lang="ja"><strong>${Utils.escape(card.japaneseName)}</strong><span>${Utils.escape(card.japaneseMonth)} · ${Utils.escape(card.japaneseMonthReading)}</span></div><dl><div><dt>Month</dt><dd>${Utils.escape(presentation.calendarMonth)} · ${Utils.escape(presentation.monthName)}</dd></div><div><dt>Card</dt><dd>${Utils.escape(presentation.name)}</dd></div><div><dt>${Utils.escape(presentation.pointTitle)}</dt><dd>${Utils.escape(presentation.pointLabel)}</dd></div><div><dt>Yaku type</dt><dd>${Utils.escape((card.categories || []).join(' · '))}</dd></div><div><dt>Japanese type</dt><dd lang="ja">${Utils.escape(card.japaneseType)} <small>${Utils.escape(card.japaneseTypeReading)}</small></dd></div></dl><div class="card-yaku-links"><strong>Appears in these combinations</strong><p>${related.length ? related.map(yaku => Utils.escape(yaku.name)).join(' · ') : 'A useful month-matching card; it mainly contributes to category totals.'}</p></div><div class="card-detail-actions">${canPlay ? `<button id="btn-detail-play" class="primary" type="button">PLAY THIS CARD</button>` : ''}<button id="btn-detail-close" class="secondary" type="button">BACK TO TABLE</button></div></div></div>`;
-            const playButton = document.getElementById('btn-detail-play'); if (playButton) playButton.onclick = () => { UI.closeCardDetail(); document.getElementById('modal-overlay').classList.add('hidden'); requestAnimationFrame(() => Net.sendAction({ type: 'PLAY_HAND_CARD', cardId: card.id })); };
+            const playButton = document.getElementById('btn-detail-play'); if (playButton) playButton.onclick = () => { UI.closeCardDetail(); UI.setModalOverlay(false); requestAnimationFrame(() => Net.sendAction({ type: 'PLAY_HAND_CARD', cardId: card.id })); };
             document.getElementById('btn-detail-close').onclick = UI.closeCardDetail;
-            document.getElementById('card-detail-modal').classList.remove('hidden'); document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('card-detail-modal').classList.remove('hidden'); UI.setModalOverlay(true);
         },
         closeCardDetail() { document.getElementById('card-detail-modal').classList.add('hidden'); UI.syncModalOverlay(); },
         openAppearance() {
@@ -699,12 +700,27 @@
             if (cards.length < 3 && typeof HanafudaRules?.createDeck === 'function') cards = HanafudaRules.createDeck(() => 0.37).slice(0, 4);
             document.getElementById('appearance-preview').innerHTML = `${cards.map(card => UI.cardMarkup(card)).join('')}<div class="hana-card card-back" role="img" aria-label="Selected card back"></div>`;
             UI.setCardBack(document.documentElement.dataset.hanafudaBack); UI.setCardFront(document.documentElement.dataset.hanafudaFront);
-            document.getElementById('appearance-modal').classList.remove('hidden'); document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('appearance-modal').classList.remove('hidden'); UI.setModalOverlay(true);
         },
         closeAppearance() { document.getElementById('appearance-modal').classList.add('hidden'); UI.syncModalOverlay(); },
-        syncModalOverlay() { const open = ['rules-modal', 'capture-modal', 'koi-choice-modal', 'overview-modal', 'card-detail-modal', 'appearance-modal', 'result-modal'].some(id => !document.getElementById(id).classList.contains('hidden')); document.getElementById('modal-overlay').classList.toggle('hidden', !open); },
-        hideResult() { if (App.gameState) App.ui.dismissedRound = App.gameState.roundNumber; UI.clearTurnAnimation(); document.getElementById('result-modal').classList.add('hidden'); UI.syncModalOverlay(); },
-        showResult() { if (!App.gameState || !['END_ROUND', 'MATCH_OVER'].includes(App.gameState.phase)) return; App.ui.dismissedRound = null; UI.renderResult(App.gameState); },
+        setModalOverlay(open) {
+            const overlay = document.getElementById('modal-overlay'); const visible = Boolean(open);
+            overlay.classList.toggle('hidden', !visible); overlay.toggleAttribute('hidden', !visible); overlay.setAttribute('aria-hidden', String(!visible));
+        },
+        syncModalOverlay() {
+            const open = ['rules-modal', 'capture-modal', 'koi-choice-modal', 'overview-modal', 'card-detail-modal', 'appearance-modal', 'result-modal'].some(id => !document.getElementById(id).classList.contains('hidden'));
+            UI.setModalOverlay(open);
+        },
+        inspectFinalTable() {
+            const state = App.gameState; if (state) App.ui.dismissedRound = state.roundNumber;
+            App.ui.animationRun += 1; UI.clearTurnAnimation();
+            ['rules-modal', 'capture-modal', 'koi-choice-modal', 'overview-modal', 'card-detail-modal', 'appearance-modal', 'result-modal'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            const gameView = document.getElementById('game-view'); gameView.classList.add('final-table-inspection'); UI.setModalOverlay(false);
+            if (state) { UI.renderStatus(state); UI.renderOpponents(state); UI.renderField(state); UI.renderCaptures(state); UI.renderHand(state); UI.renderActions(state); }
+            requestAnimationFrame(() => { void gameView.offsetHeight; gameView.classList.add('final-table-inspection'); UI.setModalOverlay(false); });
+        },
+        hideResult() { UI.inspectFinalTable(); },
+        showResult() { if (!App.gameState || !['END_ROUND', 'MATCH_OVER'].includes(App.gameState.phase)) return; document.getElementById('game-view').classList.remove('final-table-inspection'); App.ui.dismissedRound = null; UI.renderResult(App.gameState); },
         startNextMonth() { if (!App.isHost || App.gameState?.phase !== 'END_ROUND') return UI.showToast('Only the host can deal the next month.', 'danger'); App.ui.dismissedRound = App.gameState.roundNumber; UI.hideResult(); Net.sendAction({ type: 'START_NEXT_ROUND' }); },
         shouldDeferResult(state) {
             const nonce = state?.turnAnimation?.nonce;
@@ -854,7 +870,7 @@
         sendLobbyChat() { const input = document.getElementById('lobby-chat-input'); const message = Utils.clean(input.value, 180); if (!message) return; input.value = ''; Net.sendAction({ type: 'CHAT', message }); },
         renamePlayer(inputId) { const input = document.getElementById(inputId); const name = Utils.clean(input?.value, 24); if (!name) return UI.showToast('Enter a name first.', 'danger'); App.localName = name; localStorage.setItem('hanafuda_player_name', name); Net.sendAction({ type: 'RENAME', name }); },
         syncNameInputs(state) { const me = state?.players?.find(player => player.id === App.localId); const name = App.isSpectator ? state?.spectatorName : me?.name; if (!name) return; App.localName = name; ['room-player-name', 'game-player-name'].forEach(id => { const input = document.getElementById(id); if (input && document.activeElement !== input) input.value = name; }); },
-        openRules() { document.getElementById('modal-overlay').classList.remove('hidden'); document.getElementById('rules-modal').classList.remove('hidden'); },
+        openRules() { document.getElementById('rules-modal').classList.remove('hidden'); UI.setModalOverlay(true); },
         closeRules() { document.getElementById('rules-modal').classList.add('hidden'); UI.syncModalOverlay(); },
         closeTopModal() {
             if (!document.getElementById('card-detail-modal').classList.contains('hidden')) UI.closeCardDetail();

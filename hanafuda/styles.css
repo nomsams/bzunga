@@ -170,6 +170,7 @@ html[data-hanafuda-back^="svg-"] .card-back::before { display: none; }
 .hana-card:has(.hawaii-art) .hana-face { inset: 0; background: #fff; }
 .hawaii-art { object-fit: contain; image-rendering: auto; }
 html[data-hanafuda-front="original"] .hana-card:has(.hana-art) .hana-face { background: #050505; }
+html[data-hanafuda-art="hawaii-svg"] .hana-card:has(.hawaii-art) .hana-face { background: #fff; }
 html[data-hanafuda-front="invert"] .hana-card:has(.hana-art) .hana-face { background: #f8f5ed; }
 html[data-hanafuda-front="invert"] .hana-art { filter: invert(1) hue-rotate(180deg) saturate(1.12); background: transparent; }
 html[data-hanafuda-front="white-red"] .hana-card:has(.hana-art) .hana-face { background: #fff; }
@@ -236,6 +237,10 @@ html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef
 .toast.success { border-left: 4px solid #d7b44e; }
 
 #modal-overlay { z-index: 70; position: fixed; inset: 0; background: #000b; -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); }
+#modal-overlay.hidden, #modal-overlay[hidden] { display: none !important; background: transparent !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+.final-table-inspection, .final-table-inspection #table-stage, .final-table-inspection #table { opacity: 1 !important; visibility: visible !important; filter: none !important; }
+.final-table-inspection #animation-layer { display: none !important; }
+.final-table-inspection .hana-card { visibility: visible !important; }
 .modal { z-index: 71; position: fixed; top: 50%; left: 50%; translate: -50% -50%; width: min(780px, calc(100% - 24px)); max-height: min(86svh, 760px); overflow-y: auto; padding: clamp(20px, 4vw, 34px); border: 1px solid #d5a93666; border-radius: 20px; background: #111510; box-shadow: 0 30px 80px #000e; }
 .modal-close { position: absolute; top: 10px; right: 12px; color: white; border: 0; background: transparent; font-size: 1.8rem; }
 .rules-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }

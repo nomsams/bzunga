@@ -458,6 +458,54 @@
             return true;
         },
 
+        kickParticipant(participant) {
+            if (!App.isHost || !participant?.id) return false;
+            if (participant.role !== 'spectator') return Net.kickPlayer(participant.id);
+            const connection = App.connections[participant.id];
+            try { connection?.send?.({ type: 'KICKED', reason: 'The host removed you from this table. You can join again whenever you want.' }); } catch (error) {}
+            delete App.connections[participant.id]; delete App.connectionRoles[participant.id]; delete App.spectators[participant.id];
+            setTimeout(() => { try { connection?.close?.(); } catch (error) {} }, 180); Net.broadcast(); return true;
+        },
+
+        switchConnectionRole(peerId, targetRole) {
+            const role = App.connectionRoles[peerId]; const connection = App.connections[peerId];
+            if (!role || !connection?.open || !['player', 'spectator'].includes(targetRole) || role.role === targetRole) return { ok: false, reason: 'That room role is already active.' };
+            if (targetRole === 'spectator') {
+                if (!App.allowSpectators) return { ok: false, reason: 'Spectator mode is disabled for this table.' };
+                const player = Game.engine?.getPlayer(role.playerId || peerId); if (!player?.id) return { ok: false, reason: 'Your player seat could not be found.' };
+                const formerSeat = { id: player.id, name: player.name, sessionToken: player.sessionToken };
+                const perspectiveId = Game.engine.state.players.find(item => item.id !== player.id)?.id || player.id;
+                App.connectionRoles[peerId] = { role: 'spectator', perspectiveId, formerPlayerId: formerSeat.id, formerSeat };
+                App.spectators[peerId] = { id: peerId, name: player.name, perspectiveId, formerPlayerId: formerSeat.id, formerSeat, connected: true, lastChatAt: 0 };
+                if (Game.engine.state.phase === 'lobby') Game.engine.removePlayer(player.id); else Game.engine.disconnectPlayer(player.id);
+                Net.broadcast(); return { ok: true };
+            }
+            const spectator = App.spectators[peerId] || {}; const formerId = role.formerPlayerId || spectator.formerPlayerId;
+            const reserved = formerId ? Game.engine?.getPlayer(formerId) : null; let seated = false; let playerId = peerId;
+            if (reserved && reserved.connected === false) { seated = Game.engine.reconnectPlayer(formerId, formerId); playerId = formerId; }
+            else if (Game.engine?.state.phase === 'lobby' && Game.engine.state.players.length < MAX_PLAYERS) {
+                const seat = role.formerSeat || spectator.formerSeat || {};
+                seated = Game.engine.addPlayer({ id: peerId, name: spectator.name || seat.name || 'Player', sessionToken: seat.sessionToken || '', connected: true });
+            }
+            if (!seated) return { ok: false, reason: 'No player seat is available during this round. Keep spectating until a reserved seat or lobby opens.' };
+            App.connectionRoles[peerId] = { role: 'player', playerId }; delete App.spectators[peerId]; Net.broadcast(); return { ok: true };
+        },
+
+        handleSpectatorAction(peerId, data) {
+            const spectator = App.spectators[peerId]; if (!spectator) return { ok: false, reason: 'Spectator session not found.' };
+            if (data?.type === 'SPECTATOR_PERSPECTIVE') { Net.changeSpectatorPerspective(peerId, Number(data.direction) || 1); return { ok: true }; }
+            if (data?.type === 'ROLE_SWITCH') return Net.switchConnectionRole(peerId, data.role);
+            if (data?.type === 'RENAME') { spectator.name = Utils.cleanText(data.name, 24, spectator.name || 'Spectator'); Net.broadcast(); return { ok: true }; }
+            if (data?.type === 'CHAT') {
+                const message = Utils.cleanText(data.message, 240); const now = Date.now();
+                if (!message) return { ok: false, reason: 'Message is empty.' };
+                if (now - (spectator.lastChatAt || 0) < 650) return { ok: false, reason: 'Please wait before sending another message.' };
+                spectator.lastChatAt = now; Game.engine._appendLog({ type: 'chat', name: spectator.name, playerId: `spectator-${peerId}`, message });
+                Game.engine._emit({ type: 'chat', playerId: `spectator-${peerId}`, name: spectator.name, message, isSpectator: true }); return { ok: true };
+            }
+            return { ok: false, reason: 'Spectators can chat, inspect the table, or switch roles, but cannot play cards.' };
+        },
+
         acceptConnection(connection) {
             if (!App.isHost) return;
             connection.on('data', data => {
@@ -470,11 +518,8 @@
                     Net.handleJoin(connection, data);
                     return;
                 }
-                if (data.type === 'SPECTATOR_PERSPECTIVE') {
-                    Net.changeSpectatorPerspective(connection.peer, Number(data.direction) || 1);
-                    return;
-                }
-                if (App.connectionRoles[connection.peer]?.role === 'spectator') return;
+                if (data.type === 'ROLE_SWITCH') { const result = Net.switchConnectionRole(connection.peer, data.role); if (!result.ok && connection.open) connection.send({ type: 'ACTION_REJECTED', reason: result.reason }); return; }
+                if (App.connectionRoles[connection.peer]?.role === 'spectator') { const result = Net.handleSpectatorAction(connection.peer, data); if (!result.ok && connection.open) connection.send({ type: 'ACTION_REJECTED', reason: result.reason }); return; }
                 const actorId = App.connectionRoles[connection.peer]?.playerId || connection.peer;
                 const result = Game.engine?.processAction(data, actorId);
                 if (result && !result.ok && connection.open) {
@@ -497,24 +542,8 @@
         handleJoin(connection, data) {
             if (!Game.engine) return;
             const state = Game.engine.state;
-            if (data.role === 'spectator') {
-                if (!App.allowSpectators) {
-                    connection.send({ type: 'JOIN_REJECTED', reason: 'Spectator mode is disabled for this table.' });
-                    return;
-                }
-                const perspectiveId = state.players[0]?.id || null;
-                App.connections[connection.peer] = connection;
-                App.connectionRoles[connection.peer] = { role: 'spectator', perspectiveId };
-                App.spectators[connection.peer] = {
-                    id: connection.peer,
-                    name: Utils.cleanText(data.name, 24, 'Spectator'),
-                    perspectiveId
-                };
-                Net.sendState(connection, connection.peer);
-                Net.broadcast();
-                return;
-            }
-            const sameSeat = state.players.find(player => player.id === connection.peer);
+            const requestedSpectator = data.role === 'spectator';
+            const sameSeat = !requestedSpectator ? state.players.find(player => player.id === connection.peer) : null;
             if (sameSeat) {
                 App.connections[connection.peer] = connection;
                 App.connectionRoles[connection.peer] = { role: 'player', playerId: sameSeat.id };
@@ -525,7 +554,7 @@
             }
 
             const sessionToken = Utils.cleanText(data.sessionToken, 80);
-            const reconnecting = sessionToken.length >= 6
+            const reconnecting = !requestedSpectator && sessionToken.length >= 6
                 ? state.players.find(player => player.sessionToken === sessionToken && !player.connected && !player.isBot)
                 : null;
             if (reconnecting) {
@@ -537,8 +566,17 @@
                 Net.broadcast();
                 return;
             }
-            if (state.phase !== 'lobby') {
-                connection.send({ type: 'JOIN_REJECTED', reason: 'This round is already in progress.' });
+            if (requestedSpectator || state.phase !== 'lobby') {
+                if (!App.allowSpectators) {
+                    connection.send({ type: 'JOIN_REJECTED', reason: 'Spectator mode is disabled for this table.' });
+                    return;
+                }
+                const perspectiveId = state.players[0]?.id || null;
+                App.connections[connection.peer] = connection;
+                App.connectionRoles[connection.peer] = { role: 'spectator', perspectiveId };
+                App.spectators[connection.peer] = { id: connection.peer, name: Utils.cleanText(data.name, 24, 'Spectator'), perspectiveId, connected: true, lastChatAt: 0 };
+                Net.sendState(connection, connection.peer);
+                Net.broadcast();
                 return;
             }
             if (state.players.length >= MAX_PLAYERS) {
@@ -568,7 +606,7 @@
         receiveHostData(data) {
             if (!data || typeof data !== 'object') return;
             if (data.type === 'STATE_UPDATE' && data.state?.players && data.state?.logs) {
-                App.isSpectator = Boolean(data.state.spectatorMode);
+                App.isSpectator = Boolean(data.state.spectatorMode); App.requestedSpectator = App.isSpectator;
                 if (data.state.viewerId) App.localId = data.state.viewerId;
                 App.gameState = data.state;
                 UI.render(data.state);
@@ -632,9 +670,13 @@
                 ? (connectionRole.perspectiveId || Game.engine.state.players[0]?.id)
                 : (connectionRole.playerId || peerId);
             const state = Game.engine.getViewState(perspectiveId, spectator);
+            state.spectatorCount = Object.keys(App.spectators).length;
+            state.spectatorsAllowed = App.allowSpectators;
             if (spectator) {
+                const guest = App.spectators[peerId] || {}; const reserved = connectionRole.formerPlayerId ? Game.engine.getPlayer(connectionRole.formerPlayerId) : null;
                 state.spectatorMode = true;
-                state.spectatorCount = Object.keys(App.spectators).length;
+                state.spectatorName = guest.name || 'Spectator';
+                state.canTakePlayerSeat = Boolean((reserved && reserved.connected === false) || (Game.engine.state.phase === 'lobby' && Game.engine.state.players.length < MAX_PLAYERS));
             }
             try {
                 connection.send({ type: 'STATE_UPDATE', state });
@@ -656,11 +698,11 @@
 
         sendAction(action) {
             if (App.isSpectator) {
-                if (action?.type === 'SPECTATOR_PERSPECTIVE' && App.hostConnection?.open) {
+                if (['SPECTATOR_PERSPECTIVE', 'CHAT', 'RENAME', 'ROLE_SWITCH'].includes(action?.type) && App.hostConnection?.open) {
                     App.hostConnection.send(action);
                     return { ok: true, pending: true };
                 }
-                UI.showToast('Spectators have god view, but cannot play cards.', 'danger');
+                UI.showToast('Spectators can chat, inspect the table, or request a player seat, but cannot play cards.', 'danger');
                 return { ok: false };
             }
             if (App.isHost) {
@@ -674,6 +716,11 @@
             }
             UI.showToast('The host is not connected.', 'danger');
             return { ok: false };
+        },
+        requestRoleSwitch(role) {
+            if (App.isHost) return UI.showToast('The room host must keep a player seat.', 'danger');
+            if (!App.hostConnection?.open) return UI.showToast('The host is not connected.', 'danger');
+            App.hostConnection.send({ type: 'ROLE_SWITCH', role }); UI.showToast(role === 'spectator' ? 'Requesting spectator mode…' : 'Requesting a player seat…');
         }
     };
 
@@ -757,6 +804,7 @@
             document.getElementById('spectator-next').onclick = () => Net.sendAction({ type: 'SPECTATOR_PERSPECTIVE', direction: 1 });
             document.getElementById('btn-add-bot').onclick = UI.addBot;
             document.getElementById('btn-start-game').onclick = UI.startGame;
+            document.getElementById('btn-manage-room').onclick = UI.openParticipantManager;
             document.getElementById('btn-sort-hand').onclick = UI.toggleSort;
             document.getElementById('btn-pass').onclick = UI.secondaryAction;
             document.getElementById('btn-play-selected').onclick = UI.primaryAction;
@@ -879,6 +927,7 @@
 
         render(state) {
             App.gameState = state;
+            UI.renderRoleControl(state);
             UI.renderSpectatorControls(state);
             UI.renderLogs(state);
             if (state.phase === 'lobby') {
@@ -898,6 +947,7 @@
 
         renderLobby(state) {
             const list = document.getElementById('lobby-players');
+            const spectatorCount = Number(state.spectatorCount || (App.isHost ? Object.keys(App.spectators).length : 0));
             list.innerHTML = state.players.map(player => `
                 <div class="lobby-player">
                     <div>
@@ -905,16 +955,26 @@
                         <span>${player.isHost ? 'Host' : player.isBot ? `Bot · Level ${player.botDifficulty}` : 'Player'}</span>
                     </div>
                     ${App.isHost && player.isBot ? `<button class="remove-bot" data-bot-id="${Utils.escapeHTML(player.id)}">REMOVE</button>` : ''}
-                    ${App.isHost && !player.isBot && player.id !== App.localId ? `<button class="kick-player" data-player-id="${Utils.escapeHTML(player.id)}">${player.connected === false ? 'REMOVE' : 'KICK'}</button>` : ''}
                 </div>
-            `).join('');
+            `).join('') + (spectatorCount ? `<div class="lobby-player spectator-summary"><div><strong>👁 ${spectatorCount} spectator${spectatorCount === 1 ? '' : 's'}</strong><span>God view · chat enabled</span></div></div>` : '');
             list.querySelectorAll('.remove-bot').forEach(button => {
                 button.onclick = () => Game.engine?.removePlayer(button.dataset.botId);
             });
-            list.querySelectorAll('.kick-player').forEach(button => {
-                button.onclick = () => Net.kickPlayer(button.dataset.playerId);
-            });
             UI.syncNameInputs(state);
+        },
+
+        renderRoleControl(state) {
+            const canSwitch = !App.isHost && (App.isSpectator ? state.canTakePlayerSeat !== false : state.spectatorsAllowed !== false);
+            const reason = App.isSpectator && state.canTakePlayerSeat === false ? 'No player seat is currently available' : !App.isSpectator && state.spectatorsAllowed === false ? 'Spectator mode is disabled for this table' : '';
+            RoomTools.RoleControl.update({ visible: Boolean(App.isHost || App.hostConnection || App.offlineHost), host: App.isHost, spectator: App.isSpectator, canSwitch, reason, onSwitch: Net.requestRoleSwitch, onManage: UI.openParticipantManager });
+        },
+
+        openParticipantManager() {
+            if (!App.isHost || !Game.engine) return;
+            const spectatorSeats = new Set(Object.values(App.spectators).map(item => item.formerPlayerId).filter(Boolean));
+            const players = Game.engine.state.players.filter(player => !player.isBot && !spectatorSeats.has(player.id)).map(player => ({ id: player.id, name: player.name, role: player.isHost ? 'host player' : 'player', connected: player.connected !== false, protected: player.id === App.localId }));
+            const spectators = Object.values(App.spectators).map(person => ({ id: person.id, name: person.name, role: 'spectator', connected: person.connected !== false }));
+            RoomTools.ParticipantManager.open({ participants: [...players, ...spectators], onKick: Net.kickParticipant });
         },
 
         renderSpectatorControls(state) {
@@ -1360,8 +1420,9 @@
 
         syncNameInputs(state) {
             const me = state?.players?.find(player => player.id === App.localId);
-            if (!me) return;
-            App.localName = me.name;
+            const name = App.isSpectator ? state?.spectatorName : me?.name;
+            if (!name) return;
+            App.localName = name;
             ['room-player-name', 'game-player-name'].forEach(id => {
                 const input = document.getElementById(id);
                 if (input && document.activeElement !== input) input.value = me.name;
@@ -1443,6 +1504,7 @@
 
         leaveGame() {
             App.leaving = true;
+            RoomTools.RoleControl.update({ visible: false }); RoomTools.ParticipantManager.close();
             clearTimeout(App.reconnectTimer);
             Game.bots?.stop();
             Object.values(App.connections).forEach(connection => {

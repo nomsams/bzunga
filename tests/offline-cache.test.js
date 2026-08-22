@@ -50,7 +50,7 @@ assert(workerSource.includes('isAppShellRequest') && workerSource.includes("cach
 assert(workerSource.includes("request.mode !== 'navigate'"), 'Service worker must provide per-game navigation fallbacks');
 assert(workerSource.includes("navigationUrl.search = ''"), 'Offline invite URLs must resolve to their cached game page');
 assert(!workerSource.includes('cache.match(request, { ignoreSearch: true })'), 'Remote resources with different query strings must not collide');
-assert(workerSource.includes("${CACHE_PREFIX}v17") && offlineSource.includes('bzunga-offline-cache-ready-v17'), 'A gameplay release must invalidate both the old cache and its stale ready indicator');
+assert(workerSource.includes("${CACHE_PREFIX}v18") && offlineSource.includes('bzunga-offline-cache-ready-v18'), 'A gameplay release must invalidate both the old cache and its stale ready indicator');
 
 for (const appFile of ['index.html', 'president/app.js', 'durak/app.js', 'hanafuda/app.js']) {
     const source = fs.readFileSync(path.join(root, appFile), 'utf8');

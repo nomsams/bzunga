@@ -894,6 +894,56 @@
         };
     }
 
+    const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+
+    const RoleControl = {
+        update(options = {}) {
+            let control = document.getElementById('room-role-control');
+            if (!options.visible) { control?.remove(); return; }
+            if (!control) {
+                control = document.createElement('button'); control.id = 'room-role-control'; control.type = 'button';
+                control.className = 'room-role-control'; document.body.appendChild(control);
+            }
+            const spectator = Boolean(options.spectator); const host = Boolean(options.host); const canManage = host && typeof options.onManage === 'function'; const canSwitch = options.canSwitch !== false && !host;
+            control.dataset.role = host ? 'host' : spectator ? 'spectator' : 'player';
+            control.disabled = host ? !canManage : !canSwitch;
+            control.innerHTML = host
+                ? '<span>ROOM ROLE</span><strong>HOST · PLAYER</strong><small>Manage room</small>'
+                : spectator
+                    ? '<span>ROOM ROLE</span><strong>SPECTATOR</strong><small>Take a player seat</small>'
+                    : '<span>ROOM ROLE</span><strong>PLAYER</strong><small>Switch to spectator</small>';
+            control.title = host ? 'Manage players and spectators' : options.reason || (canSwitch ? 'Switch your room role' : 'This role cannot be changed right now');
+            control.onclick = canManage ? options.onManage : canSwitch ? () => options.onSwitch?.(spectator ? 'player' : 'spectator') : null;
+        }
+    };
+
+    const ParticipantManager = {
+        close() { document.getElementById('participant-manager-overlay')?.remove(); },
+        open(options = {}) {
+            ParticipantManager.close();
+            const overlay = document.createElement('div'); overlay.id = 'participant-manager-overlay'; overlay.className = 'participant-manager-overlay';
+            const people = Array.isArray(options.participants) ? options.participants : [];
+            overlay.innerHTML = `<section class="participant-manager" role="dialog" aria-modal="true" aria-labelledby="participant-manager-title"><button class="participant-manager-close" type="button" aria-label="Close participant manager">×</button><div class="participant-manager-kicker">HOST CONTROLS</div><h2 id="participant-manager-title">Manage room</h2><p>Players and spectators can rejoin after removal.</p><div class="participant-manager-list">${people.length ? people.map(person => `<article data-participant-id="${escapeHTML(person.id)}" data-participant-role="${escapeHTML(person.role || 'player')}"><div><strong>${escapeHTML(person.name || 'Guest')}</strong><span>${escapeHTML(String(person.role || 'player').toUpperCase())}${person.connected === false ? ' · AWAY' : ' · CONNECTED'}</span></div>${person.protected ? '<b>HOST</b>' : `<button type="button">KICK</button>`}</article>`).join('') : '<div class="participant-manager-empty">No remote people are connected.</div>'}</div><div class="participant-confirm hidden" role="alertdialog" aria-modal="true"><strong></strong><span>They can join the room again later.</span><div><button class="participant-cancel" type="button">CANCEL</button><button class="participant-confirm-kick" type="button">YES · KICK</button></div></div></section>`;
+            document.body.appendChild(overlay);
+            const close = () => ParticipantManager.close(); overlay.onclick = event => { if (event.target === overlay) close(); };
+            overlay.querySelector('.participant-manager-close').onclick = close;
+            overlay.onkeydown = event => { if (event.key === 'Escape') close(); };
+            const confirmation = overlay.querySelector('.participant-confirm'); let pending = null;
+            overlay.querySelectorAll('.participant-manager-list article button').forEach(button => {
+                button.onclick = () => {
+                    const article = button.closest('article'); pending = { id: article.dataset.participantId, role: article.dataset.participantRole, name: article.querySelector('strong').textContent };
+                    confirmation.querySelector('strong').textContent = `Kick ${pending.name} from the room?`;
+                    confirmation.classList.remove('hidden'); confirmation.querySelector('.participant-cancel').focus();
+                };
+            });
+            confirmation.querySelector('.participant-cancel').onclick = () => { pending = null; confirmation.classList.add('hidden'); };
+            confirmation.querySelector('.participant-confirm-kick').onclick = () => { if (!pending) return; const choice = pending; pending = null; close(); options.onKick?.(choice); };
+            setTimeout(() => overlay.querySelector('.participant-manager-close')?.focus(), 0);
+        }
+    };
+
     root.RoomTools = {
         cleanRoomName,
         makeRoomId,
@@ -914,6 +964,8 @@
         ConnectionProgress,
         RoomRelay,
         ResilientJoin,
+        RoleControl,
+        ParticipantManager,
         PEER_OPEN_TIMEOUT_MS,
         CONNECTION_OPEN_TIMEOUT_MS,
         JOIN_RETRY_MS,

@@ -39,7 +39,7 @@ assert(engine.includes('lastRoundResult') && app.includes('lastRoundResultToken'
 assert(app.includes("RoomTools.configureInvite('durak', peerId,") && html.includes('id="btn-copy-invite"'), 'Durak QR invites need high-resolution routing and one-tap copying');
 assert(app.includes('const activeCount = state.players.filter') && app.includes('DEAL TO ${activeCount} PLAYERS'), 'Disconnected lobby seats must not inflate the Durak deal count');
 assert(app.includes("state.phase === 'waiting'") && engine.includes('resumeWaitingRound()'), 'Two-player Durak must visibly reserve a disconnected seat during the reconnect grace window');
-assert(app.includes("player.connected === false ? 'REMOVE' : 'KICK'"), 'Hosts must be able to clear an abandoned Durak lobby seat');
+assert(html.includes('id="btn-manage-room"') && app.includes('openParticipantManager') && app.includes('kickParticipant'), 'Durak hosts need one participant manager for players and spectators');
 assert(app.includes("requestedGame === 'bazunga'") && app.includes("requestedGame === 'president'"), 'Misrouted links must reach the requested game');
 assert(bazunga.includes('href="./durak/index.html?game=durak"'), 'The BAZUNGA lobby must offer Durak');
 assert(president.includes('href="../durak/index.html?game=durak"'), 'The President lobby must offer Durak');

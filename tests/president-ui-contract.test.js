@@ -17,7 +17,7 @@ assert(html.includes('id="chat-drawer"'), 'The game needs table chat and comment
 assert(html.includes('src="rules.js"') && html.includes('src="engine.js"') && html.includes('src="bots.js"'), 'President code must stay modular');
 assert(css.includes('.hand-scroll.two-rows'), 'Large hands need a two-row mobile layout');
 assert(css.includes('--hand-height: 214px') && css.includes('width: 52px') && css.includes('height: 69px') && css.includes('width: 57px') && css.includes('height: 77px'), 'President mobile hand cards must be about 10% larger while both rows stay visible');
-assert(app.includes("player.connected === false ? 'REMOVE' : 'KICK'"), 'President hosts must be able to remove abandoned lobby seats');
+assert(html.includes('id="btn-manage-room"') && app.includes('openParticipantManager') && app.includes('kickParticipant'), 'President hosts need one participant manager for players and spectators');
 assert(css.includes('@keyframes flyCard'), 'Multi-card table plays need a clear flight animation');
 assert(css.includes('@media (max-height: 680px) and (orientation: landscape)'), 'The table must adapt to short landscape phones');
 assert(css.includes('height: 100svh'), 'Mobile table height must stay stable when browser chrome changes');

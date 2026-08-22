@@ -66,6 +66,7 @@
                     <label class="toggle-setting"><input id="viewing-yaku" type="checkbox"> Moon / Blossom Viewing</label>
                 </div>
                 <label class="toggle-setting"><input id="busted-viewing" type="checkbox" disabled> Lightning busts Viewing Yaku</label>
+                <button id="btn-manage-room" class="secondary" type="button">MANAGE PLAYERS &amp; SPECTATORS</button>
                 <label class="spectator-setting"><input id="allow-spectators" type="checkbox" checked> Allow spectators (god view)</label>
                 <button id="btn-start-game" class="primary large">DEAL THE FLOWERS</button>
             </div>
@@ -77,7 +78,7 @@
 
     <section id="game-view" class="hidden" aria-label="Hanafuda Koi-Koi table">
         <div id="spectator-controls" class="spectator-controls hidden"><button id="spectator-prev" aria-label="Previous player">&lt;</button><span id="spectator-label">GOD VIEW</span><button id="spectator-next" aria-label="Next player">&gt;</button></div>
-        <header id="status-banner"><div><span class="month-chip" id="month-display">MONTH 1 / 6</span><strong id="status-text">Waiting…</strong><small id="activity-text"></small></div><div class="scoreboard" id="scoreboard"></div><div class="header-actions"><a class="table-game-selection" href="../index.html#game-selection" aria-label="Back to game selection">GAMES</a><button id="btn-table-rules" class="header-button">RULES</button></div></header>
+        <header id="status-banner"><div><span class="month-chip" id="month-display">MONTH 1 / 6</span><strong id="status-text">Waiting…</strong><small id="activity-text"></small></div><div class="scoreboard" id="scoreboard"></div><div class="header-actions"><div class="table-zoom-controls" role="group" aria-label="Table card size"><button id="btn-table-zoom-out" type="button" aria-label="Make table cards smaller">−</button><output id="table-zoom-value" aria-live="polite">100%</output><button id="btn-table-zoom-in" type="button" aria-label="Make table cards larger">+</button></div><a class="table-game-selection" href="../index.html#game-selection" aria-label="Back to game selection">GAMES</a><button id="btn-table-rules" class="header-button">RULES</button></div></header>
         <aside id="action-panel" class="hidden" aria-live="polite"><strong id="turn-prompt">Choose one card from your hand.</strong><span id="selection-feedback"></span></aside>
         <div id="table-stage">
             <div id="table">

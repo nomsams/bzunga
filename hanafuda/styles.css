@@ -87,6 +87,10 @@ input:focus, select:focus { outline: 2px solid #d5a93688; border-color: #d5a936;
 #status-banner { z-index: 20; min-height: 58px; padding: 8px max(10px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left)); display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #ffffff14; background: #080b09f2; }
 #status-banner > div:first-child { min-width: 0; display: grid; }
 .header-actions { display: flex; align-items: center; gap: 5px; }
+.table-zoom-controls { display: flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid #ffffff1b; border-radius: 9px; background: #02040388; }
+.table-zoom-controls button { width: 27px; min-height: 27px; padding: 0; border: 0; border-radius: 6px; color: #f1d477; background: #ffffff0b; font-weight: 900; }
+.table-zoom-controls button:disabled { opacity: .32; cursor: default; }
+.table-zoom-controls output { min-width: 34px; color: #bfc5bb; font-size: .48rem; font-weight: 900; text-align: center; }
 #status-text { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: .78rem; }
 #activity-text { color: #d4b75d; font-size: .58rem; }
 .month-chip { color: #e0be55; font-size: .55rem; font-weight: 900; letter-spacing: .08em; }
@@ -309,10 +313,12 @@ html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef
 .yaku-card-row { --card-w: 48px; display: flex; align-items: end; gap: 3px; overflow-x: auto; padding: 2px 1px 4px; }
 .yaku-card-row .card-info-trigger { flex: 0 0 calc(var(--card-w) + 6px); }
 .system-yaku-badge { min-height: 48px; display: grid; place-items: center; border: 1px dashed #e3c45b55; border-radius: 8px; color: #d8c47b; font-size: .57rem; font-weight: 900; letter-spacing: .08em; }
-.card-detail-modal { z-index: 74; width: min(650px, calc(100% - 16px)); max-height: min(92svh, 720px); padding: clamp(13px, 2.3vw, 19px); }
-.card-detail-layout { display: grid; grid-template-columns: minmax(190px, 228px) minmax(0, 1fr); align-items: center; gap: clamp(10px, 2vw, 15px); }
-.card-detail-art { --card-w: clamp(190px, 23vw, 228px); display: grid; place-items: center; }
-.card-detail-art .hana-card { box-shadow: 0 20px 42px #000c; }
+.card-detail-modal { z-index: 74; width: min(720px, calc(100% - 16px)); max-height: min(94svh, 760px); padding: clamp(12px, 2vw, 18px); }
+.card-detail-layout { display: grid; grid-template-columns: minmax(220px, 264px) minmax(0, 1fr); align-items: center; gap: clamp(9px, 1.8vw, 14px); }
+.card-detail-art { --card-w: clamp(220px, 27vw, 264px); --card-h: calc(var(--card-w) * 1.52); display: grid; place-items: center; }
+.card-detail-art .hana-card { width: var(--card-w); height: var(--card-h); border: 0; border-radius: 0; background: transparent; box-shadow: 0 20px 42px #000c; }
+.card-detail-art .hana-face { inset: 0; border: 0; border-radius: 0; }
+.card-detail-art .hana-art { inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .card-detail-copy { min-width: 0; }
 .card-detail-copy .eyebrow { font-size: .48rem; letter-spacing: .085em; }
 .card-detail-copy h2 { margin: 2px 0 5px; color: #f7e5a4; font-size: clamp(1.05rem, 2.7vw, 1.55rem); line-height: 1.02; }
@@ -342,7 +348,8 @@ html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef
 .result-score { padding: 12px; border-radius: 10px; background: #ffffff0b; }
 #result-actions { display: flex; gap: 8px; margin-top: 16px; }
 #animation-layer { z-index: 60; position: fixed; inset: 0; pointer-events: none; perspective: 900px; }
-.resolution-hidden { opacity: 0 !important; }
+.resolution-hidden { opacity: 1 !important; }
+.resolution-destination { opacity: .52 !important; filter: saturate(.72) brightness(.9); }
 .turn-resolution-card { position: fixed; inset: 0 auto auto 0; width: var(--card-w); height: var(--card-h); z-index: 2; transform-origin: center; will-change: transform, opacity; filter: drop-shadow(0 13px 15px #000a); }
 .turn-resolution-card > .hana-card, .resolution-side > .hana-card { width: 100%; height: 100%; }
 .turn-resolution-card > span { position: absolute; z-index: 5; left: 50%; bottom: calc(100% + 6px); translate: -50% 0; padding: 3px 6px; border: 1px solid currentColor; border-radius: 999px; color: white; background: #080b09ed; font-size: .43rem; font-weight: 900; letter-spacing: .07em; white-space: nowrap; box-shadow: 0 5px 12px #0009; }
@@ -409,8 +416,8 @@ html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef
     .reference-heading { align-items: start; flex-direction: column; }
     .overview-controls { flex-wrap: wrap; }
     .card-detail-modal { width: calc(100% - 8px); padding: 11px 8px; }
-    .card-detail-layout { grid-template-columns: minmax(132px, 45%) minmax(0, 1fr); align-items: start; gap: 8px; }
-    .card-detail-art { --card-w: min(43vw, 172px); }
+    .card-detail-layout { grid-template-columns: minmax(174px, 54%) minmax(0, 1fr); align-items: center; gap: 7px; }
+    .card-detail-art { --card-w: min(52vw, 218px); }
     .card-detail-copy { text-align: left; }
     .card-detail-copy dl div { grid-template-columns: 58px minmax(0, 1fr); gap: 4px; }
     .card-yaku-links { margin-top: 7px; padding-top: 6px; }
@@ -440,4 +447,17 @@ html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+html[data-hanafuda-table-zoom="85"] { --card-w: clamp(43px, 6.2vw, 62px); }
+html[data-hanafuda-table-zoom="115"] { --card-w: clamp(56px, 8vw, 80px); }
+@media (max-width: 720px) {
+    html[data-hanafuda-table-zoom="85"] { --card-w: clamp(38px, 10.5vw, 50px); }
+    html[data-hanafuda-table-zoom="115"] { --card-w: clamp(48px, 13.5vw, 64px); }
+    .table-zoom-controls output { display: none; }
+    .table-zoom-controls button { width: 24px; min-height: 25px; }
+}
+@media (max-width: 1024px) and (max-height: 680px) and (orientation: landscape) {
+    html[data-hanafuda-table-zoom="85"] { --card-w: 38px; }
+    html[data-hanafuda-table-zoom="115"] { --card-w: 50px; }
 }

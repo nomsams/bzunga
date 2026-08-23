@@ -241,6 +241,7 @@ html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef
 .final-table-inspection, .final-table-inspection #table-stage, .final-table-inspection #table { opacity: 1 !important; visibility: visible !important; filter: none !important; }
 .final-table-inspection #animation-layer { display: none !important; }
 .final-table-inspection .hana-card { visibility: visible !important; }
+.final-table-inspection .hana-card.resolution-destination { opacity: 1 !important; filter: none !important; }
 .modal { z-index: 71; position: fixed; top: 50%; left: 50%; translate: -50% -50%; width: min(780px, calc(100% - 24px)); max-height: min(86svh, 760px); overflow-y: auto; padding: clamp(20px, 4vw, 34px); border: 1px solid #d5a93666; border-radius: 20px; background: #111510; box-shadow: 0 30px 80px #000e; }
 .modal-close { position: absolute; top: 10px; right: 12px; color: white; border: 0; background: transparent; font-size: 1.8rem; }
 .rules-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -354,7 +355,7 @@ html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef
 #result-actions { display: flex; gap: 8px; margin-top: 16px; }
 #animation-layer { z-index: 60; position: fixed; inset: 0; pointer-events: none; perspective: 900px; }
 .resolution-hidden { opacity: 1 !important; }
-.resolution-destination { opacity: .52 !important; filter: saturate(.72) brightness(.9); }
+.resolution-destination { opacity: .85 !important; filter: saturate(.88) brightness(.95); }
 .turn-resolution-card { position: fixed; inset: 0 auto auto 0; width: var(--card-w); height: var(--card-h); z-index: 2; transform-origin: center; will-change: transform, opacity; filter: drop-shadow(0 13px 15px #000a); }
 .turn-resolution-card > .hana-card, .resolution-side > .hana-card { width: 100%; height: 100%; }
 .turn-resolution-card > span { position: absolute; z-index: 5; left: 50%; bottom: calc(100% + 6px); translate: -50% 0; padding: 3px 6px; border: 1px solid currentColor; border-radius: 999px; color: white; background: #080b09ed; font-size: .43rem; font-weight: 900; letter-spacing: .07em; white-space: nowrap; box-shadow: 0 5px 12px #0009; }

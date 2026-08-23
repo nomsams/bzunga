@@ -471,11 +471,21 @@
             UI.renderLogs(state);
             if (state.phase === 'lobby') return UI.renderLobby(state);
             document.getElementById('lobby').classList.add('hidden'); document.getElementById('game-view').classList.remove('hidden');
-            if (!['END_ROUND', 'MATCH_OVER'].includes(state.phase)) document.getElementById('game-view').classList.remove('final-table-inspection');
+            const isRoundOver = ['END_ROUND', 'MATCH_OVER'].includes(state.phase);
+            if (!isRoundOver) {
+                document.getElementById('game-view').classList.remove('final-table-inspection');
+            } else {
+                // Ensure final-table-inspection is active so cards stay visible (not dimmed by animation)
+                document.getElementById('game-view').classList.add('final-table-inspection');
+                // Clear any stale animation state from the last turn
+                App.ui.animationRun += 1; UI.clearTurnAnimation();
+            }
             UI.renderSpectator(state); UI.renderStatus(state); UI.renderOpponents(state); UI.renderField(state); UI.renderCaptures(state); UI.renderHand(state); UI.renderActions(state); UI.renderResult(state);
-            Promise.resolve(UI.animateAction(state)).catch(() => UI.clearTurnAnimation()).finally(() => {
-                if (App.gameState && ['END_ROUND', 'MATCH_OVER'].includes(App.gameState.phase)) UI.renderResult(App.gameState);
-            });
+            if (!isRoundOver) {
+                Promise.resolve(UI.animateAction(state)).catch(() => UI.clearTurnAnimation()).finally(() => {
+                    if (App.gameState && ['END_ROUND', 'MATCH_OVER'].includes(App.gameState.phase)) UI.renderResult(App.gameState);
+                });
+            }
         },
         renderLobby(state) {
             const mode = HanafudaRules.tableMode(state.settings?.mode); const seatsOpen = Math.max(0, mode.playerCount - state.players.length);
@@ -737,6 +747,11 @@
             const ids = new Set([sequence.hand?.card?.id, ...(sequence.hand?.captured || []).map(card => card.id), sequence.draw?.card?.id, ...(sequence.draw?.captured || []).map(card => card.id)].filter(Boolean));
             const cards = {};
             document.querySelectorAll('#field-cards .hana-card[data-info-card-id], #local-hand .hana-card[data-info-card-id]').forEach(element => {
+                const id = element.dataset.infoCardId;
+                if (ids.has(id) && !cards[id]) cards[id] = UI.snapshotRect(element);
+            });
+            // Also capture opponent mini-hand card positions for animation origins
+            document.querySelectorAll('.opponent-seat .mini-hand .hana-card[data-info-card-id]').forEach(element => {
                 const id = element.dataset.infoCardId;
                 if (ids.has(id) && !cards[id]) cards[id] = UI.snapshotRect(element);
             });

@@ -756,7 +756,7 @@
                 <button id="btn-start-game">START GAME</button>
             </div>
             <div id="client-waiting" class="hidden" style="margin-top: 15px; color: var(--info); font-weight: 600;">Waiting for Host to start...</div>
-            <section class="lobby-chat" aria-label="Room chat"><div class="lobby-chat-title">ROOM CHAT</div><div id="lobby-chat-messages" class="lobby-chat-messages" aria-live="polite"></div><div class="lobby-chat-compose"><input id="lobby-chat-input" type="text" maxlength="240" placeholder="Say something"><button id="lobby-chat-send" type="button">SEND</button></div></section>
+            <section class="lobby-chat" aria-label="Room chat"><div class="lobby-chat-title">ROOM CHAT</div><div id="lobby-chat-messages" class="lobby-chat-messages" aria-live="polite"></div><div class="lobby-chat-compose"><input id="lobby-chat-input" type="text" maxlength="240" placeholder="Say something" enterkeyhint="send" autocomplete="off"><button id="lobby-chat-send" type="button">SEND</button></div></section>
             <button id="btn-rules-room" class="secondary">Rules &amp; Powers</button>
         </div>
     </div>
@@ -1740,6 +1740,100 @@ const Net = {
         Net.openHost(`offline-${Utils.uuid()}`, true);
     },
 
+    acceptConnection: conn => {
+        if (!App.isHost) return;
+        conn.on('data', data => {
+            if (!data || typeof data !== 'object') return;
+            if (data.type === 'ROOM_PING') {
+                if (conn.open) conn.send({ type: 'ROOM_PONG', sentAt: data.sentAt || Date.now() });
+                return;
+            }
+            if (data.type === 'JOIN') {
+                const requestedSpectator = data.role === 'spectator';
+                const sessionToken = String(data.sessionToken || '').slice(0, 80);
+                const sameSeat = !requestedSpectator ? Engine.state.players.find(existingPlayer => existingPlayer.id === conn.peer) : null;
+                if (sameSeat) {
+                    App.connections[conn.peer] = conn;
+                    App.connectionRoles[conn.peer] = { role: 'player', playerId: sameSeat.id };
+                    if (sameSeat.connected === false) {
+                        sameSeat.connected = true;
+                        Engine.sysLog(`${sameSeat.name} reconnected!`, 'success');
+                    }
+                    Net.sendState(conn, conn.peer);
+                    Engine.broadcast();
+                    return;
+                }
+                const existing = !requestedSpectator && sessionToken.length >= 6
+                    ? Engine.state.players.find(player => player.sessionToken === sessionToken && !player.connected && !player.isBot)
+                    : null;
+                if (existing) {
+                    App.connections[conn.peer] = conn;
+                    App.connectionRoles[conn.peer] = { role: 'player', playerId: existing.id };
+                    existing.connected = true;
+                    Engine.sysLog(`${existing.name} reconnected!`, 'success');
+                    Net.sendState(conn, conn.peer);
+                    Engine.broadcast();
+                    return;
+                }
+                if (requestedSpectator || Engine.state.phase !== 'lobby') {
+                    if (!App.allowSpectators) {
+                        conn.send({ type: 'JOIN_REJECTED', reason: 'Spectator mode is disabled for this table.' });
+                        return;
+                    }
+                    const perspectiveId = Engine.state.players[0]?.id || null;
+                    App.connections[conn.peer] = conn;
+                    App.connectionRoles[conn.peer] = { role: 'spectator', perspectiveId };
+                    App.spectators[conn.peer] = { id: conn.peer, name: Utils.cleanText(data.name, 24, 'Spectator'), perspectiveId, connected: true, lastChatAt: 0 };
+                    Net.sendState(conn, conn.peer);
+                    Engine.broadcast();
+                    return;
+                }
+                if (Engine.state.players.length >= MAX_PLAYERS) {
+                    conn.send({ type: 'JOIN_REJECTED', reason: `This lobby is full (${MAX_PLAYERS} players).` });
+                    return;
+                }
+                App.connections[conn.peer] = conn;
+                App.connectionRoles[conn.peer] = { role: 'player', playerId: conn.peer };
+                const requestedName = Utils.cleanText(data.name, 24, 'Player');
+                const usedNames = new Set(Engine.state.players.map(player => player.name.toLowerCase()));
+                let uniqueName = requestedName;
+                let suffix = 2;
+                while (usedNames.has(uniqueName.toLowerCase())) {
+                    const suffixText = ` ${suffix++}`;
+                    uniqueName = requestedName.slice(0, 24 - suffixText.length) + suffixText;
+                }
+                Engine.state.players.push({ id: conn.peer, name: uniqueName, sessionToken, isHost: false, isBot: false, connected: true });
+                Net.sendState(conn, conn.peer);
+                Engine.sysLog(`${uniqueName} joined the lobby.`, 'info');
+                return;
+            }
+            if (data.type === 'ROLE_SWITCH') {
+                const result = Net.switchConnectionRole(conn.peer, data.role);
+                if (!result.ok && conn.open) conn.send({ type: 'ACTION_REJECTED', reason: result.reason });
+            } else if (App.connectionRoles[conn.peer]?.role === 'spectator') {
+                const result = Net.handleSpectatorAction(conn.peer, data);
+                if (!result.ok && conn.open) conn.send({ type: 'ACTION_REJECTED', reason: result.reason });
+            } else {
+                Engine.processAction(data, App.connectionRoles[conn.peer]?.playerId || conn.peer);
+            }
+        });
+        conn.on('close', () => {
+            if (App.connections[conn.peer] !== conn) return;
+            const role = App.connectionRoles[conn.peer];
+            const wasSpectator = role?.role === 'spectator';
+            const playerId = role?.playerId || conn.peer;
+            delete App.connections[conn.peer];
+            delete App.connectionRoles[conn.peer];
+            delete App.spectators[conn.peer];
+            if (wasSpectator) {
+                Engine.broadcast();
+                return;
+            }
+            const player = Engine.state.players.find(item => item.id === playerId);
+            if (player?.connected !== false) Net.markPlayerDisconnected(playerId);
+        });
+    },
+
     init: (name, providedId, spectator = false) => {
         App.localName = Utils.cleanText(name, 24, "Player_" + Math.floor(Math.random()*1000));
         App.requestedSpectator = Boolean(spectator);
@@ -1832,96 +1926,6 @@ const Net = {
             }
         });
 
-        Net.acceptConnection = (conn) => {
-            if (!App.isHost) return;
-            conn.on('data', (data) => {
-                if (!data || typeof data !== 'object') return;
-                if (data.type === 'ROOM_PING') {
-                    if (conn.open) conn.send({ type: 'ROOM_PONG', sentAt: data.sentAt || Date.now() });
-                    return;
-                }
-                if (data.type === 'JOIN') {
-                    const requestedSpectator = data.role === 'spectator';
-                    const sessionToken = String(data.sessionToken || '').slice(0, 80);
-                    const sameSeat = !requestedSpectator ? Engine.state.players.find(existingPlayer => existingPlayer.id === conn.peer) : null;
-                    if (sameSeat) {
-                        App.connections[conn.peer] = conn;
-                        App.connectionRoles[conn.peer] = { role: 'player', playerId: sameSeat.id };
-                        if (sameSeat.connected === false) {
-                            sameSeat.connected = true;
-                            Engine.sysLog(`${sameSeat.name} reconnected!`, "success");
-                        }
-                        Net.sendState(conn, conn.peer);
-                        Engine.broadcast();
-                        return;
-                    }
-                    const existing = !requestedSpectator && sessionToken.length >= 6
-                        ? Engine.state.players.find(p => p.sessionToken === sessionToken && !p.connected && !p.isBot)
-                        : null;
-                    if (existing) {
-                        App.connections[conn.peer] = conn;
-                        App.connectionRoles[conn.peer] = { role: 'player', playerId: existing.id };
-                        existing.connected = true;
-                        Engine.sysLog(`${existing.name} reconnected!`, "success");
-                        Net.sendState(conn, conn.peer);
-                        Engine.broadcast();
-                        return;
-                    }
-                    if (requestedSpectator || Engine.state.phase !== 'lobby') {
-                        if (!App.allowSpectators) {
-                            conn.send({ type: 'JOIN_REJECTED', reason: 'Spectator mode is disabled for this table.' });
-                            return;
-                        }
-                        const perspectiveId = Engine.state.players[0]?.id || null;
-                        App.connections[conn.peer] = conn;
-                        App.connectionRoles[conn.peer] = { role: 'spectator', perspectiveId };
-                        App.spectators[conn.peer] = { id: conn.peer, name: Utils.cleanText(data.name, 24, 'Spectator'), perspectiveId, connected: true, lastChatAt: 0 };
-                        Net.sendState(conn, conn.peer);
-                        Engine.broadcast();
-                        return;
-                    }
-                    if (Engine.state.players.length >= MAX_PLAYERS) {
-                        conn.send({ type: 'JOIN_REJECTED', reason: `This lobby is full (${MAX_PLAYERS} players).` });
-                        return;
-                    }
-                    App.connections[conn.peer] = conn;
-                    App.connectionRoles[conn.peer] = { role: 'player', playerId: conn.peer };
-                    const requestedName = Utils.cleanText(data.name, 24, 'Player');
-                    const usedNames = new Set(Engine.state.players.map(p => p.name.toLowerCase()));
-                    let uniqueName = requestedName;
-                    let suffix = 2;
-                    while (usedNames.has(uniqueName.toLowerCase())) {
-                        const suffixText = ` ${suffix++}`;
-                        uniqueName = requestedName.slice(0, 24 - suffixText.length) + suffixText;
-                    }
-                    Engine.state.players.push({ id: conn.peer, name: uniqueName, sessionToken, isHost: false, isBot: false, connected: true });
-                    Engine.sysLog(`${uniqueName} joined the lobby.`, "info");
-                    Net.sendState(conn, conn.peer);
-                    Engine.broadcast();
-                } else if (data.type === 'ROLE_SWITCH') {
-                    const result = Net.switchConnectionRole(conn.peer, data.role); if (!result.ok && conn.open) conn.send({ type: 'ACTION_REJECTED', reason: result.reason });
-                } else if (App.connectionRoles[conn.peer]?.role === 'spectator') {
-                    const result = Net.handleSpectatorAction(conn.peer, data); if (!result.ok && conn.open) conn.send({ type: 'ACTION_REJECTED', reason: result.reason });
-                } else {
-                    Engine.processAction(data, App.connectionRoles[conn.peer]?.playerId || conn.peer);
-                }
-            });
-            conn.on('close', () => {
-                if (App.connections[conn.peer] !== conn) return;
-                const role = App.connectionRoles[conn.peer];
-                const wasSpectator = role?.role === 'spectator';
-                const playerId = role?.playerId || conn.peer;
-                delete App.connections[conn.peer];
-                delete App.connectionRoles[conn.peer];
-                delete App.spectators[conn.peer];
-                if (wasSpectator) {
-                    Engine.broadcast();
-                    return;
-                }
-                const player = Engine.state.players.find(item => item.id === playerId);
-                if (player?.connected !== false) Net.markPlayerDisconnected(playerId);
-            });
-        };
         App.peer.on('connection', connection => Net.acceptConnection(connection));
     },
 
@@ -1953,6 +1957,8 @@ const Net = {
                 App.reconnectTimer = null;
             },
             onReady: () => {
+                clearTimeout(App.promotionTimer);
+                App.promotionTimer = null;
                 App.everConnected = true;
                 document.getElementById('lobby-init').classList.add('hidden');
                 document.getElementById('lobby-room').classList.remove('hidden');
@@ -1991,7 +1997,7 @@ const Net = {
             onDrop: () => {
                 if (App.leaving || App.joinRejected) return;
                 if (App.hostBackup?.vicePlayerId === App.localId) {
-                    UI.showToast('Host left. Taking over the Bazunga table...', 'warning');
+                    UI.showToast('Host link dropped. Reconnecting before any takeover...', 'warning');
                     Net.schedulePromotion(safeHostId);
                     return;
                 }
@@ -1999,6 +2005,10 @@ const Net = {
                 Net.scheduleReconnect(safeHostId);
             },
             onFailure: ({ detail }) => {
+                if (App.promotionTimer && App.hostBackup?.vicePlayerId === App.localId) {
+                    UI.showToast('Host is still unreachable. Preparing a safe takeover...', 'warning');
+                    return;
+                }
                 UI.showToast(detail, 'danger');
                 Net.resetJoinAttempt();
             }
@@ -2015,7 +2025,11 @@ const Net = {
 
     schedulePromotion: hostId => {
         if (App.leaving || App.isHost || App.promotionTimer) return;
-        App.promotionTimer = setTimeout(() => { App.promotionTimer = null; Net.promoteFromBackup(hostId); }, 1100);
+        Net.scheduleReconnect(hostId);
+        App.promotionTimer = setTimeout(() => {
+            App.promotionTimer = null;
+            if (!App.leaving && !App.isHost) Net.promoteFromBackup(hostId);
+        }, RoomTools.HOST_TAKEOVER_GRACE_MS);
     },
 
     markPlayerDisconnected: playerId => {
@@ -2458,7 +2472,7 @@ const UI = {
     renderRoleControl: state => {
         const canSwitch = !App.isHost && (App.isSpectator ? state.canTakePlayerSeat !== false : state.spectatorsAllowed !== false);
         const reason = App.isSpectator && state.canTakePlayerSeat === false ? 'No player seat is currently available' : !App.isSpectator && state.spectatorsAllowed === false ? 'Spectator mode is disabled for this table' : '';
-        RoomTools.RoleControl.update({ visible: Boolean(App.isHost || App.hostConn || App.offlineHost), host: App.isHost, spectator: App.isSpectator, canSwitch, reason, onSwitch: Net.requestRoleSwitch, onManage: UI.openParticipantManager });
+        RoomTools.RoleControl.update({ visible: Boolean(App.isHost || App.hostConn || App.offlineHost), container: state.phase === 'lobby' ? document.getElementById('lobby-room') : document.body, host: App.isHost, spectator: App.isSpectator, canSwitch, reason, onSwitch: Net.requestRoleSwitch, onManage: UI.openParticipantManager });
     },
 
     openParticipantManager: () => {
@@ -2511,8 +2525,9 @@ const UI = {
         const input = document.getElementById('lobby-chat-input');
         const message = Utils.cleanText(input.value, 240);
         if (!message) return;
-        input.value = '';
         Net.sendAction({ type: 'CHAT', msg: message });
+        input.value = '';
+        if (window.matchMedia?.('(pointer: coarse)').matches) input.blur();
     },
 
     renamePlayer: inputId => {

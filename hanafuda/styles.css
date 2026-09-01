@@ -351,6 +351,7 @@ html[data-hanafuda-front="white-red"] .card-back { filter: none; background: #ef
 #btn-appearance-done { width: 100%; }
 #result-summary { display: grid; gap: 8px; }
 .result-score { padding: 12px; border-radius: 10px; background: #ffffff0b; }
+.score-math { display: block; margin-top: 6px; color: #f0d77f; font-size: .6rem; line-height: 1.4; }
 #result-actions { display: flex; gap: 8px; margin-top: 16px; }
 #animation-layer { z-index: 60; position: fixed; inset: 0; pointer-events: none; perspective: 900px; background: transparent; }
 .resolution-hidden { opacity: 1 !important; }

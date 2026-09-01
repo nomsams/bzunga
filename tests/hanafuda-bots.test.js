@@ -70,4 +70,13 @@ assert(
 );
 assert.doesNotThrow(() => controller.selectChatReply(casualBot, { playerId: 'human', message: 'where are you?' }, chatState));
 
+let recovered = 0;
+const stalledController = new HanafudaBotController({
+    state: { phase: 'WAIT_HAND_SELECTION' },
+    activePlayer: () => ({ id: 'empty-baba', isBot: true, hand: [] }),
+    recoverStalledTurn: () => { recovered += 1; return true; }
+}, { random: () => 0, now: () => 1000 });
+stalledController.tick();
+assert.strictEqual(recovered, 1, 'The controller must recover an empty bot turn instead of rescheduling endless thinking');
+
 console.log('Hanafuda bots: legal decisions, hidden-information boundary, search, Koi-Koi risk, and varied contextual chat passed.');

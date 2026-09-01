@@ -50,6 +50,8 @@ assert(sharedCss.includes('.game-room-card .player-list') && sharedCss.includes(
 assert(!bazunga.includes('user-scalable=no'), 'Bazunga must not disable native mobile zoom');
 
 assert(shared.includes('const RoleControl') && shared.includes('Switch to spectator') && shared.includes('Take a player seat') && shared.includes('options.onManage'), 'Every room needs a clearly labelled player/spectator control and persistent host manager access');
+assert(shared.includes('options.container instanceof HTMLElement') && sharedCss.includes('.game-room-card > .room-role-control'), 'Lobby role controls must mount inside the room card instead of covering QR, profile, or chat controls');
+assert(sharedCss.includes('font-size: 16px !important') && sharedCss.includes('overflow-y: auto !important'), 'Mobile lobby chat must avoid iOS focus zoom and retain one scrollable room surface');
 assert(shared.includes('const ParticipantManager') && shared.includes('participant-confirm') && shared.includes('YES · KICK'), 'Host kicks must require an in-app confirmation step');
 
 for (const [name, app] of [['President', presidentApp], ['Durak', durakApp], ['Hanafuda', hanafudaApp]]) {
@@ -66,6 +68,7 @@ for (const [name, app] of [['President', presidentApp], ['Durak', durakApp], ['H
     assert(app.includes('SPECTATOR_PERSPECTIVE'), `${name} must route spectator perspective changes through the host`);
     assert(app.includes('playerId: returning.id') || app.includes('playerId: reconnecting.id') || app.includes('playerId: oldId'), `${name} reconnects must retain a stable game-seat identity`);
     assert(app.includes('HOST_BACKUP') && app.includes('promoteFromBackup'), `${name} must promote a human vice-host without resetting the game`);
+    assert(app.includes('RoomTools.HOST_TAKEOVER_GRACE_MS') && app.includes('clearTimeout(App.promotionTimer)'), `${name} must cancel false host takeovers when fresh state reconnects`);
     assert(app.includes('kickPlayer('), `${name} hosts must be able to remove a player without banning the room code`);
     assert(app.includes('switchConnectionRole(') && app.includes("'ROLE_SWITCH'"), `${name} must synchronize role changes through the host`);
     assert(app.includes("'CHAT'") && app.includes("'RENAME'"), `${name} spectators must be able to chat and rename`);
@@ -74,16 +77,23 @@ for (const [name, app] of [['President', presidentApp], ['Durak', durakApp], ['H
     const lateSpectatorCheck = app.indexOf("requestedSpectator ||", seatCheck);
     assert(seatCheck >= 0 && lateSpectatorCheck > seatCheck && app.slice(seatCheck, lateSpectatorCheck).includes('!requestedSpectator &&'), `${name} must reclaim a disconnected seat before auto-spectating a genuinely new late join`);
     assert(app.includes('App.requestedSpectator = App.isSpectator'), `${name} reconnects must preserve an intentional role switch`);
+    assert(app.includes("container: state.phase === 'lobby' ? document.getElementById('lobby-room') : document.body"), `${name} must keep the room-role control inline until play begins`);
 }
+
+assert(bazunga.includes("container: state.phase === 'lobby' ? document.getElementById('lobby-room') : document.body"), 'Bazunga must keep the room-role control inline until play begins');
+assert(bazunga.includes("window.matchMedia?.('(pointer: coarse)').matches") && bazunga.includes('input.blur()'), 'Bazunga lobby chat must release the mobile keyboard after sending');
 
 assert(bazunga.includes('RoomTools.ResilientJoin.connect') && bazunga.includes('scheduleReconnect: hostId'), 'Bazunga must share resilient reconnect behavior');
 assert(bazunga.includes('RoomTools.RoomRelay.host') && bazunga.includes('RoomTools.PEER_OPEN_TIMEOUT_MS'), 'Bazunga must accept relayed guests and recover from signalling timeouts');
+assert(bazunga.includes('acceptConnection: conn =>'), 'Bazunga must define its connection handler before any direct or relay guest can arrive');
+assert(!bazunga.includes('Net.acceptConnection ='), 'Bazunga must not install its connection handler late during initialization');
 assert(bazunga.includes('resetJoinAttempt:') && bazunga.includes('App.localId = null'), 'Bazunga retries must discard stale peer identities');
 assert(bazunga.includes('UI.resetLobbyButtons();') && !bazunga.includes("const joinButton = document.getElementById('btn-join');\n            if (joinButton)"), 'Bazunga failures must restore Host, Join, and Spectate controls together');
 assert(bazunga.includes('player.sessionToken = \'\''), 'Bazunga state delivery must hide other reconnect tokens');
 assert(bazunga.includes('App.connections[conn.peer] !== conn'), 'Bazunga must ignore stale connection close events');
 assert(bazunga.includes("playerId: existing.id") && !bazunga.includes('existing.id = conn.peer'), 'Bazunga reconnects must preserve the stable seat and pending final orbit');
 assert(bazunga.includes("data.type === 'HOST_BACKUP'") && bazunga.includes('promoteFromBackup:'), 'Bazunga must promote a human vice-host without resetting the game');
+assert(bazunga.includes('RoomTools.HOST_TAKEOVER_GRACE_MS') && bazunga.includes('clearTimeout(App.promotionTimer)'), 'Bazunga must reconnect before promoting and cancel false takeovers when the host returns');
 assert(bazunga.includes('switchConnectionRole:') && bazunga.includes("'ROLE_SWITCH'"), 'Bazunga must synchronize player/spectator switching through the host');
 assert(bazunga.includes("'CHAT'") && bazunga.includes("'RENAME'"), 'Bazunga spectators must be able to chat and rename');
 const bazungaSeatCheck = bazunga.indexOf('const sameSeat = !requestedSpectator');

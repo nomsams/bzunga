@@ -15,6 +15,7 @@
     const ROOM_PING_MS = 2500;
     const ROOM_SILENCE_TIMEOUT_MS = 8500;
     const RELAY_CONNECT_TIMEOUT_MS = 18000;
+    const HOST_TAKEOVER_GRACE_MS = 12000;
     const RELAY_SCRIPT_URLS = [
         'https://unpkg.com/mqtt@5.14.1/dist/mqtt.min.js',
         'https://cdn.jsdelivr.net/npm/mqtt@5.14.1/dist/mqtt.min.js'
@@ -906,6 +907,8 @@
                 control = document.createElement('button'); control.id = 'room-role-control'; control.type = 'button';
                 control.className = 'room-role-control'; document.body.appendChild(control);
             }
+            const container = options.container instanceof HTMLElement ? options.container : document.body;
+            if (control.parentElement !== container) container.appendChild(control);
             const spectator = Boolean(options.spectator); const host = Boolean(options.host); const canManage = host && typeof options.onManage === 'function'; const canSwitch = options.canSwitch !== false && !host;
             control.dataset.role = host ? 'host' : spectator ? 'spectator' : 'player';
             control.disabled = host ? !canManage : !canSwitch;
@@ -974,6 +977,7 @@
         ROOM_PING_MS,
         ROOM_SILENCE_TIMEOUT_MS,
         RELAY_CONNECT_TIMEOUT_MS,
+        HOST_TAKEOVER_GRACE_MS,
         isNameCollision: error => error?.type === 'unavailable-id'
     };
 })(globalThis);

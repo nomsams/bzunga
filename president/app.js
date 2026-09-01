@@ -283,6 +283,8 @@
                     App.reconnectTimer = null;
                 },
                 onReady: () => {
+                    clearTimeout(App.promotionTimer);
+                    App.promotionTimer = null;
                     App.everConnected = true;
                     document.getElementById('lobby-start').classList.add('hidden');
                     document.getElementById('lobby-room').classList.remove('hidden');
@@ -295,7 +297,7 @@
                 onDrop: () => {
                     if (App.leaving || App.joinRejected) return;
                     if (App.hostBackup?.vicePlayerId === App.localId) {
-                        UI.showToast('Host connection lost. Taking over the table...', 'danger');
+                        UI.showToast('Host link dropped. Reconnecting before any takeover...', 'danger');
                         Net.schedulePromotion(safeHostId);
                         return;
                     }
@@ -303,6 +305,10 @@
                     Net.scheduleReconnect(safeHostId);
                 },
                 onFailure: ({ detail }) => {
+                    if (App.promotionTimer && App.hostBackup?.vicePlayerId === App.localId) {
+                        UI.showToast('Host is still unreachable. Preparing a safe takeover...', 'danger');
+                        return;
+                    }
                     UI.showToast(detail, 'danger');
                     Net.resetJoinAttempt();
                 }
@@ -319,10 +325,11 @@
 
         schedulePromotion(hostId) {
             if (App.leaving || App.isHost || App.promotionTimer) return;
+            Net.scheduleReconnect(hostId);
             App.promotionTimer = setTimeout(() => {
                 App.promotionTimer = null;
-                Net.promoteFromBackup(hostId);
-            }, 1100);
+                if (!App.leaving && !App.isHost) Net.promoteFromBackup(hostId);
+            }, RoomTools.HOST_TAKEOVER_GRACE_MS);
         },
 
         promoteFromBackup(hostId) {
@@ -966,7 +973,7 @@
         renderRoleControl(state) {
             const canSwitch = !App.isHost && (App.isSpectator ? state.canTakePlayerSeat !== false : state.spectatorsAllowed !== false);
             const reason = App.isSpectator && state.canTakePlayerSeat === false ? 'No player seat is currently available' : !App.isSpectator && state.spectatorsAllowed === false ? 'Spectator mode is disabled for this table' : '';
-            RoomTools.RoleControl.update({ visible: Boolean(App.isHost || App.hostConnection || App.offlineHost), host: App.isHost, spectator: App.isSpectator, canSwitch, reason, onSwitch: Net.requestRoleSwitch, onManage: UI.openParticipantManager });
+            RoomTools.RoleControl.update({ visible: Boolean(App.isHost || App.hostConnection || App.offlineHost), container: state.phase === 'lobby' ? document.getElementById('lobby-room') : document.body, host: App.isHost, spectator: App.isSpectator, canSwitch, reason, onSwitch: Net.requestRoleSwitch, onManage: UI.openParticipantManager });
         },
 
         openParticipantManager() {
@@ -1405,8 +1412,8 @@
             const input = document.getElementById('lobby-chat-input');
             const message = Utils.cleanText(input.value, 240);
             if (!message) return;
-            input.value = '';
-            Net.sendAction({ type: 'CHAT', message });
+            const result = Net.sendAction({ type: 'CHAT', message });
+            if (!result || result.ok) { input.value = ''; if (window.matchMedia?.('(pointer: coarse)').matches) input.blur(); }
         },
 
         renamePlayer(inputId) {

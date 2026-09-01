@@ -107,10 +107,10 @@
                 hostId: safeHostId, peerId: App.fallbackClientId || App.localId, peer: App.peer,
                 joinPayload: { type: 'JOIN', name: App.localName, sessionToken: App.sessionToken, role: App.requestedSpectator ? 'spectator' : 'player' },
                 onConnection: (connection, transport) => { App.hostConnection = connection; App.transport = transport; },
-                onReady: () => { document.getElementById('lobby-start').classList.add('hidden'); document.getElementById('lobby-room').classList.remove('hidden'); document.getElementById('client-waiting').classList.remove('hidden'); document.getElementById('room-id-display').textContent = `Connected to ${safeHostId}`; document.getElementById('qr-container').classList.remove('hidden'); UI.renderQr(safeHostId); },
+                onReady: () => { clearTimeout(App.promotionTimer); App.promotionTimer = null; document.getElementById('lobby-start').classList.add('hidden'); document.getElementById('lobby-room').classList.remove('hidden'); document.getElementById('client-waiting').classList.remove('hidden'); document.getElementById('room-id-display').textContent = `Connected to ${safeHostId}`; document.getElementById('qr-container').classList.remove('hidden'); UI.renderQr(safeHostId); },
                 onData: data => Net.receiveHostData(data),
-                onDrop: () => { if (!App.leaving && !App.joinRejected) { if (App.hostBackup?.vicePlayerId === App.localId) { UI.showToast('Host left. Taking over the flower table…', 'danger'); Net.schedulePromotion(safeHostId); } else { UI.showToast('Connection dropped. Rejoining your flower cards…', 'danger'); Net.scheduleReconnect(safeHostId); } } },
-                onFailure: ({ detail }) => { UI.showToast(detail, 'danger'); Net.resetJoinAttempt(); }
+                onDrop: () => { if (!App.leaving && !App.joinRejected) { if (App.hostBackup?.vicePlayerId === App.localId) { UI.showToast('Host link dropped. Reconnecting before any takeover…', 'danger'); Net.schedulePromotion(safeHostId); } else { UI.showToast('Connection dropped. Rejoining your flower cards…', 'danger'); Net.scheduleReconnect(safeHostId); } } },
+                onFailure: ({ detail }) => { if (App.promotionTimer && App.hostBackup?.vicePlayerId === App.localId) { UI.showToast('Host is still unreachable. Preparing a safe takeover…', 'danger'); return; } UI.showToast(detail, 'danger'); Net.resetJoinAttempt(); }
             });
         },
 
@@ -121,7 +121,8 @@
 
         schedulePromotion(hostId) {
             if (App.leaving || App.isHost || App.promotionTimer) return;
-            App.promotionTimer = setTimeout(() => { App.promotionTimer = null; Net.promoteFromBackup(hostId); }, 1100);
+            Net.scheduleReconnect(hostId);
+            App.promotionTimer = setTimeout(() => { App.promotionTimer = null; if (!App.leaving && !App.isHost) Net.promoteFromBackup(hostId); }, RoomTools.HOST_TAKEOVER_GRACE_MS);
         },
 
         promoteFromBackup(hostId) {
@@ -491,7 +492,7 @@
         renderRoleControl(state) {
             const canSwitch = !App.isHost && (App.isSpectator ? state.canTakePlayerSeat !== false : state.spectatorsAllowed !== false);
             const reason = App.isSpectator && state.canTakePlayerSeat === false ? 'No player seat is currently available' : !App.isSpectator && state.spectatorsAllowed === false ? 'Spectator mode is disabled for this table' : '';
-            RoomTools.RoleControl.update({ visible: Boolean(App.isHost || App.hostConnection || App.offlineHost), host: App.isHost, spectator: App.isSpectator, canSwitch, reason, onSwitch: Net.requestRoleSwitch, onManage: UI.openParticipantManager });
+            RoomTools.RoleControl.update({ visible: Boolean(App.isHost || App.hostConnection || App.offlineHost), container: state.phase === 'lobby' ? document.getElementById('lobby-room') : document.body, host: App.isHost, spectator: App.isSpectator, canSwitch, reason, onSwitch: Net.requestRoleSwitch, onManage: UI.openParticipantManager });
         },
         localPlayer(state) {
             return state?.players?.find(player => player.id === App.localId)
@@ -511,6 +512,7 @@
             const active = state.players.find(player => player.id === state.turnPlayerId); const me = UI.localPlayer(state); const localId = me?.id; const mode = HanafudaRules.tableMode(state.settings?.mode);
             document.getElementById('month-display').textContent = `${mode.shortName} · MONTH ${state.roundNumber} / ${state.settings.rounds}`;
             let status = active ? `${active.name}'s turn` : 'Round complete';
+            if (state.phase === 'WAIT_HAND_SELECTION' && active?.connected === false && !active?.isBot) status = `${active.name} is away · waiting for reconnection`;
             if (['END_ROUND', 'MATCH_OVER'].includes(state.phase)) status = state.phase === 'MATCH_OVER' ? 'Match complete · inspect the final table' : `Month ${state.roundNumber} complete · inspect the final table`;
             if (state.phase === 'WAIT_HAND_SELECTION' && active?.id === localId && !App.isSpectator) status = 'Your turn · choose a card from your hand';
             if (state.phase.includes('CAPTURE') && state.pending?.playerId === localId && !App.isSpectator) status = 'Choose which matching field card to capture';
@@ -631,7 +633,9 @@
             if (!complete || App.ui.dismissedRound === state.roundNumber || deferred) { modal.classList.add('hidden'); UI.syncModalOverlay(); return; }
             const winner = state.players.find(player => player.id === (state.matchResult?.winnerId || state.roundResult?.winnerId));
             document.getElementById('result-kicker').textContent = matchOver ? 'MATCH COMPLETE' : `MONTH ${state.roundNumber} COMPLETE`; document.getElementById('result-title').textContent = matchOver ? `${winner?.name || 'Winner'} wins` : state.roundResult.reason === 'oya-ken' ? 'Oya-ken' : 'Shobu';
-            const yaku = state.roundResult?.yaku || []; document.getElementById('result-summary').innerHTML = `<div class="result-score"><strong>${Utils.escape(winner?.name || 'Oya')} · +${state.roundResult?.points || 0}</strong><p>${yaku.length ? yaku.map(item => Utils.escape(item.name || item.label)).join(' · ') : 'Dealer award / instant result'}</p></div>${state.players.map(player => `<div>${Utils.escape(player.name)} · <strong>${player.score} points</strong></div>`).join('')}`;
+            const yaku = state.roundResult?.yaku || []; const scoring = state.roundResult?.scoring;
+            const scoreMath = scoring ? `<small class="score-math">Base ${scoring.base}${scoring.sevenPlusMultiplier > 1 ? ' · 7+ points ×2' : ''}${scoring.koiKoiPenaltyMultiplier > 1 ? ' · failed rival Koi-Koi ×2' : ''} = ${scoring.total}</small>` : '';
+            document.getElementById('result-summary').innerHTML = `<div class="result-score"><strong>${Utils.escape(winner?.name || 'Oya')} · +${state.roundResult?.points || 0}</strong><p>${yaku.length ? yaku.map(item => Utils.escape(item.name || item.label)).join(' · ') : 'Dealer award / instant result'}</p>${scoreMath}</div>${state.players.map(player => `<div>${Utils.escape(player.name)} · <strong>${player.score} points</strong></div>`).join('')}`;
             document.getElementById('result-actions').querySelector('#btn-next-round')?.remove();
             if (App.isHost && !matchOver) { const button = document.createElement('button'); button.id = 'btn-next-round'; button.className = 'primary'; button.textContent = 'DEAL NEXT MONTH'; button.onclick = UI.startNextMonth; document.getElementById('result-actions').prepend(button); }
             modal.classList.remove('hidden'); UI.setModalOverlay(true);
@@ -911,7 +915,7 @@
         showToast(message, type = 'info') { const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.textContent = Utils.clean(message, 220); document.getElementById('toast-container').appendChild(toast); setTimeout(() => toast.remove(), 4800); },
         setChatOpen(open) { App.ui.chatOpen = Boolean(open); document.getElementById('chat-drawer').classList.toggle('open', App.ui.chatOpen); document.getElementById('chat-fab').setAttribute('aria-expanded', String(App.ui.chatOpen)); if (open) setTimeout(() => document.getElementById('chat-input').focus(), 180); },
         sendChat() { const input = document.getElementById('chat-input'); const message = Utils.clean(input.value, 180); if (!message) return; input.value = ''; Net.sendAction({ type: 'CHAT', message }); },
-        sendLobbyChat() { const input = document.getElementById('lobby-chat-input'); const message = Utils.clean(input.value, 180); if (!message) return; input.value = ''; Net.sendAction({ type: 'CHAT', message }); },
+        sendLobbyChat() { const input = document.getElementById('lobby-chat-input'); const message = Utils.clean(input.value, 180); if (!message) return; const result = Net.sendAction({ type: 'CHAT', message }); if (!result || result.ok) { input.value = ''; if (UI.isMobileCardInput()) input.blur(); } },
         renamePlayer(inputId) { const input = document.getElementById(inputId); const name = Utils.clean(input?.value, 24); if (!name) return UI.showToast('Enter a name first.', 'danger'); App.localName = name; localStorage.setItem('hanafuda_player_name', name); Net.sendAction({ type: 'RENAME', name }); },
         syncNameInputs(state) { const me = UI.localPlayer(state); const name = App.isSpectator ? state?.spectatorName : me?.name; if (!name) return; App.localName = name; ['room-player-name', 'game-player-name'].forEach(id => { const input = document.getElementById(id); if (input && document.activeElement !== input) input.value = name; }); },
         openRules() { document.getElementById('rules-modal').classList.remove('hidden'); UI.setModalOverlay(true); },

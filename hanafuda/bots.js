@@ -530,6 +530,7 @@
         constructor(engine, options = {}) {
             this.engine = engine;
             this.random = options.random || Math.random;
+            this.now = options.now || (() => Date.now());
             this.interval = null;
             this.schedules = new Map();
             this.disconnectedSchedule = null;
@@ -552,13 +553,18 @@
             const state = this.engine.state;
             const bot = this.engine.activePlayer();
             const actionable = ['WAIT_HAND_SELECTION', 'WAIT_HAND_CAPTURE', 'WAIT_DRAW_CAPTURE', 'WAIT_KOI_KOI_CHOICE'];
+            if (actionable.includes(state.phase) && (!bot || (state.phase === 'WAIT_HAND_SELECTION' && !bot.hand?.length))) {
+                if (bot) this.schedules.delete(bot.id);
+                this.engine.recoverStalledTurn?.();
+                return;
+            }
             if (bot && bot.connected === false && !bot.isBot && actionable.includes(state.phase)) {
                 const awayKey = `${bot.id}:${state.phase}:${state.lastAction?.nonce || state.roundNumber}:${state.pending?.card?.id || ''}`;
                 if (!this.disconnectedSchedule || this.disconnectedSchedule.key !== awayKey) {
-                    this.disconnectedSchedule = { key: awayKey, readyAt: Date.now() + 2600 };
+                    this.disconnectedSchedule = { key: awayKey, readyAt: this.now() + 2600 };
                     return;
                 }
-                if (Date.now() >= this.disconnectedSchedule.readyAt) {
+                if (this.now() >= this.disconnectedSchedule.readyAt) {
                     this.disconnectedSchedule = null;
                     this.engine.skipDisconnectedTurn();
                 }
@@ -573,15 +579,25 @@
                 const choicePhase = state.phase !== 'WAIT_HAND_SELECTION';
                 const multiplier = choicePhase ? 0.58 : bot.hand.length <= 3 ? 1.15 : 1;
                 const delay = (profile.thinkMin + this.random() * (profile.thinkMax - profile.thinkMin)) * multiplier;
-                this.schedules.set(bot.id, { key, readyAt: Date.now() + delay });
+                this.schedules.set(bot.id, { key, readyAt: this.now() + delay });
                 this.engine.setBotActivity(bot.id, 'thinking', true);
                 return;
             }
-            if (Date.now() < existing.readyAt) return;
+            if (this.now() < existing.readyAt) return;
             this.schedules.delete(bot.id);
             this.engine.setBotActivity(bot.id, 'thinking', false);
             const action = HanafudaBotBrain.chooseAction(bot, state, this.random);
-            if (action) this.engine.processAction(action, bot.id);
+            const result = action ? this.engine.processAction(action, bot.id) : null;
+            if (result?.ok) return;
+            if (this.engine.recoverStalledTurn?.()) return;
+            const fallback = state.phase === 'WAIT_HAND_SELECTION' && bot.hand?.length
+                ? { type: 'PLAY_HAND_CARD', cardId: bot.hand[0].id }
+                : ['WAIT_HAND_CAPTURE', 'WAIT_DRAW_CAPTURE'].includes(state.phase) && state.pending?.choiceIds?.length
+                    ? { type: 'CHOOSE_CAPTURE', cardId: state.pending.choiceIds[0] }
+                    : state.phase === 'WAIT_KOI_KOI_CHOICE' && state.pending?.playerId === bot.id
+                        ? { type: 'SHOBU' }
+                        : null;
+            if (fallback) this.engine.processAction(fallback, bot.id);
         }
 
         handleEvent(event, state) {

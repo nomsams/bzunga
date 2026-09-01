@@ -89,33 +89,24 @@
                 cardFront: ['original', 'invert', 'white-red'].includes(settings.cardFront) ? settings.cardFront : 'original',
                 cardArt: ['scanned-svg', 'mantia-png', 'hawaii-svg'].includes(settings.cardArt) ? settings.cardArt : 'hawaii-svg'
             };
-            this.state.dealerId = active[Math.floor(this.random() * active.length)].id;
+            const dealerIndex = Math.min(active.length - 1, Math.max(0, Math.floor(Number(this.random()) * active.length) || 0));
+            this.state.dealerId = active[dealerIndex].id;
             this._dealRound();
             return { ok: true };
         }
 
         _dealRound() {
-            this.state.roundNumber += 1;
-            this.state.roundResult = null;
-            this.state.pending = null;
-            this.state.currentTurn = null;
-            this.state.turnAnimation = null;
-            this.state.koiKoi = {};
-            this.state.roundBaselines = {};
-            this.state.thinkingBots = [];
-            this.state.typingBots = [];
+            const mode = Rules.tableMode(this.state.settings.mode);
+            const dealRandom = () => Math.min(0.999999999999, Math.max(0, Number(this.random()) || 0));
+            let prepared = null;
             let attempts = 0;
             while (attempts++ < 200) {
-                const deck = Rules.createDeck(this.random);
-                const mode = Rules.tableMode(this.state.settings.mode);
-                for (const player of this.state.players) {
-                    player.hand = [];
-                    player.captured = [];
-                }
+                const deck = Rules.createDeck(dealRandom);
+                const hands = new Map(this.state.players.map(player => [player.id, []]));
                 const field = [];
                 for (let index = 0; index < mode.handSize; index++) {
                     for (const player of this.state.players) {
-                        const card = deck.pop(); card.ownerId = player.id; player.hand.push(card);
+                        const card = deck.pop(); card.ownerId = player.id; hands.get(player.id).push(card);
                     }
                 }
                 for (let index = 0; index < mode.fieldSize; index++) {
@@ -125,11 +116,38 @@
                     this.state.redeals += 1;
                     continue;
                 }
-                this.state.deck = deck;
-                this.state.field = field;
+                prepared = { deck, field, hands };
                 break;
             }
-            if (!this.state.deck.length) throw new Error('Could not produce a valid Hanafuda deal.');
+            if (!prepared) {
+                const deck = Rules.createDeck(() => 0.2);
+                const hands = new Map(this.state.players.map(player => [player.id, []]));
+                const field = [];
+                for (let index = 0; index < mode.handSize; index++) {
+                    for (const player of this.state.players) {
+                        const card = deck.pop(); card.ownerId = player.id; hands.get(player.id).push(card);
+                    }
+                }
+                for (let index = 0; index < mode.fieldSize; index++) {
+                    const card = deck.pop(); card.ownerId = null; field.push(card);
+                }
+                prepared = { deck, field, hands };
+            }
+            this.state.roundNumber += 1;
+            this.state.roundResult = null;
+            this.state.pending = null;
+            this.state.currentTurn = null;
+            this.state.turnAnimation = null;
+            this.state.koiKoi = {};
+            this.state.roundBaselines = {};
+            this.state.thinkingBots = [];
+            this.state.typingBots = [];
+            this.state.deck = prepared.deck;
+            this.state.field = prepared.field;
+            for (const player of this.state.players) {
+                player.hand = prepared.hands.get(player.id) || [];
+                player.captured = [];
+            }
             this.state.phase = 'CHECK_BOARD_STATE';
             this.state.lastAction = { type: 'deal', nonce: this.makeId(), roundNumber: this.state.roundNumber, time: this.now() };
 
@@ -142,7 +160,6 @@
             }
             this.state.phase = 'WAIT_HAND_SELECTION';
             this.state.turnPlayerId = this.state.dealerId;
-            const mode = Rules.tableMode(this.state.settings.mode);
             this._log(`Month ${this.state.roundNumber} begins in ${mode.name}. ${this.getPlayer(this.state.dealerId).name} is Oya and plays first.`, 'info');
             this._emit({ type: 'round_started', roundNumber: this.state.roundNumber, playerId: this.state.dealerId });
         }
@@ -314,29 +331,120 @@
                 return;
             }
             const currentIndex = this.state.players.findIndex(player => player.id === this.state.turnPlayerId);
-            this.state.turnPlayerId = this.state.players[(currentIndex + 1) % this.state.players.length].id;
+            let next = null;
+            for (let offset = 1; offset <= this.state.players.length; offset += 1) {
+                const candidate = this.state.players[(Math.max(-1, currentIndex) + offset) % this.state.players.length];
+                if (candidate?.hand?.length && (candidate.isBot || candidate.connected !== false)) { next = candidate; break; }
+            }
+            if (!next) {
+                next = this.state.players.find(player => player.hand?.length) || null;
+                if (!next) {
+                    this._log(`No playable hand remains. Oya receives 6 points.`, 'result');
+                    this._endRound(this.state.dealerId, 6, 'oya-ken', { retainDealer: true, yaku: [] });
+                    return;
+                }
+            }
+            this.state.turnPlayerId = next.id;
             this.state.phase = 'WAIT_HAND_SELECTION';
-            this.state.lastAction = { type: 'turn', nonce: this.makeId(), playerId: this.state.turnPlayerId, time: this.now() };
-            this._emit({ type: 'turn', playerId: this.state.turnPlayerId });
+            const waiting = !next.isBot && next.connected === false;
+            this.state.lastAction = { type: waiting ? 'waiting_reconnect' : 'turn', nonce: this.makeId(), playerId: this.state.turnPlayerId, time: this.now() };
+            this._emit({ type: waiting ? 'waiting_reconnect' : 'turn', playerId: this.state.turnPlayerId });
+        }
+
+        recoverStalledTurn() {
+            const actionable = ['WAIT_HAND_SELECTION', 'WAIT_HAND_CAPTURE', 'WAIT_DRAW_CAPTURE', 'WAIT_KOI_KOI_CHOICE'];
+            if (!actionable.includes(this.state.phase)) return false;
+            let active = this.activePlayer();
+            const referencedId = this.state.pending?.playerId || this.state.currentTurn?.playerId;
+            if (!active && referencedId) {
+                active = this.getPlayer(referencedId);
+                if (active) this.state.turnPlayerId = active.id;
+            }
+            if (!active) {
+                this._log(`The active seat could not be restored. The turn moves on automatically.`, 'warning');
+                this._switchTurn();
+                return true;
+            }
+            if (this.state.phase === 'WAIT_HAND_SELECTION') {
+                if (active.hand?.length) return false;
+                this._log(`${active.name} has no playable card. The turn moves on automatically.`, 'warning');
+                this._switchTurn();
+                return true;
+            }
+            if (['WAIT_HAND_CAPTURE', 'WAIT_DRAW_CAPTURE'].includes(this.state.phase)) {
+                const source = this.state.phase === 'WAIT_HAND_CAPTURE' ? 'hand' : 'draw';
+                const turn = this.state.currentTurn;
+                const card = this.state.pending?.card || (source === 'hand' ? turn?.handCard : turn?.drawCard);
+                if (!card) {
+                    this._log(`${active.name}'s unfinished capture could not be restored. The turn moves on safely.`, 'warning');
+                    this._switchTurn();
+                    return true;
+                }
+                if (!turn || turn.playerId !== active.id) {
+                    this.state.currentTurn = {
+                        playerId: active.id,
+                        handCard: source === 'hand' ? card : turn?.handCard || null,
+                        handCaptured: turn?.handCaptured || [],
+                        drawCard: source === 'draw' ? card : turn?.drawCard || null,
+                        drawCaptured: turn?.drawCaptured || []
+                    };
+                }
+                const resolution = Rules.resolveCapture(this.state.field, card);
+                if (resolution.needsChoice) {
+                    const choiceIds = resolution.choices.map(item => item.id);
+                    const pending = this.state.pending;
+                    const valid = pending?.playerId === active.id && pending.source === source && pending.card?.id === card.id
+                        && choiceIds.length === pending.choiceIds?.length && choiceIds.every(id => pending.choiceIds.includes(id));
+                    if (valid) return false;
+                    this.state.pending = { playerId: active.id, source, card, choiceIds };
+                    this.state.lastAction = { type: 'capture_choice_recovered', nonce: this.makeId(), playerId: active.id, source, card: { ...card }, time: this.now() };
+                    this._emit({ type: 'turn_recovered', playerId: active.id, phase: this.state.phase });
+                    return true;
+                }
+                this._log(`${active.name}'s capture state was repaired automatically.`, 'warning');
+                this._applyCaptureResolution(active, card, source, resolution);
+                return true;
+            }
+            const evaluation = Rules.evaluateYaku(active.captured || [], this.state.settings || {});
+            const previous = this.state.roundBaselines?.[active.id] || { yaku: [], points: 0, signature: '' };
+            const improved = evaluation.points > 0 && Rules.isNewOrUpgraded(previous, evaluation);
+            const pending = this.state.pending;
+            const valid = pending?.playerId === active.id && pending.evaluation?.signature === evaluation.signature && improved;
+            if (valid) return false;
+            if (improved) {
+                this.state.pending = { playerId: active.id, evaluation, previous };
+                this.state.lastAction = { type: 'yaku_choice_recovered', nonce: this.makeId(), playerId: active.id, time: this.now() };
+                this._emit({ type: 'turn_recovered', playerId: active.id, phase: this.state.phase });
+                return true;
+            }
+            this._log(`${active.name}'s stale Koi-Koi choice was cleared.`, 'warning');
+            this._switchTurn();
+            return true;
         }
 
         _endRound(winnerId, points, reason, details = {}) {
             const winner = this.getPlayer(winnerId);
-            if (winner) winner.score += points;
+            const awardedPoints = Math.max(0, Math.trunc(Number(points) || 0));
+            const scoreBefore = Object.fromEntries(this.state.players.map(player => [player.id, Math.max(0, Number(player.score) || 0)]));
+            if (winner) winner.score = scoreBefore[winner.id] + awardedPoints;
+            const scoreAfter = Object.fromEntries(this.state.players.map(player => [player.id, Math.max(0, Number(player.score) || 0)]));
             const previousDealerId = this.state.dealerId;
             if (!details.retainDealer) this.state.dealerId = winnerId;
-            this.state.roundResult = { winnerId, points, reason, previousDealerId, dealerId: this.state.dealerId, ...details };
+            this.state.roundResult = { winnerId, points: awardedPoints, reason, previousDealerId, dealerId: this.state.dealerId, scoreBefore, scoreAfter, ...details };
             this.state.pending = null;
             this.state.currentTurn = null;
             this.state.thinkingBots = [];
             this.state.typingBots = [];
             if (this.state.roundNumber >= this.state.settings.rounds) {
-                const ordered = [...this.state.players].sort((left, right) => right.score - left.score || (left.id === this.state.dealerId ? -1 : 1));
+                const seats = new Map(this.state.players.map((player, index) => [player.id, index]));
+                const ordered = [...this.state.players].sort((left, right) => Number(right.score) - Number(left.score)
+                    || Number(right.id === this.state.dealerId) - Number(left.id === this.state.dealerId)
+                    || seats.get(left.id) - seats.get(right.id));
                 this.state.matchResult = { winnerId: ordered[0].id, order: ordered.map(player => player.id) };
                 this.state.phase = 'MATCH_OVER';
             } else this.state.phase = 'END_ROUND';
-            this.state.lastAction = { type: 'round_end', nonce: this.makeId(), winnerId, points, reason, time: this.now() };
-            this._emit({ type: 'round_ended', winnerId, points, reason, matchOver: this.state.phase === 'MATCH_OVER' });
+            this.state.lastAction = { type: 'round_end', nonce: this.makeId(), winnerId, points: awardedPoints, reason, time: this.now() };
+            this._emit({ type: 'round_ended', winnerId, points: awardedPoints, reason, matchOver: this.state.phase === 'MATCH_OVER' });
         }
 
         startNextRound(playerId) {
@@ -358,21 +466,50 @@
         reconnectPlayer(oldId, newId) {
             const player = this.getPlayer(oldId);
             if (!player) return false;
-            if (oldId === newId) {
+            const targetId = cleanText(newId, 80);
+            if (!targetId || (targetId !== oldId && this.getPlayer(targetId))) return false;
+            if (oldId === targetId) {
                 player.connected = true;
                 this._emit({ type: 'reconnect', playerId: oldId });
                 return true;
             }
-            player.id = newId; player.connected = true;
-            for (const card of [...player.hand, ...player.captured]) card.ownerId = newId;
-            if (this.state.dealerId === oldId) this.state.dealerId = newId;
-            if (this.state.turnPlayerId === oldId) this.state.turnPlayerId = newId;
-            if (this.state.pending?.playerId === oldId) this.state.pending.playerId = newId;
-            if (this.state.currentTurn?.playerId === oldId) this.state.currentTurn.playerId = newId;
-            if (this.state.turnAnimation?.playerId === oldId) this.state.turnAnimation.playerId = newId;
-            if (this.state.koiKoi[oldId]) { this.state.koiKoi[newId] = this.state.koiKoi[oldId]; delete this.state.koiKoi[oldId]; }
-            if (this.state.roundBaselines[oldId]) { this.state.roundBaselines[newId] = this.state.roundBaselines[oldId]; delete this.state.roundBaselines[oldId]; }
-            this._emit({ type: 'reconnect', playerId: newId });
+            const replace = value => value === oldId ? targetId : value;
+            const replaceScoreKey = scores => {
+                if (!scores || !Object.prototype.hasOwnProperty.call(scores, oldId)) return;
+                scores[targetId] = scores[oldId]; delete scores[oldId];
+            };
+            player.id = targetId; player.connected = true;
+            for (const card of [...player.hand, ...player.captured]) card.ownerId = targetId;
+            this.state.dealerId = replace(this.state.dealerId);
+            this.state.turnPlayerId = replace(this.state.turnPlayerId);
+            if (this.state.pending?.playerId === oldId) this.state.pending.playerId = targetId;
+            if (this.state.pending?.card?.ownerId === oldId) this.state.pending.card.ownerId = targetId;
+            if (this.state.currentTurn?.playerId === oldId) this.state.currentTurn.playerId = targetId;
+            if (this.state.turnAnimation?.playerId === oldId) this.state.turnAnimation.playerId = targetId;
+            const migrateCards = value => {
+                if (!value || typeof value !== 'object') return;
+                if (value.ownerId === oldId) value.ownerId = targetId;
+                Object.values(value).forEach(item => Array.isArray(item) ? item.forEach(migrateCards) : migrateCards(item));
+            };
+            migrateCards(this.state.currentTurn);
+            migrateCards(this.state.turnAnimation);
+            if (this.state.koiKoi[oldId]) { this.state.koiKoi[targetId] = this.state.koiKoi[oldId]; delete this.state.koiKoi[oldId]; }
+            if (this.state.roundBaselines[oldId]) { this.state.roundBaselines[targetId] = this.state.roundBaselines[oldId]; delete this.state.roundBaselines[oldId]; }
+            this.state.thinkingBots = (this.state.thinkingBots || []).map(replace);
+            this.state.typingBots = (this.state.typingBots || []).map(replace);
+            if (this.state.lastAction?.playerId === oldId) this.state.lastAction.playerId = targetId;
+            if (this.state.lastAction?.winnerId === oldId) this.state.lastAction.winnerId = targetId;
+            for (const log of this.state.logs || []) if (log.playerId === oldId) log.playerId = targetId;
+            if (this.state.roundResult) {
+                ['winnerId', 'previousDealerId', 'dealerId'].forEach(key => { this.state.roundResult[key] = replace(this.state.roundResult[key]); });
+                this.state.roundResult.koiKoiPenaltyPlayerIds = (this.state.roundResult.koiKoiPenaltyPlayerIds || []).map(replace);
+                replaceScoreKey(this.state.roundResult.scoreBefore); replaceScoreKey(this.state.roundResult.scoreAfter);
+            }
+            if (this.state.matchResult) {
+                this.state.matchResult.winnerId = replace(this.state.matchResult.winnerId);
+                this.state.matchResult.order = (this.state.matchResult.order || []).map(replace);
+            }
+            this._emit({ type: 'reconnect', playerId: targetId });
             return true;
         }
 
@@ -386,10 +523,17 @@
                 return true;
             }
             if (this.state.phase === 'WAIT_HAND_SELECTION') {
-                const card = player.hand[0];
-                if (card) this.playHandCard(player.id, card.id);
+                const next = this.state.players.some(item => item.id !== player.id && item.hand?.length && (item.isBot || item.connected !== false));
+                if (!next) return false;
+                this._log(`${player.name} is away, so their turn is skipped.`, 'info');
+                this._switchTurn();
+                return true;
             }
-            if (this.state.pending?.playerId === player.id) this.chooseCapture(player.id, this.state.pending.choiceIds[0]);
+            const choiceId = this.state.pending?.playerId === player.id && Array.isArray(this.state.pending.choiceIds)
+                ? this.state.pending.choiceIds[0]
+                : null;
+            if (choiceId) this.chooseCapture(player.id, choiceId);
+            else this.recoverStalledTurn();
             return true;
         }
 

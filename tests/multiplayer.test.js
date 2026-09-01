@@ -31,6 +31,7 @@ assert(!multiplayerSource.includes('openrelay.metered.ca'), 'The retired public 
 assert(RoomTools.DIRECT_FALLBACK_MS <= 5000, 'A blocked direct channel must switch to relay promptly');
 assert(RoomTools.ROOM_PING_MS <= 3000, 'Guests must check host liveness often enough for smooth mobile failover');
 assert(RoomTools.ROOM_SILENCE_TIMEOUT_MS >= RoomTools.ROOM_PING_MS * 3, 'Host promotion must tolerate brief mobile scheduling pauses');
+assert(RoomTools.HOST_TAKEOVER_GRACE_MS >= RoomTools.ROOM_SILENCE_TIMEOUT_MS, 'Vice-host takeover must allow a full reconnect attempt before promotion');
 assert(multiplayerSource.includes("type: 'ROOM_PING'") && multiplayerSource.includes("data?.type === 'ROOM_PONG'"), 'Resilient guests must detect a host tab that disappears without a clean close event');
 assert(RoomTools.RELAY_CONNECT_TIMEOUT_MS >= 12000, 'Mobile WebSocket relay negotiation needs a realistic timeout');
 assert(RoomTools.RoomRelay && RoomTools.ResilientJoin, 'An independent room relay must back up direct P2P');

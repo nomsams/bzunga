@@ -274,6 +274,8 @@
                     App.reconnectTimer = null;
                 },
                 onReady: () => {
+                    clearTimeout(App.promotionTimer);
+                    App.promotionTimer = null;
                     App.everConnected = true;
                     UI.showRoom(`Connected to ${cleanHostId}`, false);
                     document.getElementById('qr-container').classList.remove('hidden');
@@ -283,7 +285,7 @@
                 onDrop: () => {
                     if (App.leaving || App.joinRejected) return;
                     if (App.hostBackup?.vicePlayerId === App.localId) {
-                        UI.showToast('Host left. Taking over the Durak table...', 'danger');
+                        UI.showToast('Host link dropped. Reconnecting before any takeover...', 'danger');
                         Net.schedulePromotion(cleanHostId);
                         return;
                     }
@@ -291,6 +293,10 @@
                     Net.scheduleReconnect(cleanHostId);
                 },
                 onFailure: ({ detail }) => {
+                    if (App.promotionTimer && App.hostBackup?.vicePlayerId === App.localId) {
+                        UI.showToast('Host is still unreachable. Preparing a safe takeover...', 'danger');
+                        return;
+                    }
                     UI.showToast(detail, 'danger');
                     Net.resetJoinAttempt();
                 }
@@ -307,7 +313,11 @@
 
         schedulePromotion(hostId) {
             if (App.leaving || App.isHost || App.promotionTimer) return;
-            App.promotionTimer = setTimeout(() => { App.promotionTimer = null; Net.promoteFromBackup(hostId); }, 1100);
+            Net.scheduleReconnect(hostId);
+            App.promotionTimer = setTimeout(() => {
+                App.promotionTimer = null;
+                if (!App.leaving && !App.isHost) Net.promoteFromBackup(hostId);
+            }, RoomTools.HOST_TAKEOVER_GRACE_MS);
         },
 
         promoteFromBackup(hostId) {
@@ -847,7 +857,7 @@
         renderRoleControl(state) {
             const canSwitch = !App.isHost && (App.isSpectator ? state.canTakePlayerSeat !== false : state.spectatorsAllowed !== false);
             const reason = App.isSpectator && state.canTakePlayerSeat === false ? 'No player seat is currently available' : !App.isSpectator && state.spectatorsAllowed === false ? 'Spectator mode is disabled for this table' : '';
-            RoomTools.RoleControl.update({ visible: Boolean(App.isHost || App.hostConnection || App.offlineHost), host: App.isHost, spectator: App.isSpectator, canSwitch, reason, onSwitch: Net.requestRoleSwitch, onManage: UI.openParticipantManager });
+            RoomTools.RoleControl.update({ visible: Boolean(App.isHost || App.hostConnection || App.offlineHost), container: state.phase === 'lobby' ? document.getElementById('lobby-room') : document.body, host: App.isHost, spectator: App.isSpectator, canSwitch, reason, onSwitch: Net.requestRoleSwitch, onManage: UI.openParticipantManager });
         },
 
         openParticipantManager() {
@@ -1262,7 +1272,7 @@
             input.value = '';
         },
 
-        sendLobbyChat() { const input = document.getElementById('lobby-chat-input'); const message = Utils.clean(input.value, 240); if (!message) return; Net.sendAction({ type: 'CHAT', message }); input.value = ''; },
+        sendLobbyChat() { const input = document.getElementById('lobby-chat-input'); const message = Utils.clean(input.value, 240); if (!message) return; const result = Net.sendAction({ type: 'CHAT', message }); if (!result || result.ok) { input.value = ''; if (window.matchMedia?.('(pointer: coarse)').matches) input.blur(); } },
         renamePlayer(inputId) { const input = document.getElementById(inputId); const name = Utils.clean(input?.value, 24); if (!name) return UI.showToast('Enter a name first.', 'danger'); App.localName = name; localStorage.setItem('durak-player-name', name); Net.sendAction({ type: 'RENAME', name }); },
         syncNameInputs(state) { const me = state?.players?.find(player => player.id === App.localId); const name = App.isSpectator ? state?.spectatorName : me?.name; if (!name) return; App.localName = name; ['room-player-name', 'game-player-name'].forEach(id => { const input = document.getElementById(id); if (input && document.activeElement !== input) input.value = name; }); },
 

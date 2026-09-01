@@ -1,7 +1,7 @@
 'use strict';
 
 const CACHE_PREFIX = 'bzunga-offline-';
-const CACHE_NAME = `${CACHE_PREFIX}v20`;
+const CACHE_NAME = `${CACHE_PREFIX}v22`;
 
 self.addEventListener('install', event => {
     event.waitUntil(self.skipWaiting());

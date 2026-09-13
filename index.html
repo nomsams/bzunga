@@ -92,7 +92,7 @@
     #card-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: auto; z-index: 10; touch-action: manipulation; }
     .card {
         width: var(--card-w); height: var(--card-h); position: absolute;
-        transition: left 0.8s cubic-bezier(0.22, 1, 0.36, 1), top 0.8s cubic-bezier(0.22, 1, 0.36, 1), scale 0.2s, rotate 0.2s, translate 0.2s;
+        transition: left 0.42s cubic-bezier(0.22, 1, 0.36, 1), top 0.42s cubic-bezier(0.22, 1, 0.36, 1), scale 0.18s, rotate 0.18s, translate 0.18s;
         pointer-events: auto; cursor: pointer; touch-action: manipulation; border-radius: 6px; transform-origin: center center; box-shadow: 2px 4px 10px rgba(0,0,0,0.4);
         -webkit-touch-callout: none; -webkit-user-drag: none;
         scale: var(--local-scale, 1);
@@ -102,8 +102,14 @@
     .card * { -webkit-touch-callout: none; -webkit-user-drag: none; }
     .card.no-anim { transition: none !important; }
     .card.no-anim .card-inner { transition: none !important; }
+    .card.optimistic-motion, .card.swap-incoming {
+        transition: left 0.24s cubic-bezier(0.22, 1, 0.36, 1), top 0.24s cubic-bezier(0.22, 1, 0.36, 1), scale 0.16s, rotate 0.16s, translate 0.16s;
+    }
+    .card.swap-outgoing {
+        transition: left 0.32s 0.12s cubic-bezier(0.22, 1, 0.36, 1), top 0.32s 0.12s cubic-bezier(0.22, 1, 0.36, 1), scale 0.16s, rotate 0.16s, translate 0.16s;
+    }
 
-    .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius: 6px; }
+    .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius: 6px; }
     .card-inner.is-flipped { transform: rotateY(180deg); }
 
     /* Fixed Card Bleeding & Artifacts */
@@ -929,16 +935,17 @@ const FINAL_SLAP_WINDOW_MS = 4200;
 const App = {
     isHost: false, offlineHost: false, localId: null, localName: '', sessionToken: null, peer: null, peerOpenTimer: null, connections: {}, hostConn: null, guestLink: null, roomRelay: null, fallbackClientId: '', transport: '', gameState: null, animEnabled: true,
     connectionRoles: {}, spectators: {}, allowSpectators: true, isSpectator: false, requestedSpectator: false, requestedRoomName: '', hostId: '', reconnectTimer: null, everConnected: false, leaving: false, joinRejected: false, hostBackup: null, viceHostId: null, promotionTimer: null, lastBackupSignature: '',
-    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null, cardPress: null, bazungaConfirmOpen: false, rulesOpen: false, expandedBadgeId: null, lastBazungaEffectNonce: null, lastBotPeekNonce: null },
+    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null, cardPress: null, bazungaConfirmOpen: false, rulesOpen: false, expandedBadgeId: null, lastBazungaEffectNonce: null, lastBotPeekNonce: null, lastCardMotionNonce: null, cardMotionStartedAt: 0, cardMotionTimer: null, renderFrame: null },
     botInterval: null
 };
 
 // --- GAME ENGINE (HOST ONLY) ---
 const Engine = {
-    state: { phase: 'lobby', gameMode: 'rhino', players: [], deck: [], discardPile: [], logs: [], nextLogId: 0, turnIndex: 0, activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, turnStartTime: 0, peekPhaseCompleted: false, openingPeekedCards: [], publicPeekedCards: [], orbitPendingPlayerIds: [], bazungaEffect: null, peekEffect: null, pendingGameOver: null, thinkingBots: [], typingBots: [] },
+    state: { phase: 'lobby', gameMode: 'rhino', players: [], deck: [], discardPile: [], logs: [], nextLogId: 0, turnIndex: 0, activeAbility: null, lastSlapTime: 0, lastSlapTargetId: null, lastSlap: null, lastActionTargetId: null, cardMotion: null, turnStartTime: 0, peekPhaseCompleted: false, openingPeekedCards: [], publicPeekedCards: [], orbitPendingPlayerIds: [], bazungaEffect: null, peekEffect: null, pendingGameOver: null, thinkingBots: [], typingBots: [] },
     botMemory: {},
     lastBazungaVariant: 0,
-    endGameTimer: null
+    endGameTimer: null,
+    broadcastQueued: false
 };
 
 Engine.rememberCardForBot = (botId, card, source = 'unauthorized') => {
@@ -1009,12 +1016,24 @@ Engine.initDeck = () => {
 };
 
 Engine.broadcast = () => {
-    if (!App.isHost) return;
-    Object.entries(App.connections).forEach(([peerId, conn]) => {
-        Net.sendState(conn, peerId);
-    });
-    Net.sendHostBackup?.();
-    UI.render(Engine.state);
+    if (!App.isHost || Engine.broadcastQueued) return;
+    Engine.broadcastQueued = true;
+
+    const flush = () => {
+        Engine.broadcastQueued = false;
+        if (!App.isHost) return;
+        Engine.state.revision = (Number(Engine.state.revision) || 0) + 1;
+        Object.entries(App.connections).forEach(([peerId, conn]) => {
+            Net.sendState(conn, peerId);
+        });
+        // The normal state is queued before the larger takeover backup so a
+        // guest sees their move as soon as possible on relayed connections.
+        Net.sendHostBackup?.();
+        UI.render(Engine.state);
+    };
+
+    if (typeof queueMicrotask === 'function') queueMicrotask(flush);
+    else Promise.resolve().then(flush);
 };
 
 Engine.setBotActivity = (botId, activity, active) => {
@@ -1100,6 +1119,7 @@ Engine.startGame = () => {
     Engine.state.lastSlapTargetId = null;
     Engine.state.lastSlap = null;
     Engine.state.lastActionTargetId = null;
+    Engine.state.cardMotion = null;
     Engine.state.turnStartTime = Utils.timestamp();
     Engine.state.openingPeekedCards = [];
     Engine.state.publicPeekedCards = [];
@@ -1116,6 +1136,10 @@ Engine.startGame = () => {
 
     App.uiState.hasPeeked.clear();
     App.uiState.lastBazungaEffectNonce = null;
+    App.uiState.lastCardMotionNonce = null;
+    App.uiState.cardMotionStartedAt = 0;
+    clearTimeout(App.uiState.cardMotionTimer);
+    App.uiState.cardMotionTimer = null;
     App.uiState.lastBotPeekNonce = null;
 
     Engine.state.players.forEach(p => {
@@ -1204,6 +1228,16 @@ Engine.drawPenalty = (playerId) => {
     p.penaltyCards.push(c);
     Engine.state.lastActionTargetId = c.id;
     Engine.sysLog(`${p.name} received a penalty card.`, "danger");
+};
+
+Engine.finishIfLayoutEmpty = player => {
+    if (!player || Engine.state.phase === 'game_over' || Engine.state.pendingGameOver) return false;
+    const remainingCards = (player.hand?.length || 0) + (player.penaltyCards?.length || 0);
+    if (remainingCards !== 0) return false;
+
+    Engine.sysLog(`${player.name} emptied their layout! The round is ending.`, "success");
+    Engine.scheduleEndGame();
+    return true;
 };
 
 Engine.scheduleEndGame = () => {
@@ -1431,6 +1465,7 @@ Engine.processAction = (action, peerId) => {
                     if (owner.isBot && owner.botDifficulty === 5) Engine.chatLog(owner.name, "Arrr, ye scallywag! Keep yer hands off me booty!", true);
                 }
                 Engine.state.lastSlap = { id: targetCard.id, success: true, time: now, playerId: player.id, targetOwnerId: owner.id };
+                if (Engine.finishIfLayoutEmpty(owner)) return;
             } else {
                 if ((isLateSlap || matchAlreadyConsumed) && targetCard.value === topDiscard.value) {
                     Engine.sysLog(`${player.name} slapped a card that was already slapped! Penalty!`, "warning");
@@ -1497,6 +1532,10 @@ Engine.processAction = (action, peerId) => {
                 Engine.state.discardPile.push(hCard);
                 Engine.state.lastActionTargetId = hCard.id;
 
+                // An empty layout is a natural finish. Do not strand the player in a
+                // magic targeting step (notably after discarding a 10) once they are out.
+                if (Engine.finishIfLayoutEmpty(player)) return;
+
                 if (Engine.state.activeAbility.type === 'holding' && MAGIC_VALUES.includes(hCard.value)) {
                     if (hCard.value === 'K' && !hCard.isRed) Engine.nextTurn();
                     else {
@@ -1525,6 +1564,14 @@ Engine.processAction = (action, peerId) => {
                     target.isSlapped = false; target.slappedAt = null;
                     target.loc = 'discard'; target.ownerId = null; target.isFaceUp = true;
                     Engine.state.discardPile.push(target);
+                    Engine.state.cardMotion = {
+                        type: 'replace',
+                        playerId: player.id,
+                        incomingId: hCard.id,
+                        outgoingId: target.id,
+                        nonce: Utils.uuid(),
+                        time: now
+                    };
                     Engine.sysLog(`${player.name} swapped their drawn card with a card in their layout.`, "info");
                     Engine.nextTurn();
                 }
@@ -1536,6 +1583,14 @@ Engine.processAction = (action, peerId) => {
                 hCard.gridIndex = newIndex;
                 player.hand.push(hCard);
                 Engine.state.lastActionTargetId = hCard.id;
+                Engine.state.cardMotion = {
+                    type: 'place',
+                    playerId: player.id,
+                    incomingId: hCard.id,
+                    outgoingId: null,
+                    nonce: Utils.uuid(),
+                    time: now
+                };
                 Engine.sysLog(`${player.name} placed a card in their empty layout.`, "info");
                 Engine.nextTurn();
             }
@@ -1578,18 +1633,29 @@ Engine.processAction = (action, peerId) => {
                 Engine.createBotPeekEffect(player, [action.targetId], '10');
                 Engine.nextTurn();
             } else if (mType === 'magic_Q') {
-                if (action.swapTarget1 && action.swapTarget2) {
-                    if (!Engine.isValidSwap(action.swapTarget1, action.swapTarget2)) return;
-                    Engine.createBotPeekEffect(player, [action.swapTarget1, action.swapTarget2], 'Q');
-                    Engine.executeSwap(action.swapTarget1, action.swapTarget2);
-                    Engine.sysLog(`${player.name} used a Queen to peek and swap a card!`, "warning");
-                } else {
+                const queenAbility = Engine.state.activeAbility;
+                if (queenAbility.step === 1) {
                     const target = Engine.getCardById(action.targetId);
                     if (!Engine.isLayoutCard(target)) return;
                     Engine.sysLog(`${player.name} used a Queen to secretly peek at a card.`, "info");
                     if (action.targetId && player.isBot) { let c = Engine.getCardById(action.targetId); if (c) Engine.rememberCardForBot(player.id, c, 'private_magic'); }
                     Engine.createBotPeekEffect(player, [action.targetId], 'Q');
+                    queenAbility.step = 2;
+                    queenAbility.peekTargetId = target.id;
+                    Engine.broadcast();
+                    break;
                 }
+
+                if (queenAbility.step !== 2
+                    || !queenAbility.peekTargetId
+                    || !action.swapTarget1
+                    || !action.swapTarget2
+                    || action.swapTarget1 !== queenAbility.peekTargetId
+                    || !Engine.isValidSwap(action.swapTarget1, action.swapTarget2)) return;
+
+                Engine.createBotPeekEffect(player, [action.swapTarget1, action.swapTarget2], 'Q');
+                Engine.executeSwap(action.swapTarget1, action.swapTarget2);
+                Engine.sysLog(`${player.name} used a Queen to peek and swap a card!`, "warning");
                 Engine.nextTurn();
             } else if (mType === 'magic_J') {
                 if (action.swapTarget1 && action.swapTarget2) {
@@ -1975,8 +2041,7 @@ const Net = {
                     && Array.isArray(data.state.logs)) {
                     App.isSpectator = Boolean(data.state.spectatorMode); App.requestedSpectator = App.isSpectator;
                     if (data.state.viewerId) App.localId = data.state.viewerId;
-                    App.gameState = data.state;
-                    UI.render(data.state);
+                    UI.queueRender(data.state);
                 } else if (data.type === 'HOST_BACKUP' && data.state?.players) {
                     App.hostBackup = { roomId: Utils.cleanText(data.roomId, 80), state: RoomTools.cloneState(data.state), botMemory: RoomTools.cloneState(data.botMemory || {}), hostPlayerId: Utils.cleanText(data.hostPlayerId, 80), vicePlayerId: Utils.cleanText(data.vicePlayerId, 80), allowSpectators: data.allowSpectators !== false };
                     App.viceHostId = App.hostBackup.vicePlayerId;
@@ -2203,6 +2268,18 @@ const Net = {
 // --- UI & RENDERING ---
 const UI = {
     lastSeenLogId: 0, lastSlapTime: 0,
+
+    queueRender: state => {
+        App.gameState = state;
+        if (App.uiState.renderFrame !== null) return;
+        const scheduleFrame = typeof requestAnimationFrame === 'function'
+            ? requestAnimationFrame
+            : callback => setTimeout(callback, 0);
+        App.uiState.renderFrame = scheduleFrame(() => {
+            App.uiState.renderFrame = null;
+            UI.render(App.gameState);
+        });
+    },
 
     init: () => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -2810,6 +2887,75 @@ const UI = {
         return false;
     },
 
+    previewAction: action => {
+        if (App.isHost || !App.animEnabled || !action || !App.gameState) return;
+        const state = App.gameState;
+        const layer = document.getElementById('card-layer');
+        if (!layer) return;
+
+        if (action.type === 'DRAW_DECK' || action.type === 'DRAW_DISCARD') {
+            const pile = action.type === 'DRAW_DECK' ? state.deck : state.discardPile;
+            const card = pile?.[pile.length - 1];
+            const cardEl = card && document.getElementById(card.id);
+            if (!cardEl) return;
+
+            const layerRect = layer.getBoundingClientRect();
+            const cardRect = cardEl.getBoundingClientRect();
+            const center = { x: layerRect.width / 2, y: layerRect.height / 2 };
+            const localPlayer = state.players.find(player => player.id === App.localId);
+            const localCard = localPlayer && [...localPlayer.hand, ...localPlayer.penaltyCards]
+                .map(item => document.getElementById(item.id))
+                .find(Boolean);
+            let targetCenter = { x: center.x, y: center.y + layerRect.height * 0.12 };
+            if (localCard) {
+                const localRect = localCard.getBoundingClientRect();
+                const layoutCenter = {
+                    x: localRect.left - layerRect.left + localRect.width / 2,
+                    y: localRect.top - layerRect.top + localRect.height / 2
+                };
+                targetCenter = {
+                    x: center.x + (layoutCenter.x - center.x) * 0.48,
+                    y: center.y + (layoutCenter.y - center.y) * 0.48
+                };
+            }
+
+            cardEl.classList.add('optimistic-motion', 'holding-card');
+            cardEl.style.left = `${targetCenter.x - cardRect.width / 2}px`;
+            cardEl.style.top = `${targetCenter.y - cardRect.height / 2}px`;
+            cardEl.style.zIndex = '1000';
+            return;
+        }
+
+        if (action.type === 'PLAY_HOLDING' && action.action === 'swap' && action.targetId) {
+            const incoming = state.activeAbility?.card;
+            const incomingEl = incoming && document.getElementById(incoming.id);
+            const outgoingEl = document.getElementById(action.targetId);
+            if (!incomingEl || !outgoingEl) return;
+
+            incomingEl.classList.add('optimistic-motion', 'swap-incoming');
+            incomingEl.style.left = outgoingEl.style.left;
+            incomingEl.style.top = outgoingEl.style.top;
+            incomingEl.style.zIndex = '1001';
+
+            clearTimeout(outgoingEl._optimisticDiscardTimer);
+            outgoingEl._optimisticDiscardTimer = setTimeout(() => {
+                if (!outgoingEl.isConnected) return;
+                const topDiscard = state.discardPile?.[state.discardPile.length - 1];
+                const discardEl = topDiscard && document.getElementById(topDiscard.id);
+                outgoingEl.classList.add('optimistic-motion', 'swap-outgoing');
+                if (discardEl) {
+                    outgoingEl.style.left = discardEl.style.left;
+                    outgoingEl.style.top = discardEl.style.top;
+                } else {
+                    outgoingEl.style.left = `${layer.clientWidth / 2 + 28}px`;
+                    outgoingEl.style.top = `${layer.clientHeight / 2 - outgoingEl.offsetHeight / 2}px`;
+                }
+                outgoingEl.style.zIndex = '1000';
+                outgoingEl._optimisticDiscardTimer = null;
+            }, 120);
+        }
+    },
+
     getStateToken: (state) => {
         const ability = state?.activeAbility;
         return [
@@ -2818,7 +2964,9 @@ const UI = {
             state?.turnStartTime,
             ability?.player,
             ability?.type,
+            ability?.step,
             ability?.time,
+            ability?.peekTargetId,
             state?.lastSlap?.time,
             state?.peekEffect?.nonce,
             state?.pendingGameOver?.nonce,
@@ -2828,15 +2976,20 @@ const UI = {
         ].join('|');
     },
 
-    submitAction: (action) => {
+    submitAction: (action, options = {}) => {
         if (App.uiState.pendingAction) return;
         App.uiState.pendingAction = true;
         App.uiState.pendingToken = UI.getStateToken(App.gameState);
-        App.uiState.targetingMode = null;
-        App.uiState.selectedCardId = null;
-        App.uiState.peekedCards.clear();
-        if (App.gameState) UI.render(App.gameState);
+        if (!options.preserveTargeting) {
+            App.uiState.targetingMode = null;
+            App.uiState.selectedCardId = null;
+            App.uiState.peekedCards.clear();
+        }
+        // Dispatch before doing any DOM work. A full table render used to delay
+        // every guest action before it even entered the network connection.
         Net.sendAction(action);
+        UI.previewAction(action);
+        if (App.uiState.pendingAction && App.gameState) UI.updateControls(App.gameState);
         const pendingToken = App.uiState.pendingToken;
         setTimeout(() => {
             if (!App.uiState.pendingAction || App.uiState.pendingToken !== pendingToken) return;
@@ -2854,6 +3007,20 @@ const UI = {
         const renderNow = Utils.timestamp();
         const gameViewForState = document.getElementById('game-view');
         gameViewForState.classList.toggle('final-slap-window', Boolean(state.pendingGameOver));
+
+        const cardMotion = state.cardMotion;
+        if (cardMotion?.nonce && cardMotion.nonce !== App.uiState.lastCardMotionNonce) {
+            App.uiState.lastCardMotionNonce = cardMotion.nonce;
+            App.uiState.cardMotionStartedAt = renderNow;
+            clearTimeout(App.uiState.cardMotionTimer);
+            App.uiState.cardMotionTimer = setTimeout(() => {
+                App.uiState.cardMotionTimer = null;
+                if (App.gameState) UI.render(App.gameState);
+            }, 620);
+        }
+        const cardMotionActive = Boolean(cardMotion?.nonce
+            && cardMotion.nonce === App.uiState.lastCardMotionNonce
+            && renderNow - App.uiState.cardMotionStartedAt < 600);
 
         if (App.uiState.pendingAction && UI.getStateToken(state) !== App.uiState.pendingToken) {
             App.uiState.pendingAction = false;
@@ -2959,6 +3126,16 @@ const UI = {
             App.uiState.targetingMode = null;
             App.uiState.selectedCardId = null;
             App.uiState.peekedCards.clear();
+        }
+        const localAbility = isMyTurn && state.activeAbility?.player === App.localId
+            ? state.activeAbility
+            : null;
+        if (localAbility?.type === 'magic_Q' && localAbility.step === 2 && localAbility.peekTargetId) {
+            // The Queen's peek is host-authoritative so a remote render, reconnect,
+            // or final-orbit update cannot erase the required swap/pass step.
+            App.uiState.targetingMode = 'q_swap_2';
+            App.uiState.selectedCardId = localAbility.peekTargetId;
+            App.uiState.peekedCards.add(localAbility.peekTargetId);
         }
         if (App.uiState.bazungaConfirmOpen && (state.phase !== 'play' || !isMyTurn || state.activeAbility || App.uiState.pendingAction)) {
             UI.hideBazungaConfirm();
@@ -3284,7 +3461,8 @@ const UI = {
 
                 if (!p.connected && !p.isBot) el.classList.add('disconnected'); else el.classList.remove('disconnected');
 
-                el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'bot-peek-target');
+                el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'bot-peek-target', 'optimistic-motion', 'swap-incoming', 'swap-outgoing');
+                if (cardMotionActive && cardMotion.incomingId === c.id) el.classList.add('swap-incoming');
                 if (state.lastActionTargetId === c.id) el.classList.add('highlight-recent');
                 if (state.publicPeekedCards && state.publicPeekedCards.includes(c.id)) el.classList.add('public-peeked');
                 if (App.uiState.peekedCards.has(c.id)) el.classList.add('peek-preview');
@@ -3334,7 +3512,7 @@ const UI = {
 
             el.querySelector('.card-inner').classList.add('is-flipped');
             UI.setCardFace(el, c, false);
-            el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'bot-peek-target');
+            el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'bot-peek-target', 'optimistic-motion', 'swap-incoming', 'swap-outgoing');
             if (i === state.deck.length - 1) {
                 el.setAttribute('role', 'button');
                 el.setAttribute('aria-label', 'Draw from deck');
@@ -3366,7 +3544,8 @@ const UI = {
 
             el.querySelector('.card-inner').classList.remove('is-flipped');
             UI.setCardFace(el, c, true);
-            el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'bot-peek-target');
+            el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'bot-peek-target', 'optimistic-motion', 'swap-incoming', 'swap-outgoing');
+            if (cardMotionActive && cardMotion.outgoingId === c.id) el.classList.add('swap-outgoing');
             if (i === state.discardPile.length - 1) {
                 el.setAttribute('role', 'button');
                 el.setAttribute('aria-label', `${c.value} of ${c.suit} on discard pile`);
@@ -3413,7 +3592,7 @@ const UI = {
                 UI.setCardFace(el, c, isFaceUp);
 
                 el.classList.add('holding-card');
-                el.classList.remove('highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked');
+                el.classList.remove('highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'optimistic-motion', 'swap-incoming', 'swap-outgoing');
                 el.setAttribute('aria-label', isFaceUp ? `Drawn ${c.value} of ${c.suit}. Tap to play.` : 'Opponent drawn card');
                 el.setAttribute('tabindex', state.activeAbility.player === App.localId ? '0' : '-1');
                 if (state.activeAbility.player === App.localId) {
@@ -3605,14 +3784,20 @@ const UI = {
                         btnAdd.onclick = () => UI.submitAction({ type: 'PLAY_HOLDING', action: 'add_to_layout' });
                         actionBar.appendChild(btnAdd);
                     }
-                } else if (ab.step === 1 && !App.uiState.targetingMode) {
+                } else if (!App.uiState.targetingMode) {
                     let mType = ab.type;
-                    if (mType === 'magic_9') App.uiState.targetingMode = 'peek_self';
-                    else if (mType === 'magic_10') App.uiState.targetingMode = 'peek_opp';
-                    else if (mType === 'magic_J') App.uiState.targetingMode = 'blind_swap_1';
-                    else if (mType === 'magic_Q') App.uiState.targetingMode = 'q_peek';
-                    else if (mType === 'magic_K') App.uiState.targetingMode = 'force_penalty';
-                    setTimeout(() => UI.render(state), 0);
+                    if (ab.step === 1) {
+                        if (mType === 'magic_9') App.uiState.targetingMode = 'peek_self';
+                        else if (mType === 'magic_10') App.uiState.targetingMode = 'peek_opp';
+                        else if (mType === 'magic_J') App.uiState.targetingMode = 'blind_swap_1';
+                        else if (mType === 'magic_Q') App.uiState.targetingMode = 'q_peek';
+                        else if (mType === 'magic_K') App.uiState.targetingMode = 'force_penalty';
+                    } else if (mType === 'magic_Q' && ab.step === 2 && ab.peekTargetId) {
+                        App.uiState.targetingMode = 'q_swap_2';
+                        App.uiState.selectedCardId = ab.peekTargetId;
+                        App.uiState.peekedCards.add(ab.peekTargetId);
+                    }
+                    if (App.uiState.targetingMode) setTimeout(() => UI.render(state), 0);
                 }
 
                 if (App.uiState.targetingMode && App.uiState.targetingMode.startsWith('q_')) {
@@ -3723,12 +3908,15 @@ const UI = {
                 App.uiState.selectedCardId = cardId;
                 App.uiState.targetingMode = 'q_swap_2';
                 UI.render(state);
-                UI.showToast("Card peeked. Select a second card to swap, or click it again to cancel.", "info");
+                UI.submitAction(
+                    { type: 'RESOLVE_MAGIC', action: 'peek', targetId: cardId },
+                    { preserveTargeting: true }
+                );
+                UI.showToast("Card peeked. Select a second card to swap, or pass.", "info");
             }
             else if (mode === 'q_swap_2' && clickedCard.loc !== 'deck' && clickedCard.loc !== 'discard') {
                 if (cardId === App.uiState.selectedCardId) {
-                    // Pressed the same card again to cancel swap
-                    UI.submitAction({ type: 'RESOLVE_MAGIC', targetId: cardId });
+                    UI.showToast("That is the peeked card. Choose a different card, or use Pass.", "warning");
                     return;
                 }
                 let target1 = App.uiState.selectedCardId;
@@ -3775,8 +3963,9 @@ const UI = {
         if (state.phase === 'peek' && clickedCard.ownerId === App.localId) {
             if (!App.uiState.hasPeeked.has(cardId)) {
                 if (App.uiState.hasPeeked.size < 2) {
-                    App.uiState.hasPeeked.add(cardId); App.uiState.peekedCards.add(cardId); UI.render(state);
+                    App.uiState.hasPeeked.add(cardId); App.uiState.peekedCards.add(cardId);
                     Net.sendAction({ type: 'PEEK_CARD', targetId: cardId });
+                    UI.render(state);
                     setTimeout(() => { App.uiState.peekedCards.delete(cardId); UI.render(App.gameState); }, 2000);
                 } else { UI.showToast("You can only peek at two cards!", "warning"); }
             } else { UI.showToast("You already peeked at this card!", "warning"); }

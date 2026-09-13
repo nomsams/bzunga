@@ -12,6 +12,8 @@ const sliceBetween = (start, end) => {
 };
 
 const guardHelpers = sliceBetween('Engine.isLayoutCard =', 'Engine.drawPenalty =');
+const emptyLayoutFinish = sliceBetween('Engine.finishIfLayoutEmpty =', 'Engine.scheduleEndGame =');
+const broadcastImplementation = sliceBetween('Engine.broadcast =', 'Engine.setBotActivity =');
 const scheduleEndGame = sliceBetween('Engine.scheduleEndGame =', 'Engine.nextTurn =');
 const nextTurn = sliceBetween('Engine.nextTurn =', 'Engine.endGame =');
 const processAction = sliceBetween('Engine.processAction =', 'Engine.executeSwap =');
@@ -42,10 +44,15 @@ vm.runInNewContext(`
         endGame() { this.endCalls++; },
         penaltyCalls: [],
         drawPenalty(id) { this.penaltyCalls.push(id); },
+        finishSchedules: 0,
+        scheduleEndGame() { this.finishSchedules++; this.state.activeAbility = null; this.state.pendingGameOver = { nonce: 'empty-layout' }; },
         sysLog() {}, broadcast() {}, rememberCardForBot() {},
-        executeSwap() { return true; }, checkDeckEmpty() {}
+        swapCalls: [],
+        executeSwap(firstId, secondId) { this.swapCalls.push([firstId, secondId]); return true; },
+        checkDeckEmpty() {}
     };
     ${guardHelpers}
+    ${emptyLayoutFinish}
     ${processAction}
     result.Engine = Engine;
 `, context);
@@ -131,8 +138,104 @@ assert.deepStrictEqual(Array.from(Engine.state.peekEffect.targetIds), [ownCard.i
 assert.strictEqual(Engine.state.peekEffect.magicValue, '10');
 guest.isBot = false;
 
+// Regression: Queen magic must retain its second step during the final orbit.
+// A peek used to be resolved as the entire ability, which could immediately end
+// the player's last turn before they were able to select the swap target.
+Engine.state.phase = 'orbit';
+Engine.state.turnIndex = 0;
+Engine.state.activeAbility = { player: host.id, type: 'magic_Q', step: 1, time: 10000 };
+const turnsBeforeQueenPeek = Engine.nextCalls;
+Engine.processAction({ type: 'RESOLVE_MAGIC', action: 'peek', targetId: guestCard.id }, host.id);
+assert.strictEqual(Engine.state.activeAbility.step, 2, 'Queen must remain active after the peek');
+assert.strictEqual(Engine.state.activeAbility.peekTargetId, guestCard.id, 'Queen must preserve the peeked card on authoritative state');
+assert.strictEqual(Engine.nextCalls, turnsBeforeQueenPeek, 'Queen peek must not advance or end the final-orbit turn');
+Engine.processAction({ type: 'RESOLVE_MAGIC', swapTarget1: ownCard.id, swapTarget2: ownCardTwo.id }, host.id);
+assert.strictEqual(Engine.swapCalls.length, 0, 'Queen must reject a swap that does not include the peeked card');
+assert.strictEqual(Engine.nextCalls, turnsBeforeQueenPeek, 'A rejected Queen swap must leave the ability active');
+Engine.processAction({ type: 'RESOLVE_MAGIC', swapTarget1: guestCard.id, swapTarget2: ownCard.id }, host.id);
+assert.deepStrictEqual(Array.from(Engine.swapCalls[0]), [guestCard.id, ownCard.id], 'Queen should swap the peeked card with the selected second card');
+assert.strictEqual(Engine.nextCalls, turnsBeforeQueenPeek + 1, 'Queen should advance only after the swap resolves');
+
+const replacementCard = { id: 'replacement-card', ownerId: host.id, loc: 'holding', value: '2', isSlapped: false };
+const motionTarget = { id: 'motion-target', ownerId: host.id, loc: 'hand', value: '7', isSlapped: false };
+Engine.cards.push(replacementCard, motionTarget);
+host.hand = [motionTarget, ownCardTwo];
+Engine.state.phase = 'play';
+Engine.state.turnIndex = 0;
+Engine.state.activeAbility = { player: host.id, card: replacementCard, type: 'holding', step: 0, time: 10000 };
+Engine.processAction({ type: 'PLAY_HOLDING', action: 'swap', targetId: motionTarget.id }, host.id);
+assert.strictEqual(Engine.state.cardMotion.type, 'replace', 'A layout replacement must publish a synchronized motion sequence');
+assert.strictEqual(Engine.state.cardMotion.incomingId, replacementCard.id, 'The drawn card must be identified as the first moving card');
+assert.strictEqual(Engine.state.cardMotion.outgoingId, motionTarget.id, 'The replaced layout card must be identified as the delayed discard');
+
+const broadcastTasks = [];
+const broadcastContext = { result: {}, broadcastTasks };
+vm.runInNewContext(`
+    const App = { isHost: true, connections: { guest: {} } };
+    const queueMicrotask = callback => broadcastTasks.push(callback);
+    const Net = {
+        states: 0,
+        backups: 0,
+        sendState() { this.states++; },
+        sendHostBackup() { this.backups++; }
+    };
+    const UI = { renders: 0, render() { this.renders++; } };
+    const Engine = { state: { revision: 0 }, broadcastQueued: false };
+    ${broadcastImplementation}
+    result.Engine = Engine;
+    result.Net = Net;
+    result.UI = UI;
+`, broadcastContext);
+const BatchedEngine = broadcastContext.result.Engine;
+BatchedEngine.broadcast();
+BatchedEngine.broadcast();
+assert.strictEqual(broadcastTasks.length, 1, 'Synchronous state changes must share one broadcast task');
+assert.strictEqual(broadcastContext.result.Net.states, 0, 'A partial state must not be sent before the action completes');
+broadcastTasks.shift()();
+assert.strictEqual(broadcastContext.result.Net.states, 1, 'A completed action must send one state update per guest');
+assert.strictEqual(broadcastContext.result.Net.backups, 1, 'A coalesced update must retain host-takeover backup safety');
+assert.strictEqual(broadcastContext.result.UI.renders, 1, 'The host must render once for a synchronous action');
+assert.strictEqual(BatchedEngine.state.revision, 1, 'Each flushed state must receive a monotonic revision');
+
+// Regression: a two-player round must finish cleanly when the human's last
+// layout card is a 10, rather than opening an unusable magic targeting step.
+const lastTen = { id: 'last-ten', ownerId: host.id, loc: 'hand', value: '10', isSlapped: false };
+const playedTen = { id: 'played-ten', ownerId: null, loc: 'discard', value: '10', isSlapped: false };
+const botLayout = Array.from({ length: 4 }, (_, index) => ({
+    id: `bot-layout-${index}`,
+    ownerId: guest.id,
+    loc: 'hand',
+    value: String(index + 3),
+    isSlapped: false
+}));
+host.hand = [lastTen];
+host.penaltyCards = [];
+guest.hand = botLayout;
+guest.penaltyCards = [];
+Engine.cards = [lastTen, playedTen, ...botLayout];
+Engine.state.phase = 'play';
+Engine.state.pendingGameOver = null;
+Engine.state.discardPile = [playedTen];
+Engine.state.turnIndex = 0;
+Engine.state.activeAbility = null;
+const schedulesBeforeLastSlap = Engine.finishSchedules;
+Engine.processAction({ type: 'SLAP', targetId: lastTen.id }, host.id);
+assert.strictEqual(host.hand.length, 0, 'The matching 10 must leave the human with no layout cards');
+assert.strictEqual(guest.hand.length, 4, 'The bot layout must remain unchanged');
+assert.strictEqual(Engine.finishSchedules, schedulesBeforeLastSlap + 1, 'Emptying the layout must schedule a clean round finish');
+
+// Also recover a zero-card state that already exists when a drawn 10 is played.
+const drawnTen = { id: 'drawn-ten', ownerId: host.id, loc: 'holding', value: '10', isRed: true, isSlapped: false };
+Engine.cards.push(drawnTen);
+Engine.state.pendingGameOver = null;
+Engine.state.activeAbility = { player: host.id, card: drawnTen, type: 'holding', step: 0, time: 10000 };
+const schedulesBeforeDrawnTen = Engine.finishSchedules;
+Engine.processAction({ type: 'PLAY_HOLDING', action: 'discard' }, host.id);
+assert.strictEqual(Engine.finishSchedules, schedulesBeforeDrawnTen + 1, 'A played 10 from an empty layout must finish instead of entering magic targeting');
+assert.strictEqual(Engine.state.activeAbility, null, 'No magic action may remain after the empty-layout finish starts');
+
 const finalDiscard = { id: 'final-discard', ownerId: null, loc: 'discard', value: '4', isSlapped: false };
-Engine.cards.push(finalDiscard);
+Engine.cards.push(finalDiscard, ownCard);
 Engine.state.phase = 'orbit';
 Engine.state.pendingGameOver = { nonce: 'pending-final' };
 Engine.state.discardPile = [finalDiscard];
@@ -208,4 +311,4 @@ OrbitEngine.nextTurn();
 assert.strictEqual(OrbitEngine.schedules, 1, 'Orbit should open a final slap window after the last eligible opponent');
 assert.strictEqual(OrbitEngine.state.players[OrbitEngine.state.turnIndex].id, 'guest', 'Caller must not receive an accidental extra orbit turn');
 
-console.log('Engine action guards: opening peeks, bot peek effects, magic targets, final slap window, and BAZUNGA orbit passed.');
+console.log('Engine action guards: opening peeks, bot peek effects, magic targets, staged swaps, empty-layout endings, final slap window, and BAZUNGA orbit passed.');

@@ -2229,6 +2229,34 @@ pushFreshBotLines(BotConfig.directReplies.baba.insult, BOT_UNFILTERED_BABA.insul
 pushFreshBotLines(BotConfig.chatBank.baba.banter, BOT_PUB_BABA.banter);
 pushFreshBotLines(BotConfig.directReplies.baba.insult, BOT_PUB_BABA.insult);
 
+// These are the purpose-written, short table-talk packs. Older dialogue remains
+// available as a fallback, but without this preference it drowned the sharper
+// lines in several thousand polite or over-explanatory alternatives.
+const BOT_PREFERRED_TABLE_LINES = new Set();
+const collectPreferredTableLines = value => {
+    if (Array.isArray(value)) {
+        value.forEach(line => {
+            if (typeof line === 'string' && line.trim()) BOT_PREFERRED_TABLE_LINES.add(line);
+        });
+        return;
+    }
+    if (value && typeof value === 'object') Object.values(value).forEach(collectPreferredTableLines);
+};
+[
+    BotTrashTalk,
+    BotRuderTableTalk,
+    BotRuderEvents,
+    BOT_MAXIMUM_SHITTALK,
+    BOT_PERSONA_CHAOS,
+    BOT_SHORT_REACTIONS,
+    BOT_SHORT_INSULTS,
+    BOT_OLD_MATES_TABLE,
+    BOT_UNFILTERED_TABLE,
+    BOT_UNFILTERED_BABA,
+    BOT_PUB_ONE_LINERS,
+    BOT_PUB_BABA
+].forEach(collectPreferredTableLines);
+
 const Bot = {
     chatHistory: [], lastChatTime: {}, usedLines: {},
     recentLines: {}, globalRecentLines: [],
@@ -2476,7 +2504,9 @@ const Bot = {
         const uniqueLines = [...new Set((linesArray || []).filter(line => typeof line === 'string' && line.trim()))];
         if (!uniqueLines.length) return '';
         const conciseLines = uniqueLines.filter(line => line.length <= 68);
-        const selectableLines = conciseLines.length ? conciseLines : uniqueLines;
+        const shortLines = conciseLines.length ? conciseLines : uniqueLines;
+        const preferredLines = shortLines.filter(line => BOT_PREFERRED_TABLE_LINES.has(line));
+        const selectableLines = preferredLines.length >= 2 ? preferredLines : shortLines;
         if (!Bot.usedLines[botId]) Bot.usedLines[botId] = {};
         if (!Bot.recentLines[botId]) Bot.recentLines[botId] = [];
         let state = Bot.usedLines[botId][category];
@@ -3128,7 +3158,7 @@ const Bot = {
 
         const ability = Engine.state.activeAbility;
         const decisionKey = ability?.player === activePlayer.id
-            ? `ability:${ability.type}:${ability.time}:${ability.card?.id || 'none'}`
+            ? `ability:${ability.type}:${ability.step}:${ability.time}:${ability.card?.id || ability.peekTargetId || 'none'}`
             : `turn:${Engine.state.phase}:${Engine.state.turnStartTime}`;
         const complexity = ability
             ? (ability.type.startsWith('holding') ? 'holding' : 'magic')
@@ -3272,7 +3302,35 @@ const Bot = {
                         let target = unknownOpp || Bot.layoutCards(opp)[0];
                         if (target) { payload.targetPlayerId = opp.id; payload.targetId = target.id; }
                     } else payload.action = 'pass';
-                } else if (mType === 'magic_J' || mType === 'magic_Q') {
+                } else if (mType === 'magic_Q') {
+                    if (ability.step === 1) {
+                        const opponents = rankedOpponents.map(entry => entry.player);
+                        if (targetOppId) {
+                            opponents.sort((a, b) => Number(b.id === targetOppId) - Number(a.id === targetOppId));
+                        }
+                        const opponent = opponents.find(candidate => Bot.layoutCards(candidate).some(card => !mem[card.id]))
+                            || opponents[0];
+                        const opponentLayout = opponent ? Bot.layoutCards(opponent) : [];
+                        const peek = opponentLayout.find(card => !mem[card.id])
+                            || [...opponentLayout].sort((a, b) => (mem[a.id]?.numVal ?? 99) - (mem[b.id]?.numVal ?? 99))[0];
+                        if (peek) payload.targetId = peek.id;
+                        else payload.action = 'pass';
+                    } else if (ability.step === 2) {
+                        const peeked = Engine.getCardById(ability.peekTargetId);
+                        const peekedValue = mem[ability.peekTargetId]?.numVal;
+                        const ownWorst = Bot.knownLayout(activePlayer.id, activePlayer)
+                            .filter(entry => entry.known)
+                            .sort((a, b) => b.value - a.value)[0];
+                        if (peeked
+                            && peeked.ownerId !== activePlayer.id
+                            && Number.isFinite(peekedValue)
+                            && ownWorst
+                            && ownWorst.value > peekedValue) {
+                            payload.swapTarget1 = peeked.id;
+                            payload.swapTarget2 = ownWorst.card.id;
+                        } else payload.action = 'pass';
+                    } else payload.action = 'pass';
+                } else if (mType === 'magic_J') {
                     let myWorst = null; let myWorstVal = -99;
                     let oppBest = null; let oppBestVal = 99;
                     
@@ -3290,7 +3348,7 @@ const Bot = {
                     }
                     if (myWorst && oppBest && myWorstVal > oppBestVal) {
                         payload.swapTarget1 = myWorst.id; payload.swapTarget2 = oppBest.id; 
-                    } else if (mType === 'magic_J') {
+                    } else {
                         // Blind swap: dump our least certain/worst slot into the leader.
                         const mine = myWorst || Bot.knownLayout(activePlayer.id, activePlayer)
                             .sort((a, b) => Number(a.known) - Number(b.known))[0]?.card;
@@ -3302,12 +3360,6 @@ const Bot = {
                             payload.swapTarget1 = mine.id;
                             payload.swapTarget2 = theirs.id;
                         } else payload.action = 'pass';
-                    } else {
-                        // Queen can safely turn missing information into future advantage.
-                        const opp = rankedOpponents[0]?.player;
-                        const peek = opp && (Bot.layoutCards(opp).find(c => !mem[c.id]) || Bot.layoutCards(opp)[0]);
-                        if (peek) payload.targetId = peek.id;
-                        else payload.action = 'pass';
                     }
                 } else if (mType === 'magic_K') {
                     if (targetOppId) payload.targetPlayerId = targetOppId;

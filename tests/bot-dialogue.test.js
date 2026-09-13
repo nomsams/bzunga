@@ -127,6 +127,19 @@ const shortSamples = Array.from({ length: 80 }, () =>
 assert(shortSamples.every(line => line.length <= 68), 'Bazunga table talk should favor short, punchy messages');
 assert(Bot.compactResponse('This is a deliberately oversized table message that keeps wandering long after everybody stopped caring about it.').length <= 76);
 
+const mixedTonePool = [
+    'Current projection: favorable.',
+    'That was filthy.',
+    'You lucky bastard.'
+];
+const preferredToneSamples = Array.from({ length: 12 }, () =>
+    Bot.getUniqueResponse('tone-bot', 'tone', mixedTonePool)
+);
+assert(
+    preferredToneSamples.every(line => line !== mixedTonePool[0]),
+    'Purpose-written rough table talk should take priority over sterile legacy lines'
+);
+
 const discardBot = {
     id: 'discard-expert',
     botDifficulty: 4,

@@ -40,6 +40,7 @@ assert(multiplayerSource.includes("qos: 1, retain: false"), 'Relay messages must
 assert(multiplayerSource.includes('broker.hivemq.com') && multiplayerSource.includes('broker.emqx.io'), 'The WebSocket relay must have broker failover');
 assert(multiplayerSource.includes('brokers.forEach') && multiplayerSource.includes('connection._relayClient'), 'Hosts must listen on every independent broker and answer on the guest broker');
 assert(multiplayerSource.includes('rememberRelayMessage') && multiplayerSource.includes('messageId: relayMessageId()'), 'QoS retries must not replay game actions');
+assert(multiplayerSource.includes('connection._sendChain = Promise.resolve()') && multiplayerSource.includes('.then(() => publish(connection._relayClient'), 'Encrypted relay replies must stay ordered so stale states cannot overtake move confirmations');
 const customIceServers = [{ urls: 'turn:relay.example.test:443', username: 'room', credential: 'secret' }];
 global.BZUNGA_ICE_SERVERS = customIceServers;
 assert.strictEqual(RoomTools.peerOptions().config.iceServers, customIceServers, 'A deployment must be able to replace the default relay credentials');

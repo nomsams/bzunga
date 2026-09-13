@@ -558,11 +558,19 @@
                         }
                         if (!connection) {
                             const clientTopic = `${material.baseTopic}/client/${peerId}`;
+                            const enqueueReply = packet => {
+                                connection._sendChain = connection._sendChain
+                                    .then(() => publish(connection._relayClient, clientTopic, packet))
+                                    .catch(error => onProgress?.(`Cloud fallback reply failed on ${brokerName}: ${error.message || error}`));
+                            };
                             connection = createRelayConnection(
                                 peerId,
-                                data => publish(connection._relayClient, clientTopic, { kind: 'data', data }),
-                                () => publish(connection._relayClient, clientTopic, { kind: 'close' })
+                                data => enqueueReply({ kind: 'data', data }),
+                                () => enqueueReply({ kind: 'close' })
                             );
+                            // AES-GCM sealing is asynchronous. Serialize replies so an
+                            // older state can never overtake the state that confirms a move.
+                            connection._sendChain = Promise.resolve();
                             connection.open = true;
                             connections.set(peerId, connection);
                             onConnection(connection);

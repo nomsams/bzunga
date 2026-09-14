@@ -336,6 +336,212 @@
         'Baba did not expect competence before the second drink.',
         'Your field looks awful. Baba feels strangely at home.'
     );
+    const HANAFUDA_BARRACKS = {
+        intro: [
+            'Barracks garden, dickheads. Flowers out, mouths open.',
+            'Old mates, cheap beer, sharp petals. Deal, bastards.',
+            'Dad joke: why did the month cross the pond? Your plan sank, mate.',
+            'Knock knock. Who is there? Your missing Yaku, clown.',
+            'Roses are red, this pond is blue, I steal months, mate, fuck you.',
+            'Welcome to the garden. Leave your dignity at the gate.',
+            'Fresh month. Same clowns. New victims.',
+            'Forty-eight flowers. Zero fucks given.',
+            'Deal them. The pond demands blood.',
+            'New round. Old grudges. Sharp thorns.'
+        ],
+        capture: [
+            'Mine, bastard. Barracks tax, mate.',
+            'Yoink, clown. Your flower joined a better family.',
+            'Clean steal, mate. Fair play, that stung you.',
+            'Taken. Your flower cried, mate.',
+            'Snap. That petal is mine now, clown.',
+            'Harvested. Your garden weeps, bastard.',
+            'Plucked. No mercy for the weak.',
+            'Captured. Your plan wilts, mate.',
+            'Mine. The barracks claims another.',
+            'Yoink. Your flower knew better.'
+        ],
+        yaku: [
+            'Yaku, dickhead. Barracks paperwork complete.',
+            'Points up, mate. Your pond just got drained.',
+            'That set is filthy. Respect, you lucky bastard.',
+            'Yaku formed. Your tears water it, clown.',
+            'Combo complete. Your night ruined, mate.',
+            'Points bloom. Your hope dies, bastard.',
+            'That set is sex on cardboard. Respect.',
+            'Yaku, prick. The garden speaks.',
+            'Combo hit. Your field is ash, mate.',
+            'Points secured. Your ego shattered.'
+        ],
+        koi: [
+            'Koi-Koi, bastard. Barracks greed, no refunds.',
+            'Again, mate. Your tears water the flowers.',
+            'Double down, clown. Old friend, buy the next round.',
+            'Koi-Koi. The pond demands more blood.',
+            'Again. Your wallet bleeds, mate.',
+            'Pressing it. Your nightmares grow, clown.',
+            'Koi-Koi, mate. Greed looks good on me.',
+            'Double or nothing. You have nothing.',
+            'Again. The pond swallows hope.',
+            'Koi-Koi. Your fear feeds me.'
+        ],
+        stop: [
+            'Shobu, prick. Pay up, drinks on you, mate.',
+            'Banked, bastard. Good game, bad gardener.',
+            'Stop. Fair play, that was enough damage, mate.',
+            'Shobu. Your month ends here, clown.',
+            'Banked. The garden closes, mate.',
+            'Done. Your flowers rot, bastard.',
+            'Stop. Mercy is for the weak.',
+            'Shobu. Count your losses, mate.',
+            'Banked. The house always wins.',
+            'Enough. Your garden is a graveyard.'
+        ],
+        chat: [
+            'Mate, your garden is weeds with confidence.',
+            'Shut it, wanker. The pond heard enough, clown.',
+            'Dad joke: your Yaku called, it wants better parents, mate.',
+            'Knock knock. Your comeback never arrived, bastard.',
+            'Roses are red, ribbons blue, your field is shit, mate, true.',
+            'Yo mama spots Yaku pissed better than you sober, clown.',
+            'Old friend, buy me a pint. Your capture paid for it.',
+            'Drinks on you after that dogshit capture, mate.',
+            'Fair play, bastard. That match had teeth.',
+            'That was class, clown. Cards still fucking tragic.',
+            'What do you call your pond? A fucking rumour, mate.',
+            'Why did you feed the field? No brain, mate.',
+            'You play flowers like a donkey arranges boots, bastard.',
+            'Your field is a crime scene. Yellow tape, mate.',
+            'Mate, even the rain avoids your garden.',
+            'Your strategy is a dead bonsai. Pruned.',
+            'The pond called. It wants its flowers back.',
+            'You play like a blind bee. Lost.',
+            'Mate, your Yaku is a myth. Urban legend.',
+            'Your capture was a fluke. Admit it.',
+            'The moon laughs at your field, clown.',
+            'Your ribbons are tangled. Like your brain.',
+            'Mate, you feed the field like a saint.',
+            'Your Phoenix flew away. Smart bird.',
+            'The Sake Cup is empty. Like your head.',
+            'You play hanafuda like a drunk ikebana.',
+            'Mate, your field is a salad. Tossed.',
+            'Your captures are participation trophies.',
+            'The rain knows your cards better, mate.',
+            'Your strategy: hope, pray, lose.',
+            'Mate, even the weeds reject you.',
+            'Your Yaku is a fairy tale. Gone wrong.',
+            'The pond remembers. You are the villain.',
+            'Mate, your cards have abandonment issues.',
+            'Your field is a war zone. You lost.',
+            'The crane laughs at your plays, mate.',
+            'You capture like a confused tourist.',
+            'Mate, your hand is a black hole.',
+            'Your moves are a cry for help.',
+            'The curtain falls. Your garden burns.'
+        ]
+    };
+    const HANAFUDA_BARRACKS_BABA = {
+        intro: [
+            'Baba enters the pond, mates. Hide the Sake, clown.',
+            'Baba walks the garden. Your flowers tremble.',
+            'New month. Baba brings the shears.',
+            'Baba is here. Your petals fall, mate.',
+            'Welcome. Baba owns this pond now.',
+            'Baba enters. The garden goes quiet.',
+            'Fresh flowers. Baba harvests all.',
+            'Deal them. Baba counts the months.',
+            'Baba arrives. Your Yaku hides, clown.',
+            'The garden bows. Baba passes.'
+        ],
+        capture: [
+            'Baba takes it, mate. Cry quietly, bastard.',
+            'Mine. Baba harvests. You weep, clown.',
+            'Plucked. Baba owns that month, mate.',
+            'Harvested. Your flower knew its place.',
+            'Taken. The garden serves Baba.',
+            'Captured. Your plan withers, mate.',
+            'Baba claims another. The pond watches.',
+            'Yoink. Baba collects. You pay, clown.',
+            'Snapped. Your month is Baba now.',
+            'Taken. Resistance is fertiliser.'
+        ],
+        yaku: [
+            'Yaku, mate. Baba grows points, you grow excuses.',
+            'Combo complete. Baba feasts. You starve.',
+            'Points bloom. Your hope composts, mate.',
+            'Yaku formed. The garden obeys Baba.',
+            'That set is Baba. You are the dirt.',
+            'Points secured. Your night ends, clown.',
+            'Baba builds Yaku. You build regret.',
+            'Combo hit. Your field burns, mate.',
+            'Yaku, prick. Baba writes history.',
+            'Combo done. Your tears water it.'
+        ],
+        koi: [
+            'Koi-Koi, clown. Baba wants the whole barracks pond.',
+            'Again. Baba presses. You break, mate.',
+            'Koi-Koi. Your wallet is Baba now.',
+            'Double down. Baba owns the night.',
+            'Pressing it. Your fear is sweet, mate.',
+            'Koi-Koi. The pond is Baba now.',
+            'Again. Your hope drowns, bastard.',
+            'Koi-Koi, mate. Greed is a virtue.',
+            'Press on. Your garden falls, clown.',
+            'Again. Baba takes it all.'
+        ],
+        stop: [
+            'Shobu, bastard. Baba banks, you buy drinks, mate.',
+            'Banked. Baba wins. You learn, clown.',
+            'Stop. Baba counts. You cry, mate.',
+            'Shobu. The garden closes for you.',
+            'Banked. Your month is over, clown.',
+            'Done. Baba owns the night, mate.',
+            'Stop. Mercy is not in Baba vocabulary.',
+            'Shobu. Count your losses, bastard.',
+            'Banked. The house is Baba.',
+            'Enough. Your garden is ash.'
+        ],
+        chat: [
+            'Baba likes you, mate. Your pond is still shit.',
+            'Yo mama asked Baba to prune your nonsense, clown.',
+            'Knock knock. Baba. Your points evicted, mate.',
+            'Baba sees your field. It is a joke.',
+            'Your Yaku is a bedtime story. Fake.',
+            'Mate, Baba played your hand better.',
+            'Shut it. Baba is gardening violently.',
+            'Your capture was luck. Baba is skill.',
+            'Old friend, buy Baba Sake. You owe.',
+            'Your Phoenix fears Baba. Wise bird.',
+            'The moon serves Baba. You serve nothing.',
+            'Mate, your ribbons are Baba leashes.',
+            'Baba does not hope. Baba takes.',
+            'Your field is a diary. All failures.',
+            'Mate, even the rain serves Baba.',
+            'Your strategy is a dead end. Baba paved it.',
+            'The pond is Baba. You are the algae.',
+            'Mate, Baba sees through your petals.',
+            'Your moves are noise. Baba is signal.',
+            'Baba wins. The rest is compost.'
+        ]
+    };
+    for (const [category, lines] of Object.entries(HANAFUDA_BARRACKS)) PHRASES[category].push(...lines);
+    for (const [category, lines] of Object.entries(HANAFUDA_BARRACKS)) BABA_PHRASES[category].push(...lines);
+    for (const [category, lines] of Object.entries(HANAFUDA_BARRACKS_BABA)) BABA_PHRASES[category].push(...lines);
+    CHAT_POOLS.shared.insult.push(
+        'Barracks verdict, mate: your pond is fucking tragic.',
+        'Shut it, clown. Even the chaff outranks you.',
+        'Dad joke: your field has potential. As compost, bastard.',
+        'Knock knock. Your Yaku is still missing, mate.',
+        'Roses are red, your pond is blue, all mouth, no clue, bastard.',
+        'Old friend, buy me a pint after that shitshow.',
+        'Fair play, that insult had balls. Field still shit, mate.',
+        'That was class trash talk. Cards still dogshit, clown.'
+    );
+    CHAT_POOLS.shared.general.push(
+        'Oh shit, mate. The pond just mugged me.',
+        'Fair play, bastard. That capture was filthy.',
+        'Old mates, good scrap. Your pond still stinks, mate.'
+    );
 
     const normalizeChat = message => String(message || '').toLowerCase().replace(/[^a-z0-9åäö!?\s']/gi, ' ').replace(/\s+/g, ' ').trim();
 

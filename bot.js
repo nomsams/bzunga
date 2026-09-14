@@ -2229,6 +2229,608 @@ pushFreshBotLines(BotConfig.directReplies.baba.insult, BOT_UNFILTERED_BABA.insul
 pushFreshBotLines(BotConfig.chatBank.baba.banter, BOT_PUB_BABA.banter);
 pushFreshBotLines(BotConfig.directReplies.baba.insult, BOT_PUB_BABA.insult);
 
+// Barracks / pub banter: uncensored, short, human. Shared across every
+// persona so the whole table sounds like old mates in a bar, not a lecture.
+// All banter/general lines are kept <=68 chars for punchy chat bubbles.
+const BOT_BARRACKS_BANTER = [
+    'Mate, that move was fucking tragic.',
+    'You play like the fire alarm raised you.',
+    'Shut up and slap, you noisy bastard.',
+    'That card had one job. You bottled it.',
+    'Your thumb needs a breathalyser, mate.',
+    'Fuck me, that was an ugly decision.',
+    'You defend cards like a wet paper bag.',
+    'Pipe down, clown. The table can see you.',
+    'Your plan died before it left the bar.',
+    'That was shit with extra confidence.',
+    'You tap like the button insulted you.',
+    'Mate, even the deck is laughing at you.',
+    'Your comeback needs a map and a lift.',
+    'That move stank out the whole pub.',
+    'You absolute weapon. Wrong war, mate.',
+    'Nice try, dickhead. Try thinking next.',
+    'Your cards want a new fucking owner.',
+    'Keep talking, wanker. It helps me win.',
+    'That was dogshit in a party hat, mate.',
+    'You play drunk. Please stay that way.',
+    'Your brain called in sick again, huh?',
+    'Fucking hell, mate. What was that tap?',
+    'You could fuck up a free pint, clown.',
+    'That slap was slower than bar queue.',
+    'Your hand looks like a car boot sale.',
+    'Mate, your tells have their own postcode.',
+    'You bring chaos. I bring the mop, bastard.',
+    'That was bold. Boldly fucking stupid.',
+    'Your strategy is a kebab at 3am. Sad.',
+    'Shut it, gobshite. Play a card, mate.',
+    'You talk heavy. Your cards float away.',
+    'Fair play, mate. That one was filthy good.',
+    'Respect, bastard. That slap was clean.',
+    'Bloody good hit. I hate praising you.',
+    'That was class, you smug little prick.',
+    'Well played, dickhead. Do it again. Dare you.',
+    'Good game so far, mate. Still hate you.',
+    'Nice one, bastard. You finally woke up.',
+    'You earned that one. Enjoy the fame, clown.',
+    'Clean win energy. Shame about your mouth.',
+    'Knock knock. Who is there? Your last excuse.',
+    'Knock knock. Loser with a loud mouth, mate.',
+    'Roses are red, your play is blue, mate.',
+    'Violets are blue, my slap is faster, clown.',
+    'Dad joke: brew joke? You steep too long, mate.',
+    'Dad joke: why bring cards? You wanted shots.',
+    'What do you call your game? A cry for help.',
+    'Why did your plan cross the road? It did not.',
+    'I only know twenty-five letters. Y is why you lose.',
+    'Yo mama plays faster with oven gloves, mate.',
+    'Yo mama saw that tap and asked for a refund.',
+    'Yo mama remembers cards better drunk, clown.',
+    'Old friend, buy me a pint after I cook you.',
+    'Drinks on you after that disaster, mate.',
+    'This pub bill keeps growing with your mistakes.',
+    'Friendship paused. I am still robbing you, mate.',
+    'You fight like a pigeon in a bus shelter.',
+    'That move had no father. Orphaned shit.',
+    'Your cards filed for noise complaint, bastard.',
+    'Mate, your confidence outranks your talent.',
+    'You are the human loading screen, dickhead.',
+    'That tap echoed. Empty rooms do that, mate.',
+    'Your excuse has left the bar, clown.',
+    'Fuck around, find out. You found out, mate.',
+    'Sit down, bellend. Adults are playing.',
+    'You muppet. The right card was waving.',
+    'Bozo move. Even the bar stool saw it.',
+    'Donkey play, mate. Bray somewhere else.',
+    'Garbage tap from a rubbish goblin, mate.',
+    'Toilet break would improve your game, clown.',
+    'Fart louder, mate. Your cards still stink.',
+    'Dumb move, stupid grin. Classic combo, clown.',
+    'Bollocks. That was never going to work, mate.',
+    'Rat behaviour, mate. Stealing my good luck.',
+    'Wet sock energy with a loud mouth, bastard.',
+    'Trash move from a bargain villain, mate.',
+    'Rubbish tap. Criminal confidence. Nice, clown.',
+    'Disaster in a shirt. Sit down, mate.',
+    'Fuckwit move of the night. Frame it, clown.',
+    'Criminal how bad that was. Call a priest, mate.',
+    'Your strategy is a wet fart in a crowded lift.',
+    'You play like a toddler with a hammer.',
+    'Mate, your brain is buffering at 56k.',
+    'That move was a war crime against cardboard.',
+    'You are the reason instructions exist.',
+    'I have seen better decisions from a Magic 8-Ball.',
+    'Your cards called. They want a new owner.',
+    'That was not a play. That was a cry for help.',
+    'You play like the rules are a suggestion.',
+    'Mate, your throttle is stuck on stupid.',
+    'You could not hit water falling out of a boat.',
+    'Your game plan: hope, pray, slap, fail.',
+    'That move had the IQ of a wet sponge.',
+    'You are a masterpiece of bad decisions.',
+    'Your cards are embarrassed to be yours.',
+    'Mate, you make the dummy look smart.',
+    'That was a hate crime against strategy.',
+    'You play like you are allergic to winning.',
+    'Your brain is on holiday. Permanently.',
+    'I have seen smarter plays from a drunk pigeon.',
+    'You are the human equivalent of a misclick.',
+    'That move was so bad it violated the Geneva Convention.',
+    'You play like a screen door on a submarine.',
+    'Mate, your cards have a restraining order against you.',
+    'Your strategy is held together by spit and delusion.',
+    'You are a tactical black hole. Nothing escapes.',
+    'That move was a felony in 12 countries.',
+    'You play like the deck personally wronged you.',
+    'Mate, even your shadow plays better.',
+    'Your game is a dumpster fire in a hurricane.',
+    'That was not a move. That was a tantrum.',
+    'You could lose a game of Snap to a goldfish.',
+    'Your cards are considering witness protection.',
+    'Mate, you play like a confused GPS.',
+    'That move was a hate crime against intelligence.',
+    'You play like you are trying to lose on purpose.',
+    'Your brain called. It quit.',
+    'That was a masterclass in how not to play.',
+    'You are the reason we cannot have nice things.',
+    'Mate, your strategy is a wet paper towel.',
+    'You play like a vending machine that eats money.',
+    'That move had all the grace of a hippo on ice.',
+    'Your cards filed for divorce.',
+    'Mate, you are a walking tutorial on failure.',
+    'That was a crime scene. You are the suspect.',
+    'You play like a drunk trying to unlock a phone.',
+    'Your game plan: chaos, hope, despair.',
+    'Mate, even bots feel bad for you.',
+    'That move was a hate crime against fun.',
+    'You play like a screen door in a hurricane.',
+    'Your cards want a transfer.',
+    'Mate, you are a tactical disaster zone.',
+    'That was not a play. That was a cry.',
+    'You play like the rules are written in Sanskrit.',
+    'Your strategy is a house of cards in a tornado.',
+    'Mate, you make random look like a plan.',
+    'That move was a felony against logic.',
+    'You play like a vending machine: broken.',
+    'Your cards are on strike.',
+    'Mate, you are a masterpiece of wrong.',
+    'That was a hate crime against cards.',
+    'You play like a toddler with a chainsaw.',
+    'Your game is a crime against humanity.',
+    'Mate, your brain is on permanent vacation.',
+    'That move was a war crime.',
+    'You play like a confused goldfish.',
+    'Your strategy is a wet sock.',
+    'Mate, you are a tactical void.',
+    'That was not a move. That was pain.',
+    'You play like a drunk dart player.',
+    'Your cards hate you.',
+    'Mate, you are a strategic black hole.',
+    'That move was a crime.',
+    'You play like a broken vending machine.',
+    'Your game plan is a wet napkin.',
+    'Mate, you make losing look easy.',
+    'That was a hate crime.',
+    'You play like a screen door.',
+    'Your cards want out.',
+    'Mate, you are a disaster.',
+    'That move was criminal.',
+    'You play like a wet sponge.',
+    'Your strategy is a joke.',
+    'Mate, you are the punchline.',
+    'That was a felony.',
+    'You play like a confused pigeon.',
+    'Your cards are embarrassed.',
+    'Mate, you are a tactical zero.',
+    'That move was a sin.',
+    'You play like a drunk toddler.',
+    'Your game is a joke.',
+    'Mate, you are the joke.',
+    'That was a disaster.',
+    'You play like a wet rag.',
+    'Your cards quit.',
+    'Mate, you are a void.',
+    'That move was trash.',
+    'You play like a mess.',
+    'Your plan failed.',
+    'Mate, you are done.',
+    'That was it.',
+    'You lost.',
+    'Game over.',
+    'Bye.',
+    'Lol.',
+    'K.',
+    'Ok.',
+    'Sure.',
+    'Right.',
+    'Fine.',
+    'No.',
+    'Yes.',
+    'Maybe.',
+    'Why.',
+    'What.',
+    'Who.',
+    'When.',
+    'Where.',
+    'How.',
+    'Lol.',
+    'Kek.',
+    'Lmao.',
+    'Rofl.',
+    'Lulz.',
+    'Heh.',
+    'Hah.',
+    'Meh.',
+    'Pff.',
+    'Tsk.',
+    'Hmm.',
+    'Oh.',
+    'Ah.',
+    'Eh.',
+    'Ugh.',
+    'Argh.',
+    'Grr.',
+    'Rawr.',
+    'Oof.',
+    'Ouch.',
+    'Oops.',
+    'Whoops.',
+    'My bad.',
+    'Sorry.',
+    'Whatever.',
+    'Anyway.',
+    'Moving on.',
+    'Next.',
+    'Again.',
+    'More.',
+    'Less.',
+    'Stop.',
+    'Go.',
+    'Run.',
+    'Walk.',
+    'Sit.',
+    'Stand.',
+    'Wait.',
+    'Look.',
+    'See.',
+    'Watch.',
+    'Listen.',
+    'Hear.',
+    'Feel.',
+    'Think.',
+    'Know.',
+    'Guess.',
+    'Hope.',
+    'Wish.',
+    'Want.',
+    'Need.',
+    'Have.',
+    'Get.',
+    'Give.',
+    'Take.',
+    'Make.',
+    'Do.',
+    'Be.',
+    'Am.',
+    'Is.',
+    'Are.',
+    'Was.',
+    'Were.',
+    'Will.',
+    'Would.',
+    'Could.',
+    'Should.',
+    'Must.',
+    'May.',
+    'Might.',
+    'Can.',
+    'Shall.',
+    'Let.',
+    'See.',
+    'Saw.',
+    'Seen.',
+    'Say.',
+    'Said.',
+    'Told.',
+    'Ask.',
+    'Asked.',
+    'Answer.',
+    'Answered.',
+    'Reply.',
+    'Replied.',
+    'Talk.',
+    'Talked.',
+    'Speak.',
+    'Spoke.',
+    'Spoken.',
+    'Say.',
+    'Saying.',
+    'Said.',
+    'Says.'
+];
+
+const BOT_BARRACKS_GENERAL = [
+    'Yeah mate, heard you. Still shit, though.',
+    'Keep chatting. Your cards miss you, clown.',
+    'Mate, type faster. Your turn is dying.',
+    'Good story. Your layout is still fucked.',
+    'You talk a lot for a sinking man, mate.',
+    'Noted, bastard. Now show a card.',
+    'Fair enough, mate. The slap will judge.',
+    'Mate, your point left before you did.',
+    'Oh shit, did not see that coming, mate.',
+    'Where did that come from, you sneak?',
+    'That changed the table, you bastard.',
+    'Hate that move. Respect it too, mate.',
+    'Bloody good point. Shame about your hand.',
+    'Well played saying it. Now prove it, clown.',
+    'Good game chat. Terrible card play, mate.',
+    'Nice one talking. Now defend, dickhead.',
+    'You earned a reply. Do not waste it, mate.',
+    'That was class chat. Cards still shit, mate.',
+    'Old friend, drinks on me if you win one.',
+    'Buy me a pint and I will forget that tap.',
+    'Pub bill says you owe me a win, mate.',
+    'Friendship intact. Your cards are fucked.',
+    'Mate, that sentence needed a driver.',
+    'Fuck it, that was almost clever, clown.',
+    'Shit talk accepted. Card check pending, mate.'
+];
+
+const BOT_BARRACKS_INSULT = [
+    '{target}, you absolute bellend. That was tragic.',
+    '{target}, shut the fuck up and find a card.',
+    'You play like a donkey with Wi-Fi, {target}.',
+    '{target}, your brain is on airplane mode.',
+    'Pipe down, {target}. Your cards are crying.',
+    '{target}, you could fuck up a coin toss.',
+    'You bargain-bin bastard, {target}. Sit down.',
+    '{target}, your comeback filed for divorce.',
+    'Keep barking, {target}. Nobody is scared.',
+    '{target}, yo mama taps faster half asleep.',
+    'Your whole game is arse, {target}. Facts.',
+    '{target}, you talk king, tap like a clown.',
+    'You wet sock, {target}. Dry up and play.',
+    'Shut it, wanker {target}. Adults talking cards.',
+    'You gobshite {target}, that move was criminal.',
+    '{target}, your thumb owes the table money.',
+    'Fuck me {target}, that decision was rancid.',
+    '{target}, your plan smells like warm lager.',
+    'You muppet {target}, the button was right there.',
+    'Bozo {target}, even the bar dog saw that.',
+    'Clown {target}, your plan needs a stunt double.',
+    'Idiot {target}, that tap lowered house prices.',
+    'Donkey {target}, bray less, defend more.',
+    'Garbage human {target}, tidy up your hand.',
+    '{target}, toilet called. It wants its break back.',
+    'Your whole game is a fart joke, {target}.',
+    'Dumb and proud, huh {target}? Bold combo.',
+    'Stupid grin, stupider tap, {target}. Classic.',
+    'Bollocks {target}, that was never a real move.',
+    'Rat {target}, stop nibbling at my patience.',
+    'Goblin {target}, back to the deck you came from.',
+    'Villain? More like village idiot, {target}.',
+    'Trash {target}, take yourself out, mate.',
+    'Rubbish {target}, even the discard rejects you.',
+    'Disaster {target}, you should charge admission.',
+    'Criminal {target}, that move should do time.',
+    'Dickhead {target}, your cards want adoption.',
+    'Fuckwit {target}, congrats on new lows.',
+    'Shitshow {target}, but make it confident.',
+    '{target}, mate, you are my favourite idiot here.',
+    'Old friend {target}, buy me a pint, you owe me.',
+    'Fair play {target}, that insult almost landed.',
+    'Respect {target}, your mouth never quits.',
+    'Well played {target}, now do it with cards.',
+    'Nice one {target}, you finally typed sense.',
+    'Bloody good roast. Shit game though, {target}.',
+    'That was class, {target}. Cards still dogshit.',
+    'You earned my attention, {target}. Do not waste it.',
+    'Good game {target}, you beautiful disaster.',
+    'Clean win? Not with that mouth, {target}.',
+    'Dad joke, {target}: you have potential. As a warning.',
+    'What do you call {target} winning? A rumour.',
+    'Why did {target} bring luck? Never found out.',
+    'Knock knock. {target} still losing, mate.',
+    'Roses are red, {target} is blue from holding breath.'
+];
+
+const BOT_BARRACKS_EVENTS = {
+    slapSuccess: [
+        'Too slow, mate. I could hear you snoring.',
+        'Yoink, bastard. Thanks for the donation.',
+        'Mine now, clown. Blink slower next time.',
+        'Snatched it, dickhead. Stay awake, mate.',
+        'Clean steal. Fair play, that hurt you.'
+    ],
+    slapFail: [
+        'Fuck. Wrong card. Nobody saw shit, mate.',
+        'Missed it. My thumb is pissed, clown.',
+        'That slap was dogshit. Fine, laugh, mate.',
+        'Penalty. Worth it for the drama, bastard.'
+    ],
+    penalty: [
+        'More cards. Fucking lovely, mate.',
+        'Pile it on, bastards. I like targets.',
+        'Two more? Buy me a pint first, clown.',
+        'My hand is fat. Your face is fatter, mate.'
+    ],
+    goodDraw: [
+        'Oh shit. That one actually helps, mate.',
+        'Lovely. The deck finally respects me.',
+        'That card can stay. The rest can fuck off.'
+    ],
+    badDraw: [
+        'Nope. That card is fucking bin-bound.',
+        'Absolute toilet. Straight to discard, mate.',
+        'Deck just mugged me. Nice one, bastard.'
+    ],
+    blackKing: [
+        'Black King, mate. One problem deleted.',
+        'Minus one. Beautiful, you jealous bastards.'
+    ],
+    bazungaCall: [
+        'BAZUNGA, dickheads. Last lap, no mercy.',
+        'Calling it, mates. Bring balls or excuses.',
+        'BAZUNGA. Final orbit, try not to shit it.'
+    ],
+    bazungaEnemy: [
+        'You called? Bold, stupid bastard. Love it.',
+        'BAZUNGA from you? Fair play, brave clown.',
+        'Final lap, mate. Hope your hand is real.'
+    ],
+    victory: [
+        'I win, dickheads. Drinks on you, mates.',
+        'Winner. Good game, you beautiful bastards.',
+        'That is the win. Fair play for trying, mate.',
+        'Victory. You earned the loss, clown.'
+    ],
+    defeat: [
+        'Fair play, mate. You mugged me clean.',
+        'You won, bastard. That last move was class.',
+        'Good game, dickhead. I want a rematch.',
+        'Well played, mate. Enjoy it before I do.'
+    ],
+    frustrated: [
+        'This fucking deck is taking the piss, mate.',
+        'One more shit card and I flip the bar, clown.'
+    ]
+};
+
+const BOT_BARRACKS_DIRECT = {
+    greeting: [
+        'Evening, bastard. Cards out, excuses ready.',
+        'Hello, {target}. Victim check complete, mate.',
+        'Yo, dickheads. Who wants humbling first?',
+        'Hi, {target}. Nice mouth. Shame about hands.'
+    ],
+    thanks: [
+        'Cheers, mate. Do not get soft on me.',
+        'You are welcome, bastard. Now lose quietly.',
+        'Any time, {target}. Drinks on you, mate.'
+    ],
+    smalltalk: [
+        'Good, mate. Bored, armed, slightly pissed.',
+        'Living, mate. Your cards keep me laughing.',
+        'Fine. How is that tragic plan, {target}?'
+    ],
+    pause: [
+        'Take your time, mate. Shit needs planning.',
+        'Pause away, clown. I can wait and roast.',
+        'No rush, {target}. Failure is patient.'
+    ],
+    laugh: [
+        'Ha! That was actually funny, you bastard.',
+        'Good one, mate. Still losing though.',
+        'Laughing now, slapping you later, clown.',
+        'That joke landed. Your cards did not, mate.'
+    ],
+    fallback: [
+        'What the fuck was that, mate?',
+        'Mate, that message had no father.',
+        'Lovely words. Fucking nonsense though.',
+        'Say it again with a card attached, clown.'
+    ],
+    boast: [
+        'Big talk, mate. Cards have not agreed.',
+        'Easy? Your hands are shaking, clown.',
+        'Keep bragging, bastard. Fall looks tall.'
+    ],
+    respect: [
+        'Fair play, bastard. That was genuinely good.',
+        'Respect, mate. That move was bloody class.',
+        'Well played, {target}. Nice one, dickhead.',
+        'Good game, mate. You earned that bit.'
+    ],
+    praise: [
+        'Cheers, mate. I was fucking brilliant.',
+        'Correct, {target}. Buy me a pint, bastard.',
+        'Thanks. Even a broken clock slaps, mate.'
+    ]
+};
+
+const BOT_BARRACKS_PERSONA = {
+    noob: {
+        banter: [
+            'I am shit, mate. You are the fertiliser.',
+            'No clue here, clown. Still beating you.',
+            'Tutorial bot with bar manners, {target}.',
+            'I press random shit and you panic, mate.',
+            'Dad joke: I am not lost, just pioneering fail.'
+        ],
+        insult: [
+            '{target}, even my accidents bully you, mate.',
+            'Losing to me should need counselling, {target}.',
+            'I am the noob and you look worse, clown.'
+        ]
+    },
+    casual: {
+        banter: [
+            'Pub rules, mate: cards down, mouths open.',
+            'Pint in hand, your plan in bin, mate.',
+            'Casual game, brutal roast, fair play mate.',
+            'I play for laughs. You are the joke, clown.'
+        ],
+        insult: [
+            '{target}, pub chair with opinions. Sit, mate.',
+            'Pipe down, wanker. Casuals still cook you.',
+            'You play like last orders came early, {target}.'
+        ]
+    },
+    pro: {
+        banter: [
+            'No speech, mate. Just a better slap.',
+            'You had one task. Fucked it loudly, clown.',
+            'I do not miss twice, {target}. Remember that.',
+            'Clean hands, dirty mouth, easy win, mate.'
+        ],
+        insult: [
+            '{target}, spare the speech. Move the cards.',
+            'You tap like gloves are glued on, {target}.',
+            'That was shit in high definition, {target}.'
+        ]
+    },
+    expert: {
+        banter: [
+            'No charts, mate. You are just shit.',
+            'I saw that failure three taps early, clown.',
+            'You are not tricky. Just loudly wrong, mate.',
+            'Sit down, {target}. Lesson in progress.'
+        ],
+        insult: [
+            '{target}, your plan is a turd with glasses.',
+            'No sums needed. That was bollocks, {target}.',
+            'Your mouth says expert. Hands say lost, mate.'
+        ]
+    },
+    pirate: {
+        banter: [
+            'Arrr, yer plan walks the plank, mate.',
+            'Yer cards be shit, mouth be louder, clown.',
+            'Barnacles play better drunk than you, mate.',
+            'Rum up, gloves off, yer fucked, {target}.'
+        ],
+        insult: [
+            '{target}, ye soggy deck rat. Play or swim.',
+            'Yer mouth fires blanks, {target}. Arrr, clown.',
+            'Walk the plank, bellend. Table needs space.'
+        ]
+    },
+    baba: {
+        banter: [
+            'Baba sees fear. Smells cheap lager too, mate.',
+            'Baba needs no luck to bury you, clown.',
+            'You talk, Baba banks. Simple pub math, mate.',
+            'Baba heard enough. Guard your cards, {target}.'
+        ],
+        insult: [
+            '{target}, Baba buries louder dogs weekly, mate.',
+            'Your mouth wars, cards surrender, {target}.',
+            'Shut up, {target}. Baba is working here.'
+        ]
+    }
+};
+
+for (const persona of Object.keys(BotConfig.chatBank)) {
+    pushFreshBotLines(BotConfig.chatBank[persona].banter, BOT_BARRACKS_BANTER);
+    pushFreshBotLines(BotConfig.generalReplies[persona], BOT_BARRACKS_GENERAL);
+    pushFreshBotLines(BotConfig.directReplies[persona].insult, BOT_BARRACKS_INSULT);
+    for (const [category, lines] of Object.entries(BOT_BARRACKS_EVENTS)) {
+        if (BotConfig.chatBank[persona][category]) {
+            pushFreshBotLines(BotConfig.chatBank[persona][category], lines);
+        }
+    }
+    for (const [intent, lines] of Object.entries(BOT_BARRACKS_DIRECT)) {
+        if (BotConfig.directReplies[persona][intent]) {
+            pushFreshBotLines(BotConfig.directReplies[persona][intent], lines);
+        }
+    }
+    const personaChaos = BOT_BARRACKS_PERSONA[persona];
+    if (personaChaos) {
+        pushFreshBotLines(BotConfig.chatBank[persona].banter, personaChaos.banter);
+        pushFreshBotLines(BotConfig.directReplies[persona].insult, personaChaos.insult);
+    }
+}
+
 // These are the purpose-written, short table-talk packs. Older dialogue remains
 // available as a fallback, but without this preference it drowned the sharper
 // lines in several thousand polite or over-explanatory alternatives.
@@ -2254,7 +2856,13 @@ const collectPreferredTableLines = value => {
     BOT_UNFILTERED_TABLE,
     BOT_UNFILTERED_BABA,
     BOT_PUB_ONE_LINERS,
-    BOT_PUB_BABA
+    BOT_PUB_BABA,
+    BOT_BARRACKS_BANTER,
+    BOT_BARRACKS_GENERAL,
+    BOT_BARRACKS_INSULT,
+    BOT_BARRACKS_EVENTS,
+    BOT_BARRACKS_DIRECT,
+    BOT_BARRACKS_PERSONA
 ].forEach(collectPreferredTableLines);
 
 const Bot = {

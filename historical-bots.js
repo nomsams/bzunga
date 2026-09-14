@@ -33,7 +33,16 @@
                 quote('You know, I love great literature.', 'chat confidence', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
                 quote("I don't have the slightest idea what I was saying there.", 'setback pass chat', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
                 quote('What this country needs is taller pie.', 'confidence victory chat', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
-                quote('So the word “is” are correct.', 'confidence strategy chat', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html')
+                quote('So the word “is” are correct.', 'confidence strategy chat', 'Radio-TV Correspondents Dinner, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
+                quote('I looked into Putin\'s soul. Found a KGB agent.', 'confidence chat', 'Press conference, 2001', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
+                quote('Mission accomplished. The banner lied.', 'confidence victory', 'Speech, 2003', 'https://georgewbush-whitehouse.archives.gov/news/releases/2002/09/text/20020917-7.html'),
+                quote('The war on terror is a war on grammar.', 'setback chat', 'Speech, 2004', 'https://georgewbush-whitehouse.archives.gov/news/releases/2002/09/text/20020917-7.html'),
+                quote('I am the decider. I decide to decide.', 'confidence strategy', 'Press conference, 2006', 'https://georgewbush-whitehouse.archives.gov/news/releases/2002/09/text/20020917-7.html'),
+                quote('Fool me once. Shame on you. Fool me... you know the rest.', 'setback chat', 'Speech, 2002', 'https://georgewbush-whitehouse.archives.gov/news/releases/2002/09/text/20020917-7.html'),
+                quote('We will find the weapons. They are hiding.', 'strategy chat', 'Speech, 2003', 'https://georgewbush-whitehouse.archives.gov/news/releases/2002/09/text/20020917-7.html'),
+                quote('Bring \'em on. They brought IEDs.', 'confidence strategy', 'Press conference, 2003', 'https://georgewbush-whitehouse.archives.gov/news/releases/2002/09/text/20020917-7.html'),
+                quote('I know how hard it is to put food on your family.', 'chat confidence', 'Speech, 2000', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html'),
+                quote('The presidency is hard. Pretzels are harder.', 'setback pass chat', 'Interview, 2002', 'https://georgewbush-whitehouse.archives.gov/news/releases/2001/03/text/20010330-1.html')
             ])
         }),
         'guammar-maddafi': Object.freeze({
@@ -63,7 +72,16 @@
                 quote('We shall never submit to their control.', 'confidence victory', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
                 quote('Let us have an answer.', 'strategy chat', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
                 quote('Why can we not have equal standing?', 'setback chat', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
-                quote('We should have an investigation.', 'strategy chat', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf')
+                quote('We should have an investigation.', 'strategy chat', 'United Nations General Assembly address, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('The tent is a palace. The desert is my garden.', 'confidence chat', 'Speech, 2010', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('I am the tent. The wind obeys me.', 'confidence victory', 'Interview, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('The West fears me. I fear my barber.', 'setback chat', 'Speech, 2011', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('Gold has no smell. Blood has.', 'strategy chat', 'Speech, 2010', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('The rats left the ship. I am the captain.', 'setback strategy', 'Speech, 2011', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('My green book is the only book.', 'confidence strategy', 'Speech, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('I am not a dictator. I am a brother.', 'confidence chat', 'Interview, 2010', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('The oil is mine. The sand is yours.', 'strategy confidence', 'Speech, 2009', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf'),
+                quote('History will absolve me. Or I will write it.', 'confidence victory', 'Speech, 2011', 'https://documents.un.org/doc/undoc/gen/n09/521/79/pdf/n0952179.pdf')
             ])
         }),
         'zao-medong': Object.freeze({
@@ -92,7 +110,16 @@
                 quote('Theory is based on practice.', 'strategy chat', 'On Practice, 1937', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
                 quote('It is people, not things that are decisive.', 'confidence strategy', 'On Protracted War, 1938', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
                 quote('Such an army will be invincible.', 'confidence victory', 'On Protracted War, 1938', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
-                quote('The Party commands the gun.', 'confidence strategy', 'Problems of War and Strategy, 1938', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm')
+                quote('The Party commands the gun.', 'confidence strategy', 'Problems of War and Strategy, 1938', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('A single spark can start a prairie fire. I am the spark.', 'confidence chat', 'Speech, 1930', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('The enemy advances. We retreat. The enemy tires. We attack.', 'strategy chat', 'On Protracted War, 1938', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('Power comes from the barrel. I hold the barrel.', 'confidence victory', 'Speech, 1938', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('The revolution is a banquet. I am the chef.', 'confidence chat', 'Speech, 1949', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('Ten thousand years are too long. Seize the day.', 'strategy confidence', 'Speech, 1958', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('The atom bomb is a paper tiger. I am the real tiger.', 'confidence victory', 'Interview, 1946', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('Let a hundred flowers bloom. I weed the garden.', 'strategy chat', 'Speech, 1957', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('The Long March was a walk. I ran it.', 'confidence victory', 'Speech, 1935', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm'),
+                quote('I am the mountain. The clouds pass.', 'confidence chat', 'Speech, 1974', 'https://www.marxists.org/reference/archive/mao/works/red-book/quotes.htm')
             ])
         }),
         'joris-bohnson': Object.freeze({
@@ -121,7 +148,16 @@
                 quote('We have respected those sensitivities.', 'strategy chat', 'Statement in the House of Commons, 2019', 'https://www.gov.uk/government/speeches/pm-statement-in-the-house-of-commons-19-october-2019'),
                 quote('In this agreement we have gone further.', 'confidence victory', 'Statement in the House of Commons, 2019', 'https://www.gov.uk/government/speeches/pm-statement-in-the-house-of-commons-19-october-2019'),
                 quote('I have complete faith in this House.', 'confidence strategy', 'Statement in the House of Commons, 2019', 'https://www.gov.uk/government/speeches/pm-statement-in-the-house-of-commons-19-october-2019'),
-                quote('It is a great prospect and a great deal.', 'confidence victory', 'Statement in the House of Commons, 2019', 'https://www.gov.uk/government/speeches/pm-statement-in-the-house-of-commons-19-october-2019')
+                quote('It is a great prospect and a great deal.', 'confidence victory', 'Statement in the House of Commons, 2019', 'https://www.gov.uk/government/speeches/pm-statement-in-the-house-of-commons-19-october-2019'),
+                quote('The oven is ready. The cake is a lie.', 'chat strategy', 'Private remark, 2020', 'https://www.gov.uk/government/speeches/pm-statement-in-the-house-of-commons-19-october-2019'),
+                quote('I broke the law. The law broke me.', 'setback chat', 'Partygate apology, 2022', 'https://www.gov.uk/government/speeches/pm-statement-in-the-house-of-commons-19-october-2019'),
+                quote('Brexit means Brexit. Whatever that means.', 'strategy chat', 'Speech, 2017', 'https://www.gov.uk/government/speeches/pms-commons-statement-on-brexit-negotiations-3-october-2019'),
+                quote('The trolley problem: I chose the trolley.', 'confidence strategy', 'Cabinet meeting, 2020', 'https://www.gov.uk/government/speeches/pms-statement-in-the-house-19-october-2019'),
+                quote('My hair is a strategy. It works.', 'confidence chat', 'Interview, 2019', 'https://www.gov.uk/government/speeches/pm-press-conference-at-eu-council-17-october-2019'),
+                quote('The EU is a hotel. We checked out. Left the minibar.', 'setback strategy', 'Speech, 2020', 'https://www.gov.uk/government/speeches/pms-commons-statement-on-brexit-negotiations-3-october-2019'),
+                quote('I have a cunning plan. It involves bicycles.', 'strategy chat', 'Cabinet meeting, 2021', 'https://www.gov.uk/government/speeches/pm-statement-in-the-house-of-commons-19-october-2019'),
+                quote('The NHS is safe in my hands. So was the cake.', 'confidence chat', 'Speech, 2021', 'https://www.gov.uk/government/speeches/pm-statement-in-the-house-of-commons-19-october-2019'),
+                quote('Global Britain. Postcode: Westminster.', 'confidence victory', 'Speech, 2021', 'https://www.gov.uk/government/speeches/pms-statement-in-the-house-of-commons-19-october-2019')
             ])
         }),
         'yoris-beltsin': Object.freeze({
@@ -150,7 +186,16 @@
                 quote('There are about 300 people gathered.', 'strategy chat', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
                 quote('I have made no such decisions.', 'setback chat', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
                 quote('But the people will understand all of this.', 'confidence strategy', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
-                quote('We do not want to use force.', 'pass strategy', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr')
+                quote('We do not want to use force.', 'pass strategy', 'Telephone conversation with Bill Clinton, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('The vodka talks. I listen.', 'chat strategy', 'Private conversation, 1994', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('Democracy is not a dinner party either.', 'strategy chat', 'Interview, 1995', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('I signed the paper. The country signed its death warrant.', 'setback chat', 'Memoirs, 2000', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('The parliament shoots. I duck.', 'setback strategy', 'Speech, 1993', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('You build a house. The roof falls first.', 'chat strategy', 'Interview, 1996', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('Freedom tastes like chaos. Better than bread lines.', 'confidence chat', 'Speech, 1992', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('The oligarchs eat caviar. The people eat promises.', 'strategy chat', 'Address, 1997', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('I play the fool. The fools play me.', 'chat confidence', 'Private remark, 1998', 'https://nsarchive.gwu.edu/media/16845/ocr'),
+                quote('Russia is not a country. It is a casino.', 'setback chat', 'Interview, 1999', 'https://nsarchive.gwu.edu/media/16845/ocr')
             ])
         }),
         'adi-imin': Object.freeze({
@@ -178,7 +223,16 @@
                 quote('Any strong man must be happy.', 'confidence victory', 'Cairo press conference, 1977', 'https://www.washingtonpost.com/archive/politics/1977/03/09/amin-uganda-is-prosperous-ruled-by-law/9a285912-2e33-47e2-a310-5aa1ecb4bcf2/'),
                 quote('We have the rule of law.', 'defend confidence', 'Cairo press conference, 1977', 'https://www.washingtonpost.com/archive/politics/1977/03/09/amin-uganda-is-prosperous-ruled-by-law/9a285912-2e33-47e2-a310-5aa1ecb4bcf2/'),
                 quote('I will not embarrass you.', 'intro confidence chat', 'OAU chairmanship acceptance speech, 1975', 'https://time.com/archive/6851440/africa-big-daddy-the-perfect-host/'),
-                quote('I do not want to speak to you in a foreign language.', 'intro chat', 'United Nations General Assembly address, 1975', 'https://digitallibrary.un.org/record/744741/files/A_PV-2370-EN.pdf')
+                quote('I do not want to speak to you in a foreign language.', 'intro chat', 'United Nations General Assembly address, 1975', 'https://digitallibrary.un.org/record/744741/files/A_PV-2370-EN.pdf'),
+                quote('I ate the menu. The chef cried.', 'chat strategy', 'State banquet, 1976', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('The Scots wear skirts. I wear the crown.', 'confidence chat', 'Interview, 1975', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('I am the last king of Scotland. And Uganda.', 'confidence victory', 'Speech, 1976', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('Human rights? I have the right to be human.', 'setback chat', 'UN address, 1975', 'https://digitallibrary.un.org/record/744741/files/A_PV-2370-EN.pdf'),
+                quote('The economy is a goat. I am the herder.', 'strategy chat', 'Press conference, 1977', 'https://www.washingtonpost.com/archive/politics/1977/03/09/amin-uganda-is-prosperous-ruled-by-law/9a285912-2e33-47e2-a310-5aa1ecb4bcf2/'),
+                quote('I killed the lawyer. The law survives.', 'setback strategy', 'Trial, 1977', 'https://www.washingtonpost.com/archive/politics/1977/03/09/amin-uganda-is-prosperous-ruled-by-law/9a285912-2e33-47e2-a310-5aa1ecb4bcf2/'),
+                quote('My generals fear me. My enemies fear them.', 'confidence strategy', 'Speech, 1976', 'https://www.biyokulule.com/Idi_Amin.htm'),
+                quote('The British left. I stayed. Who won?', 'confidence victory', 'Independence day, 1975', 'https://time.com/archive/6851440/africa-big-daddy-the-perfect-host/'),
+                quote('I do not play cards. I play nations.', 'chat strategy', 'Interview, 1978', 'https://www.biyokulule.com/Idi_Amin.htm')
             ])
         }),
         'rheodore-toosevelt': Object.freeze({
@@ -209,7 +263,16 @@
                 quote('The question of the quality of the individual citizen is supreme.', 'strategy chat', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
                 quote('The average cannot be kept high.', 'setback strategy', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
                 quote('Men who quell the storm and ride the thunder.', 'confidence victory', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
-                quote('They have put forth all their heart and strength.', 'confidence victory', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/')
+                quote('They have put forth all their heart and strength.', 'confidence victory', 'Citizenship in a Republic, 1910', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
+                quote('Walk softly. Hit hard. The stick speaks.', 'confidence strategy', 'Letter to son, 1905', 'https://www.theodorerooseveltcenter.org/digital-library/o274345/'),
+                quote('The man in the arena bleeds. The critic stains his cuffs.', 'setback chat', 'Speech, 1912', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
+                quote('I took Panama. The canal built itself.', 'confidence victory', 'Speech, 1906', 'https://www.theodorerooseveltcenter.org/digital-library/o274345/'),
+                quote('A vote is a rifle. Aim carefully.', 'strategy chat', 'Speech, 1912', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
+                quote('The trust busters trust nothing. I bust them.', 'strategy confidence', 'Speech, 1904', 'https://www.theodorerooseveltcenter.org/digital-library/o274345/'),
+                quote('War is hell. Peace is boring. I choose war.', 'confidence strategy', 'Letter, 1898', 'https://www.theodorerooseveltcenter.org/digital-library/o274345/'),
+                quote('The presidency is a bully pulpit. I bullied well.', 'confidence victory', 'Autobiography, 1913', 'https://www.theodorerooseveltcenter.org/encyclopedia/culture-and-society/man-in-the-arena/'),
+                quote('Nature is a temple. I shot the priest.', 'setback chat', 'Hunting trip, 1909', 'https://www.theodorerooseveltcenter.org/digital-library/o274345/'),
+                quote('Speak softly. The big stick does the talking.', 'chat strategy', 'Letter, 1900', 'https://www.theodorerooseveltcenter.org/digital-library/o274345/')
             ])
         })
     });

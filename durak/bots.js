@@ -1150,6 +1150,111 @@
     for (let difficulty = 1; difficulty <= 5; difficulty++) addDurakLines(difficulty, DURAK_PUB_ONE_LINERS);
     addDurakLines(5, DURAK_UNFILTERED_BABA);
     addDurakLines(5, DURAK_PUB_BABA);
+    const DURAK_BARRACKS = {
+        attack: [
+            'Beat this, mate. Barracks rules, no crying.',
+            'One card, one bastard, one bad evening for you.',
+            'Dad joke: why bring a trump? You never do, clown.',
+            'Knock knock. Pickup with luggage, mate.',
+            'Roses are red, trumps are black, cover this or carry it back.'
+        ],
+        defend: [
+            'Covered, mate. Your attack died of shame.',
+            'Not today, dickhead. Barracks says no.',
+            'Clean cover. Fair play, that was almost scary.',
+            'Sit down, clown. Even the talon laughed.'
+        ],
+        take: [
+            'Fine, give me the pile, you smug bastard.',
+            'I take. Your grin is now evidence, mate.',
+            'Lovely cards. Shame about the owner, clown.'
+        ],
+        throw: [
+            'Another one, mate. Your hands look empty-ish.',
+            'Eat this too, bastard. Family reunion.',
+            'Matching bastard for your pile, clown.'
+        ],
+        pass: [
+            'Pass, mate. Barracks mercy, one per night.',
+            'Done. Your hand is ugly enough, clown.',
+            'I stop. Old friend, buy me a pint instead.'
+        ],
+        transfer: [
+            'Same rank, mate. Your problem now, bastard.',
+            'Catch, clown. Barracks postal service.'
+        ],
+        chat: [
+            '{target}, mate, your defence is pure pub talk.',
+            'Shut it, wanker. Defend or collect, clown.',
+            'Dad joke: {target} defends like a screen door, mate.',
+            'Knock knock. {target} still picking up, mate.',
+            'Roses are red, {target} collects blue piles too.',
+            'Yo mama covers faster pissed, {target}.',
+            'Old friend, drinks on you after that pickup.',
+            'Fair play, bastard. That cover had teeth.',
+            'That was class, {target}. Cards still shit though.',
+            'What do you call {target} defending? A rumour, mate.',
+            'Why did {target} take six? Because hands, mate.'
+        ]
+    };
+    const DURAK_BARRACKS_BABA = {
+        attack: [
+            'Baba sends one, mate. Start swearing, clown.',
+            'Baba attacks. Your hand trembles, mate.',
+            'One card from Baba. Your night ruined, clown.',
+            'Baba plays. The bar goes quiet, mate.',
+            'Cover this, bastard. Baba demands respect.'
+        ],
+        defend: [
+            'Baba covers. Fair play, almost worried, mate.',
+            'Not today, clown. Baba stands tall.',
+            'Your attack died. Baba buried it, mate.',
+            'Covered. Baba barely blinked, bastard.',
+            'Nice try. Baba eats attacks for breakfast.'
+        ],
+        take: [
+            'Baba takes. Grin now, cry later, bastard.',
+            'Pile accepted. Revenge filed, mate.',
+            'Baba collects. Your turn comes, clown.',
+            'Fine. Baba remembers every card, mate.',
+            'Taken. The grudge grows, bastard.'
+        ],
+        throw: [
+            'Baba adds one more, mate. Hold it, clown.',
+            'Another card. Your wrist screams, mate.',
+            'Matching rank. Baba delivers, bastard.',
+            'Eat this too. Family style, mate.',
+            'One more. The pile grows, clown.'
+        ],
+        pass: [
+            'Baba passes. Friendship survives this one, mate.',
+            'Done. Your hand is ugly enough, bastard.',
+            'Baba stops. Mercy is a myth, mate.',
+            'Pass. The clown show continues, clown.',
+            'Enough. Baba has seen enough, mate.'
+        ],
+        transfer: [
+            'Baba forwards it, mate. New clown selected.',
+            'Same rank. Your problem now, bastard.',
+            'Catch, mate. Barracks mail, clown.',
+            'Transfer complete. Next victim, mate.',
+            'Forwarded. The pain travels, bastard.'
+        ],
+        chat: [
+            '{target}, Baba likes you. Your defence is shit, mate.',
+            'Yo mama asked Baba to teach you trumps, {target}.',
+            'Baba sees fear. Smells cheap lager, mate.',
+            'Your cards scream. Baba listens, clown.',
+            'Mate, Baba owns this table. You rent.',
+            'Shut it, wanker. Baba is working.',
+            'Your plan is a wet fart, mate.',
+            'Baba does not bluff. You do, clown.',
+            'Old friend, buy Baba a pint, mate.',
+            'Your defence is a joke. Baba laughs, bastard.'
+        ]
+    };
+    for (let difficulty = 1; difficulty <= 5; difficulty++) addDurakLines(difficulty, DURAK_BARRACKS);
+    addDurakLines(5, DURAK_BARRACKS_BABA);
     Object.assign(PROFILES[1], { chat: 0.86 });
     Object.assign(PROFILES[2], { chat: 0.84 });
     Object.assign(PROFILES[3], { chat: 0.82 });

@@ -110,7 +110,9 @@ assert(submitAction.indexOf('UI.previewAction(action)', submitSend) > submitSend
 assert(submitAction.indexOf('UI.updateControls(App.gameState)', submitSend) > submitSend, 'Pending feedback must use the lightweight controls update after dispatch');
 assert(html.includes('UI.queueRender(data.state)') && html.includes('App.uiState.renderFrame = scheduleFrame'), 'Bursting remote states must coalesce into one render per animation frame');
 assert(html.includes("action.type === 'DRAW_DECK' || action.type === 'DRAW_DISCARD'") && html.includes("action.type === 'PLAY_HOLDING' && action.action === 'swap'"), 'Remote players need optimistic draw and swap motion');
-assert(html.includes("cardMotion.incomingId === c.id") && html.includes("cardMotion.outgoingId === c.id"), 'Authoritative swaps must seat the drawn card before delaying the discarded card');
+assert(html.includes('createMotionGhost:') && html.includes('animateMotionGhost:') && html.includes("will-change: transform"), 'Card travel must use compositor-friendly overlay cards instead of mutating authoritative table cards');
+assert(html.includes('incomingDone.then(() =>') && html.includes('UI.animateMotionGhost(ghost, origins.outgoing.rect'), 'A replacement must visibly seat the drawn card before moving the old layout card to discard');
+assert(html.includes('state.deck.slice(visibleDeckStart)') && html.includes('state.discardPile.slice(visibleDiscardStart)'), 'Only the visible pile cards should be rendered on each state update');
 assert(html.includes("badge.setAttribute(") && html.includes("', current turn'"), 'The active seat must expose its turn state for every player');
 assert(html.includes("let icon = p.isBot ? '🤖'"), 'Bot seats must use an unmistakable robot emoji');
 assert(html.includes('expandedBadgeId') && html.includes('badge.onclick = toggleBadge'), 'Player names must expand on tap as well as desktop hover');

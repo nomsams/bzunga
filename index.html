@@ -92,7 +92,7 @@
     #card-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: auto; z-index: 10; touch-action: manipulation; }
     .card {
         width: var(--card-w); height: var(--card-h); position: absolute;
-        transition: left 0.42s cubic-bezier(0.22, 1, 0.36, 1), top 0.42s cubic-bezier(0.22, 1, 0.36, 1), scale 0.18s, rotate 0.18s, translate 0.18s;
+        transition: left 0.26s cubic-bezier(0.22, 1, 0.36, 1), top 0.26s cubic-bezier(0.22, 1, 0.36, 1), scale 0.14s, rotate 0.14s, translate 0.14s;
         pointer-events: auto; cursor: pointer; touch-action: manipulation; border-radius: 6px; transform-origin: center center; box-shadow: 2px 4px 10px rgba(0,0,0,0.4);
         -webkit-touch-callout: none; -webkit-user-drag: none;
         scale: var(--local-scale, 1);
@@ -102,14 +102,15 @@
     .card * { -webkit-touch-callout: none; -webkit-user-drag: none; }
     .card.no-anim { transition: none !important; }
     .card.no-anim .card-inner { transition: none !important; }
-    .card.optimistic-motion, .card.swap-incoming {
-        transition: left 0.24s cubic-bezier(0.22, 1, 0.36, 1), top 0.24s cubic-bezier(0.22, 1, 0.36, 1), scale 0.16s, rotate 0.16s, translate 0.16s;
-    }
-    .card.swap-outgoing {
-        transition: left 0.32s 0.12s cubic-bezier(0.22, 1, 0.36, 1), top 0.32s 0.12s cubic-bezier(0.22, 1, 0.36, 1), scale 0.16s, rotate 0.16s, translate 0.16s;
+    .card.motion-concealed { visibility: hidden !important; transition: none !important; }
+    .card-motion-ghost {
+        position: fixed !important; margin: 0 !important; pointer-events: none !important;
+        z-index: 700 !important; scale: 1 !important; rotate: 0deg !important;
+        translate: 0 0 !important; transition: none !important; will-change: transform;
+        filter: drop-shadow(0 12px 14px rgba(0,0,0,0.48));
     }
 
-    .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius: 6px; }
+    .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius: 6px; }
     .card-inner.is-flipped { transform: rotateY(180deg); }
 
     /* Fixed Card Bleeding & Artifacts */
@@ -196,6 +197,15 @@
 
     #status-banner { background: rgba(0,0,0,0.85); color: white; text-align: center; padding: 10px 15px; font-size: 1rem; font-weight: 600; backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,0.1); pointer-events: auto; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
     #status-text { flex: 1; text-align: center; color: var(--accent); letter-spacing: 0.5px; font-size: 0.9rem; }
+    #status-meta { display: grid; justify-items: center; gap: 3px; flex: 0 0 60px; }
+    #table-role-slot:empty { display: none; }
+    #table-role-slot .room-role-control {
+        position: static; min-width: 0; min-height: 20px; padding: 3px 7px;
+        display: block; border-radius: 999px; box-shadow: none; line-height: 1;
+    }
+    #table-role-slot .room-role-control span,
+    #table-role-slot .room-role-control small { display: none; }
+    #table-role-slot .room-role-control strong { display: block; font-size: 0.45rem; letter-spacing: 0.02em; }
 
     .player-badge {
         position: absolute; background: var(--surface); border-radius: 22px; font-size: 0.85rem; pointer-events: auto; cursor: pointer; text-align: center; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; backdrop-filter: blur(4px); white-space: nowrap; z-index: 150;
@@ -791,7 +801,7 @@
         <!-- Moved UI elements outside zoom-wrapper -->
         <div id="ui-layer">
             <div id="status-banner">
-                <div style="font-size: 0.75rem; color: #94a3b8; font-weight:800;" id="phase-display">PHASE</div>
+                <div id="status-meta"><div style="font-size: 0.75rem; color: #94a3b8; font-weight:800;" id="phase-display">PHASE</div><div id="table-role-slot"></div></div>
                 <div id="status-text">Waiting for players...</div>
                 <div style="display: flex; gap: 5px;">
                     <a class="table-game-selection" href="./index.html#game-selection" aria-label="Back to game selection">GAMES</a>
@@ -935,7 +945,7 @@ const FINAL_SLAP_WINDOW_MS = 4200;
 const App = {
     isHost: false, offlineHost: false, localId: null, localName: '', sessionToken: null, peer: null, peerOpenTimer: null, connections: {}, hostConn: null, guestLink: null, roomRelay: null, fallbackClientId: '', transport: '', gameState: null, animEnabled: true,
     connectionRoles: {}, spectators: {}, allowSpectators: true, isSpectator: false, requestedSpectator: false, requestedRoomName: '', hostId: '', reconnectTimer: null, everConnected: false, leaving: false, joinRejected: false, hostBackup: null, viceHostId: null, promotionTimer: null, lastBackupSignature: '',
-    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null, cardPress: null, bazungaConfirmOpen: false, rulesOpen: false, expandedBadgeId: null, lastBazungaEffectNonce: null, lastBotPeekNonce: null, lastCardMotionNonce: null, cardMotionStartedAt: 0, cardMotionTimer: null, renderFrame: null },
+    uiState: { targetingMode: null, selectedCardId: null, peekedCards: new Set(), hasPeeked: new Set(), showingResults: false, layoutMode: 'grid', pendingAction: false, pendingToken: null, cardPress: null, bazungaConfirmOpen: false, rulesOpen: false, expandedBadgeId: null, lastBazungaEffectNonce: null, lastBotPeekNonce: null, lastCardMotionNonce: null, motionRun: 0, motionGhosts: new Set(), optimisticMotion: null, renderFrame: null },
     botInterval: null
 };
 
@@ -1137,9 +1147,8 @@ Engine.startGame = () => {
     App.uiState.hasPeeked.clear();
     App.uiState.lastBazungaEffectNonce = null;
     App.uiState.lastCardMotionNonce = null;
-    App.uiState.cardMotionStartedAt = 0;
-    clearTimeout(App.uiState.cardMotionTimer);
-    App.uiState.cardMotionTimer = null;
+    UI.clearCardMotionVisuals();
+    UI.clearOptimisticMotion();
     App.uiState.lastBotPeekNonce = null;
 
     Engine.state.players.forEach(p => {
@@ -2549,7 +2558,7 @@ const UI = {
     renderRoleControl: state => {
         const canSwitch = !App.isHost && (App.isSpectator ? state.canTakePlayerSeat !== false : state.spectatorsAllowed !== false);
         const reason = App.isSpectator && state.canTakePlayerSeat === false ? 'No player seat is currently available' : !App.isSpectator && state.spectatorsAllowed === false ? 'Spectator mode is disabled for this table' : '';
-        RoomTools.RoleControl.update({ visible: Boolean(App.isHost || App.hostConn || App.offlineHost), container: state.phase === 'lobby' ? document.getElementById('lobby-room') : document.body, host: App.isHost, spectator: App.isSpectator, canSwitch, reason, onSwitch: Net.requestRoleSwitch, onManage: UI.openParticipantManager });
+        RoomTools.RoleControl.update({ visible: Boolean(App.isHost || App.hostConn || App.offlineHost), container: state.phase === 'lobby' ? document.getElementById('lobby-room') : document.getElementById('table-role-slot'), host: App.isHost, spectator: App.isSpectator, canSwitch, reason, onSwitch: Net.requestRoleSwitch, onManage: UI.openParticipantManager });
     },
 
     openParticipantManager: () => {
@@ -2887,73 +2896,233 @@ const UI = {
         return false;
     },
 
+    removeMotionGhost: ghost => {
+        if (!ghost) return;
+        App.uiState.motionGhosts.delete(ghost);
+        ghost.remove();
+    },
+
+    clearCardMotionVisuals: (preserveGhost = null) => {
+        App.uiState.motionRun += 1;
+        App.uiState.motionGhosts.forEach(ghost => {
+            if (ghost !== preserveGhost) UI.removeMotionGhost(ghost);
+        });
+        document.querySelectorAll('#card-layer > .card.motion-concealed').forEach(card => card.classList.remove('motion-concealed'));
+    },
+
+    clearOptimisticMotion: () => {
+        const motion = App.uiState.optimisticMotion;
+        if (!motion) return;
+        clearTimeout(motion.timeout);
+        motion.animation?.cancel?.();
+        motion.sourceEl?.classList.remove('motion-concealed');
+        UI.removeMotionGhost(motion.ghost);
+        App.uiState.optimisticMotion = null;
+    },
+
+    createMotionGhost: (source, rect) => {
+        if (!source || !rect) return null;
+        const ghost = source.cloneNode(true);
+        ghost.removeAttribute('id');
+        ghost.querySelectorAll('[id]').forEach(child => child.removeAttribute('id'));
+        ghost.removeAttribute('role');
+        ghost.removeAttribute('tabindex');
+        ghost.setAttribute('aria-hidden', 'true');
+        ghost.classList.remove('holding-card', 'targetable', 'selected-target', 'deck-glow', 'highlight-recent', 'motion-concealed');
+        ghost.classList.add('card-motion-ghost');
+        ghost.style.left = `${rect.left}px`;
+        ghost.style.top = `${rect.top}px`;
+        ghost.style.width = `${rect.width}px`;
+        ghost.style.height = `${rect.height}px`;
+        ghost.style.transformOrigin = 'center center';
+        ghost.style.setProperty('--local-scale', '1');
+        ghost.style.setProperty('--local-rot', '0deg');
+        document.body.appendChild(ghost);
+        App.uiState.motionGhosts.add(ghost);
+        return ghost;
+    },
+
+    animateMotionGhost: (ghost, startRect, endRect, duration = 170, lift = 14) => {
+        if (!ghost || !startRect || !endRect) return { animation: null, done: Promise.resolve() };
+        const startCenterX = startRect.left + startRect.width / 2;
+        const startCenterY = startRect.top + startRect.height / 2;
+        const endCenterX = endRect.left + endRect.width / 2;
+        const endCenterY = endRect.top + endRect.height / 2;
+        const dx = endCenterX - startCenterX;
+        const dy = endCenterY - startCenterY;
+        const scaleX = endRect.width / Math.max(1, startRect.width);
+        const scaleY = endRect.height / Math.max(1, startRect.height);
+        const middleScaleX = 1 + (scaleX - 1) * 0.55;
+        const middleScaleY = 1 + (scaleY - 1) * 0.55;
+        const frames = [
+            { transform: 'translate3d(0, 0, 0) scale(1, 1)', offset: 0 },
+            { transform: `translate3d(${dx * 0.58}px, ${dy * 0.52 - lift}px, 0) scale(${middleScaleX}, ${middleScaleY})`, offset: 0.55 },
+            { transform: `translate3d(${dx}px, ${dy}px, 0) scale(${scaleX}, ${scaleY})`, offset: 1 }
+        ];
+        if (typeof ghost.animate !== 'function') {
+            ghost.style.transform = frames[2].transform;
+            return { animation: null, done: new Promise(resolve => setTimeout(resolve, duration)) };
+        }
+        const animation = ghost.animate(frames, { duration, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' });
+        return { animation, done: animation.finished.catch(() => {}) };
+    },
+
+    getLocalHoldingRect: sourceRect => {
+        const layer = document.getElementById('card-layer');
+        const layerRect = layer.getBoundingClientRect();
+        const viewportHeight = window.visualViewport?.height || window.innerHeight;
+        const viewportWidth = window.visualViewport?.width || window.innerWidth;
+        const isMobile = Math.min(viewportWidth, viewportHeight) <= 768
+            && Math.max(viewportWidth, viewportHeight) <= 1024;
+        const isLandscapeMobile = isMobile && viewportWidth > viewportHeight;
+        const actionRail = isLandscapeMobile ? 168 : 0;
+        const playfieldLeft = isLandscapeMobile ? 6 : 0;
+        const playfieldRight = viewportWidth - actionRail;
+        const playfieldTop = isMobile ? (isLandscapeMobile ? 54 : 60) : 0;
+        const playfieldBottom = isMobile ? (isLandscapeMobile ? viewportHeight - 10 : viewportHeight - 86) : viewportHeight;
+        const playfieldHeight = playfieldBottom - playfieldTop;
+        const centerX = playfieldLeft + (playfieldRight - playfieldLeft) / 2;
+        const centerY = playfieldTop + playfieldHeight / 2;
+        const radiusY = isMobile
+            ? Math.max(72, Math.min(playfieldHeight * (isLandscapeMobile ? 0.3 : 0.42), playfieldHeight / 2 - 66))
+            : Math.min(viewportHeight * 0.38, viewportHeight / 2 - 90);
+        const width = sourceRect.width * 1.3;
+        const height = sourceRect.height * 1.3;
+        const holdingCenterX = layerRect.left + centerX;
+        const holdingCenterY = layerRect.top + centerY + radiusY * 0.35;
+        return { left: holdingCenterX - width / 2, top: holdingCenterY - height / 2, width, height };
+    },
+
     previewAction: action => {
         if (App.isHost || !App.animEnabled || !action || !App.gameState) return;
         const state = App.gameState;
-        const layer = document.getElementById('card-layer');
-        if (!layer) return;
 
         if (action.type === 'DRAW_DECK' || action.type === 'DRAW_DISCARD') {
             const pile = action.type === 'DRAW_DECK' ? state.deck : state.discardPile;
             const card = pile?.[pile.length - 1];
-            const cardEl = card && document.getElementById(card.id);
-            if (!cardEl) return;
-
-            const layerRect = layer.getBoundingClientRect();
-            const cardRect = cardEl.getBoundingClientRect();
-            const center = { x: layerRect.width / 2, y: layerRect.height / 2 };
-            const localPlayer = state.players.find(player => player.id === App.localId);
-            const localCard = localPlayer && [...localPlayer.hand, ...localPlayer.penaltyCards]
-                .map(item => document.getElementById(item.id))
-                .find(Boolean);
-            let targetCenter = { x: center.x, y: center.y + layerRect.height * 0.12 };
-            if (localCard) {
-                const localRect = localCard.getBoundingClientRect();
-                const layoutCenter = {
-                    x: localRect.left - layerRect.left + localRect.width / 2,
-                    y: localRect.top - layerRect.top + localRect.height / 2
-                };
-                targetCenter = {
-                    x: center.x + (layoutCenter.x - center.x) * 0.48,
-                    y: center.y + (layoutCenter.y - center.y) * 0.48
-                };
-            }
-
-            cardEl.classList.add('optimistic-motion', 'holding-card');
-            cardEl.style.left = `${targetCenter.x - cardRect.width / 2}px`;
-            cardEl.style.top = `${targetCenter.y - cardRect.height / 2}px`;
-            cardEl.style.zIndex = '1000';
+            const sourceEl = card && document.getElementById(card.id);
+            if (!sourceEl) return;
+            UI.clearOptimisticMotion();
+            const startRect = sourceEl.getBoundingClientRect();
+            const endRect = UI.getLocalHoldingRect(startRect);
+            const ghost = UI.createMotionGhost(sourceEl, startRect);
+            if (!ghost) return;
+            sourceEl.classList.add('motion-concealed');
+            const flight = UI.animateMotionGhost(ghost, startRect, endRect, 165, 16);
+            const motion = { type: 'draw', cardId: card.id, sourceEl, ghost, animation: flight.animation, done: flight.done, finished: false, authoritative: false, timeout: null };
+            App.uiState.optimisticMotion = motion;
+            motion.done.then(() => { motion.finished = true; });
+            motion.timeout = setTimeout(() => {
+                if (App.uiState.optimisticMotion === motion && !motion.authoritative) UI.clearOptimisticMotion();
+            }, 2800);
             return;
         }
 
         if (action.type === 'PLAY_HOLDING' && action.action === 'swap' && action.targetId) {
             const incoming = state.activeAbility?.card;
-            const incomingEl = incoming && document.getElementById(incoming.id);
+            const sourceEl = incoming && document.getElementById(incoming.id);
             const outgoingEl = document.getElementById(action.targetId);
-            if (!incomingEl || !outgoingEl) return;
-
-            incomingEl.classList.add('optimistic-motion', 'swap-incoming');
-            incomingEl.style.left = outgoingEl.style.left;
-            incomingEl.style.top = outgoingEl.style.top;
-            incomingEl.style.zIndex = '1001';
-
-            clearTimeout(outgoingEl._optimisticDiscardTimer);
-            outgoingEl._optimisticDiscardTimer = setTimeout(() => {
-                if (!outgoingEl.isConnected) return;
-                const topDiscard = state.discardPile?.[state.discardPile.length - 1];
-                const discardEl = topDiscard && document.getElementById(topDiscard.id);
-                outgoingEl.classList.add('optimistic-motion', 'swap-outgoing');
-                if (discardEl) {
-                    outgoingEl.style.left = discardEl.style.left;
-                    outgoingEl.style.top = discardEl.style.top;
-                } else {
-                    outgoingEl.style.left = `${layer.clientWidth / 2 + 28}px`;
-                    outgoingEl.style.top = `${layer.clientHeight / 2 - outgoingEl.offsetHeight / 2}px`;
-                }
-                outgoingEl.style.zIndex = '1000';
-                outgoingEl._optimisticDiscardTimer = null;
-            }, 120);
+            if (!sourceEl || !outgoingEl) return;
+            UI.clearOptimisticMotion();
+            const startRect = sourceEl.getBoundingClientRect();
+            const endRect = outgoingEl.getBoundingClientRect();
+            const ghost = UI.createMotionGhost(sourceEl, startRect);
+            if (!ghost) return;
+            sourceEl.classList.add('motion-concealed');
+            const flight = UI.animateMotionGhost(ghost, startRect, endRect, 165, 18);
+            const motion = { type: 'swap', incomingId: incoming.id, outgoingId: action.targetId, sourceEl, ghost, animation: flight.animation, done: flight.done, finished: false, authoritative: false, timeout: null };
+            App.uiState.optimisticMotion = motion;
+            motion.done.then(() => { motion.finished = true; });
+            motion.timeout = setTimeout(() => {
+                if (App.uiState.optimisticMotion === motion && !motion.authoritative) UI.clearOptimisticMotion();
+            }, 2800);
         }
+    },
+
+    captureCardMotionOrigins: motion => {
+        if (!App.animEnabled || !motion?.incomingId) return null;
+        const incomingEl = document.getElementById(motion.incomingId);
+        const outgoingEl = motion.outgoingId ? document.getElementById(motion.outgoingId) : null;
+        if (!incomingEl && !outgoingEl) return null;
+        const optimistic = App.uiState.optimisticMotion;
+        const matchingOptimistic = optimistic?.type === 'swap'
+            && optimistic.incomingId === motion.incomingId
+            && optimistic.outgoingId === motion.outgoingId
+            ? optimistic
+            : null;
+        UI.clearCardMotionVisuals(matchingOptimistic?.ghost || null);
+        const origins = {
+            run: App.uiState.motionRun,
+            matchingOptimistic,
+            incoming: incomingEl ? { rect: incomingEl.getBoundingClientRect(), clone: incomingEl.cloneNode(true) } : null,
+            outgoing: outgoingEl ? { rect: outgoingEl.getBoundingClientRect() } : null
+        };
+        incomingEl?.classList.add('motion-concealed');
+        outgoingEl?.classList.add('motion-concealed');
+        return origins;
+    },
+
+    settleOptimisticMotion: (motion, targetEl, run) => {
+        motion.authoritative = true;
+        clearTimeout(motion.timeout);
+        return motion.done.then(() => {
+            if (run !== App.uiState.motionRun) return;
+            targetEl?.classList.remove('motion-concealed');
+            UI.removeMotionGhost(motion.ghost);
+            if (App.uiState.optimisticMotion === motion) App.uiState.optimisticMotion = null;
+        });
+    },
+
+    playCardMotion: (motion, origins) => {
+        if (!origins || !motion?.incomingId) return;
+        const run = origins.run;
+        const incomingEl = document.getElementById(motion.incomingId);
+        const outgoingEl = motion.outgoingId ? document.getElementById(motion.outgoingId) : null;
+        let incomingDone;
+
+        if (origins.matchingOptimistic) {
+            incomingDone = UI.settleOptimisticMotion(origins.matchingOptimistic, incomingEl, run);
+        } else if (origins.incoming && incomingEl) {
+            const endRect = incomingEl.getBoundingClientRect();
+            const ghost = UI.createMotionGhost(origins.incoming.clone, origins.incoming.rect);
+            const flight = UI.animateMotionGhost(ghost, origins.incoming.rect, endRect, 170, 18);
+            incomingDone = flight.done.then(() => {
+                if (run !== App.uiState.motionRun) return;
+                incomingEl.classList.remove('motion-concealed');
+                UI.removeMotionGhost(ghost);
+            });
+        } else {
+            incomingEl?.classList.remove('motion-concealed');
+            incomingDone = Promise.resolve();
+        }
+
+        incomingDone.then(() => {
+            if (run !== App.uiState.motionRun || !outgoingEl || !origins.outgoing) return;
+            const endRect = outgoingEl.getBoundingClientRect();
+            const ghost = UI.createMotionGhost(outgoingEl, origins.outgoing.rect);
+            const ghostInner = ghost?.querySelector('.card-inner');
+            ghostInner?.classList.add('is-flipped');
+            const flight = UI.animateMotionGhost(ghost, origins.outgoing.rect, endRect, 185, 12);
+            setTimeout(() => {
+                if (run === App.uiState.motionRun) ghostInner?.classList.remove('is-flipped');
+            }, 45);
+            flight.done.then(() => {
+                if (run !== App.uiState.motionRun) return;
+                outgoingEl.classList.remove('motion-concealed');
+                UI.removeMotionGhost(ghost);
+            });
+        });
+    },
+
+    reconcileOptimisticMotion: state => {
+        const motion = App.uiState.optimisticMotion;
+        if (!motion || motion.authoritative) return;
+        if (motion.type === 'draw' && state.activeAbility?.card?.id === motion.cardId) {
+            const targetEl = document.getElementById(motion.cardId);
+            UI.settleOptimisticMotion(motion, targetEl, App.uiState.motionRun);
+            return;
+        }
+        if (!App.uiState.pendingAction) UI.clearOptimisticMotion();
     },
 
     getStateToken: (state) => {
@@ -3001,26 +3170,16 @@ const UI = {
     },
 
     render: (state) => {
+        const renderNow = Utils.timestamp();
+        const cardMotion = state.cardMotion;
+        const isNewCardMotion = Boolean(cardMotion?.nonce && cardMotion.nonce !== App.uiState.lastCardMotionNonce);
+        const cardMotionOrigins = isNewCardMotion ? UI.captureCardMotionOrigins(cardMotion) : null;
+        if (isNewCardMotion) App.uiState.lastCardMotionNonce = cardMotion.nonce;
         App.gameState = state;
         UI.renderRoleControl(state);
         UI.renderSpectatorControls(state);
-        const renderNow = Utils.timestamp();
         const gameViewForState = document.getElementById('game-view');
         gameViewForState.classList.toggle('final-slap-window', Boolean(state.pendingGameOver));
-
-        const cardMotion = state.cardMotion;
-        if (cardMotion?.nonce && cardMotion.nonce !== App.uiState.lastCardMotionNonce) {
-            App.uiState.lastCardMotionNonce = cardMotion.nonce;
-            App.uiState.cardMotionStartedAt = renderNow;
-            clearTimeout(App.uiState.cardMotionTimer);
-            App.uiState.cardMotionTimer = setTimeout(() => {
-                App.uiState.cardMotionTimer = null;
-                if (App.gameState) UI.render(App.gameState);
-            }, 620);
-        }
-        const cardMotionActive = Boolean(cardMotion?.nonce
-            && cardMotion.nonce === App.uiState.lastCardMotionNonce
-            && renderNow - App.uiState.cardMotionStartedAt < 600);
 
         if (App.uiState.pendingAction && UI.getStateToken(state) !== App.uiState.pendingToken) {
             App.uiState.pendingAction = false;
@@ -3222,6 +3381,7 @@ const UI = {
         if (localPlayerIndex === -1) localPlayerIndex = 0;
 
         let currentBadgeIds = new Set();
+        const currentCardIds = new Set();
 
         state.players.forEach((p, i) => {
             let relIndex = (i - localPlayerIndex + state.players.length) % state.players.length;
@@ -3336,6 +3496,7 @@ const UI = {
             };
 
             let allCards = [...p.hand, ...p.penaltyCards];
+            allCards.forEach(card => currentCardIds.add(card.id));
             const cardMetrics = getComputedStyle(document.documentElement);
             const baseHandW = parseFloat(cardMetrics.getPropertyValue('--card-w')) || 52;
             const baseHandH = parseFloat(cardMetrics.getPropertyValue('--card-h')) || 74;
@@ -3461,8 +3622,7 @@ const UI = {
 
                 if (!p.connected && !p.isBot) el.classList.add('disconnected'); else el.classList.remove('disconnected');
 
-                el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'bot-peek-target', 'optimistic-motion', 'swap-incoming', 'swap-outgoing');
-                if (cardMotionActive && cardMotion.incomingId === c.id) el.classList.add('swap-incoming');
+                el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'bot-peek-target');
                 if (state.lastActionTargetId === c.id) el.classList.add('highlight-recent');
                 if (state.publicPeekedCards && state.publicPeekedCards.includes(c.id)) el.classList.add('public-peeked');
                 if (App.uiState.peekedCards.has(c.id)) el.classList.add('peek-preview');
@@ -3503,16 +3663,19 @@ const UI = {
         const discardLeft = isMobile ? cx + deckGap / 2 : cx + 45 - cWidthScale;
         const deckTop = isMobile ? cy - mobileCardHeight / 2 : cy - deckOffsetY;
 
-        state.deck.forEach((c, i) => {
+        const visibleDeckStart = Math.max(0, state.deck.length - 7);
+        state.deck.slice(visibleDeckStart).forEach((c, visibleIndex) => {
+            const i = visibleDeckStart + visibleIndex;
+            currentCardIds.add(c.id);
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
-            el.style.left = `${deckLeft}px`; el.style.top = `${deckTop - Math.min(i, 6) * 0.45}px`; el.style.zIndex = i;
+            el.style.left = `${deckLeft}px`; el.style.top = `${deckTop - Math.min(visibleIndex, 6) * 0.45}px`; el.style.zIndex = i;
             el.style.setProperty('--local-scale', '1');
             el.style.setProperty('--local-rot', '0deg');
 
             el.querySelector('.card-inner').classList.add('is-flipped');
             UI.setCardFace(el, c, false);
-            el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'bot-peek-target', 'optimistic-motion', 'swap-incoming', 'swap-outgoing');
+            el.classList.remove('targetable', 'selected-target', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'bot-peek-target');
             if (i === state.deck.length - 1) {
                 el.setAttribute('role', 'button');
                 el.setAttribute('aria-label', 'Draw from deck');
@@ -3531,7 +3694,10 @@ const UI = {
             else el.classList.remove('deck-glow');
         });
 
-        state.discardPile.forEach((c, i) => {
+        const visibleDiscardStart = Math.max(0, state.discardPile.length - 8);
+        state.discardPile.slice(visibleDiscardStart).forEach((c, visibleIndex) => {
+            const i = visibleDiscardStart + visibleIndex;
+            currentCardIds.add(c.id);
             let el = document.getElementById(c.id) || UI.createCardDOM(c);
             if (!App.animEnabled) el.classList.add('no-anim'); else el.classList.remove('no-anim');
             const discardPose = UI.getDiscardPose(c);
@@ -3544,8 +3710,7 @@ const UI = {
 
             el.querySelector('.card-inner').classList.remove('is-flipped');
             UI.setCardFace(el, c, true);
-            el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'bot-peek-target', 'optimistic-motion', 'swap-incoming', 'swap-outgoing');
-            if (cardMotionActive && cardMotion.outgoingId === c.id) el.classList.add('swap-outgoing');
+            el.classList.remove('targetable', 'selected-target', 'deck-glow', 'holding-card', 'highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'bot-peek-target');
             if (i === state.discardPile.length - 1) {
                 el.setAttribute('role', 'button');
                 el.setAttribute('aria-label', `${c.value} of ${c.suit} on discard pile`);
@@ -3570,6 +3735,7 @@ const UI = {
             // Don't show magic cards as "holding" - they're already in discard pile
             if (!state.activeAbility.type.startsWith('magic_')) {
                 let c = state.activeAbility.card;
+                currentCardIds.add(c.id);
                 let el = document.getElementById(c.id) || UI.createCardDOM(c);
 
                 let activePIdx = state.players.findIndex(p => p.id === state.activeAbility.player);
@@ -3592,7 +3758,7 @@ const UI = {
                 UI.setCardFace(el, c, isFaceUp);
 
                 el.classList.add('holding-card');
-                el.classList.remove('highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked', 'optimistic-motion', 'swap-incoming', 'swap-outgoing');
+                el.classList.remove('highlight-recent', 'public-peeked', 'peek-preview', 'opening-peeked');
                 el.setAttribute('aria-label', isFaceUp ? `Drawn ${c.value} of ${c.suit}. Tap to play.` : 'Opponent drawn card');
                 el.setAttribute('tabindex', state.activeAbility.player === App.localId ? '0' : '-1');
                 if (state.activeAbility.player === App.localId) {
@@ -3607,6 +3773,11 @@ const UI = {
             }
         }
 
+        document.querySelectorAll('#card-layer > .card').forEach(card => {
+            if (!currentCardIds.has(card.id)) card.remove();
+        });
+        if (isNewCardMotion) UI.playCardMotion(cardMotion, cardMotionOrigins);
+        UI.reconcileOptimisticMotion(state);
         UI.playBotPeekEffect(state);
         UI.updateControls(state);
 

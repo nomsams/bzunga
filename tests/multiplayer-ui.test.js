@@ -80,7 +80,8 @@ for (const [name, app] of [['President', presidentApp], ['Durak', durakApp], ['H
     assert(app.includes("container: state.phase === 'lobby' ? document.getElementById('lobby-room') : document.body"), `${name} must keep the room-role control inline until play begins`);
 }
 
-assert(bazunga.includes("container: state.phase === 'lobby' ? document.getElementById('lobby-room') : document.body"), 'Bazunga must keep the room-role control inline until play begins');
+assert(bazunga.includes("container: state.phase === 'lobby' ? document.getElementById('lobby-room') : document.getElementById('table-role-slot')"), 'Bazunga must dock the live room-role control in the status strip instead of covering table cards');
+assert(bazunga.includes('#table-role-slot .room-role-control') && bazunga.includes('position: static'), 'Bazunga live role control must participate in status layout rather than float over a two-player hand');
 assert(bazunga.includes("window.matchMedia?.('(pointer: coarse)').matches") && bazunga.includes('input.blur()'), 'Bazunga lobby chat must release the mobile keyboard after sending');
 
 assert(bazunga.includes('RoomTools.ResilientJoin.connect') && bazunga.includes('scheduleReconnect: hostId'), 'Bazunga must share resilient reconnect behavior');
